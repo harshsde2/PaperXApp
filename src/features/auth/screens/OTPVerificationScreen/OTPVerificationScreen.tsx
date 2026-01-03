@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Linking } from 'react-native';
+import { View, TouchableOpacity, Linking } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Text } from '@shared/components/Text';
 import OTPInput from '@features/auth/components/OTPInput';
 import {
   OTPVerificationScreenNavigationProp,
@@ -62,7 +63,7 @@ const OTPVerificationScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topSection}>
-        <Text style={styles.logo}>Logo</Text>
+        <Text variant="h2" style={styles.logo}>Logo</Text>
       </View>
       
       <View style={styles.bottomSection}>
@@ -70,18 +71,18 @@ const OTPVerificationScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Text variant="h3" style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         
-        <Text style={styles.title}>Enter OTP</Text>
-        <Text style={styles.subtitle}>
+        <Text variant="h1" style={styles.title}>Enter OTP</Text>
+        <Text variant="bodyMedium" style={styles.subtitle}>
           Please enter the 6-digit code sent to your mobile device ending in {maskedMobile}.
         </Text>
         
         <OTPInput length={6} onComplete={handleOTPComplete} />
         
         <View style={styles.timerContainer}>
-          <Text style={styles.timerText}>
+          <Text variant="captionMedium" style={styles.timerText}>
             Code expires in {formatTime(timeLeft)}
           </Text>
         </View>
@@ -90,25 +91,25 @@ const OTPVerificationScreen = () => {
           style={styles.button}
           onPress={() => handleOTPComplete('123456')} // Temporary for testing
         >
-          <Text style={styles.buttonText}>Verify & Proceed</Text>
+          <Text variant="buttonMedium" style={styles.buttonText}>Verify & Proceed</Text>
         </TouchableOpacity>
         
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text variant="captionMedium" style={styles.footerText}>
             Didn't receive code?{' '}
             {canResend ? (
-              <Text style={styles.resendLink} onPress={handleResend}>
+              <Text variant="captionMedium" style={styles.resendLink} onPress={handleResend}>
                 Resend Code
               </Text>
             ) : (
-              <Text style={styles.resendDisabled}>
+              <Text variant="captionMedium" style={styles.resendDisabled}>
                 Resend Code ({formatTime(timeLeft)})
               </Text>
             )}
           </Text>
           
           <TouchableOpacity onPress={() => {}}>
-            <Text style={styles.helpLink}>Having trouble verifying?</Text>
+            <Text variant="captionMedium" style={styles.helpLink}>Having trouble verifying?</Text>
           </TouchableOpacity>
         </View>
       </View>

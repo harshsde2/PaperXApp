@@ -106,12 +106,12 @@ export const baseColors = {
 // ============================================================================
 
 export const baseTypography = {
-  // Font Families (can be extended with custom fonts)
+  // Font Families - Poppins
   fontFamily: {
-    regular: 'System',
-    medium: 'System',
-    semibold: 'System',
-    bold: 'System',
+    regular: 'Poppins-Regular',
+    medium: 'Poppins-Medium',
+    semibold: 'Poppins-SemiBold',
+    bold: 'Poppins-Bold',
   },
 
   // Font Sizes

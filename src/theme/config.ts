@@ -6,7 +6,7 @@
  */
 
 import { lightColors, darkColors, semanticTypography, semanticSpacing, semanticBorderRadius, semanticShadows } from './tokens/semantic';
-import { baseSpacing, baseBorderRadius, baseShadows, baseOpacity, baseZIndex, baseAnimation } from './tokens/base';
+import { baseSpacing, baseBorderRadius, baseShadows, baseOpacity, baseZIndex, baseAnimation, baseTypography } from './tokens/base';
 import type { Theme, ThemeMode } from './types';
 
 // ============================================================================
@@ -17,6 +17,7 @@ export const lightTheme: Theme = {
   mode: 'light',
   colors: lightColors,
   typography: semanticTypography,
+  fontFamily: baseTypography.fontFamily,
   spacing: {
     ...semanticSpacing,
     ...baseSpacing,
@@ -42,6 +43,7 @@ export const darkTheme: Theme = {
   mode: 'dark',
   colors: darkColors,
   typography: semanticTypography,
+  fontFamily: baseTypography.fontFamily,
   spacing: {
     ...semanticSpacing,
     ...baseSpacing,

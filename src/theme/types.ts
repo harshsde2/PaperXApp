@@ -67,6 +67,7 @@ export interface Theme {
   mode: ThemeMode;
   colors: LightColors | DarkColors;
   typography: typeof semanticTypography;
+  fontFamily: typeof baseTypography.fontFamily;
   spacing: typeof semanticSpacing & typeof baseSpacing;
   borderRadius: typeof semanticBorderRadius & typeof baseBorderRadius;
   shadows: typeof semanticShadows & typeof baseShadows;

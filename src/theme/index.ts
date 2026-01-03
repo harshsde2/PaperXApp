@@ -1,20 +1,88 @@
-// Theme configuration
+/**
+ * Theme - Main Export
+ * 
+ * Central export point for the theme system.
+ * This is the single entry point for all theme-related functionality.
+ * 
+ * @example
+ * ```tsx
+ * import { useTheme, lightTheme, colors } from '@theme';
+ * 
+ * // In component
+ * const theme = useTheme();
+ * const primaryColor = theme.colors.primary.DEFAULT;
+ * ```
+ */
+
+// ============================================================================
+// Main Theme Configuration
+// ============================================================================
+export { defaultTheme, lightTheme, darkTheme, themes, getTheme } from './config';
+import { lightTheme } from './config';
+export type { Theme, ThemeMode } from './types';
+
+// ============================================================================
+// Hooks
+// ============================================================================
+export { useTheme } from './hooks/useTheme';
+
+// ============================================================================
+// Design Tokens (Direct Access)
+// ============================================================================
+export * from './tokens';
+
+// ============================================================================
+// Type Exports
+// ============================================================================
+export type {
+  BaseColors,
+  LightColors,
+  DarkColors,
+  PrimaryColor,
+  StatusColor,
+  BaseTypography,
+  SemanticTypography,
+  HeadingStyle,
+  BodyStyle,
+  CaptionStyle,
+  ButtonTypography,
+  BaseSpacing,
+  SemanticSpacing,
+  BaseBorderRadius,
+  SemanticBorderRadius,
+  BaseShadows,
+  SemanticShadows,
+  ThemeContextValue,
+} from './types';
+
+// ============================================================================
+// Legacy Exports (Backward Compatibility)
+// ============================================================================
+/**
+ * @deprecated Use theme.colors instead
+ * Legacy color exports for backward compatibility.
+ * These will be removed in a future version.
+ */
 export const colors = {
-  primary: '#1E3A8A',
-  primaryDark: '#1E40AF',
-  primaryLight: '#3B82F6',
-  secondary: '#10B981',
-  error: '#EF4444',
-  warning: '#F59E0B',
-  success: '#10B981',
-  background: '#FFFFFF',
-  surface: '#F9FAFB',
-  text: '#1F2937',
-  textSecondary: '#6B7280',
-  border: '#E5E7EB',
-  disabled: '#9CA3AF',
+  primary: lightTheme.colors.primary.DEFAULT,
+  primaryDark: lightTheme.colors.primary.dark,
+  primaryLight: lightTheme.colors.primary.light,
+  secondary: lightTheme.colors.secondary.DEFAULT,
+  error: lightTheme.colors.error.DEFAULT,
+  warning: lightTheme.colors.warning.DEFAULT,
+  success: lightTheme.colors.success.DEFAULT,
+  background: lightTheme.colors.background.primary,
+  surface: lightTheme.colors.surface.primary,
+  text: lightTheme.colors.text.primary,
+  textSecondary: lightTheme.colors.text.secondary,
+  border: lightTheme.colors.border.primary,
+  disabled: lightTheme.colors.text.disabled,
 };
 
+/**
+ * @deprecated Use theme.spacing instead
+ * Legacy spacing exports for backward compatibility.
+ */
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -24,33 +92,23 @@ export const spacing = {
   xxl: 48,
 };
 
+/**
+ * @deprecated Use theme.typography instead
+ * Legacy typography exports for backward compatibility.
+ */
 export const typography = {
-  h1: {
-    fontSize: 32,
-    fontWeight: 'bold' as const,
-  },
-  h2: {
-    fontSize: 24,
-    fontWeight: 'bold' as const,
-  },
-  h3: {
-    fontSize: 20,
-    fontWeight: '600' as const,
-  },
-  body: {
-    fontSize: 16,
-    fontWeight: '400' as const,
-  },
-  caption: {
-    fontSize: 14,
-    fontWeight: '400' as const,
-  },
-  small: {
-    fontSize: 12,
-    fontWeight: '400' as const,
-  },
+  h1: lightTheme.typography.heading.h1,
+  h2: lightTheme.typography.heading.h2,
+  h3: lightTheme.typography.heading.h3,
+  body: lightTheme.typography.body.medium,
+  caption: lightTheme.typography.caption.medium,
+  small: lightTheme.typography.caption.small,
 };
 
+/**
+ * @deprecated Use theme.borderRadius instead
+ * Legacy borderRadius exports for backward compatibility.
+ */
 export const borderRadius = {
   sm: 4,
   md: 8,
@@ -58,4 +116,3 @@ export const borderRadius = {
   xl: 16,
   full: 9999,
 };
-

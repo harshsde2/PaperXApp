@@ -20,14 +20,16 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#000000',
   },
-  logoutButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FF3B30',
-    borderRadius: 8,
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  logoutButtonText: {
-    color: '#FFFFFF',
+  profileButtonIcon: {
+    fontSize: 20,
   },
   content: {
     flex: 1,

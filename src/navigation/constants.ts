@@ -5,5 +5,9 @@ export const SCREENS = {
     SIGNUP: 'Signup',
     OTP_VERIFICATION: 'OTPVerification',
   },
+  MAIN: {
+    DASHBOARD: 'Dashboard',
+    PROFILE: 'Profile',
+  },
 } as const;
 

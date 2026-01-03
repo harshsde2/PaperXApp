@@ -1,16 +1,20 @@
 import React from 'react';
-import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppSelector } from '@store/hooks';
-import { useLogout } from '@services/api';
 import { Text } from '@shared/components/Text';
+import { MainStackParamList } from '@navigation/MainNavigator';
 import { styles } from './styles';
+
+type DashboardScreenNavigationProp = StackNavigationProp<MainStackParamList, 'Dashboard'>;
 
 const DashboardScreen = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const logoutMutation = useLogout();
+  const navigation = useNavigation<DashboardScreenNavigationProp>();
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
   };
 
   return (
@@ -18,15 +22,10 @@ const DashboardScreen = () => {
       <View style={styles.header}>
         <Text variant="h1" style={styles.title}>Dashboard</Text>
         <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={handleLogout}
-          disabled={logoutMutation.isPending}
+          style={styles.profileButton} 
+          onPress={handleProfilePress}
         >
-          {logoutMutation.isPending ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text variant="buttonMedium" style={styles.logoutButtonText}>Logout</Text>
-          )}
+          <Text style={styles.profileButtonIcon}>👤</Text>
         </TouchableOpacity>
       </View>
       

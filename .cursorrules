@@ -228,6 +228,8 @@ Before submitting code, ensure:
 - [ ] Proper error handling
 - [ ] TypeScript types are correct and strict
 - [ ] Follows project structure from docs
+- [ ] Dont write unnecessary comments and write clean code
+
 
 ## 🎓 Remember
 

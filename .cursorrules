@@ -1,0 +1,240 @@
+# PaperX App - Cursor IDE Rules
+
+## 📁 File and Folder Structure
+
+### Screens
+- Every screen MUST be in its own folder
+- Folder structure: `ScreenName/`
+  - `ScreenName.tsx` - Main screen component
+  - `@types.ts` - All TypeScript types, interfaces, and enums for this screen
+  - `styles.ts` - All StyleSheet styles for this screen
+- NO inline types or styles in the main screen file
+- Example structure:
+  ```
+  screens/
+    LoginScreen/
+      LoginScreen.tsx
+      @types.ts
+      styles.ts
+  ```
+
+### Components
+- Every component MUST be in its own folder
+- Folder structure: `ComponentName/`
+  - `index.tsx` - Main component file (always named index.tsx)
+  - `@types.ts` - All TypeScript types, interfaces, and enums for this component
+  - `styles.ts` - All StyleSheet styles for this component
+- NO inline types or styles in the main component file
+- Example structure:
+  ```
+  components/
+    Button/
+      index.tsx
+      @types.ts
+      styles.ts
+  ```
+
+### Screen Constants
+- All screen names MUST be defined in constants and used everywhere
+- Create a `constants.ts` or `routes.ts` file in navigation folder
+- Use constants instead of string literals for navigation
+- Example:
+  ```typescript
+  export const SCREENS = {
+    AUTH: {
+      LOGIN: 'Login',
+      SIGNUP: 'Signup',
+      OTP_VERIFICATION: 'OTPVerification',
+    },
+    // ...
+  } as const;
+  ```
+
+## 📂 Project Structure Compliance
+
+- Follow the established directory structure from `docs/PROJECT_DIRECTORY_STRUCTURE.md`
+- Feature-based architecture: Organize code by features (`auth`, `posting`, `chat`, etc.)
+- Shared code goes in `src/shared/`
+- Services go in `src/services/`
+- Use path aliases: `@features`, `@shared`, `@navigation`, `@store`, `@services`, `@theme`, `@assets`
+
+## 🚫 Code Organization Rules
+
+### Type Definitions
+- NO type definitions, interfaces, or enums in main component/screen files
+- All types MUST be in separate `@types.ts` file
+- Export types from `@types.ts` and import in main file
+- Shared types go in `src/shared/types/`
+
+### Style Definitions
+- NO StyleSheet.create() calls in main component/screen files
+- All styles MUST be in separate `styles.ts` file
+- Export styles from `styles.ts` and import in main file
+
+### Main File Content
+- Main files (ScreenName.tsx or index.tsx) should ONLY contain:
+  - Imports
+  - Component/Screen logic (hooks, handlers, JSX)
+  - NO type definitions
+  - NO style definitions
+  - Minimal inline styles (only when absolutely necessary for dynamic styles)
+
+## 🤖 Agent Mode Guidelines
+
+When in Agent Mode, ALWAYS provide clear descriptions before implementing or changing any file or line:
+
+### Before Making Changes:
+1. **WHAT**: Clearly describe what you're going to do
+   - What file(s) will be created/modified?
+   - What functionality will be added/changed?
+
+2. **WHY**: Explain the reasoning
+   - Why is this change necessary?
+   - What problem does it solve?
+   - What is the business/technical reason?
+
+3. **HOW**: Describe the implementation approach
+   - How will you implement it?
+   - What patterns/approaches will you use?
+   - Are there any dependencies or prerequisites?
+
+### Example Format:
+```
+## Change: Add Login Screen
+
+**WHAT**: Creating LoginScreen folder with LoginScreen.tsx, @types.ts, and styles.ts files
+
+**WHY**: User needs to authenticate via OTP. This screen is the entry point for authenticated users.
+
+**HOW**: 
+- Create LoginScreen/ folder structure following project conventions
+- Extract types to @types.ts (navigation props, state types)
+- Extract styles to styles.ts
+- Implement mobile number input with validation
+- Navigate to OTP screen on submit
+```
+
+## 📝 TypeScript Best Practices
+
+- Use TypeScript for all files (`.ts` or `.tsx`)
+- Use strict type checking
+- Define types in `@types.ts` files, not inline
+- Use `interface` for object shapes, `type` for unions/intersections
+- Use `as const` for immutable constants
+- Prefer `const` assertions for readonly arrays/objects
+- Use utility types (Pick, Omit, Partial, etc.) when appropriate
+
+## 🎨 React Native Best Practices
+
+- Use functional components with hooks
+- Extract custom hooks to `hooks/` folder
+- Use React Query (`@tanstack/react-query`) for API data fetching
+- Use Redux Toolkit for global state management
+- Use MMKV for persistent storage (auth tokens, user data only)
+- Follow React Native naming conventions (PascalCase for components)
+
+## 🔄 State Management
+
+- **Redux Toolkit**: Global app state (auth, roles, UI state)
+- **React Query**: Server state (API data, caching)
+- **MMKV**: Persistent storage (auth tokens, user preferences)
+- **Local State (useState)**: Component-specific state only
+
+## 🚨 Code Quality Standards
+
+### Imports
+- Group imports: external libraries → internal modules → relative imports
+- Use path aliases (`@features`, `@shared`, etc.)
+- Sort imports alphabetically within groups
+
+### Naming Conventions
+- Components/Screens: PascalCase (`LoginScreen`, `Button`)
+- Files: Match component name (`LoginScreen.tsx`, `Button/index.tsx`)
+- Types/Interfaces: PascalCase (`LoginProps`, `UserData`)
+- Functions/Variables: camelCase (`handleSubmit`, `userName`)
+- Constants: UPPER_SNAKE_CASE (`API_BASE_URL`, `MAX_RETRIES`)
+- Screen constants: Use SCREENS object with nested structure
+
+### Error Handling
+- Always handle errors in API calls
+- Use try-catch for async operations
+- Provide user-friendly error messages
+- Log errors for debugging (console.error in development)
+
+### Performance
+- Memoize expensive computations with `useMemo`
+- Memoize callbacks with `useCallback` when passing to child components
+- Use `React.memo` for components that re-render frequently
+- Follow React Query best practices (appropriate staleTime, gcTime)
+
+## 🧪 Testing Considerations
+
+- Write testable code (pure functions where possible)
+- Extract business logic from components
+- Use dependency injection for API services
+- Keep components focused and single-responsibility
+
+## 📚 Documentation
+
+- Add JSDoc comments for complex functions
+- Document props in `@types.ts` files
+- Keep README.md updated
+- Document architectural decisions in code comments when necessary
+
+## 🔐 Security Best Practices
+
+- Never commit sensitive data (tokens, keys, passwords)
+- Use environment variables for API endpoints
+- Validate and sanitize user inputs
+- Use secure storage (MMKV with encryption) for sensitive data
+- Follow authentication best practices (token refresh, secure storage)
+
+## 🎯 Specific Project Rules
+
+### Caching Strategy
+- DO NOT persist React Query cache to storage
+- Use React Query in-memory caching only
+- Use MMKV ONLY for auth tokens and user preferences
+- For time-sensitive data (sessions, matches), set `staleTime: 0` and `gcTime: 0`
+
+### Navigation
+- Use screen constants from navigation constants file
+- Never use string literals for navigation
+- Type navigation props properly in `@types.ts`
+
+### API Integration
+- Use Axios instance from `@services/api/client`
+- Use React Query hooks for API calls
+- Handle errors in mutation/query `onError` callbacks
+- Use typed API responses from `@services/api/types`
+
+### Styling
+- Extract all styles to `styles.ts` files
+- Use StyleSheet.create() for performance
+- Use theme constants from `@theme` when available
+- Prefer Flexbox for layout
+- Use responsive dimensions where appropriate
+
+## ✅ Code Review Checklist
+
+Before submitting code, ensure:
+- [ ] All types are in `@types.ts` file
+- [ ] All styles are in `styles.ts` file
+- [ ] Screen names use constants, not string literals
+- [ ] Folder structure follows conventions
+- [ ] Imports use path aliases
+- [ ] No inline type definitions in main files
+- [ ] No inline StyleSheet in main files
+- [ ] Proper error handling
+- [ ] TypeScript types are correct and strict
+- [ ] Follows project structure from docs
+
+## 🎓 Remember
+
+- **Consistency is key**: Follow these rules consistently across the entire codebase
+- **When in doubt**: Check existing code patterns in the project
+- **Agent mode**: Always explain WHAT, WHY, and HOW before making changes
+- **Code organization**: Keep files focused and organized
+- **Type safety**: Leverage TypeScript's type system fully
+- **Performance**: Consider React Native performance best practices
+

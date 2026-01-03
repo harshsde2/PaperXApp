@@ -59,19 +59,19 @@ export interface FilterParams {
 // Auth request/response types
 export interface SendOTPRequest {
   mobile: string;
-  purpose: 'login' | 'signup';
 }
 
 export interface SendOTPResponse {
-  otp_sent: boolean;
-  expires_in: number;
-  retry_after: number;
+  otp_sent?: boolean;
+  expires_in?: number;
+  retry_after?: number;
+  message?: string;
+  success?: boolean;
 }
 
 export interface VerifyOTPRequest {
   mobile: string;
   otp: string;
-  purpose: 'login' | 'signup';
 }
 
 export interface VerifyOTPResponse {

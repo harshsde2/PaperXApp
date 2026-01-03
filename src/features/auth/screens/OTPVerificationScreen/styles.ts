@@ -62,6 +62,10 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
+  buttonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
+  },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,

@@ -51,42 +51,61 @@ const Text: FC<TextProps> = ({
   };
 
   const getVariantStyle = (variant: string): TextStyle | undefined => {
-    switch (variant) {
-      case 'h1':
-        return theme.typography.heading.h1;
-      case 'h2':
-        return theme.typography.heading.h2;
-      case 'h3':
-        return theme.typography.heading.h3;
-      case 'h4':
-        return theme.typography.heading.h4;
-      case 'h5':
-        return theme.typography.heading.h5;
-      case 'h6':
-        return theme.typography.heading.h6;
-      case 'bodyLarge':
-        return theme.typography.body.large;
-      case 'bodyMedium':
-        return theme.typography.body.medium;
-      case 'bodySmall':
-        return theme.typography.body.small;
-      case 'captionLarge':
-        return theme.typography.caption.large;
-      case 'captionMedium':
-        return theme.typography.caption.medium;
-      case 'captionSmall':
-        return theme.typography.caption.small;
-      case 'buttonLarge':
-        return theme.typography.button.large;
-      case 'buttonMedium':
-        return theme.typography.button.medium;
-      case 'buttonSmall':
-        return theme.typography.button.small;
-      case 'overline':
-        return theme.typography.overline;
-      default:
-        return undefined;
+    const variantStyle = (() => {
+      switch (variant) {
+        case 'h1':
+          return theme.typography.heading.h1;
+        case 'h2':
+          return theme.typography.heading.h2;
+        case 'h3':
+          return theme.typography.heading.h3;
+        case 'h4':
+          return theme.typography.heading.h4;
+        case 'h5':
+          return theme.typography.heading.h5;
+        case 'h6':
+          return theme.typography.heading.h6;
+        case 'bodyLarge':
+          return theme.typography.body.large;
+        case 'bodyMedium':
+          return theme.typography.body.medium;
+        case 'bodySmall':
+          return theme.typography.body.small;
+        case 'captionLarge':
+          return theme.typography.caption.large;
+        case 'captionMedium':
+          return theme.typography.caption.medium;
+        case 'captionSmall':
+          return theme.typography.caption.small;
+        case 'buttonLarge':
+          return theme.typography.button.large;
+        case 'buttonMedium':
+          return theme.typography.button.medium;
+        case 'buttonSmall':
+          return theme.typography.button.small;
+        case 'overline':
+          return theme.typography.overline;
+        default:
+          return undefined;
+      }
+    })();
+
+    // Process variant style: convert lineHeight multiplier to absolute pixels
+    // React Native with custom fonts needs absolute pixel values, not multipliers
+    if (variantStyle && variantStyle.fontSize && variantStyle.lineHeight) {
+      const fontSize = typeof variantStyle.fontSize === 'number' ? variantStyle.fontSize : 16;
+      const lineHeight = variantStyle.lineHeight;
+      
+      // If lineHeight is a multiplier (less than 5, typically 1.2, 1.5, etc.), convert to pixels
+      if (typeof lineHeight === 'number' && lineHeight < 5) {
+        return {
+          ...variantStyle,
+          lineHeight: Math.round(fontSize * lineHeight),
+        };
+      }
     }
+
+    return variantStyle;
   };
 
   const getTextColor = (): string | undefined => {
@@ -117,7 +136,7 @@ const Text: FC<TextProps> = ({
     }
   };
 
-  // When using specific font files (like Poppins-Bold), we don't need fontWeight
+  // When using specific font files (like Montserrat-Bold), we don't need fontWeight
   // as the weight is already in the font file name
   const finalFontFamily = getFontFamily(fontWeight);
   const needsFontWeight = !fontFamily && !finalFontFamily.includes('-');

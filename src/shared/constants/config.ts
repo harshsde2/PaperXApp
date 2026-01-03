@@ -16,9 +16,9 @@ export const CURRENT_ENV: Environment =
 
 // API Base URLs
 export const API_BASE_URLS = {
-  [ENV.DEVELOPMENT]: 'http://localhost:8080/api/v1',
-  [ENV.STAGING]: 'https://staging-api.paperx.com/api/v1',
-  [ENV.PRODUCTION]: 'https://api.paperx.com/api/v1',
+  [ENV.DEVELOPMENT]: 'https://paperx.safewayrssi.com/api/v1',
+  [ENV.STAGING]: 'https://paperx.safewayrssi.com/api/v1',
+  [ENV.PRODUCTION]: 'https://paperx.safewayrssi.com/api/v1',
 } as const;
 
 // WebSocket URLs

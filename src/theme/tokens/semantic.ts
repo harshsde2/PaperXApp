@@ -250,13 +250,13 @@ export const semanticTypography = {
     h1: {
       fontSize: baseTypography.fontSize['4xl'], // 32
       fontWeight: baseTypography.fontWeight.bold,
-      lineHeight: baseTypography.lineHeight.tight,
+      lineHeight: baseTypography.lineHeight.normal,
       letterSpacing: baseTypography.letterSpacing.tight,
     },
     h2: {
       fontSize: baseTypography.fontSize['3xl'], // 28
       fontWeight: baseTypography.fontWeight.bold,
-      lineHeight: baseTypography.lineHeight.tight,
+      lineHeight: baseTypography.lineHeight.loose,
       letterSpacing: baseTypography.letterSpacing.tight,
     },
     h3: {

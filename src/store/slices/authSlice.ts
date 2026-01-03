@@ -20,11 +20,17 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<SetCredentialsPayload>
     ) => {
+      console.log('[AuthSlice] setCredentials called with:', {
+        hasUser: !!action.payload.user,
+        hasToken: !!action.payload.token,
+        userMobile: action.payload.user?.mobile,
+      });
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
       state.error = null;
       state.otpVerified = true;
+      console.log('[AuthSlice] State updated, isAuthenticated:', true);
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;

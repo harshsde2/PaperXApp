@@ -1,21 +1,42 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Linking } from 'react-native';
+import { View, TouchableOpacity, TextInput, Linking, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '@navigation/constants';
 import { Text } from '@shared/components/Text';
+import { useSendOTP } from '@services/api';
 import { LoginScreenNavigationProp } from './@types';
 import { styles } from './styles';
 
 const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [mobileNumber, setMobileNumber] = useState('');
+  const sendOTPMutation = useSendOTP();
 
-  const handleSendOTP = () => {
-    if (mobileNumber.trim()) {
+  const handleSendOTP = async () => {
+    if (!mobileNumber.trim()) {
+      Alert.alert('Error', 'Please enter a valid mobile number');
+      return;
+    }
+
+    // Validate mobile number (10 digits for Indian numbers)
+    if (mobileNumber.trim().length !== 10) {
+      Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    try {
+      await sendOTPMutation.mutateAsync({ mobile: mobileNumber.trim() });
+      // Navigate to OTP verification screen on success
       navigation.navigate(SCREENS.AUTH.OTP_VERIFICATION, {
-        mobile: mobileNumber,
+        mobile: mobileNumber.trim(),
         purpose: 'login',
       });
+    } catch (error: any) {
+      console.log("error ---->",JSON.stringify(error,null,2));
+      Alert.alert(
+        'Error',
+        error?.message || 'Failed to send OTP. Please try again.'
+      );
     }
   };
 
@@ -44,11 +65,18 @@ const LoginScreen = () => {
           />
           
           <TouchableOpacity
-            style={[styles.button, !mobileNumber.trim() && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              (!mobileNumber.trim() || sendOTPMutation.isPending) && styles.buttonDisabled,
+            ]}
             onPress={handleSendOTP}
-            disabled={!mobileNumber.trim()}
+            disabled={!mobileNumber.trim() || sendOTPMutation.isPending}
           >
-            <Text variant="buttonMedium" style={styles.buttonText}>Send OTP</Text>
+            {sendOTPMutation.isPending ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text variant="buttonMedium" style={styles.buttonText}>Send OTP</Text>
+            )}
           </TouchableOpacity>
         </View>
         

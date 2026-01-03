@@ -106,12 +106,12 @@ export const baseColors = {
 // ============================================================================
 
 export const baseTypography = {
-  // Font Families - Poppins
+  // Font Families - Montserrat
   fontFamily: {
-    regular: 'Poppins-Regular',
-    medium: 'Poppins-Medium',
-    semibold: 'Poppins-SemiBold',
-    bold: 'Poppins-Bold',
+    regular: 'Montserrat-Regular',
+    medium: 'Montserrat-Medium',
+    semibold: 'Montserrat-SemiBold',
+    bold: 'Montserrat-Bold',
   },
 
   // Font Sizes
@@ -139,6 +139,7 @@ export const baseTypography = {
   // Line Heights
   lineHeight: {
     tight: 1.2,
+    medium: 1.3,
     normal: 1.5,
     relaxed: 1.75,
     loose: 2,

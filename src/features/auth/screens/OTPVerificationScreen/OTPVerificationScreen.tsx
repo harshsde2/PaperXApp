@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Linking } from 'react-native';
+import { View, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import OTPInput from '@features/auth/components/OTPInput';
+import { useSendOTP, useVerifyOTP } from '@services/api';
 import {
   OTPVerificationScreenNavigationProp,
   OTPVerificationScreenRouteProp,
@@ -16,6 +17,10 @@ const OTPVerificationScreen = () => {
   
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
   const [canResend, setCanResend] = useState(false);
+  const [otp, setOtp] = useState('');
+  
+  const verifyOTPMutation = useVerifyOTP();
+  const sendOTPMutation = useSendOTP();
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -39,23 +44,58 @@ const OTPVerificationScreen = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleOTPComplete = (otp: string) => {
-    // TODO: Verify OTP with backend
-    console.log('OTP entered:', otp);
-    
-    if (purpose === 'login') {
-      // Navigate to Dashboard after successful login
-      // navigation.navigate('Dashboard' as never);
-    } else {
-      // Navigate to Registration flow
-      // navigation.navigate('CompanyDetails' as never);
+  const handleOTPComplete = (enteredOtp: string) => {
+    // Store OTP when all digits are entered
+    setOtp(enteredOtp);
+    // Automatically verify when 6 digits are entered
+    if (enteredOtp.length === 6) {
+      verifyOTP(enteredOtp);
     }
   };
 
-  const handleResend = () => {
-    // TODO: Resend OTP
-    setTimeLeft(120);
-    setCanResend(false);
+  const verifyOTP = async (otpToVerify: string) => {
+    if (!otpToVerify || otpToVerify.length !== 6) {
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    // Prevent multiple simultaneous verification attempts
+    if (verifyOTPMutation.isPending) {
+      return;
+    }
+
+    try {
+      await verifyOTPMutation.mutateAsync({
+        mobile: mobile,
+        otp: otpToVerify,
+      });
+      
+      // Success - AppNavigator will automatically switch to MainNavigator
+      // when auth state is updated in Redux (isAuthenticated becomes true)
+      // No need to navigate manually or show alert
+    } catch (error: any) {
+      Alert.alert(
+        'Verification Failed',
+        error?.message || 'Invalid OTP. Please try again.'
+      );
+      // Clear OTP input on error
+      setOtp('');
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      await sendOTPMutation.mutateAsync({ mobile: mobile });
+      setTimeLeft(120);
+      setCanResend(false);
+      setOtp('');
+      Alert.alert('Success', 'OTP has been resent to your mobile number');
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error?.message || 'Failed to resend OTP. Please try again.'
+      );
+    }
   };
 
   const maskedMobile = mobile ? `${mobile.slice(0, 2)}${mobile.slice(-2)}` : 'XX86';
@@ -87,19 +127,33 @@ const OTPVerificationScreen = () => {
           </Text>
         </View>
         
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleOTPComplete('123456')} // Temporary for testing
-        >
-          <Text variant="buttonMedium" style={styles.buttonText}>Verify & Proceed</Text>
-        </TouchableOpacity>
+        {otp.length === 6 && (
+          <TouchableOpacity
+            style={[
+              styles.button,
+              (verifyOTPMutation.isPending || sendOTPMutation.isPending) && styles.buttonDisabled,
+            ]}
+            onPress={() => verifyOTP(otp)}
+            disabled={verifyOTPMutation.isPending || sendOTPMutation.isPending}
+          >
+            {verifyOTPMutation.isPending ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text variant="buttonMedium" style={styles.buttonText}>Verify & Proceed</Text>
+            )}
+          </TouchableOpacity>
+        )}
         
         <View style={styles.footer}>
           <Text variant="captionMedium" style={styles.footerText}>
             Didn't receive code?{' '}
             {canResend ? (
-              <Text variant="captionMedium" style={styles.resendLink} onPress={handleResend}>
-                Resend Code
+              <Text
+                variant="captionMedium"
+                style={styles.resendLink}
+                onPress={sendOTPMutation.isPending ? undefined : handleResend}
+              >
+                {sendOTPMutation.isPending ? 'Sending...' : 'Resend Code'}
               </Text>
             ) : (
               <Text variant="captionMedium" style={styles.resendDisabled}>

@@ -1,18 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '@navigation/constants';
 import { Text } from '@shared/components/Text';
+import { useTheme } from '@theme/index';
+import { useAppSelector } from '@store/hooks';
 import { SplashScreenNavigationProp } from './@types';
 import { styles } from './styles';
 
 const SplashScreen = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
+  const theme = useTheme();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+  // Auto-navigate if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      // User is already logged in, AppNavigator will handle showing MainNavigator
+      // No need to navigate here as the navigation is handled at AppNavigator level
+    }
+  }, [isAuthenticated]);
 
   return (
     <View style={styles.container}>
       <View style={styles.topSection}>
-        <Text variant="h2" style={styles.logo}>Logo</Text>
+        <Text variant="h1" color={theme.colors.text.inverse} >Logo</Text>
       </View>
       
       <View style={styles.bottomSection}>

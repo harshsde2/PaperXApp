@@ -76,14 +76,24 @@ apiClient.interceptors.response.use(
       });
     }
 
-    // Return data directly if success is true
-    if (response.data.success) {
+    // Check if response has success field
+    if ('success' in response.data) {
+      // Standard API response with success flag
+      if (response.data.success) {
+        return response;
+      }
+      // Handle API-level errors (success: false in response)
+      const apiError: ApiError = response.data as unknown as ApiError;
+      return Promise.reject(new Error(apiError.error?.message || 'API request failed'));
+    }
+
+    // If no success field but status is 2xx, treat as successful (for APIs without standard wrapper)
+    if (response.status >= 200 && response.status < 300) {
       return response;
     }
 
-    // Handle API-level errors (success: false in response)
-    const apiError: ApiError = response.data as unknown as ApiError;
-    return Promise.reject(new Error(apiError.error.message || 'API request failed'));
+    // Fallback: reject if we can't determine success
+    return Promise.reject(new Error('API request failed'));
   },
   async (error: AxiosError<ApiError>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };

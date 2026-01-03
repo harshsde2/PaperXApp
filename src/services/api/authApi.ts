@@ -27,14 +27,15 @@ export const useSendOTP = () => {
   return useMutation({
     mutationFn: async (data: SendOTPRequest): Promise<SendOTPResponse> => {
       const response = await api.post<SendOTPResponse>(AUTH_ENDPOINTS.SEND_OTP, data);
-      return response.data.data;
+      // Handle both wrapped response (response.data.data) and direct response (response.data)
+      return response.data.data || response.data || { otp_sent: true };
     },
     onSuccess: () => {
       dispatch(setOTPSent(true));
     },
     onError: (error: Error) => {
       dispatch(setOTPSent(false));
-      console.error('Send OTP error:', error);
+      console.error('Send OTP error:', JSON.stringify(error,null,2));
     },
   });
 };
@@ -49,36 +50,86 @@ export const useVerifyOTP = () => {
   return useMutation({
     mutationFn: async (data: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
       const response = await api.post<VerifyOTPResponse>(AUTH_ENDPOINTS.VERIFY_OTP, data);
-      return response.data.data;
+      
+      // Handle both wrapped response (response.data.data) and direct response (response.data)
+      const responseData = response.data as any;
+      
+      // If response has a 'data' property, use it (wrapped response)
+      if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+        return responseData.data;
+      }
+      
+      // Otherwise, return response.data directly
+      return responseData;
     },
     onSuccess: (data) => {
-      // Store tokens
-      storageService.setAuthToken(data.access_token);
-      storageService.setRefreshToken(data.refresh_token);
-      storageService.setUserData(data.user);
+      // Log response for debugging
+      console.log('[OTP Verification Success] Full response:', JSON.stringify(data, null, 2));
+      console.log('[OTP Verification] access_token:', data?.access_token);
+      console.log('[OTP Verification] token:', (data as any)?.token);
+      console.log('[OTP Verification] user:', data?.user);
 
-      // Update Redux state
-      dispatch(
-        setCredentials({
-          user: {
-            id: data.user.user_id,
-            mobile: data.user.mobile,
-            primaryRole: data.user.primary_role as any,
-            secondaryRole: data.user.secondary_role as any,
-            isVerified: data.user.verified,
-          },
-          token: data.access_token,
-        })
-      );
+      // Get token from either access_token or token field
+      const token = data?.access_token || (data as any)?.token;
+      
+      // Only store values that are defined (not null/undefined) to prevent MMKV errors
+      if (token) {
+        storageService.setAuthToken(token);
+        console.log('[OTP Verification] Token stored in storage');
+      } else {
+        console.warn('[OTP Verification] No token found in response');
+      }
 
-      // Set roles if available
-      if (data.user.primary_role) {
+      if (data?.refresh_token) {
+        storageService.setRefreshToken(data.refresh_token);
+      }
+
+      if (data?.user) {
+        storageService.setUserData(data.user);
+        console.log('[OTP Verification] User data stored in storage');
+      }
+
+      // Update Redux state - we need at least a token to authenticate
+      if (token) {
+        // If we have user data, use it; otherwise create minimal user object
+        const user = data?.user || {
+          user_id: '',
+          mobile: '',
+          verified: true,
+        };
+
+        console.log('[OTP Verification] Dispatching setCredentials with:', {
+          hasToken: !!token,
+          hasUser: !!user,
+          userMobile: user.mobile,
+        });
+
         dispatch(
-          setRoles({
-            primaryRole: data.user.primary_role as any,
-            secondaryRole: data.user.secondary_role as any,
+          setCredentials({
+            user: {
+              id: user.user_id || (user as any).id || '',
+              mobile: user.mobile || '',
+              primaryRole: user.primary_role || (user as any).primaryRole as any,
+              secondaryRole: user.secondary_role || (user as any).secondaryRole as any,
+              isVerified: user.verified !== undefined ? user.verified : true,
+            },
+            token: token,
           })
         );
+
+        console.log('[OTP Verification] setCredentials dispatched');
+
+        // Set roles if available
+        if (user.primary_role || (user as any).primaryRole) {
+          dispatch(
+            setRoles({
+              primaryRole: (user.primary_role || (user as any).primaryRole) as any,
+              secondaryRole: (user.secondary_role || (user as any).secondaryRole) as any,
+            })
+          );
+        }
+      } else {
+        console.error('[OTP Verification] Cannot authenticate: No token in response');
       }
 
       dispatch(setOTPVerified(true));
@@ -102,7 +153,13 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await api.post(AUTH_ENDPOINTS.LOGOUT);
+      // Attempt to call logout API, but don't wait if it fails
+      try {
+        await api.post(AUTH_ENDPOINTS.LOGOUT);
+      } catch (error) {
+        // Log error but continue with local logout
+        console.warn('Logout API call failed:', error);
+      }
     },
     onSuccess: () => {
       // Clear storage

@@ -7,8 +7,8 @@ const BASE_PATH = '';
 
 // Authentication Endpoints
 export const AUTH_ENDPOINTS = {
-  SEND_OTP: `${BASE_PATH}/auth/send-otp`,
-  VERIFY_OTP: `${BASE_PATH}/auth/verify-otp`,
+  SEND_OTP: `${BASE_PATH}/auth/otp/request`,
+  VERIFY_OTP: `${BASE_PATH}/auth/otp/verify`,
   REFRESH_TOKEN: `${BASE_PATH}/auth/refresh-token`,
   LOGOUT: `${BASE_PATH}/auth/logout`,
 } as const;

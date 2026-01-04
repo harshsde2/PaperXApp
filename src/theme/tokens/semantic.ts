@@ -48,6 +48,9 @@ export const lightColors = {
   success: {
     50: baseColors.green50,
     100: baseColors.green100,
+    200: baseColors.green200,
+    300: baseColors.green300,
+    400: baseColors.green400,
     500: baseColors.green500,
     600: baseColors.green600, // Approved/Matching status
     700: baseColors.green700,

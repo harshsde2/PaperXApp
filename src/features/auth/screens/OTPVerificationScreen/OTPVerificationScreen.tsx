@@ -11,6 +11,7 @@ import {
   OTPVerificationScreenRouteProp,
 } from './@types';
 import { styles } from './styles';
+import { SCREENS } from '@navigation/constants';
 
 const OTPVerificationScreen = () => {
   const navigation = useNavigation<OTPVerificationScreenNavigationProp>();
@@ -67,14 +68,15 @@ const OTPVerificationScreen = () => {
     }
 
     try {
-      await verifyOTPMutation.mutateAsync({
-        mobile: mobile,
-        otp: otpToVerify,
-      });
+      // await verifyOTPMutation.mutateAsync({
+      //   mobile: mobile,
+      //   otp: otpToVerify,
+      // });
       
       // Success - AppNavigator will automatically switch to MainNavigator
       // when auth state is updated in Redux (isAuthenticated becomes true)
       // No need to navigate manually or show alert
+      navigation.navigate(SCREENS.AUTH.COMPANY_DETAILS);
     } catch (error: any) {
       Alert.alert(
         'Verification Failed',

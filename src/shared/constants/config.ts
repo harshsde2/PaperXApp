@@ -55,7 +55,7 @@ export const QUERY_CONFIG = {
       refetchOnReconnect: true,
     },
     mutations: {
-      retry: false,
+      retry: 1, // Retry once for network errors (axios interceptor handles most retries)
     },
   },
 } as const;

@@ -210,13 +210,17 @@ When in Agent Mode, ALWAYS provide clear descriptions before implementing or cha
 
 ### Styling
 - Extract all styles to `styles.ts` files
-- Use StyleSheet.create() for performance
-- **MUST use theme colors from `@theme/tokens/base` - NEVER use hardcoded color values**
-- Import colors, spacing, borderRadius, etc. from `@theme/tokens/base` in styles.ts files
-- Example: `import { baseColors, baseSpacing, baseBorderRadius } from '@theme/tokens/base';`
-- Use `baseColors.white`, `baseColors.black`, `baseColors.gray500`, etc. instead of `'#FFFFFF'`, `'#000000'`, etc.
-- Use `baseSpacing[4]`, `baseSpacing[6]`, etc. instead of hardcoded numbers like `16`, `24`
-- Use `baseBorderRadius.lg`, `baseBorderRadius.md`, etc. instead of hardcoded values like `12`, `8`
+- **MUST use theme system - NEVER use hardcoded color values or direct imports from `@theme/tokens/base`**
+- Use `createStyles(theme)` function pattern that accepts theme as parameter
+- Use `useTheme()` hook in components and pass theme to `createStyles()`
+- Import theme from `@theme/index`: `import { useTheme } from '@theme/index';`
+- Export `createStyles` function from `styles.ts`: `export const createStyles = (theme: Theme) => StyleSheet.create({...});`
+- In component: `const theme = useTheme(); const styles = createStyles(theme);`
+- Use theme colors: `theme.colors.primary.DEFAULT`, `theme.colors.text.primary`, `theme.colors.background.secondary`, etc.
+- Use theme spacing: `theme.spacing[4]`, `theme.spacing[6]`, etc.
+- Use theme borderRadius: `theme.borderRadius.lg`, `theme.borderRadius.md`, etc.
+- Use theme fontFamily: `theme.fontFamily.regular`, `theme.fontFamily.medium`, etc.
+- NEVER import from `@theme/tokens/base` - always use theme object from `useTheme()` hook
 - Prefer Flexbox for layout
 - Use responsive dimensions where appropriate
 

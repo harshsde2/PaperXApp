@@ -17,6 +17,13 @@ import PersonIcon from './PersonIcon.svg';
 import EmailIcon from './EmailIcon.svg';
 import PhoneIcon from './PhoneIcon.svg';
 import Location from './Location.svg';
+import Organization from './Organization.svg';
+import State from './State.svg';
+import Globe from './Globe.svg';
+import Converter from './Converter.svg';
+import MachineDealer from './MachineDealer.svg';
+import Dealer from './Dealer.svg';
+import Brand from './Brand.svg';
 
 
 
@@ -40,4 +47,11 @@ export const AppIcon = {
   EmailIcon,
   PhoneIcon,
   Location,
+  Organization,
+  State,
+  Globe,
+  Converter,
+  MachineDealer,
+  Dealer,
+  Brand,
 };

@@ -19,14 +19,14 @@ export const lightColors = {
     200: baseColors.blue200,
     300: baseColors.blue300,
     400: baseColors.blue400,
-    500: baseColors.blue500, // Main primary
+    500: baseColors.blue500,
     600: baseColors.blue600,
     700: baseColors.blue700,
     800: baseColors.blue800,
     900: baseColors.blue900, // Primary darkest
-    DEFAULT: baseColors.blue600, // Default primary color
-    light: baseColors.blue400,
-    dark: baseColors.blue800,
+    DEFAULT: baseColors.blue800, // Default primary color
+    light: baseColors.blue300,
+    dark: baseColors.blue900,
   },
 
   // Secondary Colors (can be customized)
@@ -127,8 +127,8 @@ export const lightColors = {
     tertiary: baseColors.gray500,
     disabled: baseColors.gray400,
     inverse: baseColors.white,
-    link: baseColors.blue600,
-    linkHover: baseColors.blue700,
+    link: baseColors.blue800,
+    linkHover: baseColors.blue900,
     placeholder: baseColors.gray400,
   },
 
@@ -136,7 +136,7 @@ export const lightColors = {
   border: {
     primary: baseColors.gray200,
     secondary: baseColors.gray300,
-    focus: baseColors.blue500,
+    focus: baseColors.blue800,
     error: baseColors.red500,
     success: baseColors.green500,
     disabled: baseColors.gray300,

@@ -35,7 +35,7 @@ export const useSendOTP = () => {
     },
     onError: (error: Error) => {
       dispatch(setOTPSent(false));
-      console.error('Send OTP error:', JSON.stringify(error,null,2));
+      // console.error('Send OTP error:', JSON.stringify(error,null,2));
     },
   });
 };

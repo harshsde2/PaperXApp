@@ -4,6 +4,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import OTPInput from '@features/auth/components/OTPInput';
 import { useSendOTP, useVerifyOTP } from '@services/api';
+import { AppIcon } from '@assets/svgs';
+import { baseColors } from '@theme/tokens/base';
 import {
   OTPVerificationScreenNavigationProp,
   OTPVerificationScreenRouteProp,
@@ -98,7 +100,7 @@ const OTPVerificationScreen = () => {
     }
   };
 
-  const maskedMobile = mobile ? `${mobile.slice(0, 2)}${mobile.slice(-2)}` : 'XX86';
+  const lastTwoDigits = mobile ? mobile.slice(-2) : '88';
 
   return (
     <View style={styles.container}>
@@ -107,42 +109,55 @@ const OTPVerificationScreen = () => {
       </View>
       
       <View style={styles.bottomSection}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text variant="h3" style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRow}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <AppIcon.ArrowLeft width={24} height={24} color={baseColors.black} />
+          </TouchableOpacity>
+          <Text variant="h1" style={styles.title}>Verify Identity</Text>
+          <View style={styles.backButton} />
+        </View>
         
-        <Text variant="h1" style={styles.title}>Enter OTP</Text>
+        <View style={styles.shieldContainer}>
+          <View style={styles.shieldIcon}>
+            <Text style={styles.shieldCheckmark}>✓</Text>
+          </View>
+        </View>
+        
+        <Text variant="h1" style={styles.codeTitle}>Enter Authentication Code</Text>
         <Text variant="bodyMedium" style={styles.subtitle}>
-          Please enter the 6-digit code sent to your mobile device ending in {maskedMobile}.
+          Please enter the 6-digit code sent to your mobile device ending in{' '}
+          <Text style={styles.boldText}>{lastTwoDigits}</Text>.
         </Text>
         
         <OTPInput length={6} onComplete={handleOTPComplete} />
         
         <View style={styles.timerContainer}>
+          <Text style={styles.clockIcon}>🕐</Text>
           <Text variant="captionMedium" style={styles.timerText}>
-            Code expires in {formatTime(timeLeft)}
+            Code expires in <Text style={styles.boldText}>{formatTime(timeLeft)}</Text>
           </Text>
         </View>
         
-        {otp.length === 6 && (
-          <TouchableOpacity
-            style={[
-              styles.button,
-              (verifyOTPMutation.isPending || sendOTPMutation.isPending) && styles.buttonDisabled,
-            ]}
-            onPress={() => verifyOTP(otp)}
-            disabled={verifyOTPMutation.isPending || sendOTPMutation.isPending}
-          >
-            {verifyOTPMutation.isPending ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
+        <TouchableOpacity
+          style={[
+            styles.button,
+            (verifyOTPMutation.isPending || sendOTPMutation.isPending || otp.length !== 6) && styles.buttonDisabled,
+          ]}
+          onPress={() => verifyOTP(otp)}
+          disabled={verifyOTPMutation.isPending || sendOTPMutation.isPending || otp.length !== 6}
+        >
+          {verifyOTPMutation.isPending ? (
+            <ActivityIndicator color={baseColors.white} />
+          ) : (
+            <>
               <Text variant="buttonMedium" style={styles.buttonText}>Verify & Proceed</Text>
-            )}
-          </TouchableOpacity>
-        )}
+              <AppIcon.ArrowRight width={20} height={20} color={baseColors.white} />
+            </>
+          )}
+        </TouchableOpacity>
         
         <View style={styles.footer}>
           <Text variant="captionMedium" style={styles.footerText}>
@@ -157,7 +172,7 @@ const OTPVerificationScreen = () => {
               </Text>
             ) : (
               <Text variant="captionMedium" style={styles.resendDisabled}>
-                Resend Code ({formatTime(timeLeft)})
+                Resend Code
               </Text>
             )}
           </Text>

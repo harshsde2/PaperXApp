@@ -211,7 +211,12 @@ When in Agent Mode, ALWAYS provide clear descriptions before implementing or cha
 ### Styling
 - Extract all styles to `styles.ts` files
 - Use StyleSheet.create() for performance
-- Use theme constants from `@theme` when available
+- **MUST use theme colors from `@theme/tokens/base` - NEVER use hardcoded color values**
+- Import colors, spacing, borderRadius, etc. from `@theme/tokens/base` in styles.ts files
+- Example: `import { baseColors, baseSpacing, baseBorderRadius } from '@theme/tokens/base';`
+- Use `baseColors.white`, `baseColors.black`, `baseColors.gray500`, etc. instead of `'#FFFFFF'`, `'#000000'`, etc.
+- Use `baseSpacing[4]`, `baseSpacing[6]`, etc. instead of hardcoded numbers like `16`, `24`
+- Use `baseBorderRadius.lg`, `baseBorderRadius.md`, etc. instead of hardcoded values like `12`, `8`
 - Prefer Flexbox for layout
 - Use responsive dimensions where appropriate
 

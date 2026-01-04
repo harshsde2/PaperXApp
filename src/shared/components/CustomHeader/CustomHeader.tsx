@@ -5,6 +5,7 @@ import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { CustomHeaderProps } from './@types';
 import { styles } from './styles';
+import { AppIcon } from '@assets/svgs';
 
 const formatScreenTitle = (routeName: string): string => {
   // Handle specific screen name mappings
@@ -70,7 +71,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
             onPress={handleBackPress}
             activeOpacity={0.7}
           >
-            <Text style={styles.backButtonText}>←</Text>
+            <AppIcon.ArrowLeft width={24} height={24} />
           </TouchableOpacity>
         ) : (
           <View style={styles.leftButton} />

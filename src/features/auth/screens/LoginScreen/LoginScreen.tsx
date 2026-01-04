@@ -4,6 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '@navigation/constants';
 import { Text } from '@shared/components/Text';
 import { useSendOTP } from '@services/api';
+import { AppIcon } from '@assets/svgs';
+import { baseColors } from '@theme/tokens/base';
 import { LoginScreenNavigationProp } from './@types';
 import { styles } from './styles';
 
@@ -57,7 +59,7 @@ const LoginScreen = () => {
           <TextInput
             style={styles.input}
             placeholder="Enter Your mobile number"
-            placeholderTextColor="#999999"
+            placeholderTextColor={baseColors.gray500}
             value={mobileNumber}
             onChangeText={setMobileNumber}
             keyboardType="phone-pad"
@@ -73,9 +75,12 @@ const LoginScreen = () => {
             disabled={!mobileNumber.trim() || sendOTPMutation.isPending}
           >
             {sendOTPMutation.isPending ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={baseColors.white} />
             ) : (
-              <Text variant="buttonMedium" style={styles.buttonText}>Send OTP</Text>
+              <>
+                <Text variant="buttonMedium" style={styles.buttonText}>Send OTP</Text>
+                <AppIcon.ArrowRight width={20} height={20} color={baseColors.white} />
+              </>
             )}
           </TouchableOpacity>
         </View>
@@ -97,8 +102,13 @@ const LoginScreen = () => {
               <Text variant="bodyMedium" style={styles.badgeIcon}>🔒</Text>
               <Text variant="captionMedium" style={styles.badgeText}>256-bit SSL</Text>
             </View>
+            <View style={styles.badgeDivider} />
             <View style={styles.badge}>
               <Text variant="bodyMedium" style={styles.badgeIcon}>🛡️</Text>
+            </View>
+            <View style={styles.badgeDivider} />
+            <View style={styles.badge}>
+              <Text variant="bodyMedium" style={styles.badgeIcon}>👤</Text>
               <Text variant="captionMedium" style={styles.badgeText}>Secure Session</Text>
             </View>
           </View>

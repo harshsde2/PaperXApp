@@ -12,6 +12,7 @@ import { CustomHeader } from '@shared/components/CustomHeader';
 import { ProfileScreenNavigationProp } from './@types';
 import { styles } from './styles';
 import type { UserProfile } from '@services/api/types';
+import { AppIcon } from '@assets/svgs';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
@@ -103,9 +104,7 @@ const ProfileScreen = () => {
         style={styles.section}
       >
         <Card variant="compact" style={styles.contactItemContainer}>
-          <View style={styles.contactIcon}>
-            <Text style={styles.contactIconText}>👤</Text>
-          </View>
+          <AppIcon.PersonIcon width={24} height={24} />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Contact Person</Text>
             <Text style={styles.contactValue}>{contactPerson}</Text>
@@ -113,9 +112,7 @@ const ProfileScreen = () => {
         </Card>
 
         <Card variant="compact" style={styles.contactItemContainer}>
-          <View style={styles.contactIcon}>
-            <Text style={styles.contactIconText}>✉️</Text>
-          </View>
+          <AppIcon.EmailIcon width={24} height={24} />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Email</Text>
             <Text style={styles.contactValue}>{email}</Text>
@@ -123,9 +120,7 @@ const ProfileScreen = () => {
         </Card>
 
         <Card variant="compact" style={styles.contactItemContainer}>
-          <View style={styles.contactIcon}>
-            <Text style={styles.contactIconText}>📱</Text>
-          </View>
+          <AppIcon.PhoneIcon width={24} height={24} />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Mobile</Text>
             <Text style={styles.contactValue}>{mobile}</Text>
@@ -133,9 +128,7 @@ const ProfileScreen = () => {
         </Card>
 
         <Card variant="compact" style={styles.contactItemContainer}>
-          <View style={styles.contactIcon}>
-            <Text style={styles.contactIconText}>📍</Text>
-          </View>
+          <AppIcon.Location width={24} height={24} />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Location</Text>
             <Text style={styles.contactValue}>{location}</Text>

@@ -24,6 +24,14 @@ import Converter from './Converter.svg';
 import MachineDealer from './MachineDealer.svg';
 import Dealer from './Dealer.svg';
 import Brand from './Brand.svg';
+import Edit from './Edit.svg';
+import Delete from './Delete.svg';
+import Search from './Search.svg';
+import Process from './Process.svg';
+import Finishing from './Finishing.svg';
+import Scrap from './Scrap.svg';
+import Security from './Security.svg';
+import Person from './Person.svg';
 
 
 
@@ -54,4 +62,12 @@ export const AppIcon = {
   MachineDealer,
   Dealer,
   Brand,
+  Edit,
+  Delete,
+  Search,
+  Process,
+  Finishing,
+  Scrap,
+  Security,
+  Person,
 };

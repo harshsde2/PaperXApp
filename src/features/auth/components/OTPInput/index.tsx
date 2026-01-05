@@ -1,11 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { View, TextInput } from 'react-native';
+import { useTheme } from '@theme/index';
 import { OTPInputProps } from './@types';
-import { styles } from './styles';
+import { createStyles } from './styles';
 
 const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) => {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const [otp, setOtp] = useState<string[]>(Array(length).fill(''));
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const handleChange = (text: string, index: number) => {
     if (text.length > 1) {
@@ -54,10 +58,15 @@ const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) => {
         <TextInput
           key={index}
           ref={(ref) => (inputRefs.current[index] = ref)}
-          style={styles.input}
+          style={[
+            styles.input,
+            focusedIndex === index && styles.inputFocused,
+          ]}
           value={otp[index]}
           onChangeText={(text) => handleChange(text, index)}
           onKeyPress={(e) => handleKeyPress(e, index)}
+          onFocus={() => setFocusedIndex(index)}
+          onBlur={() => setFocusedIndex(null)}
           keyboardType="number-pad"
           maxLength={1}
           selectTextOnFocus

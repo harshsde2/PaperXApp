@@ -8,6 +8,7 @@ import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { SelectThicknessScreenNavigationProp, ThicknessUnit } from './@types';
 import { createStyles } from './styles';
+import { SCREENS } from '@navigation/constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SLIDER_PADDING = 16;
@@ -26,6 +27,7 @@ const SelectThicknessScreen = () => {
 
   const handleApply = () => {
     // TODO: Save thickness values and navigate to next screen
+    navigation.navigate(SCREENS.AUTH.MANAGE_WAREHOUSES);
   };
 
   const handleMinValueChange = (value: string) => {
@@ -217,4 +219,3 @@ const SelectThicknessScreen = () => {
 };
 
 export default SelectThicknessScreen;
-

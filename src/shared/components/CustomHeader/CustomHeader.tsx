@@ -14,7 +14,7 @@ const formatScreenTitle = (routeName: string): string => {
     Profile: 'My Profile',
     Login: 'Login Account',
     Signup: 'Sign Up',
-    OTPVerification: 'Create Account',
+    OTPVerification: 'Verify Identity',
   };
 
   if (screenNameMap[routeName]) {

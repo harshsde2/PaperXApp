@@ -1,26 +1,30 @@
 import { StyleSheet } from 'react-native';
+import type { Theme } from '@theme/types';
 
-export const styles = StyleSheet.create({
+export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 24,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginVertical: theme.spacing[6],
+    gap: theme.spacing[3],
   },
   input: {
-    flex: 1,
-    height: 56,
-    minWidth: 48,
-    borderWidth: 0,
-    borderRadius: 8,
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+    borderRadius: theme.borderRadius.md,
     textAlign: 'center',
     fontSize: 24,
     fontWeight: '600',
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.surface.primary,
+    fontFamily: theme.fontFamily.semibold,
+  },
+  inputFocused: {
+    borderColor: theme.colors.primary.DEFAULT,
+    borderWidth: 2,
   },
 });
-

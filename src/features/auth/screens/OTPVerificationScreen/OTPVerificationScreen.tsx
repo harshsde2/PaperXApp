@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Controller } from 'react-hook-form';
 import { Text } from '@shared/components/Text';
 import OTPInput from '@features/auth/components/OTPInput';
 import { useSendOTP, useVerifyOTP } from '@services/api';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
+import { useForm } from '@shared/forms';
 import {
   OTPVerificationScreenNavigationProp,
   OTPVerificationScreenRouteProp,
@@ -13,6 +15,10 @@ import {
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
+
+type OTPFormData = {
+  otp: string;
+};
 
 const OTPVerificationScreen = () => {
   const navigation = useNavigation<OTPVerificationScreenNavigationProp>();
@@ -23,10 +29,18 @@ const OTPVerificationScreen = () => {
 
   const [timeLeft, setTimeLeft] = useState(120);
   const [canResend, setCanResend] = useState(false);
-  const [otp, setOtp] = useState('');
 
-  const verifyOTPMutation = useVerifyOTP();
-  const sendOTPMutation = useSendOTP();
+  const { control, handleSubmit, formState: { isValid }, setValue, watch } = useForm<OTPFormData>({
+    defaultValues: {
+      otp: '',
+    },
+    mode: 'onChange',
+  });
+
+  const otp = watch('otp');
+
+  const {mutate: verifyOTP, isPending: isVerifyingOTP} = useVerifyOTP();
+  const {mutate: sendOTP, isPending: isSendingOTP} = useSendOTP();
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -53,66 +67,40 @@ const OTPVerificationScreen = () => {
   };
 
   const handleOTPComplete = (enteredOtp: string) => {
-    // Store OTP when all digits are entered
-    setOtp(enteredOtp);
-    // Automatically verify when 6 digits are entered
+    setValue('otp', enteredOtp, { shouldValidate: true });
     if (enteredOtp.length === 6) {
-      verifyOTP(enteredOtp);
+      handleSubmit(onSubmit)();
     }
   };
 
-  const verifyOTP = async (otpToVerify: string) => {
-    if (!otpToVerify || otpToVerify.length !== 6) {
-      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+  const onSubmit = (data: OTPFormData) => {
+    if (isVerifyingOTP) {
       return;
     }
-
-    // Prevent multiple simultaneous verification attempts
-    if (verifyOTPMutation.isPending) {
-      return;
-    }
-
-    try {
-      const response = await verifyOTPMutation.mutateAsync({
-        mobile: mobile,
-        otp: otpToVerify,
-      });
-
-      // Check if user has completed registration (company_name exists)
-      // Response structure: { type, token, user: { company_name, ... } }
-      const responseData = response as any;
-      const user = responseData?.user;
-      const companyName = user?.company_name;
-
-      // If company_name is null or undefined, user needs to complete registration
-      if (!companyName) {
+    verifyOTP({ mobile: mobile, otp: data.otp }, {
+      onSuccess: () => {
         navigation.navigate(SCREENS.AUTH.COMPANY_DETAILS);
-      }
-      // Otherwise, AppNavigator will automatically switch to MainNavigator
-      // when auth state is updated in Redux (isAuthenticated becomes true)
-    } catch (error: any) {
-      Alert.alert(
-        'Verification Failed',
-        error?.message || 'Invalid OTP. Please try again.',
-      );
-      // Clear OTP input on error
-      setOtp('');
-    }
+      },
+      onError: (error: Error) => {
+        console.error('[OTPVerificationScreen] Verify OTP Error:', error);
+        Alert.alert('Error', error.message);
+      },
+    });
   };
 
-  const handleResend = async () => {
-    try {
-      await sendOTPMutation.mutateAsync({ mobile: mobile });
-      setTimeLeft(120);
-      setCanResend(false);
-      setOtp('');
-      Alert.alert('Success', 'OTP has been resent to your mobile number');
-    } catch (error: any) {
-      Alert.alert(
-        'Error',
-        error?.message || 'Failed to resend OTP. Please try again.',
-      );
-    }
+  const handleResendOTP = async () => {
+    sendOTP({ mobile: mobile }, {
+      onSuccess: () => {
+        setTimeLeft(120);
+        setCanResend(false);
+        setValue('otp', '');
+        Alert.alert('Success', 'OTP has been resent to your mobile number');
+      },
+      onError: (error: Error) => {
+        console.error('[OTPVerificationScreen] Send OTP Error:', error);
+        Alert.alert('Error', error.message);
+      },
+    });
   };
 
   const lastTwoDigits = mobile ? mobile.slice(-2) : '88';
@@ -143,7 +131,28 @@ const OTPVerificationScreen = () => {
         <Text style={styles.boldText}>{lastTwoDigits}</Text>.
       </Text>
       <View style={styles.otpInputContainer}>
-        <OTPInput length={6} onComplete={handleOTPComplete} />
+        <Controller
+          control={control}
+          name="otp"
+          rules={{
+            required: 'Please enter the OTP',
+            minLength: {
+              value: 6,
+              message: 'OTP must be 6 digits',
+            },
+            maxLength: {
+              value: 6,
+              message: 'OTP must be 6 digits',
+            },
+            pattern: {
+              value: /^[0-9]{6}$/,
+              message: 'Please enter a valid 6-digit OTP',
+            },
+          }}
+          render={({ field: { value } }) => (
+            <OTPInput length={6} onComplete={handleOTPComplete} />
+          )}
+        />
       </View>
 
       <View style={styles.timerContainer}>
@@ -157,19 +166,12 @@ const OTPVerificationScreen = () => {
       <TouchableOpacity
         style={[
           styles.button,
-          (verifyOTPMutation.isPending ||
-            sendOTPMutation.isPending ||
-            otp.length !== 6) &&
-            styles.buttonDisabled,
+          (!isValid || isVerifyingOTP || isSendingOTP) && styles.buttonDisabled,
         ]}
-        onPress={() => verifyOTP(otp)}
-        disabled={
-          verifyOTPMutation.isPending ||
-          sendOTPMutation.isPending ||
-          otp.length !== 6
-        }
+        onPress={handleSubmit(onSubmit)}
+        disabled={!isValid || isVerifyingOTP || isSendingOTP}
       >
-        {verifyOTPMutation.isPending ? (
+        {isVerifyingOTP ? (
           <ActivityIndicator color={theme.colors.text.inverse} />
         ) : (
           <>
@@ -192,9 +194,9 @@ const OTPVerificationScreen = () => {
             <Text
               variant="captionMedium"
               style={styles.resendLink}
-              onPress={sendOTPMutation.isPending ? undefined : handleResend}
+              onPress={isSendingOTP ? undefined : handleResendOTP}
             >
-              {sendOTPMutation.isPending ? 'Sending...' : 'Resend Code'}
+              {isSendingOTP ? 'Sending...' : 'Resend Code'}
             </Text>
           ) : (
             <Text variant="captionMedium" style={styles.resendDisabled}>

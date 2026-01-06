@@ -14,6 +14,7 @@ import RNFS from 'react-native-fs';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
+import { DropdownButton } from '@shared/components/DropdownButton';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useDocumentPicker } from '@shared/hooks';
@@ -254,21 +255,14 @@ const CompanyDetailsScreen = () => {
                 State
               </Text>
             </View>
-            <TouchableOpacity style={styles.dropdownInput}>
-              <Text
-                style={[
-                  styles.dropdownText,
-                  !state && styles.dropdownPlaceholder,
-                ]}
-              >
-                {state || 'Select State'}
-              </Text>
-              <AppIcon.ChevronDown
-                width={20}
-                height={20}
-                color={theme.colors.text.tertiary}
-              />
-            </TouchableOpacity>
+            <DropdownButton
+              value={state}
+              placeholder="Select State"
+              onPress={() => {
+                // TODO: Implement state selection logic
+                console.log('State dropdown pressed');
+              }}
+            />
           </View>
 
           <View style={styles.formGroup}>

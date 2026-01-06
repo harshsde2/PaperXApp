@@ -37,7 +37,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   shieldContainer: {
     alignItems: 'center',
-    marginBottom: theme.spacing[8],
+    marginVertical: theme.spacing[8],
   },
   shieldIconWrapper: {
     width: 80,

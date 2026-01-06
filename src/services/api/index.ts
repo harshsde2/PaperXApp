@@ -27,4 +27,13 @@ export { ERROR_CODES } from './types';
 
 // API Services (export individual services as they're created)
 export * from './authApi';
+export * from './userApi';
+
+// Export types
+export type {
+  UpdateProfileRequest,
+  UpdateProfileResponse,
+  UploadUdyamRequest,
+  UploadUdyamResponse,
+} from './userApi';
 

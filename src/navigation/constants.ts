@@ -20,6 +20,7 @@ export const SCREENS = {
     RAW_MATERIALS: 'RawMaterials',
     FACTORY_LOCATION: 'FactoryLocation',
     CONFIRM_REGISTRATION: 'ConfirmRegistration',
+    BRAND_REGISTRATION: 'BrandRegistration',
   },
   MAIN: {
     DASHBOARD: 'Dashboard',

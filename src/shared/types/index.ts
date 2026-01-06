@@ -8,6 +8,8 @@ export interface User {
   primaryRole: UserRole;
   secondaryRole?: UserRole;
   isVerified: boolean;
+  companyName?: string | null;
+  udyamVerifiedAt?: string | null;
 }
 
 // Add more common types as needed

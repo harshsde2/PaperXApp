@@ -1,22 +1,36 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Switch, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import { RoleSelectionScreenNavigationProp } from './@types';
+import { RoleSelectionScreenNavigationProp, RoleSelectionScreenRouteProp } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { useUpdateProfile } from '@services/api';
 
 type PrimaryRole = 'dealer' | 'converter' | 'brand' | 'machineDealer';
 type Geography = 'local' | 'state' | 'panIndia';
 
 const RoleSelectionScreen = () => {
   const navigation = useNavigation<RoleSelectionScreenNavigationProp>();
+  const route = useRoute<RoleSelectionScreenRouteProp>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  const updateProfileMutation = useUpdateProfile();
+
+  // Get data from previous screen
+  const {
+    companyName,
+    gstIn,
+    state,
+    city,
+    udyamCertificateBase64,
+    udyamCertificateName,
+    udyamCertificateType,
+  } = route.params || {};
 
   const [primaryRole, setPrimaryRole] = useState<PrimaryRole>('dealer');
   const [hasSecondaryRole, setHasSecondaryRole] = useState(false);
@@ -49,9 +63,42 @@ const RoleSelectionScreen = () => {
     }
   };
 
-  const handleContinue = () => {
-    // TODO: Validate and save selection
-    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS);
+  const handleContinue = async () => {
+    try {
+      // Prepare update profile data
+      const updateData: any = {
+        company_name: companyName,
+        gst_in: gstIn,
+        state: state,
+        city: city,
+        primary_role: primaryRole,
+        secondary_role: secondaryRole || undefined,
+        has_secondary_role: hasSecondaryRole ? 1 : 0,
+        operation_area: geography,
+      };
+
+      // Add UDYAM certificate if provided (as base64)
+      if (udyamCertificateBase64) {
+        // updateData.udyam_certificate = udyamCertificateBase64;
+        updateData.udyam_certificate_name = udyamCertificateName;
+        updateData.udyam_certificate_type = udyamCertificateType;
+      }
+
+      // Call API to update profile
+      const response = await updateProfileMutation.mutateAsync(updateData);
+
+      // Navigate to verification status with response data
+      navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+        profileData: response,
+      });
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      Alert.alert(
+        'Registration Failed',
+        error?.message || 'Failed to update profile. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const renderRoleGrid = (
@@ -224,13 +271,21 @@ const RoleSelectionScreen = () => {
 
         {/* Continue Button */}
         <TouchableOpacity
-          style={styles.button}
+          style={[
+            styles.button,
+            updateProfileMutation.isPending && styles.buttonDisabled,
+          ]}
           onPress={handleContinue}
           activeOpacity={0.8}
+          disabled={updateProfileMutation.isPending}
         >
-          <Text variant="buttonMedium" style={styles.buttonText}>
-            Continue
-          </Text>
+          {updateProfileMutation.isPending ? (
+            <ActivityIndicator color={theme.colors.text.inverse} />
+          ) : (
+            <Text variant="buttonMedium" style={styles.buttonText}>
+              Continue
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScreenWrapper>

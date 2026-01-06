@@ -10,15 +10,26 @@ import MainNavigator from './MainNavigator';
 const AppNavigator = () => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const user = useAppSelector((state) => state.auth.user);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check if user has completed registration (has company_name)
+  const hasCompletedRegistration = user?.companyName !== null && user?.companyName !== undefined;
+  
+  // Check if UDYAM is verified (if verified, go to dashboard)
+  const isUdyamVerified = user?.udyamVerifiedAt !== null && user?.udyamVerifiedAt !== undefined;
 
   // Debug log for auth state changes
   useEffect(() => {
     console.log('[AppNavigator] Auth state changed:', {
       isAuthenticated,
       isLoading,
+      hasCompletedRegistration,
+      isUdyamVerified,
+      companyName: user?.companyName,
+      udyamVerifiedAt: user?.udyamVerifiedAt,
     });
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, hasCompletedRegistration, isUdyamVerified, user?.companyName, user?.udyamVerifiedAt]);
 
   // Initialize auth state from storage on app start
   useEffect(() => {
@@ -37,6 +48,8 @@ const AppNavigator = () => {
                 primaryRole: userData.primary_role || userData.primaryRole || '',
                 secondaryRole: userData.secondary_role || userData.secondaryRole,
                 isVerified: userData.verified !== undefined ? userData.verified : true,
+                companyName: userData.company_name || null,
+                udyamVerifiedAt: userData.udyam_verified_at || null,
               },
               token: token,
             })
@@ -57,9 +70,17 @@ const AppNavigator = () => {
     return null; // Or you can return a loading screen here
   }
 
+  // Show MainNavigator if:
+  // 1. User is authenticated AND
+  // 2. User has completed registration (has company_name)
+  // Note: UDYAM verification can be completed later from the dashboard/profile screen
+  // If user doesn't have company_name, they'll be redirected to CompanyDetails screen
+  // from OTPVerificationScreen.
+  const shouldShowMainNavigator = isAuthenticated && hasCompletedRegistration;
+
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainNavigator /> : <AuthStackNavigator />}
+      {shouldShowMainNavigator ? <MainNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
 };

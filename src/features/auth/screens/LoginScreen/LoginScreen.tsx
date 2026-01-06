@@ -36,13 +36,12 @@ const LoginScreen = () => {
     }
 
     try {
-      // await sendOTPMutation.mutateAsync({ mobile: mobileNumber.trim() });
-      // Navigate to OTP verification screen on success
-      // navigation.navigate(SCREENS.AUTH.OTP_VERIFICATION, {
-      //   mobile: mobileNumber.trim(),
-      //   purpose: 'login',
-      // });
-      navigation.navigate(SCREENS.AUTH.CONVERTER_TYPE);
+      await sendOTPMutation.mutateAsync({ mobile: mobileNumber.trim() });
+      navigation.navigate(SCREENS.AUTH.OTP_VERIFICATION, {
+        mobile: mobileNumber.trim(),
+        purpose: 'login',
+      });
+      // navigation.navigate(SCREENS.AUTH.CONVERTER_TYPE);
     } catch (error: any) {
       // Enhanced error logging
       console.error('[LoginScreen] Send OTP Error:', {

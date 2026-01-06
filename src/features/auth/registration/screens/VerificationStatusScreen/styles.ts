@@ -93,8 +93,15 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     gap: theme.spacing[2],
     marginBottom: theme.spacing[3],
   },
+  primaryButtonDisabled: {
+    backgroundColor: theme.colors.border.primary,
+    opacity: 0.6,
+  },
   primaryButtonText: {
     color: theme.colors.text.inverse,
+  },
+  primaryButtonTextDisabled: {
+    color: theme.colors.text.tertiary,
   },
   secondaryButton: {
     backgroundColor: theme.colors.surface.primary,

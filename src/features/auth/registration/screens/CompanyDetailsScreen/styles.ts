@@ -137,6 +137,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: theme.colors.background.secondary,
     marginBottom: theme.spacing[3],
   },
+  uploadContainerDisabled: {
+    opacity: 0.6,
+  },
   uploadIconContainer: {
     marginBottom: theme.spacing[2],
   },
@@ -194,6 +197,118 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   securityText: {
     color: theme.colors.text.tertiary,
     letterSpacing: 0.5,
+  },
+  // Uploaded file styles
+  uploadedFileContainer: {
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing[3],
+    backgroundColor: theme.colors.surface.primary,
+    marginBottom: theme.spacing[3],
+  },
+  uploadedFileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[3],
+    marginBottom: theme.spacing[2],
+  },
+  filePreviewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.background.secondary,
+  },
+  filePreviewPdf: {
+    width: 60,
+    height: 60,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.primary[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.spacing[1],
+  },
+  pdfLabel: {
+    color: theme.colors.primary.DEFAULT,
+    fontWeight: '600',
+  },
+  fileInfo: {
+    flex: 1,
+  },
+  fileName: {
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing[0.5],
+  },
+  fileSize: {
+    color: theme.colors.text.tertiary,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.error[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteIcon: {
+    color: theme.colors.error.DEFAULT,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  // Preview modal styles
+  previewModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewModalContent: {
+    width: '90%',
+    maxHeight: '90%',
+    backgroundColor: theme.colors.surface.primary,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing[4],
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: theme.spacing[2],
+    right: theme.spacing[2],
+    width: 32,
+    height: 32,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  closeButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  previewImage: {
+    width: '100%',
+    height: 400,
+    borderRadius: theme.borderRadius.md,
+  },
+  previewPdfContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing[6],
+    gap: theme.spacing[3],
+  },
+  previewPdfTitle: {
+    color: theme.colors.text.primary,
+    textAlign: 'center',
+  },
+  previewPdfText: {
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+  },
+  previewPdfSize: {
+    color: theme.colors.text.tertiary,
+    textAlign: 'center',
   },
 });
 

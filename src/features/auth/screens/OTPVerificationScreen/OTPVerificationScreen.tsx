@@ -73,15 +73,23 @@ const OTPVerificationScreen = () => {
     }
 
     try {
-      // await verifyOTPMutation.mutateAsync({
-      //   mobile: mobile,
-      //   otp: otpToVerify,
-      // });
+      const response = await verifyOTPMutation.mutateAsync({
+        mobile: mobile,
+        otp: otpToVerify,
+      });
 
-      // Success - AppNavigator will automatically switch to MainNavigator
+      // Check if user has completed registration (company_name exists)
+      // Response structure: { type, token, user: { company_name, ... } }
+      const responseData = response as any;
+      const user = responseData?.user;
+      const companyName = user?.company_name;
+
+      // If company_name is null or undefined, user needs to complete registration
+      if (!companyName) {
+        navigation.navigate(SCREENS.AUTH.COMPANY_DETAILS);
+      }
+      // Otherwise, AppNavigator will automatically switch to MainNavigator
       // when auth state is updated in Redux (isAuthenticated becomes true)
-      // No need to navigate manually or show alert
-      navigation.navigate(SCREENS.AUTH.COMPANY_DETAILS);
     } catch (error: any) {
       Alert.alert(
         'Verification Failed',
@@ -123,7 +131,7 @@ const OTPVerificationScreen = () => {
             width={50}
             height={50}
             color={theme.colors.primary.DEFAULT}
-          />{' '}
+          />
         </View>
       </View>
 

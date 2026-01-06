@@ -216,5 +216,86 @@ export const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#999999',
   },
+  // Profile Completion Styles
+  completionCard: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    backgroundColor: '#FFF9E6',
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    borderRadius: 12,
+    padding: 16,
+  },
+  completionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  completionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFD700',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  completionIcon: {
+    fontSize: 20,
+  },
+  completionTextContainer: {
+    flex: 1,
+  },
+  completionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  completionSubtitle: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#666666',
+  },
+  incompleteFieldsList: {
+    marginBottom: 12,
+    paddingLeft: 8,
+  },
+  incompleteFieldItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  incompleteFieldDot: {
+    fontSize: 12,
+    color: '#FF6B00',
+    marginRight: 8,
+    fontWeight: 'bold',
+  },
+  incompleteFieldText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#333333',
+  },
+  completeProfileButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completeProfileButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  completeProfileArrow: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 

@@ -65,9 +65,6 @@ export const useVerifyOTP = () => {
     onSuccess: (data) => {
       // Log response for debugging
       console.log('[OTP Verification Success] Full response:', JSON.stringify(data, null, 2));
-      console.log('[OTP Verification] access_token:', data?.access_token);
-      console.log('[OTP Verification] token:', (data as any)?.token);
-      console.log('[OTP Verification] user:', data?.user);
 
       // Get token from either access_token or token field
       const token = data?.access_token || (data as any)?.token;
@@ -112,6 +109,8 @@ export const useVerifyOTP = () => {
               primaryRole: user.primary_role || (user as any).primaryRole as any,
               secondaryRole: user.secondary_role || (user as any).secondaryRole as any,
               isVerified: user.verified !== undefined ? user.verified : true,
+              companyName: (user as any).company_name || null,
+              udyamVerifiedAt: (user as any).udyam_verified_at || null,
             },
             token: token,
           })

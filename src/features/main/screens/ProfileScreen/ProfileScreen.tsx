@@ -63,13 +63,42 @@ const ProfileScreen = () => {
   };
 
   // Get display values from stored user data or Redux user
-  const companyName = storedUserData?.company_name || 'Company Name';
-  const email = storedUserData?.email || 'email@example.com';
-  const mobile = user?.mobile || storedUserData?.mobile || '';
-  const contactPerson = storedUserData?.email?.split('@')[0] || 'Contact Person';
-  const location = storedUserData?.location 
-    ? `${storedUserData.location.city}, ${storedUserData.location.state}, ${storedUserData.location.pincode}`
+  // storedUserData uses snake_case from API response
+  const userData = storedUserData as any;
+  const companyName = userData?.company_name || 'Company Name';
+  const email = userData?.email || 'email@example.com';
+  const mobile = user?.mobile || userData?.mobile || '';
+  const contactPerson = userData?.email?.split('@')[0] || 'Contact Person';
+  const location = userData?.location 
+    ? `${userData.location.city}, ${userData.location.state}, ${userData.location.pincode}`
+    : userData?.city && userData?.state
+    ? `${userData.city}, ${userData.state}`
     : 'Location';
+
+  // Check profile completion status
+  // storedUserData comes from UpdateProfileResponse which has snake_case fields
+  const isUdyamVerified = (storedUserData as any)?.udyam_verified_at || user?.udyamVerifiedAt;
+  const hasEmail = (storedUserData as any)?.email;
+  const hasGstIn = (storedUserData as any)?.gst_in;
+  const hasState = (storedUserData as any)?.state;
+  const hasCity = (storedUserData as any)?.city;
+  const hasPrimaryRole = (storedUserData as any)?.primary_role || user?.primaryRole;
+  
+  // Determine if profile needs completion
+  const profileIncomplete = !isUdyamVerified || !hasEmail || !hasGstIn || !hasState || !hasCity || !hasPrimaryRole;
+  
+  const incompleteFields: string[] = [];
+  if (!isUdyamVerified) incompleteFields.push('UDYAM Certificate');
+  if (!hasEmail) incompleteFields.push('Email');
+  if (!hasGstIn) incompleteFields.push('GSTIN');
+  if (!hasState || !hasCity) incompleteFields.push('Location');
+  if (!hasPrimaryRole) incompleteFields.push('Primary Role');
+
+  const handleCompleteProfile = () => {
+    // TODO: Navigate to profile completion/editing screen
+    // For now, we can navigate back to CompanyDetails or show a completion flow
+    console.log('Complete profile');
+  };
 
   return (
     <ScreenWrapper
@@ -97,6 +126,39 @@ const ProfileScreen = () => {
           <Text style={styles.activeButtonText}>ACTIVE</Text>
         </TouchableOpacity>
       </Card>
+
+      {/* Profile Completion Alert */}
+      {profileIncomplete && (
+        <Card style={styles.completionCard}>
+          <View style={styles.completionHeader}>
+            <View style={styles.completionIconContainer}>
+              <Text style={styles.completionIcon}>⚠️</Text>
+            </View>
+            <View style={styles.completionTextContainer}>
+              <Text style={styles.completionTitle}>Complete Your Profile</Text>
+              <Text style={styles.completionSubtitle}>
+                {incompleteFields.length} field{incompleteFields.length > 1 ? 's' : ''} remaining
+              </Text>
+            </View>
+          </View>
+          <View style={styles.incompleteFieldsList}>
+            {incompleteFields.map((field, index) => (
+              <View key={index} style={styles.incompleteFieldItem}>
+                <Text style={styles.incompleteFieldDot}>•</Text>
+                <Text style={styles.incompleteFieldText}>{field}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity
+            style={styles.completeProfileButton}
+            onPress={handleCompleteProfile}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.completeProfileButtonText}>Complete Profile</Text>
+            <Text style={styles.completeProfileArrow}>→</Text>
+          </TouchableOpacity>
+        </Card>
+      )}
 
       {/* Contact Information */}
       <Section

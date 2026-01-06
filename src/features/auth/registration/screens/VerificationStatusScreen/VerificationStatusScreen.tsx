@@ -1,29 +1,67 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useAppDispatch } from '@store/hooks';
-import { setCredentials } from '@store/slices/authSlice';
+import { updateUser } from '@store/slices/authSlice';
+import { storageService } from '@services/storage/storageService';
 import { SCREENS } from '@navigation/constants';
-import { VerificationStatusScreenNavigationProp } from './@types';
+import { VerificationStatusScreenNavigationProp, VerificationStatusScreenRouteProp } from './@types';
 import { createStyles } from './styles';
+import type { UpdateProfileResponse } from '@services/api';
 
 const VerificationStatusScreen = () => {
   const navigation = useNavigation<VerificationStatusScreenNavigationProp>();
+  const route = useRoute<VerificationStatusScreenRouteProp>();
   const theme = useTheme();
   const styles = createStyles(theme);
   const dispatch = useAppDispatch();
 
+  // Get profile data from route params
+  const profileData = route.params?.profileData as UpdateProfileResponse | undefined;
+
+  // NOTE: Do NOT update Redux state or storage on screen load
+  // State will be updated only when user clicks "Proceed to Dashboard" button
+  // This prevents automatic navigation to dashboard
+
+  // Check if UDYAM is verified and redirect to dashboard
+  useEffect(() => {
+    if (profileData?.udyam_verified_at) {
+      // UDYAM is verified, AppNavigator will handle navigation to MainNavigator
+      // We can navigate away after a short delay to show the success message
+      const timer = setTimeout(() => {
+        // Navigation will be handled by AppNavigator based on udyam_verified_at
+        // The AppNavigator will check this and show MainNavigator
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [profileData?.udyam_verified_at]);
+
   const handleProceedToDashboard = () => {
-    // TODO: Set user as verified and authenticated
-    // For now, this will be handled by the actual verification flow
-    // dispatch(setCredentials({ ... }));
-    // Navigation will be handled by AppNavigator based on auth state
-    navigation.navigate(SCREENS.AUTH.MATERIALS);
+    // Update Redux state and storage ONLY when user clicks "Proceed to Dashboard"
+    // This ensures user sees verification status before navigating to dashboard
+    if (profileData) {
+      // Update storage to persist the data
+      storageService.setUserData(profileData);
+      console.log('[VerificationStatus] User data saved to storage');
+
+      // Update Redux state to trigger AppNavigator to show MainNavigator
+      dispatch(
+        updateUser({
+          companyName: profileData.company_name || null,
+          udyamVerifiedAt: profileData.udyam_verified_at || null,
+        })
+      );
+      console.log('[VerificationStatus] Redux state updated, navigating to dashboard');
+    }
+    
+    // AppNavigator will automatically switch to MainNavigator
+    // since user has company_name (hasCompletedRegistration = true)
+    // The navigation happens automatically when Redux state updates
   };
 
   const handleContactSupport = () => {
@@ -70,12 +108,15 @@ const VerificationStatusScreen = () => {
             </View>
 
             <Text variant="h3" fontWeight="bold" style={styles.verificationTitle}>
-              Verification Approved
+              {profileData?.udyam_verified_at
+                ? 'Verification Approved'
+                : 'Registration Submitted'}
             </Text>
 
             <Text variant="bodyMedium" style={styles.verificationDescription}>
-              Your UDYAM registration has been successfully validated. You now
-              have full access to global matchmaking services.
+              {profileData?.udyam_verified_at
+                ? 'Your UDYAM registration has been successfully validated. You now have full access to global matchmaking services.'
+                : 'Your registration has been submitted successfully. Your UDYAM certificate is being verified. You will be notified once verification is complete.'}
             </Text>
           </View>
         </Card>
@@ -91,18 +132,42 @@ const VerificationStatusScreen = () => {
               Business Name
             </Text>
             <Text variant="bodyMedium" fontWeight="semibold" style={styles.detailValue}>
-              Acme Packaging Ltd.
+              {profileData?.company_name || 'N/A'}
             </Text>
           </View>
 
-          <View style={styles.detailRow}>
-            <Text variant="bodyMedium" style={styles.detailLabel}>
-              UDYAM No.
-            </Text>
-            <Text variant="bodyMedium" fontWeight="semibold" style={styles.detailValue}>
-              UDYAM-MH-33-0004521
-            </Text>
-          </View>
+          {profileData?.gst_in && (
+            <View style={styles.detailRow}>
+              <Text variant="bodyMedium" style={styles.detailLabel}>
+                GSTIN
+              </Text>
+              <Text variant="bodyMedium" fontWeight="semibold" style={styles.detailValue}>
+                {profileData.gst_in}
+              </Text>
+            </View>
+          )}
+
+          {profileData?.udyam_certificate && (
+            <View style={styles.detailRow}>
+              <Text variant="bodyMedium" style={styles.detailLabel}>
+                UDYAM Certificate
+              </Text>
+              <Text variant="bodyMedium" fontWeight="semibold" style={styles.detailValue}>
+                {profileData.udyam_verified_at ? 'Verified' : 'Pending Verification'}
+              </Text>
+            </View>
+          )}
+
+          {profileData?.primary_role && (
+            <View style={styles.detailRow}>
+              <Text variant="bodyMedium" style={styles.detailLabel}>
+                Primary Role
+              </Text>
+              <Text variant="bodyMedium" fontWeight="semibold" style={styles.detailValue}>
+                {profileData.primary_role}
+              </Text>
+            </View>
+          )}
         </Card>
 
         {/* Action Buttons */}

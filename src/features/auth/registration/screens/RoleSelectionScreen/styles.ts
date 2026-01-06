@@ -128,6 +128,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     marginTop: theme.spacing[4],
     marginBottom: theme.spacing[4],
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   buttonText: {
     color: theme.colors.text.inverse,
   },

@@ -21,6 +21,7 @@ import ProductionCapacityScreen from '@features/auth/roles/converter/screens/Pro
 import RawMaterialsScreen from '@features/auth/roles/converter/screens/RawMaterialsScreen/RawMaterialsScreen';
 import FactoryLocationScreen from '@features/auth/roles/converter/screens/FactoryLocationScreen/FactoryLocationScreen';
 import ConfirmRegistrationScreen from '@features/auth/roles/converter/screens/ConfirmRegistrationScreen/ConfirmRegistrationScreen';
+import BrandRegistrationScreen from '@features/auth/roles/brand/screens/BrandRegistrationScreen/BrandRegistrationScreen';
 import { CustomHeader } from '@shared/components/CustomHeader';
 
 export type AuthStackParamList = {
@@ -29,8 +30,18 @@ export type AuthStackParamList = {
   Signup: undefined;
   OTPVerification: { mobile: string; purpose: 'login' | 'signup' };
   CompanyDetails: undefined;
-  RoleSelection: undefined;
-  VerificationStatus: undefined;
+  RoleSelection: {
+    companyName?: string;
+    gstIn?: string;
+    state?: string;
+    city?: string;
+    udyamCertificateBase64?: string;
+    udyamCertificateName?: string;
+    udyamCertificateType?: string;
+  };
+  VerificationStatus: {
+    profileData?: any;
+  };
   Materials: undefined;
   MillBrandDetails: undefined;
   MaterialSpecs: undefined;
@@ -44,6 +55,7 @@ export type AuthStackParamList = {
   RawMaterials: undefined;
   FactoryLocation: undefined;
   ConfirmRegistration: undefined;
+  BrandRegistration: undefined;
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -136,6 +148,11 @@ const AuthStackNavigator = () => {
       <Stack.Screen
         name={SCREENS.AUTH.CONFIRM_REGISTRATION}
         component={ConfirmRegistrationScreen}
+        options={{ headerShown: true }}
+      />
+      <Stack.Screen
+        name={SCREENS.AUTH.BRAND_REGISTRATION}
+        component={BrandRegistrationScreen}
         options={{ headerShown: true }}
       />
     </Stack.Navigator>

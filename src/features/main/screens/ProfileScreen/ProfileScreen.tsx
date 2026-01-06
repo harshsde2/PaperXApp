@@ -1,14 +1,15 @@
 import React, { useLayoutEffect } from 'react';
-import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppSelector } from '@store/hooks';
-import { useLogout } from '@services/api';
+import { useLogout, useGetProfile } from '@services/api';
 import { storageService } from '@services/storage/storageService';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { Section } from '@shared/components/Section';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { CustomHeader } from '@shared/components/CustomHeader';
+import { AnimatedCircularProgress } from '@shared/components/AnimatedCircularProgress';
 import { ProfileScreenNavigationProp } from './@types';
 import { styles } from './styles';
 import type { UserProfile } from '@services/api/types';
@@ -20,8 +21,8 @@ const ProfileScreen = () => {
   const { user } = useAppSelector((state) => state.auth);
   const logoutMutation = useLogout();
   
-  // Get user data from storage (may have more fields than Redux)
-  const storedUserData = storageService.getUserData<UserProfile>();
+  // Fetch user profile from API
+  const { data: profileData, isLoading, isError, refetch, isRefetching } = useGetProfile();
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -62,32 +63,62 @@ const ProfileScreen = () => {
     console.log('Help & support');
   };
 
-  // Get display values from stored user data or Redux user
-  // storedUserData uses snake_case from API response
-  const userData = storedUserData as any;
-  const companyName = userData?.company_name || 'Company Name';
-  const email = userData?.email || 'email@example.com';
-  const mobile = user?.mobile || userData?.mobile || '';
-  const contactPerson = userData?.email?.split('@')[0] || 'Contact Person';
-  const location = userData?.location 
-    ? `${userData.location.city}, ${userData.location.state}, ${userData.location.pincode}`
-    : userData?.city && userData?.state
-    ? `${userData.city}, ${userData.state}`
-    : 'Location';
+  // Extract user data from API response
+  const userData = profileData;
+  const companyName = userData?.company_name || 'Not Set';
+  const email = userData?.email || 'Not Set';
+  const mobile = userData?.mobile || user?.mobile || 'Not Set';
+  const name = userData?.name || 'Not Set';
+  const gstIn = userData?.gst_in || 'Not Set';
+  const state = userData?.state || 'Not Set';
+  const city = userData?.city || 'Not Set';
+  const location = state !== 'Not Set' && city !== 'Not Set' 
+    ? `${city}, ${state}`
+    : 'Not Set';
+  const primaryRole = userData?.primary_role || 'Not Set';
+  const secondaryRole = userData?.secondary_role || null;
+  const hasSecondaryRole = userData?.has_secondary_role === 1;
+  const operationArea = userData?.operation_area || 'Not Set';
+  const isUdyamVerified = !!userData?.udyam_verified_at;
+  const emailVerified = !!userData?.email_verified_at;
+  const udyamCertificate = userData?.udyam_certificate || null;
+
+  // Build roles array
+  const roles: string[] = [];
+  if (primaryRole && primaryRole !== 'Not Set') {
+    roles.push(primaryRole);
+  }
+  if (hasSecondaryRole && secondaryRole) {
+    roles.push(secondaryRole);
+  }
 
   // Check profile completion status
-  // storedUserData comes from UpdateProfileResponse which has snake_case fields
-  const isUdyamVerified = (storedUserData as any)?.udyam_verified_at || user?.udyamVerifiedAt;
-  const hasEmail = (storedUserData as any)?.email;
-  const hasGstIn = (storedUserData as any)?.gst_in;
-  const hasState = (storedUserData as any)?.state;
-  const hasCity = (storedUserData as any)?.city;
-  const hasPrimaryRole = (storedUserData as any)?.primary_role || user?.primaryRole;
+  const hasEmail = !!userData?.email;
+  const hasGstIn = !!userData?.gst_in;
+  const hasState = !!userData?.state;
+  const hasCity = !!userData?.city;
+  const hasPrimaryRole = !!userData?.primary_role;
+  const hasCompanyName = !!userData?.company_name;
+  const hasName = !!userData?.name;
   
-  // Determine if profile needs completion
-  const profileIncomplete = !isUdyamVerified || !hasEmail || !hasGstIn || !hasState || !hasCity || !hasPrimaryRole;
+  // Calculate profile completion percentage
+  const totalFields = 7; // name, company_name, email, gst_in, state, city, primary_role, udyam_verified
+  const completedFields = [
+    hasName,
+    hasCompanyName,
+    hasEmail,
+    hasGstIn,
+    hasState && hasCity, // Location counts as one field
+    hasPrimaryRole,
+    isUdyamVerified,
+  ].filter(Boolean).length;
+  
+  const profileCompletionPercentage = Math.round((completedFields / totalFields) * 100);
+  
+  const profileIncomplete = !isUdyamVerified || !hasEmail || !hasGstIn || !hasState || !hasCity || !hasPrimaryRole || !hasCompanyName;
   
   const incompleteFields: string[] = [];
+  if (!hasCompanyName) incompleteFields.push('Company Name');
   if (!isUdyamVerified) incompleteFields.push('UDYAM Certificate');
   if (!hasEmail) incompleteFields.push('Email');
   if (!hasGstIn) incompleteFields.push('GSTIN');
@@ -96,9 +127,35 @@ const ProfileScreen = () => {
 
   const handleCompleteProfile = () => {
     // TODO: Navigate to profile completion/editing screen
-    // For now, we can navigate back to CompanyDetails or show a completion flow
     console.log('Complete profile');
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <ScreenWrapper backgroundColor="#F5F5F5" safeAreaEdges={[]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <ScreenWrapper backgroundColor="#F5F5F5" safeAreaEdges={[]}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <Text style={styles.errorText}>Failed to load profile</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper
@@ -106,25 +163,40 @@ const ProfileScreen = () => {
       backgroundColor="#F5F5F5"
       safeAreaEdges={[]}
       contentContainerStyle={styles.scrollContent}
+      scrollViewProps={{
+        refreshControl: (
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        ),
+      }}
     >
       {/* Profile Card */}
       <Card style={styles.profileCardContainer}>
         <View style={styles.profileImageContainer}>
-          <View style={styles.profileImage}>
-            <Text style={styles.profileImageIcon}>📦</Text>
-            <Text style={styles.profileImageText}>COMPANY</Text>
-          </View>
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedCheckmark}>✓</Text>
-          </View>
+          <AnimatedCircularProgress
+            percentage={profileCompletionPercentage}
+            size={120}
+            strokeWidth={8}
+            duration={850}
+            backgroundColor="#E0E0E0"
+            showPercentage={true}
+          />
         </View>
         
         <Text style={styles.companyName}>{companyName}</Text>
-        <Text style={styles.supplierType}>Premium Supplier</Text>
+        {primaryRole && primaryRole !== 'Not Set' && (
+          <Text style={styles.supplierType}>{primaryRole}</Text>
+        )}
         
-        <TouchableOpacity style={styles.activeButton}>
-          <Text style={styles.activeButtonText}>ACTIVE</Text>
-        </TouchableOpacity>
+        <View style={styles.statusContainer}>
+          <TouchableOpacity style={styles.activeButton}>
+            <Text style={styles.activeButtonText}>ACTIVE</Text>
+          </TouchableOpacity>
+          {emailVerified && (
+            <View style={styles.verifiedTag}>
+              <Text style={styles.verifiedTagText}>Email Verified</Text>
+            </View>
+          )}
+        </View>
       </Card>
 
       {/* Profile Completion Alert */}
@@ -160,23 +232,51 @@ const ProfileScreen = () => {
         </Card>
       )}
 
+      {/* Roles Section */}
+      {roles.length > 0 && (
+        <Section
+          title="Roles"
+          style={styles.section}
+        >
+          <View style={styles.rolesContainer}>
+            {roles.map((role, index) => (
+              <View key={index} style={styles.roleBadge}>
+                <Text style={styles.roleBadgeText}>
+                  {index === 0 ? 'Primary' : 'Secondary'}
+                </Text>
+                <Text style={styles.roleText}>{role}</Text>
+              </View>
+            ))}
+          </View>
+        </Section>
+      )}
+
       {/* Contact Information */}
       <Section
         title="Contact Information"
         style={styles.section}
       >
-        <Card variant="compact" style={styles.contactItemContainer}>
-          <AppIcon.PersonIcon width={24} height={24} />
-          <View style={styles.contactInfo}>
-            <Text style={styles.contactLabel}>Contact Person</Text>
-            <Text style={styles.contactValue}>{contactPerson}</Text>
-          </View>
-        </Card>
+        {name && name !== 'Not Set' && (
+          <Card variant="compact" style={styles.contactItemContainer}>
+            <AppIcon.PersonIcon width={24} height={24} />
+            <View style={styles.contactInfo}>
+              <Text style={styles.contactLabel}>Name</Text>
+              <Text style={styles.contactValue}>{name}</Text>
+            </View>
+          </Card>
+        )}
 
         <Card variant="compact" style={styles.contactItemContainer}>
           <AppIcon.EmailIcon width={24} height={24} />
           <View style={styles.contactInfo}>
-            <Text style={styles.contactLabel}>Email</Text>
+            <View style={styles.contactLabelRow}>
+              <Text style={styles.contactLabel}>Email</Text>
+              {emailVerified && (
+                <View style={styles.verifiedIndicator}>
+                  <Text style={styles.verifiedIndicatorText}>✓ Verified</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.contactValue}>{email}</Text>
           </View>
         </Card>
@@ -195,6 +295,88 @@ const ProfileScreen = () => {
             <Text style={styles.contactLabel}>Location</Text>
             <Text style={styles.contactValue}>{location}</Text>
           </View>
+        </Card>
+      </Section>
+
+      {/* Company Information */}
+      <Section
+        title="Company Information"
+        style={styles.section}
+      >
+        <Card variant="compact" style={styles.contactItemContainer}>
+          <View style={styles.infoIconContainer}>
+            <Text style={styles.infoIconText}>🏢</Text>
+          </View>
+          <View style={styles.contactInfo}>
+            <Text style={styles.contactLabel}>Company Name</Text>
+            <Text style={styles.contactValue}>{companyName}</Text>
+          </View>
+        </Card>
+
+        <Card variant="compact" style={styles.contactItemContainer}>
+          <View style={styles.infoIconContainer}>
+            <Text style={styles.infoIconText}>📋</Text>
+          </View>
+          <View style={styles.contactInfo}>
+            <Text style={styles.contactLabel}>GSTIN</Text>
+            <Text style={styles.contactValue}>{gstIn}</Text>
+          </View>
+        </Card>
+
+        {operationArea && operationArea !== 'Not Set' && (
+          <Card variant="compact" style={styles.contactItemContainer}>
+            <View style={styles.infoIconContainer}>
+              <Text style={styles.infoIconText}>🌍</Text>
+            </View>
+            <View style={styles.contactInfo}>
+              <Text style={styles.contactLabel}>Operation Area</Text>
+              <Text style={styles.contactValue}>{operationArea}</Text>
+            </View>
+          </Card>
+        )}
+      </Section>
+
+      {/* Verification Status */}
+      <Section
+        title="Verification Status"
+        style={styles.section}
+      >
+        <Card variant="compact" style={styles.verificationCard}>
+          <View style={styles.verificationRow}>
+            <Text style={styles.verificationLabel}>UDYAM Certificate</Text>
+            <View style={[
+              styles.verificationStatus,
+              isUdyamVerified ? styles.verificationStatusVerified : styles.verificationStatusPending
+            ]}>
+              <Text style={styles.verificationStatusText}>
+                {isUdyamVerified ? '✓ Verified' : '⏳ Pending'}
+              </Text>
+            </View>
+          </View>
+          {userData?.udyam_verified_at && (
+            <Text style={styles.verificationDate}>
+              Verified on {new Date(userData.udyam_verified_at).toLocaleDateString()}
+            </Text>
+          )}
+        </Card>
+
+        <Card variant="compact" style={styles.verificationCard}>
+          <View style={styles.verificationRow}>
+            <Text style={styles.verificationLabel}>Email</Text>
+            <View style={[
+              styles.verificationStatus,
+              emailVerified ? styles.verificationStatusVerified : styles.verificationStatusPending
+            ]}>
+              <Text style={styles.verificationStatusText}>
+                {emailVerified ? '✓ Verified' : '⏳ Pending'}
+              </Text>
+            </View>
+          </View>
+          {userData?.email_verified_at && (
+            <Text style={styles.verificationDate}>
+              Verified on {new Date(userData.email_verified_at).toLocaleDateString()}
+            </Text>
+          )}
         </Card>
       </Section>
 

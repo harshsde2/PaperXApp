@@ -43,6 +43,9 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   title,
   showBackButton,
   rightButton,
+  titleStyle,
+  titleContainerStyle,
+  leftButtonStyle,
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -74,11 +77,11 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
             <AppIcon.ArrowLeft width={24} height={24} color={theme.colors.text.primary} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.leftButton} />
+          <View style={[styles.leftButton, leftButtonStyle]} />
         )}
 
-        <View style={styles.titleContainer}>
-          <Text variant="h4" fontWeight="semibold" numberOfLines={1} style={styles.titleText}>
+        <View style={[styles.titleContainer, titleContainerStyle]}>
+          <Text variant="h4" fontWeight="semibold" numberOfLines={1} style={[styles.titleText, titleStyle]}>
             {displayTitle}
           </Text>
         </View>

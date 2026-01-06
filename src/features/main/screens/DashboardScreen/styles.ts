@@ -1,9 +1,14 @@
 import { StyleSheet } from 'react-native';
+import type { Theme } from '@theme/types';
 
-export const styles = StyleSheet.create({
+export const createStyles = (theme: Theme) => StyleSheet.create({
+  scrollContent: {
+    paddingBottom: theme.spacing[6],
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    padding: theme.spacing[3],
+    gap: theme.spacing[3],
   },
   header: {
     paddingTop: 60,

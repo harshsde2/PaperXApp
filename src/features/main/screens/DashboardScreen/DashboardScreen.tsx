@@ -5,30 +5,29 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppSelector } from '@store/hooks';
 import { Text } from '@shared/components/Text';
 import { MainStackParamList } from '@navigation/MainNavigator';
-import { styles } from './styles';
+import { createStyles } from './styles';
+import { ScreenWrapper } from '@shared/components/ScreenWrapper';
+import { useTheme } from '@theme/index';
 
 type DashboardScreenNavigationProp = StackNavigationProp<MainStackParamList, 'Dashboard'>;
 
 const DashboardScreen = () => {
+  const theme = useTheme();
   const { user } = useAppSelector((state) => state.auth);
   const navigation = useNavigation<DashboardScreenNavigationProp>();
-
+  const styles = createStyles(theme);
   const handleProfilePress = () => {
     navigation.navigate('Profile');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text variant="h1" style={styles.title}>Dashboard</Text>
-        <TouchableOpacity 
-          style={styles.profileButton} 
-          onPress={handleProfilePress}
-        >
-          <Text style={styles.profileButtonIcon}>👤</Text>
-        </TouchableOpacity>
-      </View>
-      
+    <ScreenWrapper
+    scrollable
+    backgroundColor={theme.colors.background.secondary}
+    safeAreaEdges={[]}
+    contentContainerStyle={styles.scrollContent}
+    
+    >      
       <View style={styles.content}>
         <Text variant="h2" style={styles.welcomeText}>
           Welcome back!
@@ -46,7 +45,7 @@ const DashboardScreen = () => {
           </View>
         )}
       </View>
-    </View>
+    </ScreenWrapper>
   );
 };
 

@@ -297,5 +297,158 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Status Container
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  verifiedTag: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  verifiedTagText: {
+    color: '#2E7D32',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  // Roles Section
+  rolesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  roleBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1976D2',
+    minWidth: 120,
+  },
+  roleBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#1976D2',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  roleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1976D2',
+  },
+  // Contact Info Enhancements
+  contactLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  verifiedIndicator: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  verifiedIndicatorText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  // Info Icon Container
+  infoIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoIconText: {
+    fontSize: 20,
+  },
+  // Verification Status
+  verificationCard: {
+    marginBottom: 12,
+    padding: 16,
+  },
+  verificationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  verificationLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
+    flex: 1,
+  },
+  verificationStatus: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  verificationStatusVerified: {
+    backgroundColor: '#E8F5E9',
+  },
+  verificationStatusPending: {
+    backgroundColor: '#FFF3E0',
+  },
+  verificationStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  verificationDate: {
+    fontSize: 11,
+    color: '#666666',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
 });
 

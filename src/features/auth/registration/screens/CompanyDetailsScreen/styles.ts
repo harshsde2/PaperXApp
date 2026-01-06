@@ -310,5 +310,36 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.tertiary,
     textAlign: 'center',
   },
+  // BottomSheet styles
+  bottomSheetTitle: {
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
+    paddingTop: theme.spacing[4],
+  },
+  bottomSheetListContent: {
+    paddingBottom: theme.spacing[4],
+    flexGrow: 1,
+  },
+  stateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.primary,
+  },
+  stateItemSelected: {
+    backgroundColor: theme.colors.primary[50],
+  },
+  stateItemText: {
+    color: theme.colors.text.primary,
+    flex: 1,
+  },
+  stateItemTextSelected: {
+    color: theme.colors.primary.DEFAULT,
+    fontWeight: '600',
+  },
 });
 

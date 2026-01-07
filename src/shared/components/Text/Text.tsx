@@ -18,11 +18,20 @@ const Text: FC<TextProps> = ({
 }) => {
   const theme = useTheme();
 
-  const getFontFamily = (weight?: FontWeight): string => {
+  const getFontFamily = (weight?: FontWeight, variantWeight?: string | number): string => {
+    // If explicit fontFamily is provided, use it (highest priority)
     if (fontFamily) return fontFamily;
 
+    // Priority: explicit fontWeight prop > variant fontWeight > default
+    // If explicit fontWeight is provided, use it directly
     if (weight) {
       switch (weight) {
+        case 'thin':
+          return theme.fontFamily.thin;
+        case 'extralight':
+          return theme.fontFamily.extralight;
+        case 'light':
+          return theme.fontFamily.light;
         case 'regular':
           return theme.fontFamily.regular;
         case 'medium':
@@ -31,22 +40,29 @@ const Text: FC<TextProps> = ({
           return theme.fontFamily.semibold;
         case 'bold':
           return theme.fontFamily.bold;
+        case 'extrabold':
+          return theme.fontFamily.extrabold;
+        case 'black':
+          return theme.fontFamily.black;
         default:
           return theme.fontFamily.regular;
       }
     }
 
-    // If variant is provided, get fontFamily from variant style
-    if (variant) {
-      const variantStyle = getVariantStyle(variant);
-      if (variantStyle?.fontWeight) {
-        const weight = variantStyle.fontWeight as string;
-        if (weight === '700' || weight === 'bold') return theme.fontFamily.bold;
-        if (weight === '600' || weight === 'semibold') return theme.fontFamily.semibold;
-        if (weight === '500' || weight === 'medium') return theme.fontFamily.medium;
-      }
+    // If no explicit fontWeight, check variant's fontWeight
+    if (variantWeight) {
+      const weightStr = String(variantWeight);
+      if (weightStr === '900' || weightStr === 'black') return theme.fontFamily.black;
+      if (weightStr === '800' || weightStr === 'extrabold') return theme.fontFamily.extrabold;
+      if (weightStr === '700' || weightStr === 'bold') return theme.fontFamily.bold;
+      if (weightStr === '600' || weightStr === 'semibold') return theme.fontFamily.semibold;
+      if (weightStr === '500' || weightStr === 'medium') return theme.fontFamily.medium;
+      if (weightStr === '300' || weightStr === 'light') return theme.fontFamily.light;
+      if (weightStr === '200' || weightStr === 'extralight') return theme.fontFamily.extralight;
+      if (weightStr === '100' || weightStr === 'thin') return theme.fontFamily.thin;
     }
 
+    // Default to regular
     return theme.fontFamily.regular;
   };
 
@@ -123,6 +139,12 @@ const Text: FC<TextProps> = ({
     
     // Map our FontWeight type to React Native fontWeight values
     switch (weight) {
+      case 'thin':
+        return '100';
+      case 'extralight':
+        return '200';
+      case 'light':
+        return '300';
       case 'regular':
         return '400';
       case 'medium':
@@ -131,25 +153,65 @@ const Text: FC<TextProps> = ({
         return '600';
       case 'bold':
         return '700';
+      case 'extrabold':
+        return '800';
+      case 'black':
+        return '900';
       default:
         return '400';
     }
   };
 
-  // When using specific font files (like Montserrat-Bold), we don't need fontWeight
-  // as the weight is already in the font file name
-  const finalFontFamily = getFontFamily(fontWeight);
-  const needsFontWeight = !fontFamily && !finalFontFamily.includes('-');
-  const fontWeightStyle = needsFontWeight && fontWeight ? { fontWeight: getFontWeightValue(fontWeight) } : null;
-  const fontSizeStyle = size ? { fontSize: size } : null;
+  // Get variant style first
+  const variantStyle = variant ? getVariantStyle(variant) : null;
+  
+  // Determine effective fontWeight: explicit prop overrides variant
+  const effectiveFontWeight = fontWeight 
+    ? getFontWeightValue(fontWeight) 
+    : (variantStyle?.fontWeight as string | number | undefined);
+  
+  // Get fontFamily based on effective fontWeight (explicit prop takes priority)
+  // When fontWeight prop is provided, it should override variant's fontFamily
+  const finalFontFamily = getFontFamily(
+    fontWeight, 
+    variantStyle?.fontWeight as string | number | undefined
+  );
+  
+  // Debug: Uncomment to verify fontFamily selection
+  // if (fontWeight) {
+  //   console.log('Text fontWeight:', fontWeight, '-> fontFamily:', finalFontFamily);
+  // }
+  
+  // Override variant fontSize with size prop if provided
+  const finalFontSize = size ? size : (variantStyle?.fontSize as number | undefined);
+  
+  // Always apply fontWeight style when we have an effective fontWeight.
+  // On Android, even with custom fonts like Montserrat-Bold, the fontWeight style
+  // is sometimes needed alongside the fontFamily for proper rendering.
+  const fontWeightStyle = effectiveFontWeight 
+    ? { fontWeight: effectiveFontWeight } 
+    : null;
+  
+  const fontSizeStyle = finalFontSize ? { fontSize: finalFontSize } : null;
   const alignStyle = align ? { textAlign: align } : null;
+
+  // Build variant style without fontSize, fontWeight, and fontFamily (we handle those separately)
+  // This ensures explicit props (size, fontWeight) and our fontFamily selection take priority
+  const variantStyleCleaned = variantStyle 
+    ? {
+        ...variantStyle,
+        fontSize: undefined,
+        fontWeight: undefined,
+        fontFamily: undefined, // Remove fontFamily from variant to use our selected one
+      }
+    : null;
 
   const textStyle: StyleProp<TextStyle> = [
     textStyles.text,
-    variant && getVariantStyle(variant),
+    variantStyleCleaned,
     { color: getTextColor() },
+    { fontFamily: finalFontFamily }, // Apply fontFamily before fontWeight to ensure correct font is used
     fontWeightStyle,
-    { fontFamily: finalFontFamily },
     fontSizeStyle,
     alignStyle,
     style,

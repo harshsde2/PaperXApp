@@ -32,6 +32,8 @@ import Finishing from './Finishing.svg';
 import Scrap from './Scrap.svg';
 import Security from './Security.svg';
 import Person from './Person.svg';
+import Warning from './Warning.svg';
+import Notification from './Notification.svg';
 
 
 
@@ -70,4 +72,6 @@ export const AppIcon = {
   Scrap,
   Security,
   Person,
+  Warning,
+  Notification,
 };

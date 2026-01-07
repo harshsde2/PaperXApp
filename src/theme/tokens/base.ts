@@ -106,12 +106,17 @@ export const baseColors = {
 // ============================================================================
 
 export const baseTypography = {
-  // Font Families - Montserrat
+  // Font Families - Montserrat (all weights)
   fontFamily: {
+    thin: 'Montserrat-Thin',
+    extralight: 'Montserrat-ExtraLight',
+    light: 'Montserrat-Light',
     regular: 'Montserrat-Regular',
     medium: 'Montserrat-Medium',
     semibold: 'Montserrat-SemiBold',
     bold: 'Montserrat-Bold',
+    extrabold: 'Montserrat-ExtraBold',
+    black: 'Montserrat-Black',
   },
 
   // Font Sizes
@@ -128,12 +133,17 @@ export const baseTypography = {
     '6xl': 48,
   },
 
-  // Font Weights
+  // Font Weights (all weights)
   fontWeight: {
+    thin: '100' as const,
+    extralight: '200' as const,
+    light: '300' as const,
     regular: '400' as const,
     medium: '500' as const,
     semibold: '600' as const,
     bold: '700' as const,
+    extrabold: '800' as const,
+    black: '900' as const,
   },
 
   // Line Heights

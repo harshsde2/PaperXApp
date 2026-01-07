@@ -1,6 +1,15 @@
 import { StyleProp, TextProps as RNTextProps, TextStyle } from 'react-native';
 
-export type FontWeight = 'regular' | 'medium' | 'semibold' | 'bold';
+export type FontWeight = 
+  | 'thin'
+  | 'extralight'
+  | 'light'
+  | 'regular'
+  | 'medium'
+  | 'semibold'
+  | 'bold'
+  | 'extrabold'
+  | 'black';
 
 export type TextVariant =
   | 'h1'

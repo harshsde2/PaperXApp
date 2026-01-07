@@ -1,5 +1,5 @@
 import React, { useLayoutEffect } from 'react';
-import { View, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppSelector } from '@store/hooks';
 import { useLogout, useGetProfile } from '@services/api';
@@ -10,14 +10,17 @@ import { Section } from '@shared/components/Section';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { AnimatedCircularProgress } from '@shared/components/AnimatedCircularProgress';
+import { useTheme } from '@theme/index';
 import { ProfileScreenNavigationProp } from './@types';
-import { styles } from './styles';
+import { createStyles } from './styles';
 import type { UserProfile } from '@services/api/types';
 import { AppIcon } from '@assets/svgs';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const route = useRoute();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const { user } = useAppSelector((state) => state.auth);
   const logoutMutation = useLogout();
   
@@ -82,6 +85,7 @@ const ProfileScreen = () => {
   const isUdyamVerified = !!userData?.udyam_verified_at;
   const emailVerified = !!userData?.email_verified_at;
   const udyamCertificate = userData?.udyam_certificate || null;
+  const avatarUrl = userData?.avatar || null;
 
   // Build roles array
   const roles: string[] = [];
@@ -133,9 +137,9 @@ const ProfileScreen = () => {
   // Loading state
   if (isLoading) {
     return (
-      <ScreenWrapper backgroundColor="#F5F5F5" safeAreaEdges={[]}>
+      <ScreenWrapper backgroundColor={theme.colors.background.secondary} safeAreaEdges={[]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
       </ScreenWrapper>
@@ -145,7 +149,7 @@ const ProfileScreen = () => {
   // Error state
   if (isError) {
     return (
-      <ScreenWrapper backgroundColor="#F5F5F5" safeAreaEdges={[]}>
+      <ScreenWrapper backgroundColor={theme.colors.background.secondary} safeAreaEdges={[]}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorText}>Failed to load profile</Text>
@@ -160,7 +164,7 @@ const ProfileScreen = () => {
   return (
     <ScreenWrapper
       scrollable
-      backgroundColor="#F5F5F5"
+      backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
       contentContainerStyle={styles.scrollContent}
       scrollViewProps={{
@@ -176,10 +180,25 @@ const ProfileScreen = () => {
             percentage={profileCompletionPercentage}
             size={120}
             strokeWidth={8}
-            duration={850}
+            duration={1000}
             backgroundColor="#E0E0E0"
             showPercentage={true}
-          />
+            percentagePosition="bottom"
+            startPosition="6"
+          >
+            {/* Avatar or default icon in center */}
+            {avatarUrl ? (
+              <Image
+                source={{ uri: avatarUrl }}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <AppIcon.Person width={50} height={50} />
+              </View>
+            )}
+          </AnimatedCircularProgress>
         </View>
         
         <Text style={styles.companyName}>{companyName}</Text>
@@ -204,7 +223,7 @@ const ProfileScreen = () => {
         <Card style={styles.completionCard}>
           <View style={styles.completionHeader}>
             <View style={styles.completionIconContainer}>
-              <Text style={styles.completionIcon}>⚠️</Text>
+              <AppIcon.Warning width={24} height={24} />
             </View>
             <View style={styles.completionTextContainer}>
               <Text style={styles.completionTitle}>Complete Your Profile</Text>
@@ -240,12 +259,14 @@ const ProfileScreen = () => {
         >
           <View style={styles.rolesContainer}>
             {roles.map((role, index) => (
-              <View key={index} style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>
+              <Card key={index} variant="compact" style={styles.roleBadge}>
+                <Text variant="captionSmall" fontWeight="semibold" color={theme.colors.primary.dark} style={styles.roleBadgeLabel}>
                   {index === 0 ? 'Primary' : 'Secondary'}
                 </Text>
-                <Text style={styles.roleText}>{role}</Text>
-              </View>
+                <Text variant="bodyMedium" fontWeight="semibold" color={theme.colors.text.primary} style={styles.roleBadgeValue}>
+                  {role}
+                </Text>
+              </Card>
             ))}
           </View>
         </Section>

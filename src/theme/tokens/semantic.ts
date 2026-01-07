@@ -150,6 +150,10 @@ export const lightColors = {
     primary: baseColors.gray200,
     secondary: baseColors.gray100,
   },
+
+  // Common Colors (direct access)
+  white: baseColors.white,
+  black: baseColors.black,
 } as const;
 
 // ============================================================================
@@ -241,6 +245,10 @@ export const darkColors = {
     primary: baseColors.gray700,
     secondary: baseColors.gray800,
   },
+
+  // Common Colors (direct access)
+  white: baseColors.white,
+  black: baseColors.black,
 } as const;
 
 // ============================================================================

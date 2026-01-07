@@ -1,6 +1,6 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -8,6 +8,8 @@ import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { ManageWarehousesScreenNavigationProp, WarehouseLocation } from './@types';
 import { createStyles } from './styles';
+import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 // Mock data - in a real app, this would come from state/API
 const MOCK_LOCATIONS: WarehouseLocation[] = [
@@ -37,16 +39,23 @@ const MOCK_LOCATIONS: WarehouseLocation[] = [
 
 const ManageWarehousesScreen = () => {
   const navigation = useNavigation<ManageWarehousesScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'ManageWarehouses'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [noWarehouse, setNoWarehouse] = useState(false);
   const [locations, setLocations] = useState<WarehouseLocation[]>(MOCK_LOCATIONS);
 
   const activeLocationsCount = locations.length;
 
   const handleSave = () => {
-    // TODO: Save warehouse settings and navigate back or to next screen
-    navigation.goBack();
+    // TODO: Save warehouse settings to API/state
+    // This is the last screen in dealer registration flow
+    // Navigate to VerificationStatus with profileData
+    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { profileData });
   };
 
   useLayoutEffect(() => {
@@ -213,7 +222,7 @@ const ManageWarehousesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search Address Button */}
+      {/* Footer Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.searchButton}
@@ -228,6 +237,20 @@ const ManageWarehousesScreen = () => {
           <Text variant="buttonMedium" style={styles.searchButtonText}>
             SEARCH ADDRESS
           </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.searchButton, { marginTop: 12, backgroundColor: theme.colors.primary.DEFAULT }]}
+          onPress={handleSave}
+          activeOpacity={0.8}
+        >
+          <Text variant="buttonMedium" style={styles.searchButtonText}>
+            Complete Registration
+          </Text>
+          <AppIcon.ArrowRight
+            width={20}
+            height={20}
+            color={theme.colors.text.inverse}
+          />
         </TouchableOpacity>
       </View>
     </ScreenWrapper>

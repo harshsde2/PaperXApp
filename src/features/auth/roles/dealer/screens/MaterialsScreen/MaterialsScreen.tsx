@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -8,6 +8,7 @@ import { useTheme } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
 import { MaterialsScreenNavigationProp, MaterialItem, MaterialCategory } from './@types';
 import { createStyles } from './styles';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const MATERIALS_DATA: MaterialCategory[] = [
   {
@@ -32,8 +33,13 @@ const MATERIALS_DATA: MaterialCategory[] = [
 
 const MaterialsScreen = () => {
   const navigation = useNavigation<MaterialsScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'Materials'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params (passed from RoleSelectionScreen)
+  const { profileData } = route.params || {};
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(
     new Set(['kraft-paper', 'offset-printers'])
@@ -83,8 +89,9 @@ const MaterialsScreen = () => {
     .filter((item): item is MaterialItem => item !== undefined);
 
   const handleSaveAndContinue = () => {
-    // TODO: Save selected materials and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.MILL_BRAND_DETAILS);
+    // TODO: Save selected materials to API/state
+    // Navigate to next screen in dealer registration flow
+    navigation.navigate(SCREENS.AUTH.MILL_BRAND_DETAILS, { profileData });
   };
 
   const progressPercentage = 25;

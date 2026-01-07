@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,6 +9,7 @@ import { useTheme } from '@theme/index';
 import { MaterialSpecsScreenNavigationProp, SpecSection } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const SPEC_SECTIONS: SpecSection[] = [
   {
@@ -53,8 +54,13 @@ const SPEC_SECTIONS: SpecSection[] = [
 
 const MaterialSpecsScreen = () => {
   const navigation = useNavigation<MaterialSpecsScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'MaterialSpecs'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['finish']));
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set(['gloss', 'satin']));
   const [customInput, setCustomInput] = useState('');
@@ -92,8 +98,9 @@ const MaterialSpecsScreen = () => {
   };
 
   const handleConfirm = () => {
-    // TODO: Save selections and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.SELECT_THICKNESS);
+    // TODO: Save selections to API/state
+    // Navigate to next screen in dealer registration flow
+    navigation.navigate(SCREENS.AUTH.SELECT_THICKNESS, { profileData });
   };
 
   const handleAddCustom = () => {

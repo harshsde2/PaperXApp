@@ -14,6 +14,7 @@ module.exports = {
           '@services': './src/services',
           '@theme': './src/theme',
           '@assets': './src/assets',
+          '@utils': './src/utils',
         },
       },
     ],

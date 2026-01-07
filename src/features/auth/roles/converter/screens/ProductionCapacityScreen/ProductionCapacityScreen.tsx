@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,6 +9,7 @@ import { useTheme } from '@theme/index';
 import { ProductionCapacityScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const UNIT_OPTIONS = [
   'Sheets',
@@ -28,8 +29,13 @@ const FREQUENCY_OPTIONS = [
 
 const ProductionCapacityScreen = () => {
   const navigation = useNavigation<ProductionCapacityScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'ProductionCapacity'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [capacityVolume, setCapacityVolume] = useState('');
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
@@ -45,8 +51,9 @@ const ProductionCapacityScreen = () => {
   };
 
   const handleContinue = () => {
-    // TODO: Save selections and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.RAW_MATERIALS);
+    // TODO: Save selections to API/state
+    // Navigate to next screen in converter registration flow
+    navigation.navigate(SCREENS.AUTH.RAW_MATERIALS, { profileData });
   };
 
   const handleUnitSelect = (unit: string) => {

@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { CustomHeader } from '@shared/components/CustomHeader';
@@ -17,6 +17,7 @@ import { useTheme } from '@theme/index';
 import { BrandRegistrationScreenNavigationProp, BrandTypeCategory } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 // Brand Type Categories Data
 const BRAND_TYPE_CATEGORIES: BrandTypeCategory[] = [
@@ -169,8 +170,12 @@ const BRAND_TYPE_CATEGORIES: BrandTypeCategory[] = [
 
 const BrandRegistrationScreen = () => {
   const navigation = useNavigation<BrandRegistrationScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'BrandRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
 
   // Form state
   const [companyName, setCompanyName] = useState('');
@@ -250,16 +255,10 @@ const BrandRegistrationScreen = () => {
   const handleContinue = () => {
     if (!isFormValid) return;
 
-    // TODO: Save form data and navigate to next screen
-    // navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS);
-    console.log('Form data:', {
-      companyName,
-      brandTypes: Array.from(selectedBrandTypes),
-      contactPersonName,
-      mobileOrEmail,
-      gstNumber,
-      city,
-    });
+    // TODO: Save form data to API/state
+    // This is the last screen in brand registration flow
+    // Navigate to VerificationStatus with profileData
+    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { profileData });
   };
 
   return (

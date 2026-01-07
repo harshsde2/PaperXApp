@@ -10,6 +10,7 @@ import { RoleSelectionScreenNavigationProp, RoleSelectionScreenRouteProp } from 
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { useUpdateProfile } from '@services/api';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
 
 type PrimaryRole = 'dealer' | 'converter' | 'brand' | 'machineDealer';
 type Geography = 'local' | 'state' | 'panIndia';
@@ -87,10 +88,20 @@ const RoleSelectionScreen = () => {
       // Call API to update profile
       const response = await updateProfileMutation.mutateAsync(updateData);
 
-      // Navigate to verification status with response data
-      navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-        profileData: response,
-      });
+      // Get the first registration screen for the selected role
+      const firstScreen = getFirstRegistrationScreen(primaryRole);
+
+      if (firstScreen && firstScreen !== SCREENS.AUTH.VERIFICATION_STATUS) {
+        // Navigate to role-specific registration flow
+        // Pass profile data so it can be used at the end of registration
+        // Type assertion needed because firstScreen is a dynamic string
+        (navigation.navigate as any)(firstScreen, { profileData: response });
+      } else {
+        // Role has no specific registration screens, go directly to verification
+        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+          profileData: response,
+        });
+      }
     } catch (error: any) {
       console.error('Update profile error:', error);
       Alert.alert(

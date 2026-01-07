@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Linking } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -8,11 +8,18 @@ import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { ConfirmRegistrationScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
+import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const ConfirmRegistrationScreen = () => {
   const navigation = useNavigation<ConfirmRegistrationScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'ConfirmRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const currentStep = 4;
@@ -33,8 +40,9 @@ const ConfirmRegistrationScreen = () => {
       // TODO: Show error message
       return;
     }
-    // TODO: Submit registration and navigate to verification screen
-    // navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS);
+    // Submit registration and navigate to verification screen
+    // This is the last screen in converter registration flow
+    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { profileData });
   };
 
   return (

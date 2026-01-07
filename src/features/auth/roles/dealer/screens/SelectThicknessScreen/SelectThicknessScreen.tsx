@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, PanResponder, Dimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,6 +9,7 @@ import { useTheme } from '@theme/index';
 import { SelectThicknessScreenNavigationProp, ThicknessUnit } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SLIDER_PADDING = 16;
@@ -19,15 +20,21 @@ const STEP = 1;
 
 const SelectThicknessScreen = () => {
   const navigation = useNavigation<SelectThicknessScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'SelectThickness'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [unit, setUnit] = useState<ThicknessUnit>('GSM');
   const [minValue, setMinValue] = useState(150);
   const [maxValue, setMaxValue] = useState(300);
 
   const handleApply = () => {
-    // TODO: Save thickness values and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.MANAGE_WAREHOUSES);
+    // TODO: Save thickness values to API/state
+    // Navigate to next screen in dealer registration flow
+    navigation.navigate(SCREENS.AUTH.MANAGE_WAREHOUSES, { profileData });
   };
 
   const handleMinValueChange = (value: string) => {

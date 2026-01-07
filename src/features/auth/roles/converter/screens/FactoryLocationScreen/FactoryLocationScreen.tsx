@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,11 +9,17 @@ import { useTheme } from '@theme/index';
 import { FactoryLocationScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const FactoryLocationScreen = () => {
   const navigation = useNavigation<FactoryLocationScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'FactoryLocation'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [searchAddress, setSearchAddress] = useState('');
   const [streetAddress, setStreetAddress] = useState('1200 Manufacturing Blvd.');
   const [city, setCity] = useState('Chicago');
@@ -30,8 +36,9 @@ const FactoryLocationScreen = () => {
   };
 
   const handleConfirmLocation = () => {
-    // TODO: Save location data and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.CONFIRM_REGISTRATION);
+    // TODO: Save location data to API/state
+    // Navigate to next screen in converter registration flow
+    navigation.navigate(SCREENS.AUTH.CONFIRM_REGISTRATION, { profileData });
   };
 
   return (

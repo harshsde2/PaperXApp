@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,6 +9,7 @@ import { useTheme } from '@theme/index';
 import { ScrapGenerationScreenNavigationProp, ScrapCategory } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const SCRAP_CATEGORIES: ScrapCategory[] = [
   {
@@ -44,8 +45,13 @@ const SCRAP_CATEGORIES: ScrapCategory[] = [
 
 const ScrapGenerationScreen = () => {
   const navigation = useNavigation<ScrapGenerationScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'ScrapGeneration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [generatesScrap, setGeneratesScrap] = useState<boolean | null>(true);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['paper-board-scrap']),
@@ -89,8 +95,9 @@ const ScrapGenerationScreen = () => {
   };
 
   const handleContinue = () => {
-    // TODO: Save selections and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.PRODUCTION_CAPACITY);
+    // TODO: Save selections to API/state
+    // Navigate to next screen in converter registration flow
+    navigation.navigate(SCREENS.AUTH.PRODUCTION_CAPACITY, { profileData });
   };
 
   const handleSaveAndExit = () => {

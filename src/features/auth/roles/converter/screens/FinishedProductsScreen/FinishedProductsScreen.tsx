@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,6 +9,7 @@ import { useTheme } from '@theme/index';
 import { FinishedProductsScreenNavigationProp, FinishedProductSection } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const FINISHED_PRODUCT_SECTIONS: FinishedProductSection[] = [
   {
@@ -50,8 +51,13 @@ const FINISHED_PRODUCT_SECTIONS: FinishedProductSection[] = [
 
 const FinishedProductsScreen = () => {
   const navigation = useNavigation<FinishedProductsScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'FinishedProducts'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['packaging'])
@@ -116,8 +122,9 @@ const FinishedProductsScreen = () => {
   };
 
   const handleContinue = () => {
-    // TODO: Save selections and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.MACHINERY);
+    // TODO: Save selections to API/state
+    // Navigate to next screen in converter registration flow
+    navigation.navigate(SCREENS.AUTH.MACHINERY, { profileData });
   };
 
   return (

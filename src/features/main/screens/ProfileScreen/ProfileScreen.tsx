@@ -15,6 +15,7 @@ import { ProfileScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import type { UserProfile } from '@services/api/types';
 import { AppIcon } from '@assets/svgs';
+import { ROLES } from '@utils/constants';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
@@ -130,8 +131,12 @@ const ProfileScreen = () => {
   if (!hasPrimaryRole) incompleteFields.push('Primary Role');
 
   const handleCompleteProfile = () => {
-    // TODO: Navigate to profile completion/editing screen
-    console.log('Complete profile');
+    if(primaryRole === ROLES.DEALER) {
+
+    }else if(primaryRole === ROLES.CONVERTER) {
+      
+    }
+ 
   };
 
   // Loading state

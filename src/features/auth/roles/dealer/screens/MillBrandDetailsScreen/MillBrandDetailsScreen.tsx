@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -9,18 +9,25 @@ import { useTheme } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
 import { MillBrandDetailsScreenNavigationProp, MillRelationship } from './@types';
 import { createStyles } from './styles';
+import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 
 const MillBrandDetailsScreen = () => {
   const navigation = useNavigation<MillBrandDetailsScreenNavigationProp>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'MillBrandDetails'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  
+  // Get profileData from route params
+  const { profileData } = route.params || {};
+  
   const [millBrandName, setMillBrandName] = useState('');
   const [preferNotToDisclose, setPreferNotToDisclose] = useState(false);
   const [relationship, setRelationship] = useState<MillRelationship>('authorized-agent');
 
   const handleNextStep = () => {
-    // TODO: Save data and navigate to next screen
-    navigation.navigate(SCREENS.AUTH.MATERIAL_SPECS);
+    // TODO: Save data to API/state
+    // Navigate to next screen in dealer registration flow
+    navigation.navigate(SCREENS.AUTH.MATERIAL_SPECS, { profileData });
   };
 
   const handleAddManually = () => {

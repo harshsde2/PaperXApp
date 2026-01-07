@@ -24,6 +24,11 @@ import ConfirmRegistrationScreen from '@features/auth/roles/converter/screens/Co
 import BrandRegistrationScreen from '@features/auth/roles/brand/screens/BrandRegistrationScreen/BrandRegistrationScreen';
 import { CustomHeader } from '@shared/components/CustomHeader';
 
+// Common params for role-specific registration screens
+type RegistrationScreenParams = {
+  profileData?: any;
+};
+
 export type AuthStackParamList = {
   Splash: undefined;
   Login: undefined;
@@ -39,23 +44,24 @@ export type AuthStackParamList = {
     udyamCertificateName?: string;
     udyamCertificateType?: string;
   };
-  VerificationStatus: {
-    profileData?: any;
-  };
-  Materials: undefined;
-  MillBrandDetails: undefined;
-  MaterialSpecs: undefined;
-  SelectThickness: undefined;
-  ManageWarehouses: undefined;
-  ConverterType: undefined;
-  FinishedProducts: undefined;
-  Machinery: undefined;
-  ScrapGeneration: undefined;
-  ProductionCapacity: undefined;
-  RawMaterials: undefined;
-  FactoryLocation: undefined;
-  ConfirmRegistration: undefined;
-  BrandRegistration: undefined;
+  VerificationStatus: RegistrationScreenParams;
+  // Dealer screens
+  Materials: RegistrationScreenParams;
+  MillBrandDetails: RegistrationScreenParams;
+  MaterialSpecs: RegistrationScreenParams;
+  SelectThickness: RegistrationScreenParams;
+  ManageWarehouses: RegistrationScreenParams;
+  // Converter screens
+  ConverterType: RegistrationScreenParams;
+  FinishedProducts: RegistrationScreenParams;
+  Machinery: RegistrationScreenParams;
+  ScrapGeneration: RegistrationScreenParams;
+  ProductionCapacity: RegistrationScreenParams;
+  RawMaterials: RegistrationScreenParams;
+  FactoryLocation: RegistrationScreenParams;
+  ConfirmRegistration: RegistrationScreenParams;
+  // Brand screens
+  BrandRegistration: RegistrationScreenParams;
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();

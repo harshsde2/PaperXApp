@@ -23,8 +23,46 @@ export const SCREENS = {
     BRAND_REGISTRATION: 'BrandRegistration',
   },
   MAIN: {
+    // Tab Screens
+    TABS: 'MainTabs',
+    HOME: 'Home',
     DASHBOARD: 'Dashboard',
+    MESSAGES: 'Messages',
+    MARKET: 'Market',
+    SETTINGS: 'Settings',
+    INQUIRIES: 'Inquiries',
+    CAPACITY: 'Capacity',
+    SESSIONS: 'Sessions',
     PROFILE: 'Profile',
   },
 } as const;
 
+// Role types
+export type UserRole = 'dealer' | 'machine-dealer' | 'converter' | 'brand';
+
+// Tab configurations for each role
+export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: string }[]> = {
+  dealer: [
+    { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
+    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
+    { name: SCREENS.MAIN.MARKET, label: 'Market', icon: 'Market' },
+    { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
+  ],
+  'machine-dealer': [
+    { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
+    { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
+    { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
+  ],
+  converter: [
+    { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },
+    { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
+    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
+    { name: SCREENS.MAIN.CAPACITY, label: 'Capacity', icon: 'Capacity' },
+  ],
+  brand: [
+    { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },
+    { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
+    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
+    { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
+  ],
+} as const;

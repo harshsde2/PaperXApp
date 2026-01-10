@@ -12,6 +12,7 @@ import Mail from './Mail.svg';
 import TickCheckedBox from './TickCheckedBox.svg';
 import UntickCheckedBox from './UntickCheckedBox.svg';
 import ChevronDown from './ChevronDown.svg';
+import ChevronRight from './ChevronRight.svg';
 import ArrowRight from './ArrowRight.svg';
 import PersonIcon from './PersonIcon.svg';
 import EmailIcon from './EmailIcon.svg';
@@ -35,6 +36,15 @@ import Person from './Person.svg';
 import Warning from './Warning.svg';
 import Notification from './Notification.svg';
 import Close from './Close.svg';
+// Bottom Tab Icons
+import Dashboard from './Dashboard.svg';
+import Messages from './Messages.svg';
+import Market from './Market.svg';
+import Settings from './Settings.svg';
+import Inquiries from './Inquiries.svg';
+import Capacity from './Capacity.svg';
+import Sessions from './Sessions.svg';
+import Profile from './Profile.svg';
 
 
 
@@ -53,6 +63,7 @@ export const AppIcon = {
   TickCheckedBox,
   UntickCheckedBox,
   ChevronDown,
+  ChevronRight,
   ArrowRight,
   PersonIcon,
   EmailIcon,
@@ -76,4 +87,13 @@ export const AppIcon = {
   Warning,
   Notification,
   Close,
+  // Bottom Tab Icons
+  Dashboard,
+  Messages,
+  Market,
+  Settings,
+  Inquiries,
+  Capacity,
+  Sessions,
+  Profile,
 };

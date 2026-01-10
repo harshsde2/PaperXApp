@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -9,15 +9,102 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Controller } from 'react-hook-form';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
-import { CustomHeader } from '@shared/components/CustomHeader';
+import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import { BrandRegistrationScreenNavigationProp, BrandTypeCategory } from './@types';
+import { useForm, FormInput, validationRules } from '@shared/forms';
+import { useKeyboard, useFloatingBottomPadding } from '@shared/hooks';
+import { useCompleteBrandProfile } from '@services/api';
+import { Alert, ActivityIndicator } from 'react-native';
+import {
+  BrandRegistrationScreenNavigationProp,
+  BrandTypeCategory,
+  BrandRegistrationFormData,
+} from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
+
+// Mapping from brand type string IDs to numeric IDs for API
+// This should match your backend brand type IDs
+const BRAND_TYPE_ID_MAP: Record<string, number> = {
+  'food-beverage': 1,
+  'packaged-food': 2,
+  'snacks-confectionery': 3,
+  'dairy': 4,
+  'frozen-food': 5,
+  'beverage': 6,
+  'alcoholic-beverage': 7,
+  'tobacco-nicotine': 8,
+  'pharmaceutical': 9,
+  'otc-nutraceutical': 10,
+  'ayurvedic-herbal': 11,
+  'medical-device': 12,
+  'diagnostic-kit': 13,
+  'health-supplement': 14,
+  'cosmetics': 15,
+  'skincare': 16,
+  'haircare': 17,
+  'perfume-fragrance': 18,
+  'luxury-beauty': 19,
+  'grooming': 20,
+  'apparel-clothing': 21,
+  'garment-export': 22,
+  'footwear': 23,
+  'fashion-accessories': 24,
+  'jewellery': 25,
+  'watch': 26,
+  'eyewear': 27,
+  'consumer-electronics': 28,
+  'mobile-accessories': 29,
+  'electrical-appliances': 30,
+  'home-appliances': 31,
+  'it-hardware': 32,
+  'industrial-electronics': 33,
+  'd2c-consumer': 34,
+  'ecommerce-seller': 35,
+  'subscription-box': 36,
+  'marketplace-private-label': 37,
+  'quick-commerce': 38,
+  'bakery': 39,
+  'patisserie-cake': 40,
+  'qsr-fast-food': 41,
+  'restaurant-chain': 42,
+  'cloud-kitchen': 43,
+  'cafe': 44,
+  'catering': 45,
+  'corporate-gifting': 46,
+  'promotional-merchandise': 47,
+  'office-supplies': 48,
+  'industrial-goods': 49,
+  'chemical': 50,
+  'paints-coatings': 51,
+  'school-education': 52,
+  'publishing-house': 53,
+  'book-publisher': 54,
+  'edtech': 55,
+  'stationery': 56,
+  'notebook-diary': 57,
+  'agro-products': 58,
+  'seeds': 59,
+  'fertilizer': 60,
+  'organic-natural': 61,
+  'tea-coffee': 62,
+  'spices': 63,
+  'home-furnishing': 64,
+  'furniture': 65,
+  'home-decor': 66,
+  'kitchenware': 67,
+  'lighting': 68,
+  'event-management': 69,
+  'festive-gifting': 70,
+  'wedding-gifting': 71,
+  'luxury-hampers': 72,
+  'promotional-campaign': 73,
+};
 
 // Brand Type Categories Data
 const BRAND_TYPE_CATEGORIES: BrandTypeCategory[] = [
@@ -25,145 +112,429 @@ const BRAND_TYPE_CATEGORIES: BrandTypeCategory[] = [
     id: 'fmcg-consumer-goods',
     title: 'FMCG & CONSUMER GOODS',
     options: [
-      { id: 'food-beverage', label: 'Food & Beverage Brand', category: 'fmcg-consumer-goods' },
-      { id: 'packaged-food', label: 'Packaged Food Brand', category: 'fmcg-consumer-goods' },
-      { id: 'snacks-confectionery', label: 'Snacks & Confectionery Brand', category: 'fmcg-consumer-goods' },
+      {
+        id: 'food-beverage',
+        label: 'Food & Beverage Brand',
+        category: 'fmcg-consumer-goods',
+      },
+      {
+        id: 'packaged-food',
+        label: 'Packaged Food Brand',
+        category: 'fmcg-consumer-goods',
+      },
+      {
+        id: 'snacks-confectionery',
+        label: 'Snacks & Confectionery Brand',
+        category: 'fmcg-consumer-goods',
+      },
       { id: 'dairy', label: 'Dairy Brand', category: 'fmcg-consumer-goods' },
-      { id: 'frozen-food', label: 'Frozen Food Brand', category: 'fmcg-consumer-goods' },
-      { id: 'beverage', label: 'Beverage Brand (Juices, Water, Energy Drinks)', category: 'fmcg-consumer-goods' },
-      { id: 'alcoholic-beverage', label: 'Alcoholic Beverage Brand', category: 'fmcg-consumer-goods' },
-      { id: 'tobacco-nicotine', label: 'Tobacco / Nicotine Brand', category: 'fmcg-consumer-goods' },
+      {
+        id: 'frozen-food',
+        label: 'Frozen Food Brand',
+        category: 'fmcg-consumer-goods',
+      },
+      {
+        id: 'beverage',
+        label: 'Beverage Brand (Juices, Water, Energy Drinks)',
+        category: 'fmcg-consumer-goods',
+      },
+      {
+        id: 'alcoholic-beverage',
+        label: 'Alcoholic Beverage Brand',
+        category: 'fmcg-consumer-goods',
+      },
+      {
+        id: 'tobacco-nicotine',
+        label: 'Tobacco / Nicotine Brand',
+        category: 'fmcg-consumer-goods',
+      },
     ],
   },
   {
     id: 'pharma-health-wellness',
     title: 'PHARMA, HEALTH & WELLNESS',
     options: [
-      { id: 'pharmaceutical', label: 'Pharmaceutical Brand', category: 'pharma-health-wellness' },
-      { id: 'otc-nutraceutical', label: 'OTC / Nutraceutical Brand', category: 'pharma-health-wellness' },
-      { id: 'ayurvedic-herbal', label: 'Ayurvedic / Herbal Brand', category: 'pharma-health-wellness' },
-      { id: 'medical-device', label: 'Medical Device Brand', category: 'pharma-health-wellness' },
-      { id: 'diagnostic-kit', label: 'Diagnostic Kit Brand', category: 'pharma-health-wellness' },
-      { id: 'health-supplement', label: 'Health Supplement Brand', category: 'pharma-health-wellness' },
+      {
+        id: 'pharmaceutical',
+        label: 'Pharmaceutical Brand',
+        category: 'pharma-health-wellness',
+      },
+      {
+        id: 'otc-nutraceutical',
+        label: 'OTC / Nutraceutical Brand',
+        category: 'pharma-health-wellness',
+      },
+      {
+        id: 'ayurvedic-herbal',
+        label: 'Ayurvedic / Herbal Brand',
+        category: 'pharma-health-wellness',
+      },
+      {
+        id: 'medical-device',
+        label: 'Medical Device Brand',
+        category: 'pharma-health-wellness',
+      },
+      {
+        id: 'diagnostic-kit',
+        label: 'Diagnostic Kit Brand',
+        category: 'pharma-health-wellness',
+      },
+      {
+        id: 'health-supplement',
+        label: 'Health Supplement Brand',
+        category: 'pharma-health-wellness',
+      },
     ],
   },
   {
     id: 'beauty-personal-care-luxury',
     title: 'BEAUTY, PERSONAL CARE & LUXURY',
     options: [
-      { id: 'cosmetics', label: 'Cosmetics Brand', category: 'beauty-personal-care-luxury' },
-      { id: 'skincare', label: 'Skincare Brand', category: 'beauty-personal-care-luxury' },
-      { id: 'haircare', label: 'Haircare Brand', category: 'beauty-personal-care-luxury' },
-      { id: 'perfume-fragrance', label: 'Perfume & Fragrance Brand', category: 'beauty-personal-care-luxury' },
-      { id: 'luxury-beauty', label: 'Luxury Beauty Brand', category: 'beauty-personal-care-luxury' },
-      { id: 'grooming', label: 'Grooming Brand', category: 'beauty-personal-care-luxury' },
+      {
+        id: 'cosmetics',
+        label: 'Cosmetics Brand',
+        category: 'beauty-personal-care-luxury',
+      },
+      {
+        id: 'skincare',
+        label: 'Skincare Brand',
+        category: 'beauty-personal-care-luxury',
+      },
+      {
+        id: 'haircare',
+        label: 'Haircare Brand',
+        category: 'beauty-personal-care-luxury',
+      },
+      {
+        id: 'perfume-fragrance',
+        label: 'Perfume & Fragrance Brand',
+        category: 'beauty-personal-care-luxury',
+      },
+      {
+        id: 'luxury-beauty',
+        label: 'Luxury Beauty Brand',
+        category: 'beauty-personal-care-luxury',
+      },
+      {
+        id: 'grooming',
+        label: 'Grooming Brand',
+        category: 'beauty-personal-care-luxury',
+      },
     ],
   },
   {
     id: 'apparel-fashion-accessories',
     title: 'APPAREL, FASHION & ACCESSORIES',
     options: [
-      { id: 'apparel-clothing', label: 'Apparel / Clothing Brand', category: 'apparel-fashion-accessories' },
-      { id: 'garment-export', label: 'Garment Export Brand', category: 'apparel-fashion-accessories' },
-      { id: 'footwear', label: 'Footwear Brand', category: 'apparel-fashion-accessories' },
-      { id: 'fashion-accessories', label: 'Fashion Accessories Brand', category: 'apparel-fashion-accessories' },
-      { id: 'jewellery', label: 'Jewellery Brand', category: 'apparel-fashion-accessories' },
-      { id: 'watch', label: 'Watch Brand', category: 'apparel-fashion-accessories' },
-      { id: 'eyewear', label: 'Eyewear Brand', category: 'apparel-fashion-accessories' },
+      {
+        id: 'apparel-clothing',
+        label: 'Apparel / Clothing Brand',
+        category: 'apparel-fashion-accessories',
+      },
+      {
+        id: 'garment-export',
+        label: 'Garment Export Brand',
+        category: 'apparel-fashion-accessories',
+      },
+      {
+        id: 'footwear',
+        label: 'Footwear Brand',
+        category: 'apparel-fashion-accessories',
+      },
+      {
+        id: 'fashion-accessories',
+        label: 'Fashion Accessories Brand',
+        category: 'apparel-fashion-accessories',
+      },
+      {
+        id: 'jewellery',
+        label: 'Jewellery Brand',
+        category: 'apparel-fashion-accessories',
+      },
+      {
+        id: 'watch',
+        label: 'Watch Brand',
+        category: 'apparel-fashion-accessories',
+      },
+      {
+        id: 'eyewear',
+        label: 'Eyewear Brand',
+        category: 'apparel-fashion-accessories',
+      },
     ],
   },
   {
     id: 'electronics-durables',
     title: 'ELECTRONICS & DURABLES',
     options: [
-      { id: 'consumer-electronics', label: 'Consumer Electronics Brand', category: 'electronics-durables' },
-      { id: 'mobile-accessories', label: 'Mobile & Accessories Brand', category: 'electronics-durables' },
-      { id: 'electrical-appliances', label: 'Electrical Appliances Brand', category: 'electronics-durables' },
-      { id: 'home-appliances', label: 'Home Appliances Brand', category: 'electronics-durables' },
-      { id: 'it-hardware', label: 'IT Hardware Brand', category: 'electronics-durables' },
-      { id: 'industrial-electronics', label: 'Industrial Electronics Brand', category: 'electronics-durables' },
+      {
+        id: 'consumer-electronics',
+        label: 'Consumer Electronics Brand',
+        category: 'electronics-durables',
+      },
+      {
+        id: 'mobile-accessories',
+        label: 'Mobile & Accessories Brand',
+        category: 'electronics-durables',
+      },
+      {
+        id: 'electrical-appliances',
+        label: 'Electrical Appliances Brand',
+        category: 'electronics-durables',
+      },
+      {
+        id: 'home-appliances',
+        label: 'Home Appliances Brand',
+        category: 'electronics-durables',
+      },
+      {
+        id: 'it-hardware',
+        label: 'IT Hardware Brand',
+        category: 'electronics-durables',
+      },
+      {
+        id: 'industrial-electronics',
+        label: 'Industrial Electronics Brand',
+        category: 'electronics-durables',
+      },
     ],
   },
   {
     id: 'ecommerce-d2c',
     title: 'E-COMMERCE & D2C BRANDS',
     options: [
-      { id: 'd2c-consumer', label: 'D2C Consumer Brand', category: 'ecommerce-d2c' },
-      { id: 'ecommerce-seller', label: 'E-commerce Seller Brand', category: 'ecommerce-d2c' },
-      { id: 'subscription-box', label: 'Subscription Box Brand', category: 'ecommerce-d2c' },
-      { id: 'marketplace-private-label', label: 'Marketplace Private Label', category: 'ecommerce-d2c' },
-      { id: 'quick-commerce', label: 'Quick Commerce Brand', category: 'ecommerce-d2c' },
+      {
+        id: 'd2c-consumer',
+        label: 'D2C Consumer Brand',
+        category: 'ecommerce-d2c',
+      },
+      {
+        id: 'ecommerce-seller',
+        label: 'E-commerce Seller Brand',
+        category: 'ecommerce-d2c',
+      },
+      {
+        id: 'subscription-box',
+        label: 'Subscription Box Brand',
+        category: 'ecommerce-d2c',
+      },
+      {
+        id: 'marketplace-private-label',
+        label: 'Marketplace Private Label',
+        category: 'ecommerce-d2c',
+      },
+      {
+        id: 'quick-commerce',
+        label: 'Quick Commerce Brand',
+        category: 'ecommerce-d2c',
+      },
     ],
   },
   {
     id: 'food-service-hospitality',
     title: 'FOOD SERVICE & HOSPITALITY',
     options: [
-      { id: 'bakery', label: 'Bakery Brand', category: 'food-service-hospitality' },
-      { id: 'patisserie-cake', label: 'Patisserie / Cake Brand', category: 'food-service-hospitality' },
-      { id: 'qsr-fast-food', label: 'QSR / Fast Food Brand', category: 'food-service-hospitality' },
-      { id: 'restaurant-chain', label: 'Restaurant Chain', category: 'food-service-hospitality' },
-      { id: 'cloud-kitchen', label: 'Cloud Kitchen', category: 'food-service-hospitality' },
+      {
+        id: 'bakery',
+        label: 'Bakery Brand',
+        category: 'food-service-hospitality',
+      },
+      {
+        id: 'patisserie-cake',
+        label: 'Patisserie / Cake Brand',
+        category: 'food-service-hospitality',
+      },
+      {
+        id: 'qsr-fast-food',
+        label: 'QSR / Fast Food Brand',
+        category: 'food-service-hospitality',
+      },
+      {
+        id: 'restaurant-chain',
+        label: 'Restaurant Chain',
+        category: 'food-service-hospitality',
+      },
+      {
+        id: 'cloud-kitchen',
+        label: 'Cloud Kitchen',
+        category: 'food-service-hospitality',
+      },
       { id: 'cafe', label: 'Café Brand', category: 'food-service-hospitality' },
-      { id: 'catering', label: 'Catering Brand', category: 'food-service-hospitality' },
+      {
+        id: 'catering',
+        label: 'Catering Brand',
+        category: 'food-service-hospitality',
+      },
     ],
   },
   {
     id: 'corporate-b2b-institutional',
     title: 'CORPORATE, B2B & INSTITUTIONAL',
     options: [
-      { id: 'corporate-gifting', label: 'Corporate Gifting Brand', category: 'corporate-b2b-institutional' },
-      { id: 'promotional-merchandise', label: 'Promotional Merchandise Brand', category: 'corporate-b2b-institutional' },
-      { id: 'office-supplies', label: 'Office Supplies Brand', category: 'corporate-b2b-institutional' },
-      { id: 'industrial-goods', label: 'Industrial Goods Brand', category: 'corporate-b2b-institutional' },
-      { id: 'chemical', label: 'Chemical Brand', category: 'corporate-b2b-institutional' },
-      { id: 'paints-coatings', label: 'Paints & Coatings Brand', category: 'corporate-b2b-institutional' },
+      {
+        id: 'corporate-gifting',
+        label: 'Corporate Gifting Brand',
+        category: 'corporate-b2b-institutional',
+      },
+      {
+        id: 'promotional-merchandise',
+        label: 'Promotional Merchandise Brand',
+        category: 'corporate-b2b-institutional',
+      },
+      {
+        id: 'office-supplies',
+        label: 'Office Supplies Brand',
+        category: 'corporate-b2b-institutional',
+      },
+      {
+        id: 'industrial-goods',
+        label: 'Industrial Goods Brand',
+        category: 'corporate-b2b-institutional',
+      },
+      {
+        id: 'chemical',
+        label: 'Chemical Brand',
+        category: 'corporate-b2b-institutional',
+      },
+      {
+        id: 'paints-coatings',
+        label: 'Paints & Coatings Brand',
+        category: 'corporate-b2b-institutional',
+      },
     ],
   },
   {
     id: 'education-publishing-stationery',
     title: 'EDUCATION, PUBLISHING & STATIONERY',
     options: [
-      { id: 'school-education', label: 'School / Education Brand', category: 'education-publishing-stationery' },
-      { id: 'publishing-house', label: 'Publishing House', category: 'education-publishing-stationery' },
-      { id: 'book-publisher', label: 'Book Publisher', category: 'education-publishing-stationery' },
-      { id: 'edtech', label: 'EdTech Brand', category: 'education-publishing-stationery' },
-      { id: 'stationery', label: 'Stationery Brand', category: 'education-publishing-stationery' },
-      { id: 'notebook-diary', label: 'Notebook / Diary Brand', category: 'education-publishing-stationery' },
+      {
+        id: 'school-education',
+        label: 'School / Education Brand',
+        category: 'education-publishing-stationery',
+      },
+      {
+        id: 'publishing-house',
+        label: 'Publishing House',
+        category: 'education-publishing-stationery',
+      },
+      {
+        id: 'book-publisher',
+        label: 'Book Publisher',
+        category: 'education-publishing-stationery',
+      },
+      {
+        id: 'edtech',
+        label: 'EdTech Brand',
+        category: 'education-publishing-stationery',
+      },
+      {
+        id: 'stationery',
+        label: 'Stationery Brand',
+        category: 'education-publishing-stationery',
+      },
+      {
+        id: 'notebook-diary',
+        label: 'Notebook / Diary Brand',
+        category: 'education-publishing-stationery',
+      },
     ],
   },
   {
     id: 'agriculture-rural-products',
     title: 'AGRICULTURE & RURAL PRODUCTS',
     options: [
-      { id: 'agro-products', label: 'Agro Products Brand', category: 'agriculture-rural-products' },
-      { id: 'seeds', label: 'Seeds Brand', category: 'agriculture-rural-products' },
-      { id: 'fertilizer', label: 'Fertilizer Brand', category: 'agriculture-rural-products' },
-      { id: 'organic-natural', label: 'Organic / Natural Products Brand', category: 'agriculture-rural-products' },
-      { id: 'tea-coffee', label: 'Tea / Coffee Brand', category: 'agriculture-rural-products' },
-      { id: 'spices', label: 'Spices Brand', category: 'agriculture-rural-products' },
+      {
+        id: 'agro-products',
+        label: 'Agro Products Brand',
+        category: 'agriculture-rural-products',
+      },
+      {
+        id: 'seeds',
+        label: 'Seeds Brand',
+        category: 'agriculture-rural-products',
+      },
+      {
+        id: 'fertilizer',
+        label: 'Fertilizer Brand',
+        category: 'agriculture-rural-products',
+      },
+      {
+        id: 'organic-natural',
+        label: 'Organic / Natural Products Brand',
+        category: 'agriculture-rural-products',
+      },
+      {
+        id: 'tea-coffee',
+        label: 'Tea / Coffee Brand',
+        category: 'agriculture-rural-products',
+      },
+      {
+        id: 'spices',
+        label: 'Spices Brand',
+        category: 'agriculture-rural-products',
+      },
     ],
   },
   {
     id: 'home-lifestyle-decor',
     title: 'HOME, LIFESTYLE & DECOR',
     options: [
-      { id: 'home-furnishing', label: 'Home Furnishing Brand', category: 'home-lifestyle-decor' },
-      { id: 'furniture', label: 'Furniture Brand', category: 'home-lifestyle-decor' },
-      { id: 'home-decor', label: 'Home Décor Brand', category: 'home-lifestyle-decor' },
-      { id: 'kitchenware', label: 'Kitchenware Brand', category: 'home-lifestyle-decor' },
-      { id: 'lighting', label: 'Lighting Brand', category: 'home-lifestyle-decor' },
+      {
+        id: 'home-furnishing',
+        label: 'Home Furnishing Brand',
+        category: 'home-lifestyle-decor',
+      },
+      {
+        id: 'furniture',
+        label: 'Furniture Brand',
+        category: 'home-lifestyle-decor',
+      },
+      {
+        id: 'home-decor',
+        label: 'Home Décor Brand',
+        category: 'home-lifestyle-decor',
+      },
+      {
+        id: 'kitchenware',
+        label: 'Kitchenware Brand',
+        category: 'home-lifestyle-decor',
+      },
+      {
+        id: 'lighting',
+        label: 'Lighting Brand',
+        category: 'home-lifestyle-decor',
+      },
     ],
   },
   {
     id: 'events-gifts-promotions',
     title: 'EVENTS, GIFTS & PROMOTIONS',
     options: [
-      { id: 'event-management', label: 'Event Management Brand', category: 'events-gifts-promotions' },
-      { id: 'festive-gifting', label: 'Festive Gifting Brand', category: 'events-gifts-promotions' },
-      { id: 'wedding-gifting', label: 'Wedding Gifting Brand', category: 'events-gifts-promotions' },
-      { id: 'luxury-hampers', label: 'Luxury Hampers Brand', category: 'events-gifts-promotions' },
-      { id: 'promotional-campaign', label: 'Promotional Campaign Brand', category: 'events-gifts-promotions' },
+      {
+        id: 'event-management',
+        label: 'Event Management Brand',
+        category: 'events-gifts-promotions',
+      },
+      {
+        id: 'festive-gifting',
+        label: 'Festive Gifting Brand',
+        category: 'events-gifts-promotions',
+      },
+      {
+        id: 'wedding-gifting',
+        label: 'Wedding Gifting Brand',
+        category: 'events-gifts-promotions',
+      },
+      {
+        id: 'luxury-hampers',
+        label: 'Luxury Hampers Brand',
+        category: 'events-gifts-promotions',
+      },
+      {
+        id: 'promotional-campaign',
+        label: 'Promotional Campaign Brand',
+        category: 'events-gifts-promotions',
+      },
     ],
   },
 ];
@@ -173,22 +544,66 @@ const BrandRegistrationScreen = () => {
   const route = useRoute<RouteProp<AuthStackParamList, 'BrandRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   // Get profileData from route params
   const { profileData } = route.params || {};
 
-  // Form state
-  const [companyName, setCompanyName] = useState('');
-  const [selectedBrandTypes, setSelectedBrandTypes] = useState<Set<string>>(new Set());
-  const [contactPersonName, setContactPersonName] = useState('');
-  const [mobileOrEmail, setMobileOrEmail] = useState('');
-  const [gstNumber, setGstNumber] = useState('');
-  const [city, setCity] = useState('');
+  // Keyboard visibility hook
+  const { isKeyboardVisible } = useKeyboard();
+
+  // API mutation hook
+  const { mutate: completeBrandProfile, isPending: isSubmitting } = useCompleteBrandProfile();
+
+  // Calculate bottom padding for scrollable content (to account for FloatingBottomContainer)
+  // This ensures content doesn't get hidden behind the floating container
+  const floatingContainerPadding = useFloatingBottomPadding({
+    buttonHeight: 60,
+    additionalContentHeight: 20, // Footer note text height
+  });
+
+  // Form handling
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<BrandRegistrationFormData>({
+    defaultValues: {
+      companyName: '',
+      brandTypes: [],
+      contactPersonName: '',
+      mobileOrEmail: '',
+      gstNumber: '',
+      city: '',
+    },
+    mode: 'onChange', // Changed to onChange for real-time validation
+  });
+
+  // Watch form values
+  const companyNameValue = watch('companyName');
+  const contactPersonNameValue = watch('contactPersonName');
+  const mobileOrEmailValue = watch('mobileOrEmail');
+  const gstNumberValue = watch('gstNumber');
+  const cityValue = watch('city');
+  const brandTypesValue = watch('brandTypes');
+
+  // Local state for brand types selection
+  const [selectedBrandTypes, setSelectedBrandTypes] = useState<Set<string>>(
+    new Set(),
+  );
 
   // UI state
   const [showBrandTypeModal, setShowBrandTypeModal] = useState(false);
   const [brandTypeSearchQuery, setBrandTypeSearchQuery] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+  // Sync selectedBrandTypes with form value
+  useEffect(() => {
+    setValue('brandTypes', Array.from(selectedBrandTypes), {
+      shouldValidate: true,
+    });
+  }, [selectedBrandTypes, setValue]);
 
   // Validation
   const isValidEmail = (email: string) => {
@@ -197,24 +612,52 @@ const BrandRegistrationScreen = () => {
   };
 
   const isValidMobile = (mobile: string) => {
+    const cleaned = mobile.replace(/\D/g, ''); // Remove all non-digits
     const mobileRegex = /^[6-9]\d{9}$/;
-    return mobileRegex.test(mobile.replace(/\D/g, ''));
+    return mobileRegex.test(cleaned) && cleaned.length === 10;
   };
 
   const isMobileOrEmailValid = useMemo(() => {
-    if (!mobileOrEmail.trim()) return false;
-    return isValidEmail(mobileOrEmail) || isValidMobile(mobileOrEmail);
-  }, [mobileOrEmail]);
+    if (!mobileOrEmailValue?.trim()) return false;
+    return (
+      isValidEmail(mobileOrEmailValue) || isValidMobile(mobileOrEmailValue)
+    );
+  }, [mobileOrEmailValue]);
 
   const isFormValid = useMemo(() => {
-    return (
-      companyName.trim().length > 0 &&
-      selectedBrandTypes.size > 0 &&
-      contactPersonName.trim().length > 0 &&
-      isMobileOrEmailValid &&
-      city.trim().length > 0
-    );
-  }, [companyName, selectedBrandTypes.size, contactPersonName, isMobileOrEmailValid, city]);
+    const companyNameValid = companyNameValue?.trim().length > 0;
+    const brandTypesValid = selectedBrandTypes.size > 0;
+    const contactPersonValid = contactPersonNameValue?.trim().length > 0;
+    const mobileOrEmailValid = isMobileOrEmailValid;
+    const cityValid = cityValue?.trim().length > 0;
+
+    const valid = 
+      companyNameValid &&
+      brandTypesValid &&
+      contactPersonValid &&
+      mobileOrEmailValid &&
+      cityValid;
+
+    // Debug log (remove in production)
+    if (__DEV__) {
+      console.log('Form Validation:', {
+        companyName: companyNameValid,
+        brandTypes: brandTypesValid,
+        contactPerson: contactPersonValid,
+        mobileOrEmail: mobileOrEmailValid,
+        city: cityValid,
+        overall: valid,
+      });
+    }
+
+    return valid;
+  }, [
+    companyNameValue,
+    selectedBrandTypes.size,
+    contactPersonNameValue,
+    isMobileOrEmailValid,
+    cityValue,
+  ]);
 
   // Filtered brand types based on search
   const filteredBrandTypes = useMemo(() => {
@@ -225,12 +668,15 @@ const BrandRegistrationScreen = () => {
     const query = brandTypeSearchQuery.toLowerCase();
     return BRAND_TYPE_CATEGORIES.map(category => ({
       ...category,
-      options: category.options.filter(option =>
-        option.label.toLowerCase().includes(query) ||
-        category.title.toLowerCase().includes(query)
+      options: category.options.filter(
+        option =>
+          option.label.toLowerCase().includes(query) ||
+          category.title.toLowerCase().includes(query),
       ),
-    })).filter(category =>
-      category.options.length > 0 || category.title.toLowerCase().includes(query)
+    })).filter(
+      category =>
+        category.options.length > 0 ||
+        category.title.toLowerCase().includes(query),
     );
   }, [brandTypeSearchQuery]);
 
@@ -252,354 +698,727 @@ const BrandRegistrationScreen = () => {
     setSelectedBrandTypes(newSelected);
   };
 
-  const handleContinue = () => {
-    if (!isFormValid) return;
+  const onSubmit = useCallback(
+    (data: BrandRegistrationFormData) => {
+      // Validate that at least one brand type is selected
+      if (selectedBrandTypes.size === 0) {
+        Alert.alert('Validation Error', 'Please select at least one brand type');
+        return;
+      }
 
-    // TODO: Save form data to API/state
-    // This is the last screen in brand registration flow
-    // Navigate to VerificationStatus with profileData
-    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { profileData });
-  };
+      // Parse mobile/email - API expects separate fields
+      const isEmail = isValidEmail(mobileOrEmailValue || '');
+      const isMobile = isValidMobile(mobileOrEmailValue || '');
+      
+      let mobile = '';
+      let email = '';
+
+      if (isEmail) {
+        email = mobileOrEmailValue || '';
+      } else if (isMobile) {
+        mobile = mobileOrEmailValue?.replace(/\D/g, '') || '';
+      }
+
+      // Convert brand type string IDs to numeric IDs for API
+      const brandTypeIds = Array.from(selectedBrandTypes)
+        .map(id => BRAND_TYPE_ID_MAP[id])
+        .filter((id): id is number => id !== undefined && !isNaN(id));
+
+      if (brandTypeIds.length === 0) {
+        Alert.alert('Validation Error', 'Please select at least one valid brand type');
+        return;
+      }
+
+      // Prepare API request data
+      const apiData = {
+        company_name: companyNameValue?.trim() || '',
+        brand_name: companyNameValue?.trim() || '', // Using company name as brand name if not separate
+        contact_person_name: contactPersonNameValue?.trim() || '',
+        mobile: mobile,
+        email: email || undefined,
+        gst: gstNumberValue?.trim() || undefined,
+        city: cityValue?.trim() || '',
+        location: cityValue?.trim() || '', // Using city as location for now
+        latitude: 28.6139, // Default to Delhi coordinates - you can get from location service
+        longitude: 77.2090, // Default to Delhi coordinates - you can get from location service
+        brand_type_ids: brandTypeIds,
+      };
+
+      // Call API
+      completeBrandProfile(apiData, {
+        onSuccess: (response: any) => {
+          console.log('Brand profile completed successfully:', response);
+          // Navigate to verification status
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { 
+            profileData: {
+              ...profileData,
+              ...apiData,
+            }
+          });
+        },
+        onError: (error: any) => {
+
+          //Todo change when API word
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { 
+            profileData: {
+              ...profileData,
+              ...apiData,
+            }
+          });
+          console.error('Brand profile completion error:', error);
+          const errorMessage = 
+            error?.response?.data?.message || 
+            error?.message || 
+            'Failed to complete brand registration. Please try again.';
+          Alert.alert('Registration Failed', errorMessage, [{ text: 'OK' }]);
+        },
+      });
+    },
+    [
+      selectedBrandTypes,
+      companyNameValue,
+      contactPersonNameValue,
+      mobileOrEmailValue,
+      gstNumberValue,
+      cityValue,
+      isValidEmail,
+      isValidMobile,
+      completeBrandProfile,
+      navigation,
+      profileData,
+    ],
+  );
+
 
   return (
-    <ScreenWrapper
-      scrollable
-      backgroundColor={theme.colors.background.secondary}
-      safeAreaEdges={[]}
-      contentContainerStyle={styles.scrollContent}
-    >
+    <>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        enabled={Platform.OS === 'ios'}
       >
-        <View style={styles.container}>
-          <View style={styles.headerContainer}>
-            <Text variant="h3" fontWeight="bold" style={styles.title}>
-              Register Your Brand
-            </Text>
-            <Text variant="bodyMedium" style={styles.subtitle}>
-              Join the premium network for packaging professionals.
-            </Text>
-          </View>
-
-          <View style={styles.formContainer}>
-            {/* Company / Brand Name */}
-            <View style={styles.inputContainer}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Company / Brand Name
+        <ScreenWrapper
+          scrollable
+          backgroundColor={theme.colors.background.secondary}
+          safeAreaEdges={[]}
+          contentContainerStyle={[
+            { paddingBottom: floatingContainerPadding },
+          ]}
+          scrollViewProps={{
+            keyboardShouldPersistTaps: 'handled',
+            keyboardDismissMode: 'interactive',
+          }}
+        >
+          <View style={styles.container}>
+            <View style={styles.headerContainer}>
+              <Text variant="h3" fontWeight="bold" style={styles.title}>
+                Register Your Brand
               </Text>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'companyName' && styles.inputWrapperFocused,
-                ]}
-              >
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Acme Packaging Ltd."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={companyName}
-                  onChangeText={setCompanyName}
-                  onFocus={() => setFocusedInput('companyName')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-              </View>
+              <Text variant="bodyMedium" style={styles.subtitle}>
+                Join the premium network for packaging professionals.
+              </Text>
             </View>
 
-            {/* Brand Type(s) */}
-            <View style={styles.inputContainer}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Brand Type(s)
-              </Text>
-              <TouchableOpacity
-                style={styles.brandTypeSelector}
-                onPress={() => setShowBrandTypeModal(true)}
-                activeOpacity={0.7}
-              >
+            <View style={styles.formContainer}>
+              {/* Company / Brand Name */}
+              <View style={styles.inputContainer}>
                 <Text
                   variant="bodyMedium"
-                  style={[
-                    styles.brandTypeSelectorText,
-                    selectedBrandTypes.size === 0
-                      ? styles.brandTypeSelectorPlaceholder
-                      : styles.brandTypeSelectorSelected,
-                  ]}
-                  numberOfLines={1}
+                  fontWeight="medium"
+                  style={styles.label}
                 >
-                  {selectedBrandTypes.size === 0
-                    ? 'Select relevant categories.'
-                    : `${selectedBrandTypes.size} selected`}
+                  Company / Brand Name
                 </Text>
-                <AppIcon.ChevronDown
-                  width={20}
-                  height={20}
-                  color={theme.colors.text.tertiary}
+                <Controller
+                  control={control}
+                  name="companyName"
+                  rules={
+                    validationRules.required('Please enter company name') as any
+                  }
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'companyName' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. Acme Packaging Ltd."
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('companyName')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                        />
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
                 />
-              </TouchableOpacity>
-            </View>
+              </View>
 
-            {/* Contact Person Name */}
-            <View style={styles.inputContainer}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Contact Person Name
-              </Text>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'contactPerson' && styles.inputWrapperFocused,
-                ]}
-              >
-                <View style={styles.inputIconLeft}>
-                  <AppIcon.Person
-                    width={20}
-                    height={20}
-                    color={theme.colors.text.tertiary}
-                  />
+              {/* Brand Type(s) */}
+              <View style={styles.inputContainer}>
+                <Controller
+                  control={control}
+                  name="brandTypes"
+                  rules={
+                    {
+                      required: 'Please select at least one brand type',
+                      validate: (value: string[]) => {
+                        return (
+                          (value && value.length > 0) ||
+                          'Please select at least one brand type'
+                        );
+                      },
+                    } as any
+                  }
+                  render={({ field: { value }, fieldState: { error } }) => (
+                    <>
+                      <Text
+                        variant="bodyMedium"
+                        fontWeight="medium"
+                        style={styles.label}
+                      >
+                        Brand Type(s)
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.brandTypeSelector}
+                        onPress={() => setShowBrandTypeModal(true)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          variant="bodyMedium"
+                          style={[
+                            styles.brandTypeSelectorText,
+                            selectedBrandTypes.size === 0
+                              ? styles.brandTypeSelectorPlaceholder
+                              : styles.brandTypeSelectorSelected,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {selectedBrandTypes.size === 0
+                            ? 'Select relevant categories.'
+                            : `${selectedBrandTypes.size} selected`}
+                        </Text>
+                        <AppIcon.ChevronDown
+                          width={20}
+                          height={20}
+                          color={theme.colors.text.tertiary}
+                        />
+                      </TouchableOpacity>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Contact Person Name */}
+              <View style={styles.inputContainer}>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="medium"
+                  style={styles.label}
+                >
+                  Contact Person Name
+                </Text>
+                <Controller
+                  control={control}
+                  name="contactPersonName"
+                  rules={
+                    validationRules.required(
+                      'Please enter contact person name',
+                    ) as any
+                  }
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'contactPerson' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <View style={styles.inputIconLeft}>
+                          <AppIcon.Person
+                            width={20}
+                            height={20}
+                            color={theme.colors.text.tertiary}
+                          />
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Your full name."
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('contactPerson')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                        />
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Mobile Number OR Email */}
+              <View style={styles.inputContainer}>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="medium"
+                  style={styles.label}
+                >
+                  Mobile Number OR Email
+                </Text>
+                <Controller
+                  control={control}
+                  name="mobileOrEmail"
+                  rules={
+                    {
+                      required: 'Please enter mobile number or email',
+                      validate: (value: string) => {
+                        if (!value?.trim())
+                          return 'Please enter mobile number or email';
+                        return (
+                          isValidEmail(value) ||
+                          isValidMobile(value) ||
+                          'Please enter a valid mobile number or email'
+                        );
+                      },
+                    } as any
+                  }
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'mobileOrEmail' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter mobile or email"
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('mobileOrEmail')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                        {isMobileOrEmailValid && (
+                          <View style={styles.validationIcon}>
+                            <AppIcon.TickCheckedBox
+                              width={20}
+                              height={20}
+                              color={
+                                (theme.colors.success as any)?.DEFAULT ||
+                                theme.colors.primary.DEFAULT
+                              }
+                            />
+                          </View>
+                        )}
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* GST Number (Optional) */}
+              <View style={styles.inputContainer}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: theme.spacing[1],
+                  }}
+                >
+                  <Text
+                    variant="bodyMedium"
+                    fontWeight="medium"
+                    style={styles.label}
+                  >
+                    GST Number
+                  </Text>
+                  <Text variant="captionSmall" style={styles.optionalLabel}>
+                    (Optional)
+                  </Text>
                 </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Your full name."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={contactPersonName}
-                  onChangeText={setContactPersonName}
-                  onFocus={() => setFocusedInput('contactPerson')}
-                  onBlur={() => setFocusedInput(null)}
+                <Controller
+                  control={control}
+                  name="gstNumber"
+                  rules={validationRules.gstin() as any}
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'gstNumber' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <TextInput
+                          style={styles.input}
+                          placeholder="15-DIGIT ID."
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('gstNumber')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                          maxLength={15}
+                        />
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
                 />
               </View>
-            </View>
 
-            {/* Mobile Number OR Email */}
-            <View style={styles.inputContainer}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Mobile Number OR Email
-              </Text>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'mobileOrEmail' && styles.inputWrapperFocused,
-                ]}
-              >
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter mobile or email"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={mobileOrEmail}
-                  onChangeText={setMobileOrEmail}
-                  onFocus={() => setFocusedInput('mobileOrEmail')}
-                  onBlur={() => setFocusedInput(null)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-                {isMobileOrEmailValid && (
-                  <View style={styles.validationIcon}>
-                    <AppIcon.TickCheckedBox
-                      width={20}
-                      height={20}
-                      color={theme.colors.success || theme.colors.primary.DEFAULT}
-                    />
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* GST Number (Optional) */}
-            <View style={styles.inputContainer}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing[1] }}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  GST Number
+              {/* City / Location */}
+              <View style={styles.inputContainer}>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="medium"
+                  style={styles.label}
+                >
+                  City / Location
                 </Text>
-                <Text variant="captionSmall" style={styles.optionalLabel}>
-                  (Optional)
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'gstNumber' && styles.inputWrapperFocused,
-                ]}
-              >
-                <TextInput
-                  style={styles.input}
-                  placeholder="15-DIGIT ID."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={gstNumber}
-                  onChangeText={setGstNumber}
-                  onFocus={() => setFocusedInput('gstNumber')}
-                  onBlur={() => setFocusedInput(null)}
-                  maxLength={15}
+                <Controller
+                  control={control}
+                  name="city"
+                  rules={validationRules.required('Please enter city') as any}
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'city' && styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <View style={styles.inputIconLeft}>
+                          <AppIcon.Location
+                            width={20}
+                            height={20}
+                            color={theme.colors.text.tertiary}
+                          />
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Search city."
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('city')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                        />
+                        <View style={styles.inputIconRight}>
+                          <AppIcon.Search
+                            width={20}
+                            height={20}
+                            color={theme.colors.text.tertiary}
+                          />
+                        </View>
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
                 />
               </View>
             </View>
+          </View>
 
-            {/* City / Location */}
-            <View style={styles.inputContainer}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                City / Location
-              </Text>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'city' && styles.inputWrapperFocused,
-                ]}
-              >
-                <View style={styles.inputIconLeft}>
-                  <AppIcon.Location
-                    width={20}
-                    height={20}
-                    color={theme.colors.text.tertiary}
-                  />
+          {/* Brand Type Selection Modal */}
+          <Modal
+          visible={showBrandTypeModal}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowBrandTypeModal(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <View style={styles.brandTypeModal}>
+              <View style={styles.brandTypeModalHeader}>
+                <Text
+                  variant="h5"
+                  fontWeight="bold"
+                  style={styles.brandTypeModalTitle}
+                >
+                  Select Brand Type(s)
+                </Text>
+                <TouchableOpacity
+                  style={styles.brandTypeModalClose}
+                  onPress={() => {
+                    setShowBrandTypeModal(false);
+                    setBrandTypeSearchQuery('');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    variant="bodyMedium"
+                    fontWeight="semibold"
+                    color={theme.colors.primary.DEFAULT}
+                  >
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {selectedBrandTypes.size > 0 && (
+                <View style={styles.selectedCountBadge}>
+                  <Text variant="captionSmall" style={styles.selectedCountText}>
+                    {selectedBrandTypes.size} Selected
+                  </Text>
                 </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Search city."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={city}
-                  onChangeText={setCity}
-                  onFocus={() => setFocusedInput('city')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-                <View style={styles.inputIconRight}>
+              )}
+
+              <View style={styles.brandTypeSearchContainer}>
+                <View style={styles.brandTypeSearchIcon}>
                   <AppIcon.Search
                     width={20}
                     height={20}
                     color={theme.colors.text.tertiary}
                   />
                 </View>
-              </View>
-            </View>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-
-      {/* Brand Type Selection Modal */}
-      <Modal
-        visible={showBrandTypeModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowBrandTypeModal(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <View style={styles.brandTypeModal}>
-            <View style={styles.brandTypeModalHeader}>
-              <Text variant="h5" fontWeight="bold" style={styles.brandTypeModalTitle}>
-                Select Brand Type(s)
-              </Text>
-              <TouchableOpacity
-                style={styles.brandTypeModalClose}
-                onPress={() => {
-                  setShowBrandTypeModal(false);
-                  setBrandTypeSearchQuery('');
-                }}
-                activeOpacity={0.7}
-              >
-                <Text variant="bodyMedium" fontWeight="semibold" color={theme.colors.primary.DEFAULT}>
-                  Done
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {selectedBrandTypes.size > 0 && (
-              <View style={styles.selectedCountBadge}>
-                <Text variant="captionSmall" style={styles.selectedCountText}>
-                  {selectedBrandTypes.size} Selected
-                </Text>
-              </View>
-            )}
-
-            <View style={styles.brandTypeSearchContainer}>
-              <View style={styles.brandTypeSearchIcon}>
-                <AppIcon.Search
-                  width={20}
-                  height={20}
-                  color={theme.colors.text.tertiary}
+                <TextInput
+                  style={styles.brandTypeSearchInput}
+                  placeholder="Search brand types..."
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={brandTypeSearchQuery}
+                  onChangeText={setBrandTypeSearchQuery}
                 />
               </View>
-              <TextInput
-                style={styles.brandTypeSearchInput}
-                placeholder="Search brand types..."
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={brandTypeSearchQuery}
-                onChangeText={setBrandTypeSearchQuery}
-              />
-            </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {filteredBrandTypes.map((category) => (
-                <View key={category.id} style={styles.brandTypeCategory}>
-                  <Text variant="captionMedium" style={styles.brandTypeCategoryTitle}>
-                    {category.title}
-                  </Text>
-                  {category.options.map((option) => {
-                    const isSelected = selectedBrandTypes.has(option.id);
-                    return (
-                      <TouchableOpacity
-                        key={option.id}
-                        style={styles.brandTypeOption}
-                        onPress={() => toggleBrandType(option.id)}
-                        activeOpacity={0.7}
-                      >
-                        {isSelected ? (
-                          <AppIcon.TickCheckedBox
-                            width={24}
-                            height={24}
-                            color={theme.colors.primary.DEFAULT}
-                          />
-                        ) : (
-                          <AppIcon.UntickCheckedBox
-                            width={24}
-                            height={24}
-                            color={theme.colors.border.primary}
-                          />
-                        )}
-                        <Text
-                          variant="bodyMedium"
-                          style={[
-                            styles.brandTypeOptionLabel,
-                            isSelected && styles.brandTypeOptionSelected,
-                          ]}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {filteredBrandTypes.map(category => (
+                  <View key={category.id} style={styles.brandTypeCategory}>
+                    <Text
+                      variant="captionMedium"
+                      style={styles.brandTypeCategoryTitle}
+                    >
+                      {category.title}
+                    </Text>
+                    {category.options.map(option => {
+                      const isSelected = selectedBrandTypes.has(option.id);
+                      return (
+                        <TouchableOpacity
+                          key={option.id}
+                          style={styles.brandTypeOption}
+                          onPress={() => toggleBrandType(option.id)}
+                          activeOpacity={0.7}
                         >
-                          {option.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ))}
-            </ScrollView>
+                          {isSelected ? (
+                            <AppIcon.TickCheckedBox
+                              width={24}
+                              height={24}
+                              color={theme.colors.primary.DEFAULT}
+                            />
+                          ) : (
+                            <AppIcon.UntickCheckedBox
+                              width={24}
+                              height={24}
+                              color={theme.colors.border.primary}
+                            />
+                          )}
+                          <Text
+                            variant="bodyMedium"
+                            style={[
+                              styles.brandTypeOptionLabel,
+                              isSelected && styles.brandTypeOptionSelected,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+        </ScreenWrapper>
+      </KeyboardAvoidingView>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text variant="bodySmall" style={styles.footerNote}>
-          You can add more details later while posting a requirement.
-        </Text>
-        <TouchableOpacity
-          style={[styles.continueButton, !isFormValid && styles.continueButtonDisabled]}
-          onPress={handleContinue}
-          activeOpacity={0.8}
-          disabled={!isFormValid}
+      {/* Floating Bottom Container - Hidden when keyboard is open */}
+      {!isKeyboardVisible && (
+        <FloatingBottomContainer
+          backgroundColor={theme.colors.background.primary}
+          paddingHorizontal={theme.spacing[4]}
+          paddingVertical={theme.spacing[4]}
+          shadow={true}
+          borderRadius={0}
+          style={{
+            gap: theme.spacing[2],
+          }}
         >
-          <Text variant="buttonMedium" style={styles.continueButtonText}>
-            Continue
+          <Text variant="bodySmall" style={styles.footerNote}>
+            You can add more details later while posting a requirement.
           </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
-        </TouchableOpacity>
-      </View>
-    </ScreenWrapper>
+          <TouchableOpacity
+            style={[
+              styles.continueButton,
+              (!isFormValid || isSubmitting) && styles.continueButtonDisabled,
+            ]}
+            onPress={() => {
+              if (isFormValid && !isSubmitting) {
+                handleSubmit(onSubmit)();
+              } else {
+                // Debug: Log why button is disabled
+                if (__DEV__) {
+                  console.log('Button disabled. Form state:', {
+                    companyName: companyNameValue,
+                    brandTypes: selectedBrandTypes.size,
+                    contactPerson: contactPersonNameValue,
+                    mobileOrEmail: mobileOrEmailValue,
+                    city: cityValue,
+                    isMobileOrEmailValid,
+                    isFormValid,
+                    isSubmitting,
+                  });
+                }
+              }
+            }}
+            activeOpacity={0.8}
+            disabled={!isFormValid || isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color={theme.colors.text.inverse} size="small" />
+            ) : (
+              <>
+                <Text
+                  variant="buttonMedium"
+                  style={[
+                    styles.continueButtonText,
+                    {
+                      color: !isFormValid
+                        ? theme.colors.text.primary
+                        : theme.colors.text.inverse,
+                    },
+                  ]}
+                >
+                  Continue
+                </Text>
+                <AppIcon.ArrowRight
+                  width={20}
+                  height={20}
+                  color={theme.colors.text.inverse}
+                />
+              </>
+            )}
+          </TouchableOpacity>
+        </FloatingBottomContainer>
+      )}
+    </>
   );
 };
 
 export default BrandRegistrationScreen;
-

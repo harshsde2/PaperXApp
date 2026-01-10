@@ -3,7 +3,7 @@ import type { Theme } from '@theme/types';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
-    paddingBottom: 120,
+    flex: 1,
   },
   container: {
     flex: 1,

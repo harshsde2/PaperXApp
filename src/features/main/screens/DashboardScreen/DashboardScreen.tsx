@@ -1,20 +1,42 @@
 import React from 'react';
-import { View, ActivityIndicator, Button, RefreshControl } from 'react-native';
+import { View, ActivityIndicator, RefreshControl } from 'react-native';
 import { useAppSelector } from '@store/hooks';
-import { useGetProfile } from '@services/api';
+import { useGetProfile, useGetDashboard } from '@services/api';
+import type { DashboardRole } from '@services/api';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { ProfileCompletionCard } from './components/ProfileCompletionCard';
 import { DealerDashboardView } from './components/DealerDashboardView';
+import { ConverterDashboardView } from './components/ConverterDashboardView';
+import { BrandDashboardView } from './components/BrandDashboardView';
+import { MachineDealerDashboardView } from './components/MachineDealerDashboardView';
+import { DashboardHeader } from './components/DashboardHeader';
 import { styles } from './styles';
-import { SCREENS } from '@navigation/constants';
-import { useNavigation } from '@react-navigation/native';
 
 const DashboardScreen = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const { data: profileData, isLoading, isError, refetch } = useGetProfile();
-  const navigation = useNavigation<any>();
-  // Check profile completion status (same logic as ProfileScreen)
+  const { data: profileData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useGetProfile();
+  
+  // Get role for dashboard API
+  const primaryRole = (profileData?.primary_role || user?.primaryRole || 'dealer').toLowerCase().replace(' ', '-') as DashboardRole;
+  
+  // Fetch dashboard data based on role
+  const { 
+    data: dashboardData, 
+    isLoading: isDashboardLoading, 
+    isError: isDashboardError,
+    refetch: refetchDashboard 
+  } = useGetDashboard({ role: primaryRole });
+  
+  const isLoading = isProfileLoading || isDashboardLoading;
+  const isError = isProfileError || isDashboardError;
+  
+  const refetch = () => {
+    refetchProfile();
+    refetchDashboard();
+  };
+
+  // Check profile completion status
   const hasEmail = !!profileData?.email;
   const hasGstIn = !!profileData?.gst_in;
   const hasState = !!profileData?.state;
@@ -49,9 +71,10 @@ const DashboardScreen = () => {
   // Loading state
   if (isLoading) {
     return (
-      <ScreenWrapper backgroundColor="#F5F5F5" safeAreaEdges={[]}>
+      <ScreenWrapper backgroundColor="#F9FAFB" safeAreaEdges={[]}>
+        <DashboardHeader />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Loading dashboard...</Text>
         </View>
       </ScreenWrapper>
@@ -61,7 +84,8 @@ const DashboardScreen = () => {
   // Error state
   if (isError) {
     return (
-      <ScreenWrapper backgroundColor="#F5F5F5" safeAreaEdges={[]}>
+      <ScreenWrapper backgroundColor="#F9FAFB" safeAreaEdges={[]}>
+        <DashboardHeader />
         <View style={styles.errorContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorText}>Failed to load dashboard</Text>
@@ -70,52 +94,48 @@ const DashboardScreen = () => {
     );
   }
 
-  // Get user's primary role
-  const primaryRole = profileData?.primary_role || user?.primaryRole || 'dealer';
-
-  // // Show profile completion card if profile is incomplete
-  if (profileIncomplete) {
-    return (
-        <View style={styles.incompleteProfileContainer}>
-          <ProfileCompletionCard
-            incompleteFields={incompleteFields}
-            completionPercentage={profileCompletionPercentage}
-          />
-        </View>
-    );
-  }
+  // Show profile completion card if profile is incomplete
+  // if (profileIncomplete) {
+  //   return (
+  //     <ScreenWrapper backgroundColor="#F9FAFB" safeAreaEdges={[]}>
+  //       <DashboardHeader />
+  //       <View style={styles.incompleteProfileContainer}>
+  //         <ProfileCompletionCard
+  //           incompleteFields={incompleteFields}
+  //           completionPercentage={profileCompletionPercentage}
+  //         />
+  //       </View>
+  //     </ScreenWrapper>
+  //   );
+  // }
 
   // Render role-specific dashboard views
   const renderRoleDashboard = () => {
-    switch (primaryRole.toLowerCase()) {
+    switch (primaryRole) {
       case 'dealer':
-        return <DealerDashboardView profileData={profileData} />;
-      // Add more role cases here in the future
-      // case 'converter':
-      //   return <ConverterDashboardView profileData={profileData} />;
-      // case 'brand':
-      //   return <BrandDashboardView profileData={profileData} />;
+        return <DealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
+      case 'machine-dealer':
+        return <MachineDealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
+      case 'converter':
+        return <ConverterDashboardView profileData={profileData} dashboardData={dashboardData} />;
+      case 'brand':
+        return <BrandDashboardView profileData={profileData} dashboardData={dashboardData} />;
       default:
-        return <DealerDashboardView profileData={profileData} />;
+        return <DealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
     }
   };
 
   return (
-    <ScreenWrapper
-    scrollable
-    backgroundColor="#F5F5F5"
-    safeAreaEdges={[]}
-    contentContainerStyle={styles.scrollContent}
-    scrollViewProps={{
-      refreshControl: (
-        <></>
-            ),
-    }}
-  >
-    {renderRoleDashboard()}
-   </ScreenWrapper>
+    // <ScreenWrapper
+    //   backgroundColor="#F9FAFB"
+    //   safeAreaEdges={[]}
+    // >
+    <View style={{ flex: 1 }}>
+      <DashboardHeader />
+      {renderRoleDashboard()}
+    </View>
+    // </ScreenWrapper>
   );
 };
 
 export default DashboardScreen;
-

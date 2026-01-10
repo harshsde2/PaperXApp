@@ -6,6 +6,11 @@
 
 const API_VERSION = '/api/v1';
 
+// Dashboard Endpoints (Unified for all roles)
+export const DASHBOARD_ENDPOINTS = {
+  DASHBOARD: (role?: string) => `${API_VERSION}/dashboard${role ? `?role=${role}` : ''}`,
+} as const;
+
 // Authentication Endpoints
 export const AUTH_ENDPOINTS = {
   SEND_OTP: `${API_VERSION}/auth/otp/request`,

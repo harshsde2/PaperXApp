@@ -239,3 +239,31 @@ export type {
   // Reference Types
   BrandType,
 } from './brandApi/@types';
+
+// ============================================
+// DASHBOARD API (Unified for all roles)
+// ============================================
+
+export {
+  useGetDashboard,
+  useGetDealerDashboard,
+  useGetMachineDealerDashboard,
+  useGetConverterDashboard,
+  useGetBrandDashboard,
+} from './dashboardApi';
+
+export type {
+  DashboardRole,
+  DashboardData,
+  GetDashboardParams,
+  GetDashboardResponse,
+  DealerDashboardData,
+  MachineDealerDashboardData,
+  ConverterDashboardData,
+  BrandDashboardData,
+  RecentSession,
+  RecentInquiry,
+  ActiveSession,
+  NewInquiry,
+  MachineOpportunity,
+} from './dashboardApi';

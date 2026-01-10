@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { Text } from '@shared/components/Text';
 import OTPInput from '@features/auth/components/OTPInput';
@@ -79,7 +79,12 @@ const OTPVerificationScreen = () => {
     }
     verifyOTP({ mobile: mobile, otp: data.otp }, {
       onSuccess: () => {
-        navigation.navigate(SCREENS.AUTH.COMPANY_DETAILS);
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: SCREENS.AUTH.COMPANY_DETAILS }],
+          })
+        );
       },
       onError: (error: Error) => {
         console.error('[OTPVerificationScreen] Verify OTP Error:', error);

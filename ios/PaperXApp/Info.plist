@@ -34,7 +34,9 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
+	<string>PaperX needs access to your location to show your warehouse locations on the map and help you find nearby suppliers.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>PaperX needs access to your location to show your warehouse locations on the map and help you find nearby suppliers.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

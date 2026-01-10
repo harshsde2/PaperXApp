@@ -34,6 +34,7 @@ import Security from './Security.svg';
 import Person from './Person.svg';
 import Warning from './Warning.svg';
 import Notification from './Notification.svg';
+import Close from './Close.svg';
 
 
 
@@ -74,4 +75,5 @@ export const AppIcon = {
   Person,
   Warning,
   Notification,
+  Close,
 };

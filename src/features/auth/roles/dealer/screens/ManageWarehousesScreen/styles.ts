@@ -98,6 +98,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: theme.colors.surface.secondary,
     marginTop: theme.spacing[2],
   },
+  miniMap: {
+    ...StyleSheet.absoluteFillObject,
+  },
   mapPlaceholder: {
     flex: 1,
     justifyContent: 'center',
@@ -107,6 +110,11 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   mapPlaceholderText: {
     color: theme.colors.text.tertiary,
     marginTop: theme.spacing[1],
+  },
+  emptyStateCard: {
+    padding: theme.spacing[6],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addLocationCard: {
     borderWidth: 2,

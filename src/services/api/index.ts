@@ -67,7 +67,10 @@ export type {
   IdName,
   // Materials
   Material,
+  MaterialGrade,
   GetMaterialsResponse,
+  GetMaterialsPaginatedResponse,
+  GetMaterialsParams,
   MaterialDetails,
   GetMaterialDetailsResponse,
   // Machines

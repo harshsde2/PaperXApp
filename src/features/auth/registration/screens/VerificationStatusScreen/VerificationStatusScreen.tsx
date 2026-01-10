@@ -24,6 +24,7 @@ const VerificationStatusScreen = () => {
   // Get profile data from route params
   const profileData = route.params?.profileData as UpdateProfileResponse | undefined;
 
+  console.log('[VerificationStatus] Profile data:', JSON.stringify(profileData, null, 2));
   // NOTE: Do NOT update Redux state or storage on screen load
   // State will be updated only when user clicks "Proceed to Dashboard" button
   // This prevents automatic navigation to dashboard

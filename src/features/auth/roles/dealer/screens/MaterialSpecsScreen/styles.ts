@@ -3,7 +3,12 @@ import type { Theme } from '@theme/types';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: theme.spacing[6],
+  },
+  button: {
+
+  },
+  buttonText: {
   },
   container: {
     flex: 1,
@@ -39,7 +44,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   badge: {
     backgroundColor: theme.colors.primary.DEFAULT,
     paddingHorizontal: theme.spacing[2],
-    paddingVertical: theme.spacing[0.5],
+    paddingVertical: theme.spacing[1],
     borderRadius: theme.borderRadius.full,
   },
   badgeText: {
@@ -106,21 +111,11 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   addButton: {
     padding: theme.spacing[2],
   },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.colors.surface.primary,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.primary,
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
   footerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: theme.spacing[3],
   },
   footerItemCount: {
     color: theme.colors.text.primary,
@@ -139,6 +134,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: theme.spacing[2],
+    width: '100%',
   },
   confirmButtonText: {
     color: theme.colors.text.inverse,

@@ -165,5 +165,17 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.inverse,
     letterSpacing: 0.5,
   },
+  errorContainer: {
+    marginTop: theme.spacing[3],
+    padding: theme.spacing[3],
+    backgroundColor: theme.colors.error.light || '#FEE2E2',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.error.DEFAULT || '#EF4444',
+  },
+  errorText: {
+    color: theme.colors.error.DEFAULT || '#EF4444',
+    textAlign: 'center',
+  },
 });
 

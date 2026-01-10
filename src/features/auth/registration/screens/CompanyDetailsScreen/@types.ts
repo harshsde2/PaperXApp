@@ -6,3 +6,17 @@ export type CompanyDetailsScreenNavigationProp = StackNavigationProp<
   'CompanyDetails'
 >;
 
+export type CompanyDetailsFormData = {
+  companyName: string;
+  gstin: string;
+  state: string;
+  city: string;
+};
+
+export type SelectedFile = {
+  uri: string;
+  name: string;
+  type: string;
+  size: number;
+  base64: string;
+};

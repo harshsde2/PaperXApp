@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -10,8 +10,12 @@ import { ManageWarehousesScreenNavigationProp, WarehouseLocation } from './@type
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
+import { useCompleteDealerProfile } from '@services/api';
+import type { CompleteDealerProfileRequest, AgentType, Location } from '@services/api';
+import { useAppDispatch } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
+import type { UpdateProfileResponse } from '@services/api';
 
-// Mock data - in a real app, this would come from state/API
 const MOCK_LOCATIONS: WarehouseLocation[] = [
   {
     id: '1',
@@ -42,20 +46,172 @@ const ManageWarehousesScreen = () => {
   const route = useRoute<RouteProp<AuthStackParamList, 'ManageWarehouses'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  const dispatch = useAppDispatch();
   
-  // Get profileData from route params
   const { profileData } = route.params || {};
   
   const [noWarehouse, setNoWarehouse] = useState(false);
   const [locations, setLocations] = useState<WarehouseLocation[]>(MOCK_LOCATIONS);
+  const [error, setError] = useState<string | null>(null);
 
   const activeLocationsCount = locations.length;
 
+  const { mutate: completeProfileMutation, isPending } = useCompleteDealerProfile();
+
+
+
+  const transformDataForAPI = (): CompleteDealerProfileRequest | null => {
+    if (!profileData) {
+      setError('Profile data is missing. Please go back and try again.');
+      return null;
+    }
+
+    try {
+      const materials = (profileData.materials || []).map((material: any) => {
+        const relationship = profileData.mill_brand_details?.relationship || 'independent-dealer';
+        const agentType: AgentType =
+          relationship === 'authorized-agent' ? 'AUTHORIZED_AGENT' : 'INDEPENDENT_DEALER';
+
+        const brandId = profileData.mill_brand_details?.mill_brand_id || 1;
+        const finishIds = profileData.material_specs?.finish_ids || [];
+
+        const thicknessRanges = profileData.thickness
+          ? [
+              {
+                unit: profileData.thickness.unit as 'GSM' | 'MM' | 'MICRON',
+                min: profileData.thickness.min,
+                max: profileData.thickness.max,
+              },
+            ]
+          : [];
+
+        return {
+          material_id: Number(material.material_id),
+          brand_id: Number(brandId),
+          agent_type: agentType,
+          finish_ids: finishIds.map((id: any) => Number(id)),
+          thickness_ranges: thicknessRanges,
+        };
+      });
+
+      const apiLocations: Location[] = noWarehouse
+        ? []
+        : locations.map((loc) => ({
+            type: 'warehouse' as const,
+            address: loc.address,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            city: loc.city,
+            state: loc.state,
+            pincode: loc.zipCode,
+          }));
+
+      const requestData: CompleteDealerProfileRequest = {
+        materials,
+        has_warehouse: !noWarehouse,
+        locations: apiLocations,
+      };
+
+      return requestData;
+    } catch (err) {
+      console.error('[ManageWarehouses] Error transforming data:', err);
+      setError('Failed to prepare registration data. Please try again.');
+      return null;
+    }
+  };
+
   const handleSave = () => {
-    // TODO: Save warehouse settings to API/state
-    // This is the last screen in dealer registration flow
-    // Navigate to VerificationStatus with profileData
-    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { profileData });
+    setError(null);
+
+    if (!noWarehouse && locations.length === 0) {
+      const errorMsg = 'Please add at least one warehouse location or select "No warehouse" option.';
+      setError(errorMsg);
+      dispatch(
+        showToast({
+          message: errorMsg,
+          type: 'error',
+        })
+      );
+      return;
+    }
+
+    const requestData = transformDataForAPI();
+    if (!requestData) {
+      return;
+    }
+
+    if (!requestData.materials || requestData.materials.length === 0) {
+      setError('Materials information is missing. Please go back and select materials.');
+      dispatch(
+        showToast({
+          message: 'Materials information is missing. Please go back and select materials.',
+          type: 'error',
+        })
+      );
+      return;
+    }
+
+    if (!noWarehouse && (!requestData.locations || requestData.locations.length === 0)) {
+      const errorMsg = 'At least one warehouse location is required when warehouse is enabled.';
+      setError(errorMsg);
+      dispatch(
+        showToast({
+          message: errorMsg,
+          type: 'error',
+        })
+      );
+      return;
+    }
+
+    console.log('[ManageWarehouses] Request data:', JSON.stringify(requestData, null, 2));
+    completeProfileMutation(requestData, {
+      onSuccess: (response) => {
+        // console.log('[ManageWarehouses] Profile completion success:', response);
+
+        dispatch(
+          showToast({
+            message: response.message || 'Registration completed successfully!',
+            type: 'success',
+          })
+        );
+
+        const updatedProfileData: UpdateProfileResponse = {
+          ...profileData,
+        };
+
+        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+          profileData: updatedProfileData,
+        });
+      },
+      onError: (err: any) => {
+
+        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+          profileData: profileData,
+        });
+        console.error('[ManageWarehouses] API error:', (err.response));
+
+        let errorMessage = 'Failed to complete registration. Please try again.';
+
+        if (err?.message) {
+          errorMessage = err.message;
+        } else if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err?.response?.data?.error?.message) {
+          errorMessage = err.response.data.error.message;
+        } else if (err?.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+
+        setError(errorMessage);
+
+        dispatch(
+          showToast({
+            message: errorMessage,
+            type: 'error',
+          })
+        );
+      },
+    });
   };
 
   useLayoutEffect(() => {
@@ -92,7 +248,6 @@ const ManageWarehousesScreen = () => {
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.container}>
-        {/* No Warehouse Section */}
         <Card style={styles.noWarehouseCard}>
           <TouchableOpacity
             style={styles.noWarehouseContent}
@@ -125,7 +280,6 @@ const ManageWarehousesScreen = () => {
           </TouchableOpacity>
         </Card>
 
-        {/* Your Locations Section */}
         <View style={styles.locationsHeader}>
           <Text variant="h5" fontWeight="bold" style={styles.locationsTitle}>
             Your Locations
@@ -135,7 +289,6 @@ const ManageWarehousesScreen = () => {
           </Text>
         </View>
 
-        {/* Location Cards */}
         {locations.map((location) => (
           <Card key={location.id} style={styles.locationCard}>
             {location.isPrimary && (
@@ -186,7 +339,6 @@ const ManageWarehousesScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Map Placeholder */}
             <View style={styles.mapContainer}>
               <View style={styles.mapPlaceholder}>
                 <AppIcon.Location
@@ -202,7 +354,6 @@ const ManageWarehousesScreen = () => {
           </Card>
         ))}
 
-        {/* Add New Location Card */}
         <TouchableOpacity
           style={styles.addLocationCard}
           onPress={handleAddLocation}
@@ -222,7 +373,6 @@ const ManageWarehousesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Footer Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.searchButton}
@@ -239,19 +389,42 @@ const ManageWarehousesScreen = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.searchButton, { marginTop: 12, backgroundColor: theme.colors.primary.DEFAULT }]}
+          style={[
+            styles.searchButton,
+            {
+              marginTop: 12,
+              backgroundColor: isPending
+                ? theme.colors.primary.light
+                : theme.colors.primary.DEFAULT,
+            },
+          ]}
           onPress={handleSave}
           activeOpacity={0.8}
+          disabled={isPending}
         >
-          <Text variant="buttonMedium" style={styles.searchButtonText}>
-            Complete Registration
-          </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
+          {isPending ? (
+            <ActivityIndicator size="small" color={theme.colors.text.inverse} />
+          ) : (
+            <>
+              <Text variant="buttonMedium" style={styles.searchButtonText}>
+                Complete Registration
+              </Text>
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
+                color={theme.colors.text.inverse}
+              />
+            </>
+          )}
         </TouchableOpacity>
+
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text variant="bodySmall" style={styles.errorText}>
+              {error}
+            </Text>
+          </View>
+        )}
       </View>
     </ScreenWrapper>
   );

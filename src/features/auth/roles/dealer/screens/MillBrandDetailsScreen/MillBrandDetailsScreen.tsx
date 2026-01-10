@@ -1,37 +1,105 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, TouchableOpacity, InteractionManager } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
+import { DropdownButton } from '@shared/components/DropdownButton';
+import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
+import { useBottomSheet } from '@shared/components/BottomSheet';
+import { BrandSelectionContent, SelectedBrand } from '@shared/components/BrandSelectionContent';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
 import { MillBrandDetailsScreenNavigationProp, MillRelationship } from './@types';
 import { createStyles } from './styles';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
+import { useGetBrands } from '@services/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MillBrandDetailsScreen = () => {
   const navigation = useNavigation<MillBrandDetailsScreenNavigationProp>();
   const route = useRoute<RouteProp<AuthStackParamList, 'MillBrandDetails'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+  const insets = useSafeAreaInsets();
+  const bottomSheet = useBottomSheet();
+
   // Get profileData from route params
   const { profileData } = route.params || {};
-  
-  const [millBrandName, setMillBrandName] = useState('');
+
+  // Fetch brands from API
+  const { data: brands = [], isLoading, isError, refetch } = useGetBrands();
+
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState<SelectedBrand | null>(null);
   const [preferNotToDisclose, setPreferNotToDisclose] = useState(false);
   const [relationship, setRelationship] = useState<MillRelationship>('authorized-agent');
 
-  const handleNextStep = () => {
-    // TODO: Save data to API/state
-    // Navigate to next screen in dealer registration flow
-    navigation.navigate(SCREENS.AUTH.MATERIAL_SPECS, { profileData });
+  const handleBrandSelect = useCallback((brand: SelectedBrand) => {
+    bottomSheet.close();
+    InteractionManager.runAfterInteractions(() => {
+      setSelectedBrand(brand);
+      setBrandSearchQuery('');
+    });
+  }, [bottomSheet]);
+
+  const openBrandSelector = useCallback(() => {
+    if (preferNotToDisclose) return;
+    
+    setBrandSearchQuery('');
+    bottomSheet.open(
+      <BrandSelectionContent
+        searchQuery={brandSearchQuery}
+        onSearchChange={setBrandSearchQuery}
+        selectedBrand={selectedBrand}
+        brands={brands}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        onSelect={handleBrandSelect}
+        theme={theme}
+      />,
+      {
+        snapPoints: ['70%', '95%'],
+        initialSnapIndex: 0,
+        onClose: () => setBrandSearchQuery(''),
+      }
+    );
+  }, [
+    bottomSheet,
+    brandSearchQuery,
+    selectedBrand,
+    brands,
+    isLoading,
+    isError,
+    refetch,
+    handleBrandSelect,
+    theme,
+    preferNotToDisclose,
+  ]);
+
+  const handlePreferNotToDisclose = (value: boolean) => {
+    setPreferNotToDisclose(value);
+    if (value) {
+      setSelectedBrand(null);
+    }
   };
 
-  const handleAddManually = () => {
-    // TODO: Open manual add modal/screen
+  const handleNextStep = () => {
+    const millBrandData = {
+      mill_brand_id: preferNotToDisclose ? null : selectedBrand?.id,
+      mill_brand_name: preferNotToDisclose ? null : selectedBrand?.name,
+      prefer_not_to_disclose: preferNotToDisclose,
+      relationship: relationship,
+    };
+
+    navigation.navigate(SCREENS.AUTH.MATERIAL_SPECS, {
+      profileData: {
+        ...profileData,
+        mill_brand_details: millBrandData,
+      },
+    });
   };
 
   const relationshipOptions = [
@@ -47,129 +115,145 @@ const MillBrandDetailsScreen = () => {
     },
   ];
 
+  const canProceed = preferNotToDisclose || selectedBrand !== null;
+
+  // Calculate bottom padding for scrollable content
+  const buttonHeight = 60;
+  const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
+
   return (
-    <ScreenWrapper
-      scrollable
-      backgroundColor={theme.colors.background.secondary}
-      safeAreaEdges={[]}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View style={styles.container}>
-        <Text variant="bodyMedium" style={styles.description}>
-          Please specify the origin of the materials you are listing. accurate sourcing helps us match you with the right buyers.
-        </Text>
+    <>
+      <ScreenWrapper
+        scrollable
+        backgroundColor={theme.colors.background.secondary}
+        safeAreaEdges={[]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
+      >
+        <View style={styles.container}>
+          <Text variant="bodyMedium" style={styles.description}>
+            Please specify the origin of the materials you are listing. Accurate sourcing helps us
+            match you with the right buyers.
+          </Text>
 
-        <Card style={styles.card}>
-          <View style={styles.formGroup}>
-            <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-              Mill / Brand Name
-            </Text>
-            <View style={styles.searchContainer}>
-              <View style={styles.searchIcon}>
-                <Text style={{ fontSize: 18, color: theme.colors.text.tertiary }}>🔍</Text>
-              </View>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Start typing to search..."
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={millBrandName}
-                onChangeText={setMillBrandName}
-              />
-              <AppIcon.ChevronDown
-                width={20}
-                height={20}
-                color={theme.colors.text.tertiary}
-              />
-            </View>
-            <TouchableOpacity onPress={handleAddManually} activeOpacity={0.7}>
-              <Text variant="bodySmall" style={styles.manualAddLinkText}>
-                Can't find it? Add manually
+          <Card style={styles.card}>
+            <View style={styles.formGroup}>
+              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                Mill / Brand Name
               </Text>
-            </TouchableOpacity>
-          </View>
-        </Card>
-
-        <Card style={styles.card}>
-          <TouchableOpacity
-            style={styles.disclosureContainer}
-            onPress={() => setPreferNotToDisclose(!preferNotToDisclose)}
-            activeOpacity={0.7}
-          >
-            {preferNotToDisclose ? (
-              <AppIcon.TickCheckedBox
-                width={24}
-                height={24}
-                color={theme.colors.primary.DEFAULT}
+              <DropdownButton
+                value={selectedBrand?.name || ''}
+                placeholder="Select Mill / Brand"
+                onPress={openBrandSelector}
+                disabled={preferNotToDisclose}
               />
-            ) : (
-              <AppIcon.UntickCheckedBox
-                width={24}
-                height={24}
-                color={theme.colors.text.primary}
-              />
-            )}
-            <View style={styles.disclosureTextContainer}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.disclosureText}>
-                I prefer not to disclose the mill name
-              </Text>
-              <Text variant="captionSmall" style={styles.disclosureSubtext}>
-                This may reduce matchmaking accuracy slightly.
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </Card>
-
-        <Card style={styles.card}>
-          <View style={styles.relationshipSection}>
-            <Text variant="bodyMedium" fontWeight="medium" style={styles.relationshipTitle}>
-              What is your relationship with this mill?
-            </Text>
-            {relationshipOptions.map((option) => {
-              const isSelected = relationship === option.id;
-              return (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[styles.relationshipCard, isSelected && styles.relationshipCardSelected]}
-                  onPress={() => setRelationship(option.id)}
-                  activeOpacity={0.7}
+              <TouchableOpacity
+                onPress={() => {
+                  // For manual entry, user can still open the selector
+                  // and type in the search to find or add a brand
+                  if (!preferNotToDisclose) {
+                    openBrandSelector();
+                  }
+                }}
+                activeOpacity={0.7}
+                disabled={preferNotToDisclose}
+              >
+                <Text
+                  variant="bodySmall"
+                  style={[
+                    styles.manualAddLinkText,
+                    preferNotToDisclose && { opacity: 0.5 },
+                  ]}
                 >
-                  <View style={styles.relationshipLeft}>
-                    <View style={[styles.radioButton, isSelected && styles.radioButtonSelected]}>
-                      {isSelected && <View style={styles.radioButtonInner} />}
-                    </View>
-                    <View style={styles.relationshipContent}>
-                      <Text variant="bodyMedium" fontWeight="medium" style={styles.relationshipLabel}>
-                        {option.label}
-                      </Text>
-                      <Text variant="captionMedium" style={styles.relationshipSubtext}>
-                        {option.subtext}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Card>
+                  Can't find it? Add manually
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
 
+          <Card style={styles.card}>
+            <TouchableOpacity
+              style={styles.disclosureContainer}
+              onPress={() => handlePreferNotToDisclose(!preferNotToDisclose)}
+              activeOpacity={0.7}
+            >
+              {preferNotToDisclose ? (
+                <AppIcon.TickCheckedBox
+                  width={24}
+                  height={24}
+                  color={theme.colors.primary.DEFAULT}
+                />
+              ) : (
+                <AppIcon.UntickCheckedBox
+                  width={24}
+                  height={24}
+                  color={theme.colors.text.primary}
+                />
+              )}
+              <View style={styles.disclosureTextContainer}>
+                <Text variant="bodyMedium" fontWeight="medium" style={styles.disclosureText}>
+                  I prefer not to disclose the mill name
+                </Text>
+                <Text variant="captionSmall" style={styles.disclosureSubtext}>
+                  This may reduce matchmaking accuracy slightly.
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </Card>
+
+          <Card style={styles.card}>
+            <View style={styles.relationshipSection}>
+              <Text variant="bodyMedium" fontWeight="medium" style={styles.relationshipTitle}>
+                What is your relationship with this mill?
+              </Text>
+              {relationshipOptions.map(option => {
+                const isSelected = relationship === option.id;
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.relationshipCard,
+                      isSelected && styles.relationshipCardSelected,
+                    ]}
+                    onPress={() => setRelationship(option.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.relationshipLeft}>
+                      <View style={[styles.radioButton, isSelected && styles.radioButtonSelected]}>
+                        {isSelected && <View style={styles.radioButtonInner} />}
+                      </View>
+                      <View style={styles.relationshipContent}>
+                        <Text variant="bodyMedium" fontWeight="medium" style={styles.relationshipLabel}>
+                          {option.label}
+                        </Text>
+                        <Text variant="captionMedium" style={styles.relationshipSubtext}>
+                          {option.subtext}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Card>
+        </View>
+      </ScreenWrapper>
+
+      {/* Floating Bottom Button */}
+      <FloatingBottomContainer>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, !canProceed && { opacity: 0.5 }]}
           onPress={handleNextStep}
           activeOpacity={0.8}
+          disabled={!canProceed}
         >
           <Text variant="buttonMedium" style={styles.buttonText}>
             Next Step
           </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
+          <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
         </TouchableOpacity>
-      </View>
-    </ScreenWrapper>
+      </FloatingBottomContainer>
+    </>
   );
 };
 
 export default MillBrandDetailsScreen;
-

@@ -1,14 +1,35 @@
 # PaperX App - Cursor IDE Rules
 
+## ⛔ CRITICAL STOP & CHECK - READ BEFORE WRITING ANY CODE
+
+**BEFORE writing ANY code, ASK YOURSELF:**
+
+1. ❓ Am I creating a new component (even a small one like `ListItem`, `Card`, `Row`)?
+   → **YES** = Create a NEW FOLDER in `components/` with `index.tsx`, `@types.ts`, `styles.ts`
+   → **NO inline components allowed - not even 5 lines!**
+
+2. ❓ Am I defining a type, interface, or enum?
+   → **YES** = Put it in `@types.ts`, NEVER in the main file
+
+3. ❓ Am I writing StyleSheet.create() or any styles?
+   → **YES** = Put it in `styles.ts`, NEVER in the main file
+
+4. ❓ Am I writing `const SomeComponent = memo(...)` or `const SomeComponent = () => ...`?
+   → **YES** = This is a COMPONENT! Create a separate folder for it!
+
+**IF YOU VIOLATE THESE RULES, THE CODE WILL BE REJECTED.**
+
+---
+
 ## 📁 File and Folder Structure
 
 ### Screens
 - Every screen MUST be in its own folder
 - Folder structure: `ScreenName/`
-  - `ScreenName.tsx` - Main screen component
+  - `ScreenName.tsx` - Main screen component (ONLY the screen component, nothing else)
   - `@types.ts` - All TypeScript types, interfaces, and enums for this screen
   - `styles.ts` - All StyleSheet styles for this screen
-- NO inline types or styles in the main screen file
+- **ABSOLUTELY NO** inline types, styles, or sub-components in the main screen file
 - Example structure:
   ```
   screens/
@@ -19,12 +40,14 @@
   ```
 
 ### Components
-- Every component MUST be in its own folder
+- **EVERY component MUST be in its own folder - NO EXCEPTIONS**
+- **This includes**: List items, cards, rows, buttons, wrappers, content components, EVERYTHING
+- Even if the component is only used in ONE place, it gets its own folder
 - Folder structure: `ComponentName/`
   - `index.tsx` - Main component file (always named index.tsx)
   - `@types.ts` - All TypeScript types, interfaces, and enums for this component
   - `styles.ts` - All StyleSheet styles for this component
-- NO inline types or styles in the main component file
+- **ABSOLUTELY NO** inline types or styles in the main component file
 - Example structure:
   ```
   components/
@@ -32,7 +55,41 @@
       index.tsx
       @types.ts
       styles.ts
+    StateListItem/
+      index.tsx
+      @types.ts
+      styles.ts
+    CitySelector/
+      index.tsx
+      @types.ts
+      styles.ts
   ```
+
+### ❌ WRONG - Never Do This:
+```tsx
+// ❌ WRONG: Defining component inside another file
+const ListItem = memo(({ item }) => (
+  <TouchableOpacity>...</TouchableOpacity>
+));
+
+const MyScreen = () => {
+  return <ListItem item={data} />;
+};
+```
+
+### ✅ CORRECT - Always Do This:
+```tsx
+// ✅ Create: components/ListItem/index.tsx
+import { ListItemProps } from './@types';
+import { styles } from './styles';
+
+export const ListItem = memo(({ item }: ListItemProps) => (
+  <TouchableOpacity style={styles.container}>...</TouchableOpacity>
+));
+
+// ✅ In your screen, import it:
+import { ListItem } from '@shared/components/ListItem';
+```
 
 ### Screen Constants
 - All screen names MUST be defined in constants and used everywhere
@@ -58,26 +115,43 @@
 - Services go in `src/services/`
 - Use path aliases: `@features`, `@shared`, `@navigation`, `@store`, `@services`, `@theme`, `@assets`
 
-## 🚫 Code Organization Rules
+## 🚫 Code Organization Rules - STRICTLY ENFORCED
 
 ### Type Definitions
-- NO type definitions, interfaces, or enums in main component/screen files
+- **ZERO** type definitions, interfaces, or enums in main component/screen files
 - All types MUST be in separate `@types.ts` file
 - Export types from `@types.ts` and import in main file
 - Shared types go in `src/shared/types/`
 
 ### Style Definitions
-- NO StyleSheet.create() calls in main component/screen files
+- **ZERO** StyleSheet.create() calls in main component/screen files
 - All styles MUST be in separate `styles.ts` file
 - Export styles from `styles.ts` and import in main file
 
-### Main File Content
+### Component Definitions
+- **ZERO** component definitions inside main screen files
+- A component is ANYTHING that:
+  - Uses `memo()`
+  - Uses `React.FC`
+  - Is a function that returns JSX
+  - Has props
+- **EVERY** such component needs its own folder
+
+### Main File Content - ONLY THESE ARE ALLOWED:
 - Main files (ScreenName.tsx or index.tsx) should ONLY contain:
-  - Imports
-  - Component/Screen logic (hooks, handlers, JSX)
-  - NO type definitions
-  - NO style definitions
-  - Minimal inline styles (only when absolutely necessary for dynamic styles)
+  - ✅ Imports
+  - ✅ ONE default export component (the screen/component itself)
+  - ✅ Hooks usage (useState, useEffect, useCallback, etc.)
+  - ✅ Handler functions (handleSubmit, handlePress, etc.)
+  - ✅ JSX return statement
+  
+### Main File Content - THESE ARE FORBIDDEN:
+- ❌ `type` or `interface` definitions
+- ❌ `const SomeComponent = () => ...` (sub-components)
+- ❌ `const SomeComponent = memo(...)` (memoized components)
+- ❌ `StyleSheet.create()`
+- ❌ Inline style objects (except for truly dynamic styles like `{ width: dynamicValue }`)
+- ❌ Helper components (ListItem, Row, Card, etc.)
 
 ## 🤖 Agent Mode Guidelines
 
@@ -224,28 +298,54 @@ When in Agent Mode, ALWAYS provide clear descriptions before implementing or cha
 - Prefer Flexbox for layout
 - Use responsive dimensions where appropriate
 
-## ✅ Code Review Checklist
+## ✅ Code Review Checklist - MANDATORY BEFORE EVERY CHANGE
 
-Before submitting code, ensure:
+Before writing ANY code, verify:
+- [ ] **NO** sub-components defined in main file (check for `const X = memo(` or `const X = () =>`)
+- [ ] **NO** types/interfaces in main file (check for `type X =` or `interface X`)
+- [ ] **NO** StyleSheet in main file (check for `StyleSheet.create`)
 - [ ] All types are in `@types.ts` file
 - [ ] All styles are in `styles.ts` file
+- [ ] All components have their own folder with index.tsx, @types.ts, styles.ts
 - [ ] Screen names use constants, not string literals
-- [ ] Folder structure follows conventions
-- [ ] Imports use path aliases
-- [ ] No inline type definitions in main files
-- [ ] No inline StyleSheet in main files
-- [ ] Proper error handling
-- [ ] TypeScript types are correct and strict
-- [ ] Follows project structure from docs
-- [ ] Dont write unnecessary comments and write clean code
+- [ ] Imports use path aliases (@shared, @features, etc.)
+- [ ] No unnecessary comments - clean code only
 
+## 🛑 AGENT MODE - MANDATORY COMPONENT CHECK
+
+When creating ANY new component (even small ones):
+
+### Step 1: STOP and identify
+Ask: "Am I creating something that returns JSX?"
+- If YES → It's a component → Create a folder for it
+
+### Step 2: Create the folder structure
+```
+ComponentName/
+  index.tsx      ← Component logic and JSX
+  @types.ts      ← Props and types
+  styles.ts      ← All styles
+```
+
+### Step 3: Never write this pattern
+```tsx
+// ❌ FORBIDDEN - This is an inline component
+const ItemRow = ({ item }) => <View>...</View>;
+
+// ❌ FORBIDDEN - This is a memoized inline component  
+const ItemRow = memo(({ item }) => <View>...</View>);
+```
+
+### Step 4: Always write this pattern
+```tsx
+// ✅ CORRECT - Import from separate component folder
+import { ItemRow } from '@shared/components/ItemRow';
+```
 
 ## 🎓 Remember
 
-- **Consistency is key**: Follow these rules consistently across the entire codebase
-- **When in doubt**: Check existing code patterns in the project
-- **Agent mode**: Always explain WHAT, WHY, and HOW before making changes
-- **Code organization**: Keep files focused and organized
-- **Type safety**: Leverage TypeScript's type system fully
-- **Performance**: Consider React Native performance best practices
+- **ZERO TOLERANCE**: No inline components, types, or styles
+- **When in doubt**: Create a separate folder - it's always the right choice
+- **Consistency > Convenience**: A few extra files is better than messy code
+- **Agent mode**: ALWAYS check the rules BEFORE writing code, not after
 

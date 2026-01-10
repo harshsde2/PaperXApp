@@ -45,6 +45,8 @@ export const queryKeys = {
   reference: {
     all: ['reference'] as const,
     materials: () => [...queryKeys.reference.all, 'materials'] as const,
+    materialsInfinite: (perPage?: number) =>
+      [...queryKeys.reference.all, 'materials', 'infinite', perPage] as const,
     materialDetails: (id: number | string) =>
       [...queryKeys.reference.all, 'materials', id, 'details'] as const,
     machines: (params?: Record<string, any>) =>

@@ -7,7 +7,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
+    paddingTop: theme.spacing[4],
   },
   header: {
     marginBottom: theme.spacing[4],
@@ -116,8 +117,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: theme.spacing[2],
-    marginTop: theme.spacing[4],
-    marginBottom: theme.spacing[6],
+    width: '100%',
   },
   buttonText: {
     color: theme.colors.text.inverse,

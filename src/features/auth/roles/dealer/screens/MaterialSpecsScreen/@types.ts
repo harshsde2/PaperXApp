@@ -7,7 +7,7 @@ export type MaterialSpecsScreenNavigationProp = StackNavigationProp<
 >;
 
 export interface SpecOption {
-  id: string;
+  id: number;
   label: string;
 }
 
@@ -16,4 +16,3 @@ export interface SpecSection {
   title: string;
   options: SpecOption[];
 }
-

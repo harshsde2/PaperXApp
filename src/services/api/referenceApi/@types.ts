@@ -16,19 +16,47 @@ export interface IdName {
 // MATERIALS
 // ============================================
 
+export interface MaterialGrade {
+  id: number;
+  name: string;
+}
+
 export interface Material {
   id: number;
   name: string;
+  category: string;
+  grades: MaterialGrade[];
   code?: string;
   description?: string;
-  category?: string;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface GetMaterialsResponse {
-  materials: Material[];
+  success: boolean;
+  message: string;
+  data: Material[];
+}
+
+// Paginated Materials Response
+export interface GetMaterialsPaginatedResponse {
+  success: boolean;
+  message: string;
+  data: Material[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_items: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
+export interface GetMaterialsParams {
+  page?: number;
+  per_page?: number;
 }
 
 export interface MaterialDetails {
@@ -39,7 +67,7 @@ export interface MaterialDetails {
   category?: string;
   finishes?: MaterialFinish[];
   coatings?: MaterialFinish[];
-  grades?: MaterialFinish[];
+  grades?: MaterialGrade[];
   variants?: MaterialFinish[];
   mills?: MaterialMill[];
   thickness_types?: MaterialThicknessType[];
@@ -86,13 +114,13 @@ export interface GetMachinesResponse {
 // MATERIAL FINISHES
 // ============================================
 
-export type FinishType = 'finish' | 'coating' | 'grade' | 'variant';
+export type FinishType = 'finish' | 'coating' | 'grade' | 'variant' | 'surface';
 
 export interface MaterialFinish {
   id: number;
   name: string;
-  material_id: number;
-  type: FinishType;
+  material_id: number | null;
+  type: FinishType | string;
   description?: string;
   is_active?: boolean;
   created_at?: string;
@@ -100,7 +128,7 @@ export interface MaterialFinish {
 }
 
 export interface GetMaterialFinishesParams {
-  material_id: number;
+  material_id?: number;
   type?: FinishType;
 }
 
@@ -178,4 +206,3 @@ export interface Brand {
 export interface GetBrandsResponse {
   brands: Brand[];
 }
-

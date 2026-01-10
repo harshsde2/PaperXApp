@@ -292,24 +292,26 @@ export const BottomSheetProvider: React.FC<IBottomSheetProviderProps> = ({ child
             </TouchableWithoutFeedback>
           </Animated.View>
 
-          <GestureDetector gesture={gesture}>
-            <Animated.View
-              style={[
-                styles.container,
-                { height: maxSnapPoint },
-                config.containerStyle,
-                containerAnimatedStyle,
-              ]}
-            >
+          <Animated.View
+            style={[
+              styles.container,
+              { height: maxSnapPoint },
+              config.containerStyle,
+              containerAnimatedStyle,
+            ]}
+          >
+            {/* Gesture only on handle area for dragging */}
+            <GestureDetector gesture={gesture}>
               <View style={styles.handleContainer}>
                 <View style={[styles.handleIndicator, config.handleIndicatorStyle]} />
               </View>
+            </GestureDetector>
 
-              <View style={[styles.contentContainer, config.contentContainerStyle]}>
-                {content}
-              </View>
-            </Animated.View>
-          </GestureDetector>
+            {/* Content area - allows FlatList and other scrollables to work */}
+            <View style={[styles.contentContainer, config.contentContainerStyle]}>
+              {content}
+            </View>
+          </Animated.View>
         </>
       )}
     </BottomSheetContext.Provider>

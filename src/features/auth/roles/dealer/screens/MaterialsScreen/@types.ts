@@ -6,17 +6,24 @@ export type MaterialsScreenNavigationProp = StackNavigationProp<
   'Materials'
 >;
 
-export interface MaterialItem {
-  id: string;
-  name: string;
-  subtitle: string;
-  category: 'paper' | 'machinery';
+// Selection tracking - we track by "materialId-gradeId" combo
+export interface SelectedMaterial {
+  materialId: number;
+  materialName: string;
+  gradeId: number;
+  gradeName: string;
+  category: string;
 }
 
+// For display purposes - grouped by category
 export interface MaterialCategory {
-  id: string;
-  name: string;
-  type: 'paper' | 'machinery';
-  items: MaterialItem[];
+  category: string;
+  materials: {
+    id: number;
+    name: string;
+    grades: {
+      id: number;
+      name: string;
+    }[];
+  }[];
 }
-

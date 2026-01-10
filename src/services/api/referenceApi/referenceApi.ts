@@ -3,12 +3,14 @@
  * Handles fetching materials, machines, finishes, mills, brands, etc.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '../client';
 import { REFERENCE_ENDPOINTS } from '@shared/constants/api';
 import { queryKeys } from '../queryClient';
 import type {
   GetMaterialsResponse,
+  GetMaterialsPaginatedResponse,
+  GetMaterialsParams,
   GetMaterialDetailsResponse,
   GetMachinesParams,
   GetMachinesResponse,
@@ -34,6 +36,12 @@ import type {
 
 /**
  * Get all materials
+ * Response format:
+ * {
+ *   "success": true,
+ *   "message": "materials.fetch",
+ *   "data": [{ id, name, category, grades: [{ id, name }] }]
+ * }
  */
 export const useGetMaterials = () => {
   return useQuery({
@@ -42,15 +50,32 @@ export const useGetMaterials = () => {
       const response = await api.get<GetMaterialsResponse>(REFERENCE_ENDPOINTS.MATERIALS);
       const responseData = response.data as any;
 
+      // Handle: { success: true, data: [...] }
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        return responseData.data;
+      }
+
+      // Handle: { data: { data: [...] } } (nested)
+      if (responseData?.data?.data && Array.isArray(responseData.data.data)) {
+        return responseData.data.data;
+      }
+
+      // Handle: { data: { materials: [...] } }
       if (responseData?.data?.materials) {
         return responseData.data.materials;
       }
+
+      // Handle: { materials: [...] }
       if (responseData?.materials) {
         return responseData.materials;
       }
+
+      // Handle: { data: [...] } (direct array in data)
       if (Array.isArray(responseData?.data)) {
         return responseData.data;
       }
+
+      // Handle: [...] (direct array)
       if (Array.isArray(responseData)) {
         return responseData;
       }
@@ -58,6 +83,82 @@ export const useGetMaterials = () => {
       return [];
     },
     staleTime: 1000 * 60 * 30, // 30 minutes - reference data doesn't change often
+  });
+};
+
+/**
+ * Get materials with infinite pagination
+ * Optimized for large lists with page-based loading
+ * API: GET /api/v1/materials?page=1&per_page=50
+ */
+export const useGetMaterialsInfinite = (perPage: number = 50) => {
+  return useInfiniteQuery({
+    queryKey: queryKeys.reference.materialsInfinite(perPage),
+    queryFn: async ({ pageParam = 1 }): Promise<{
+      materials: Material[];
+      pagination: {
+        current_page: number;
+        per_page: number;
+        total_pages: number;
+        total_items: number;
+        has_next: boolean;
+      };
+    }> => {
+      const response = await api.get<GetMaterialsPaginatedResponse>(
+        REFERENCE_ENDPOINTS.MATERIALS,
+        {
+          params: {
+            page: pageParam,
+            per_page: perPage,
+          },
+        }
+      );
+      const responseData = response.data as any;
+
+      // Extract materials array
+      let materials: Material[] = [];
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        materials = responseData.data;
+      } else if (responseData?.data?.data && Array.isArray(responseData.data.data)) {
+        materials = responseData.data.data;
+      } else if (responseData?.data?.materials) {
+        materials = responseData.data.materials;
+      } else if (responseData?.materials) {
+        materials = responseData.materials;
+      } else if (Array.isArray(responseData?.data)) {
+        materials = responseData.data;
+      } else if (Array.isArray(responseData)) {
+        materials = responseData;
+      }
+
+      // Extract pagination info
+      const pagination = responseData?.pagination || responseData?.meta?.pagination || {
+        current_page: pageParam,
+        per_page: perPage,
+        total_pages: 1,
+        total_items: materials.length,
+        has_next: false,
+      };
+
+      return {
+        materials,
+        pagination: {
+          current_page: pagination.current_page ?? pageParam,
+          per_page: pagination.per_page ?? perPage,
+          total_pages: pagination.total_pages ?? 1,
+          total_items: pagination.total_items ?? materials.length,
+          has_next: pagination.has_next ?? (materials.length === perPage),
+        },
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.has_next) {
+        return lastPage.pagination.current_page + 1;
+      }
+      return undefined;
+    },
+    staleTime: 1000 * 60 * 30, // 30 minutes
   });
 };
 
@@ -106,6 +207,9 @@ export const useGetMachines = (params?: GetMachinesParams) => {
       });
       const responseData = response.data as any;
 
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        return responseData.data;
+      }
       if (responseData?.data?.machines) {
         return responseData.data.machines;
       }
@@ -142,6 +246,9 @@ export const useGetMaterialFinishes = (params: GetMaterialFinishesParams) => {
       );
       const responseData = response.data as any;
 
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        return responseData.data;
+      }
       if (responseData?.data?.finishes) {
         return responseData.data.finishes;
       }
@@ -179,6 +286,9 @@ export const useGetMaterialMills = (params: GetMaterialMillsParams) => {
       );
       const responseData = response.data as any;
 
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        return responseData.data;
+      }
       if (responseData?.data?.mills) {
         return responseData.data.mills;
       }
@@ -216,6 +326,9 @@ export const useGetMaterialThicknessTypes = (params: GetMaterialThicknessTypesPa
       );
       const responseData = response.data as any;
 
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        return responseData.data;
+      }
       if (responseData?.data?.thickness_types) {
         return responseData.data.thickness_types;
       }
@@ -250,6 +363,9 @@ export const useGetBrands = () => {
       const response = await api.get<GetBrandsResponse>(REFERENCE_ENDPOINTS.BRANDS);
       const responseData = response.data as any;
 
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        return responseData.data;
+      }
       if (responseData?.data?.brands) {
         return responseData.data.brands;
       }
@@ -268,4 +384,3 @@ export const useGetBrands = () => {
     staleTime: 1000 * 60 * 30,
   });
 };
-

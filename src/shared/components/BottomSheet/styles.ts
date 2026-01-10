@@ -36,7 +36,9 @@ export const createBottomSheetStyles = (theme: Theme) =>
     handleContainer: {
       alignItems: 'center',
       paddingTop: theme.spacing[3],
-      paddingBottom: theme.spacing[2],
+      paddingBottom: theme.spacing[3],
+      // Larger touch area for better dragging UX
+      minHeight: 32,
     },
     handleIndicator: {
       width: 40,
@@ -46,7 +48,8 @@ export const createBottomSheetStyles = (theme: Theme) =>
     },
     contentContainer: {
       flex: 1,
-      padding: theme.spacing[4],
+      paddingHorizontal: theme.spacing[4],
+      paddingBottom: theme.spacing[4],
     },
   });
 

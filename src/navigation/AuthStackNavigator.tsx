@@ -22,6 +22,7 @@ import RawMaterialsScreen from '@features/auth/roles/converter/screens/RawMateri
 import FactoryLocationScreen from '@features/auth/roles/converter/screens/FactoryLocationScreen/FactoryLocationScreen';
 import ConfirmRegistrationScreen from '@features/auth/roles/converter/screens/ConfirmRegistrationScreen/ConfirmRegistrationScreen';
 import BrandRegistrationScreen from '@features/auth/roles/brand/screens/BrandRegistrationScreen/BrandRegistrationScreen';
+import MachineDealerRegistrationScreen from '@features/auth/roles/machineDealer/screens/MachineDealerRegistrationScreen/MachineDealerRegistrationScreen';
 import { CustomHeader } from '@shared/components/CustomHeader';
 
 // Common params for role-specific registration screens
@@ -62,6 +63,8 @@ export type AuthStackParamList = {
   ConfirmRegistration: RegistrationScreenParams;
   // Brand screens
   BrandRegistration: RegistrationScreenParams;
+  // Machine Dealer screens
+  MachineDealerRegistration: RegistrationScreenParams;
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -159,6 +162,11 @@ const AuthStackNavigator = () => {
       <Stack.Screen
         name={SCREENS.AUTH.BRAND_REGISTRATION}
         component={BrandRegistrationScreen}
+        options={{ headerShown: true }}
+      />
+      <Stack.Screen
+        name={SCREENS.AUTH.MACHINE_DEALER_REGISTRATION}
+        component={MachineDealerRegistrationScreen}
         options={{ headerShown: true }}
       />
     </Stack.Navigator>

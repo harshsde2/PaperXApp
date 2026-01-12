@@ -11,6 +11,7 @@ import { PaginationMeta } from '../types';
 
 export interface CompleteConverterProfileRequest {
   converter_type_ids: number[];
+  converter_type_custom?: string;
   finished_product_ids: number[];
   machine_ids: number[];
   scrap_type_ids?: number[];

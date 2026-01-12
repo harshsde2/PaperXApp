@@ -11,6 +11,7 @@ import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { useUpdateProfile } from '@services/api';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
+import { ROLES } from '@utils/constants';
 
 type PrimaryRole = 'dealer' | 'converter' | 'brand' | 'machineDealer';
 type Geography = 'local' | 'state' | 'panIndia';
@@ -33,16 +34,16 @@ const RoleSelectionScreen = () => {
     udyamCertificateType,
   } = route.params || {};
 
-  const [primaryRole, setPrimaryRole] = useState<PrimaryRole>('dealer');
+  const [primaryRole, setPrimaryRole] = useState<PrimaryRole>(ROLES.DEALER as PrimaryRole);
   const [hasSecondaryRole, setHasSecondaryRole] = useState(false);
   const [secondaryRole, setSecondaryRole] = useState<PrimaryRole | null>(null);
   const [geography, setGeography] = useState<Geography>('local');
 
   const primaryRoles = [
-    { id: 'dealer' as PrimaryRole, label: 'Dealer / Distributor', icon:   AppIcon.Dealer },
-    { id: 'converter' as PrimaryRole, label: 'Converter / Manufacturer', icon: AppIcon.Converter },
-    { id: 'brand' as PrimaryRole, label: 'Brand / End User', icon: AppIcon.Brand },
-    { id: 'machineDealer' as PrimaryRole, label: 'Machine Dealer', icon: AppIcon.MachineDealer },
+    { id: ROLES.DEALER as PrimaryRole, label: 'Dealer / Distributor', icon:   AppIcon.Dealer },
+    { id: ROLES.CONVERTER as PrimaryRole, label: 'Converter / Manufacturer', icon: AppIcon.Converter },
+    { id: ROLES.BRAND as PrimaryRole, label: 'Brand / End User', icon: AppIcon.Brand },
+    { id: ROLES.MACHINE_DEALER as PrimaryRole, label: 'Machine Dealer', icon: AppIcon.MachineDealer },
   ];
 
   const geographyOptions = [
@@ -89,7 +90,8 @@ const RoleSelectionScreen = () => {
       const response = await updateProfileMutation.mutateAsync(updateData);
 
       // Get the first registration screen for the selected role
-      const firstScreen = getFirstRegistrationScreen(primaryRole);
+      // primaryRole is already a valid UserRole value (matches ROLES constants)
+      const firstScreen = getFirstRegistrationScreen(primaryRole as typeof ROLES[keyof typeof ROLES]);
 
       if (firstScreen && firstScreen !== SCREENS.AUTH.VERIFICATION_STATUS) {
         // Navigate to role-specific registration flow

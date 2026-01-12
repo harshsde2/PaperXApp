@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Linking } from 'react-native';
+import { View, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
+import { useCompleteConverterProfile } from '@services/api';
+import type { CompleteConverterProfileRequest } from '@services/api';
+import type { UpdateProfileResponse } from '@services/api';
+import { useAppDispatch } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
+import { ROLES } from '@utils/constants';
 import { ConfirmRegistrationScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
@@ -19,6 +26,9 @@ const ConfirmRegistrationScreen = () => {
   
   // Get profileData from route params
   const { profileData } = route.params || {};
+  
+  const dispatch = useAppDispatch();
+  const completeConverterProfileMutation = useCompleteConverterProfile();
   
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -37,12 +47,131 @@ const ConfirmRegistrationScreen = () => {
 
   const handleSubmit = () => {
     if (!termsAccepted) {
-      // TODO: Show error message
+      Alert.alert('Validation Error', 'Please accept the Terms of Service to continue.');
       return;
     }
-    // Submit registration and navigate to verification screen
-    // This is the last screen in converter registration flow
-    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { profileData });
+
+    if (!profileData) {
+      Alert.alert('Error', 'Profile data is missing. Please go back and try again.');
+      return;
+    }
+
+    const requestData: CompleteConverterProfileRequest = {
+      converter_type_ids: profileData.converter_type_ids || [],
+      converter_type_custom: profileData.converter_type_custom || undefined,
+      finished_product_ids: profileData.finished_product_ids || [],
+      machine_ids: profileData.machine_ids || [],
+      scrap_type_ids: profileData.scrap_type_ids || [],
+      raw_material_ids: profileData.raw_material_ids || [],
+      capacity_daily: profileData.capacity_daily || undefined,
+      capacity_monthly: profileData.capacity_monthly || undefined,
+      capacity_unit: profileData.capacity_unit || undefined,
+      factory_address: profileData.factory_address || '',
+      factory_city: profileData.factory_city || '',
+      factory_state: profileData.factory_state || '',
+      factory_latitude: profileData.factory_latitude || 0,
+      factory_longitude: profileData.factory_longitude || 0,
+    };
+
+    completeConverterProfileMutation.mutate(requestData, {
+      onSuccess: (response) => {
+        dispatch(
+          showToast({
+            message: response.message || 'Converter registration completed successfully!',
+            type: 'success',
+          })
+        );
+
+        const updatedProfileData: UpdateProfileResponse = {
+          ...profileData,
+          ...response.converter,
+        };
+
+        const isSecondaryRoleCompletion =
+          profileData?.secondary_role === ROLES.CONVERTER;
+
+        if (isSecondaryRoleCompletion) {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: updatedProfileData,
+          });
+        } else if (
+          updatedProfileData.has_secondary_role === 1 &&
+          updatedProfileData.secondary_role
+        ) {
+          const secondaryRole =
+            updatedProfileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+          const firstSecondaryScreen = getFirstRegistrationScreen(secondaryRole);
+
+          if (
+            firstSecondaryScreen &&
+            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+          ) {
+            (navigation.navigate as any)(firstSecondaryScreen, {
+              profileData: updatedProfileData,
+            });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: updatedProfileData,
+            });
+          }
+        } else {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: updatedProfileData,
+          });
+        }
+      },
+      onError: (error: any) => {
+        console.error('Converter profile completion error:', error);
+        let errorMessage = 'Failed to complete registration. Please try again.';
+        if (error?.message) {
+          errorMessage = error.message;
+        } else if (error?.response?.data?.error?.message) {
+          errorMessage = error.response.data.error.message;
+        } else if (error?.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+
+        dispatch(
+          showToast({
+            message: errorMessage,
+            type: 'error',
+          })
+        );
+
+        const isSecondaryRoleCompletion =
+          profileData?.secondary_role === ROLES.CONVERTER;
+
+        if (isSecondaryRoleCompletion) {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: profileData,
+          });
+        } else if (
+          profileData?.has_secondary_role === 1 &&
+          profileData?.secondary_role
+        ) {
+          const secondaryRole =
+            profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+          const firstSecondaryScreen = getFirstRegistrationScreen(secondaryRole);
+
+          if (
+            firstSecondaryScreen &&
+            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+          ) {
+            (navigation.navigate as any)(firstSecondaryScreen, {
+              profileData: profileData,
+            });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: profileData,
+            });
+          }
+        } else {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: profileData,
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -324,15 +453,19 @@ const ConfirmRegistrationScreen = () => {
         <TouchableOpacity
           style={[
             styles.submitButton,
-            !termsAccepted && styles.submitButtonDisabled,
+            (!termsAccepted || completeConverterProfileMutation.isPending) && styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit}
           activeOpacity={0.8}
-          disabled={!termsAccepted}
+          disabled={!termsAccepted || completeConverterProfileMutation.isPending}
         >
-          <Text variant="buttonMedium" style={styles.submitButtonText}>
-            Submit Registration
-          </Text>
+          {completeConverterProfileMutation.isPending ? (
+            <ActivityIndicator color={theme.colors.text.inverse} />
+          ) : (
+            <Text variant="buttonMedium" style={styles.submitButtonText}>
+              Submit Registration
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScreenWrapper>

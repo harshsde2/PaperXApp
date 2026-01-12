@@ -21,6 +21,7 @@ export const SCREENS = {
     FACTORY_LOCATION: 'FactoryLocation',
     CONFIRM_REGISTRATION: 'ConfirmRegistration',
     BRAND_REGISTRATION: 'BrandRegistration',
+    MACHINE_DEALER_REGISTRATION: 'MachineDealerRegistration',
   },
   MAIN: {
     // Tab Screens

@@ -14,15 +14,24 @@ import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import { ManageWarehousesScreenNavigationProp, WarehouseLocation } from './@types';
+import {
+  ManageWarehousesScreenNavigationProp,
+  WarehouseLocation,
+} from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { useCompleteDealerProfile } from '@services/api';
-import type { CompleteDealerProfileRequest, AgentType, Location as APILocation } from '@services/api';
+import type {
+  CompleteDealerProfileRequest,
+  AgentType,
+  Location as APILocation,
+} from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import type { UpdateProfileResponse } from '@services/api';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
+import { ROLES } from '@utils/constants';
 
 // Location module imports
 import {
@@ -47,14 +56,22 @@ const ManageWarehousesScreen = () => {
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<WarehouseLocation | null>(null);
+  const [editingLocation, setEditingLocation] =
+    useState<WarehouseLocation | null>(null);
 
   const activeLocationsCount = locations.length;
 
-  const { mutate: completeProfileMutation, isPending } = useCompleteDealerProfile();
+  const { mutate: completeProfileMutation, isPending } =
+    useCompleteDealerProfile();
+
+  console.log(
+    '[ManageWarehouses] Profile data:',
+    JSON.stringify(profileData, null, 2),
+  );
 
   // Generate unique ID for new locations
-  const generateId = () => `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const generateId = () =>
+    `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const transformDataForAPI = (): CompleteDealerProfileRequest | null => {
     if (!profileData) {
@@ -64,9 +81,12 @@ const ManageWarehousesScreen = () => {
 
     try {
       const materials = (profileData.materials || []).map((material: any) => {
-        const relationship = profileData.mill_brand_details?.relationship || 'independent-dealer';
+        const relationship =
+          profileData.mill_brand_details?.relationship || 'independent-dealer';
         const agentType: AgentType =
-          relationship === 'authorized-agent' ? 'AUTHORIZED_AGENT' : 'INDEPENDENT_DEALER';
+          relationship === 'authorized-agent'
+            ? 'AUTHORIZED_AGENT'
+            : 'INDEPENDENT_DEALER';
 
         const brandId = profileData.mill_brand_details?.mill_brand_id || 1;
         const finishIds = profileData.material_specs?.finish_ids || [];
@@ -92,7 +112,7 @@ const ManageWarehousesScreen = () => {
 
       const apiLocations: APILocation[] = noWarehouse
         ? []
-        : locations.map((loc) => ({
+        : locations.map(loc => ({
             type: 'warehouse' as const,
             address: loc.address,
             latitude: loc.latitude,
@@ -120,13 +140,14 @@ const ManageWarehousesScreen = () => {
     setError(null);
 
     if (!noWarehouse && locations.length === 0) {
-      const errorMsg = 'Please add at least one warehouse location or select "No warehouse" option.';
+      const errorMsg =
+        'Please add at least one warehouse location or select "No warehouse" option.';
       setError(errorMsg);
       dispatch(
         showToast({
           message: errorMsg,
           type: 'error',
-        })
+        }),
       );
       return;
     }
@@ -137,50 +158,122 @@ const ManageWarehousesScreen = () => {
     }
 
     if (!requestData.materials || requestData.materials.length === 0) {
-      setError('Materials information is missing. Please go back and select materials.');
+      setError(
+        'Materials information is missing. Please go back and select materials.',
+      );
       dispatch(
         showToast({
-          message: 'Materials information is missing. Please go back and select materials.',
+          message:
+            'Materials information is missing. Please go back and select materials.',
           type: 'error',
-        })
+        }),
       );
       return;
     }
 
-    if (!noWarehouse && (!requestData.locations || requestData.locations.length === 0)) {
-      const errorMsg = 'At least one warehouse location is required when warehouse is enabled.';
+    if (
+      !noWarehouse &&
+      (!requestData.locations || requestData.locations.length === 0)
+    ) {
+      const errorMsg =
+        'At least one warehouse location is required when warehouse is enabled.';
       setError(errorMsg);
       dispatch(
         showToast({
           message: errorMsg,
           type: 'error',
-        })
+        }),
       );
       return;
     }
 
-    console.log('[ManageWarehouses] Request data:', JSON.stringify(requestData, null, 2));
+    console.log(
+      '[ManageWarehouses] Request data:',
+      JSON.stringify(requestData, null, 2),
+    );
     completeProfileMutation(requestData, {
-      onSuccess: (response) => {
+      onSuccess: response => {
         dispatch(
           showToast({
             message: response.message || 'Registration completed successfully!',
             type: 'success',
-          })
+          }),
         );
 
         const updatedProfileData: UpdateProfileResponse = {
           ...profileData,
+          ...response, // Merge API response to get latest profile data
         };
 
-        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-          profileData: updatedProfileData,
-        });
+        const isSecondaryRoleCompletion =
+          profileData?.secondary_role === ROLES.DEALER;
+
+        if (isSecondaryRoleCompletion) {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: updatedProfileData,
+          });
+        } else if (
+          updatedProfileData.has_secondary_role === 1 &&
+          updatedProfileData.secondary_role
+        ) {
+          const secondaryRole =
+            updatedProfileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+          const firstSecondaryScreen =
+            getFirstRegistrationScreen(secondaryRole);
+
+          if (
+            firstSecondaryScreen &&
+            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+          ) {
+            (navigation.navigate as any)(firstSecondaryScreen, {
+              profileData: updatedProfileData,
+            });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: updatedProfileData,
+            });
+          }
+        } else {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: updatedProfileData,
+          });
+        }
       },
       onError: (err: any) => {
-        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-          profileData: profileData,
-        });
+        const isSecondaryRoleCompletion =
+          profileData?.secondary_role === ROLES.DEALER;
+
+        if (isSecondaryRoleCompletion) {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: profileData,
+          });
+        } else if (
+          profileData.has_secondary_role === 1 &&
+          profileData.secondary_role
+        ) {
+          const secondaryRole =
+            profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+          const firstSecondaryScreen =
+            getFirstRegistrationScreen(secondaryRole);
+
+          if (
+            firstSecondaryScreen &&
+            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+          ) {
+            (navigation.navigate as any)(firstSecondaryScreen, {
+              profileData: profileData,
+            });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: profileData,
+            });
+          }
+        } else {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: profileData,
+          });
+        }
+
         console.error('[ManageWarehouses] API error:', err.response);
 
         let errorMessage = 'Failed to complete registration. Please try again.';
@@ -201,7 +294,7 @@ const ManageWarehousesScreen = () => {
           showToast({
             message: errorMessage,
             type: 'error',
-          })
+          }),
         );
       },
     });
@@ -219,7 +312,10 @@ const ManageWarehousesScreen = () => {
       const warehouseLocation: WarehouseLocation = {
         id: editingLocation?.id || generateId(),
         name: location.name || `Warehouse ${locations.length + 1}`,
-        address: location.address?.streetAddress || location.address?.formattedAddress || '',
+        address:
+          location.address?.streetAddress ||
+          location.address?.formattedAddress ||
+          '',
         city: location.address?.city || '',
         state: location.address?.state || '',
         zipCode: location.address?.pincode || '',
@@ -230,12 +326,14 @@ const ManageWarehousesScreen = () => {
 
       if (editingLocation) {
         // Update existing location
-        setLocations((prev) =>
-          prev.map((loc) => (loc.id === editingLocation.id ? warehouseLocation : loc))
+        setLocations(prev =>
+          prev.map(loc =>
+            loc.id === editingLocation.id ? warehouseLocation : loc,
+          ),
         );
       } else {
         // Add new location
-        setLocations((prev) => [...prev, warehouseLocation]);
+        setLocations(prev => [...prev, warehouseLocation]);
       }
 
       setShowLocationPicker(false);
@@ -243,12 +341,14 @@ const ManageWarehousesScreen = () => {
 
       dispatch(
         showToast({
-          message: editingLocation ? 'Location updated successfully!' : 'Location added successfully!',
+          message: editingLocation
+            ? 'Location updated successfully!'
+            : 'Location added successfully!',
           type: 'success',
-        })
+        }),
       );
     },
-    [editingLocation, locations.length, dispatch]
+    [editingLocation, locations.length, dispatch],
   );
 
   const handleEdit = useCallback((location: WarehouseLocation) => {
@@ -267,19 +367,19 @@ const ManageWarehousesScreen = () => {
             text: 'Remove',
             style: 'destructive',
             onPress: () => {
-              setLocations((prev) => prev.filter((loc) => loc.id !== locationId));
+              setLocations(prev => prev.filter(loc => loc.id !== locationId));
               dispatch(
                 showToast({
                   message: 'Location removed',
                   type: 'success',
-                })
+                }),
               );
             },
           },
-        ]
+        ],
       );
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleAddLocation = useCallback(() => {
@@ -293,17 +393,17 @@ const ManageWarehousesScreen = () => {
   }, []);
 
   const handleSetPrimary = useCallback((locationId: string) => {
-    setLocations((prev) =>
-      prev.map((loc) => ({
+    setLocations(prev =>
+      prev.map(loc => ({
         ...loc,
         isPrimary: loc.id === locationId,
-      }))
+      })),
     );
   }, []);
 
   // Convert locations to markers for overview map
   const getMarkersFromLocations = (): MarkerData[] => {
-    return locations.map((loc) => ({
+    return locations.map(loc => ({
       id: loc.id,
       latitude: loc.latitude,
       longitude: loc.longitude,
@@ -345,11 +445,19 @@ const ManageWarehousesScreen = () => {
                 )}
               </View>
               <View style={styles.noWarehouseTextContainer}>
-                <Text variant="h6" fontWeight="bold" style={styles.noWarehouseTitle}>
+                <Text
+                  variant="h6"
+                  fontWeight="bold"
+                  style={styles.noWarehouseTitle}
+                >
                   No warehouse (bulk orders only)
                 </Text>
-                <Text variant="captionMedium" style={styles.noWarehouseDescription}>
-                  Enable this if you ship directly from manufacturers or don't hold inventory.
+                <Text
+                  variant="captionMedium"
+                  style={styles.noWarehouseDescription}
+                >
+                  Enable this if you ship directly from manufacturers or don't
+                  hold inventory.
                 </Text>
               </View>
             </TouchableOpacity>
@@ -366,16 +474,24 @@ const ManageWarehousesScreen = () => {
           </View>
 
           {/* Location Cards with Maps */}
-          {locations.map((location) => (
+          {locations.map(location => (
             <Card key={location.id} style={styles.locationCard}>
               {location.isPrimary && (
                 <View style={styles.primaryBadge}>
-                  <Text variant="captionSmall" fontWeight="semibold" style={styles.primaryBadgeText}>
+                  <Text
+                    variant="captionSmall"
+                    fontWeight="semibold"
+                    style={styles.primaryBadgeText}
+                  >
                     PRIMARY
                   </Text>
                 </View>
               )}
-              <Text variant="h6" fontWeight="semibold" style={styles.locationName}>
+              <Text
+                variant="h6"
+                fontWeight="semibold"
+                style={styles.locationName}
+              >
                 {location.name}
               </Text>
               <Text variant="bodySmall" style={styles.locationAddress}>
@@ -392,8 +508,18 @@ const ManageWarehousesScreen = () => {
                   onPress={() => handleEdit(location)}
                   activeOpacity={0.7}
                 >
-                  <AppIcon.Edit width={15} height={15} color={theme.colors.primary.DEFAULT} />
-                  <Text variant="bodySmall" style={[styles.actionButtonText, { color: theme.colors.primary.DEFAULT }]}>
+                  <AppIcon.Edit
+                    width={15}
+                    height={15}
+                    color={theme.colors.primary.DEFAULT}
+                  />
+                  <Text
+                    variant="bodySmall"
+                    style={[
+                      styles.actionButtonText,
+                      { color: theme.colors.primary.DEFAULT },
+                    ]}
+                  >
                     Edit
                   </Text>
                 </TouchableOpacity>
@@ -402,8 +528,18 @@ const ManageWarehousesScreen = () => {
                   onPress={() => handleRemove(location.id)}
                   activeOpacity={0.7}
                 >
-                  <AppIcon.Delete width={17} height={17} color={theme.colors.error.DEFAULT} />
-                  <Text variant="bodySmall" style={[styles.actionButtonText, { color: theme.colors.error.DEFAULT }]}>
+                  <AppIcon.Delete
+                    width={17}
+                    height={17}
+                    color={theme.colors.error.DEFAULT}
+                  />
+                  <Text
+                    variant="bodySmall"
+                    style={[
+                      styles.actionButtonText,
+                      { color: theme.colors.error.DEFAULT },
+                    ]}
+                  >
                     Remove
                   </Text>
                 </TouchableOpacity>
@@ -413,7 +549,11 @@ const ManageWarehousesScreen = () => {
                     onPress={() => handleSetPrimary(location.id)}
                     activeOpacity={0.7}
                   >
-                    <AppIcon.Location width={15} height={15} color={theme.colors.text.secondary} />
+                    <AppIcon.Location
+                      width={15}
+                      height={15}
+                      color={theme.colors.text.secondary}
+                    />
                     <Text variant="bodySmall" style={styles.actionButtonText}>
                       Set Primary
                     </Text>
@@ -462,7 +602,11 @@ const ManageWarehousesScreen = () => {
               />
               <Text
                 variant="bodyMedium"
-                style={{ color: theme.colors.text.secondary, marginTop: 12, textAlign: 'center' }}
+                style={{
+                  color: theme.colors.text.secondary,
+                  marginTop: 12,
+                  textAlign: 'center',
+                }}
               >
                 No warehouse locations added yet.{'\n'}
                 Add your first location to continue.
@@ -480,10 +624,17 @@ const ManageWarehousesScreen = () => {
               <View style={styles.addLocationIcon}>
                 <Text style={styles.addLocationIconText}>+</Text>
               </View>
-              <Text variant="bodyMedium" fontWeight="semibold" style={styles.addLocationTitle}>
+              <Text
+                variant="bodyMedium"
+                fontWeight="semibold"
+                style={styles.addLocationTitle}
+              >
                 Add New Location
               </Text>
-              <Text variant="captionMedium" style={styles.addLocationDescription}>
+              <Text
+                variant="captionMedium"
+                style={styles.addLocationDescription}
+              >
                 Search address or drop a pin on map
               </Text>
             </View>
@@ -497,7 +648,11 @@ const ManageWarehousesScreen = () => {
             onPress={handleSearchAddress}
             activeOpacity={0.8}
           >
-            <AppIcon.Search width={20} height={20} color={theme.colors.text.inverse} />
+            <AppIcon.Search
+              width={20}
+              height={20}
+              color={theme.colors.text.inverse}
+            />
             <Text variant="buttonMedium" style={styles.searchButtonText}>
               SEARCH ADDRESS
             </Text>
@@ -517,13 +672,20 @@ const ManageWarehousesScreen = () => {
             disabled={isPending}
           >
             {isPending ? (
-              <ActivityIndicator size="small" color={theme.colors.text.inverse} />
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.text.inverse}
+              />
             ) : (
               <>
                 <Text variant="buttonMedium" style={styles.searchButtonText}>
                   Complete Registration
                 </Text>
-                <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
+                <AppIcon.ArrowRight
+                  width={20}
+                  height={20}
+                  color={theme.colors.text.inverse}
+                />
               </>
             )}
           </TouchableOpacity>
@@ -573,8 +735,14 @@ const ManageWarehousesScreen = () => {
           }}
           showExistingMarkers={true}
           allowMapTap={true}
-          confirmButtonText={editingLocation ? 'Update Location' : 'Add Location'}
-          title={editingLocation ? 'Edit Warehouse Location' : 'Add Warehouse Location'}
+          confirmButtonText={
+            editingLocation ? 'Update Location' : 'Add Location'
+          }
+          title={
+            editingLocation
+              ? 'Edit Warehouse Location'
+              : 'Add Warehouse Location'
+          }
         />
       </Modal>
     </>

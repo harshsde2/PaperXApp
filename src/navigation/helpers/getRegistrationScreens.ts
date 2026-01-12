@@ -42,11 +42,9 @@ export const REGISTRATION_FLOWS: Record<UserRole, ScreenName[]> = {
     SCREENS.AUTH.BRAND_REGISTRATION,  // Step 1: Brand details & type selection
   ],
 
-  // Machine Dealer Registration Flow (placeholder - screens to be created)
+  // Machine Dealer Registration Flow
   [ROLES.MACHINE_DEALER]: [
-    // TODO: Add machine dealer specific screens when created
-    // SCREENS.AUTH.MACHINE_DEALER_REGISTRATION,
-    // SCREENS.AUTH.MACHINE_DEALER_ACCOUNT,
+    SCREENS.AUTH.MACHINE_DEALER_REGISTRATION, // Step 1: Contact info, email, business location
   ],
 
   // Mill Registration Flow (placeholder - screens to be created)

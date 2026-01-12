@@ -18,6 +18,11 @@ import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
 import { useKeyboard, useFloatingBottomPadding } from '@shared/hooks';
 import { useCompleteBrandProfile } from '@services/api';
+import type { UpdateProfileResponse } from '@services/api';
+import { useAppDispatch } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
+import { ROLES } from '@utils/constants';
 import { Alert, ActivityIndicator } from 'react-native';
 import {
   BrandRegistrationScreenNavigationProp,
@@ -554,6 +559,9 @@ const BrandRegistrationScreen = () => {
   // API mutation hook
   const { mutate: completeBrandProfile, isPending: isSubmitting } = useCompleteBrandProfile();
 
+  // Redux dispatch
+  const dispatch = useAppDispatch();
+
   // Calculate bottom padding for scrollable content (to account for FloatingBottomContainer)
   // This ensures content doesn't get hidden behind the floating container
   const floatingContainerPadding = useFloatingBottomPadding({
@@ -710,13 +718,13 @@ const BrandRegistrationScreen = () => {
       const isEmail = isValidEmail(mobileOrEmailValue || '');
       const isMobile = isValidMobile(mobileOrEmailValue || '');
       
-      let mobile = '';
+      let mobile = profileData?.mobile || '';
       let email = '';
 
       if (isEmail) {
         email = mobileOrEmailValue || '';
       } else if (isMobile) {
-        mobile = mobileOrEmailValue?.replace(/\D/g, '') || '';
+        mobile = mobileOrEmailValue?.replace(/\D/g, '') || mobile;
       }
 
       // Convert brand type string IDs to numeric IDs for API
@@ -731,46 +739,117 @@ const BrandRegistrationScreen = () => {
 
       // Prepare API request data
       const apiData = {
-        company_name: companyNameValue?.trim() || '',
-        brand_name: companyNameValue?.trim() || '', // Using company name as brand name if not separate
+        company_name: companyNameValue?.trim() || profileData?.company_name || '',
+        brand_name: companyNameValue?.trim() || profileData?.company_name || '',
         contact_person_name: contactPersonNameValue?.trim() || '',
         mobile: mobile,
         email: email || undefined,
-        gst: gstNumberValue?.trim() || undefined,
-        city: cityValue?.trim() || '',
-        location: cityValue?.trim() || '', // Using city as location for now
-        latitude: 28.6139, // Default to Delhi coordinates - you can get from location service
-        longitude: 77.2090, // Default to Delhi coordinates - you can get from location service
+        gst: gstNumberValue?.trim() || profileData?.gst_in || undefined,
+        city: cityValue?.trim() || profileData?.city || '',
+        location: cityValue?.trim() || profileData?.city || '',
+        latitude: 28.6139,
+        longitude: 77.2090,
         brand_type_ids: brandTypeIds,
       };
 
       // Call API
       completeBrandProfile(apiData, {
         onSuccess: (response: any) => {
-          console.log('Brand profile completed successfully:', response);
-          // Navigate to verification status
-          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { 
-            profileData: {
-              ...profileData,
-              ...apiData,
+          dispatch(
+            showToast({
+              message: response.message || 'Brand registration completed successfully!',
+              type: 'success',
+            })
+          );
+
+          const updatedProfileData: UpdateProfileResponse = {
+            ...profileData,
+            ...response.brand,
+          };
+
+          const isSecondaryRoleCompletion =
+            profileData?.secondary_role === ROLES.BRAND;
+
+          if (isSecondaryRoleCompletion) {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: updatedProfileData,
+            });
+          } else if (
+            updatedProfileData.has_secondary_role === 1 &&
+            updatedProfileData.secondary_role
+          ) {
+            const secondaryRole =
+              updatedProfileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+            const firstSecondaryScreen = getFirstRegistrationScreen(secondaryRole);
+
+            if (
+              firstSecondaryScreen &&
+              firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+            ) {
+              (navigation.navigate as any)(firstSecondaryScreen, {
+                profileData: updatedProfileData,
+              });
+            } else {
+              navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+                profileData: updatedProfileData,
+              });
             }
-          });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: updatedProfileData,
+            });
+          }
         },
         onError: (error: any) => {
-
-          //Todo change when API word
-          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, { 
-            profileData: {
-              ...profileData,
-              ...apiData,
-            }
-          });
           console.error('Brand profile completion error:', error);
-          const errorMessage = 
-            error?.response?.data?.message || 
-            error?.message || 
-            'Failed to complete brand registration. Please try again.';
-          Alert.alert('Registration Failed', errorMessage, [{ text: 'OK' }]);
+          let errorMessage = 'Failed to complete registration. Please try again.';
+          if (error?.message) {
+            errorMessage = error.message;
+          } else if (error?.response?.data?.error?.message) {
+            errorMessage = error.response.data.error.message;
+          } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          }
+
+        dispatch(
+          showToast({
+            message: errorMessage,
+            type: 'error',
+          })
+        );
+
+        const isSecondaryRoleCompletion =
+          profileData?.secondary_role === ROLES.BRAND;
+
+        if (isSecondaryRoleCompletion) {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: profileData,
+          });
+        } else if (
+          profileData?.has_secondary_role === 1 &&
+          profileData?.secondary_role
+        ) {
+          const secondaryRole =
+            profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+          const firstSecondaryScreen = getFirstRegistrationScreen(secondaryRole);
+
+          if (
+            firstSecondaryScreen &&
+            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+          ) {
+            (navigation.navigate as any)(firstSecondaryScreen, {
+              profileData: profileData,
+            });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: profileData,
+            });
+          }
+        } else {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: profileData,
+          });
+        }
         },
       });
     },
@@ -786,6 +865,7 @@ const BrandRegistrationScreen = () => {
       completeBrandProfile,
       navigation,
       profileData,
+      dispatch,
     ],
   );
 
@@ -802,9 +882,9 @@ const BrandRegistrationScreen = () => {
           scrollable
           backgroundColor={theme.colors.background.secondary}
           safeAreaEdges={[]}
-          contentContainerStyle={[
-            { paddingBottom: floatingContainerPadding },
-          ]}
+          contentContainerStyle={{
+            paddingBottom: floatingContainerPadding,
+          }}
           scrollViewProps={{
             keyboardShouldPersistTaps: 'handled',
             keyboardDismissMode: 'interactive',

@@ -3,6 +3,8 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
+import { SCREENS } from '@navigation/constants';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +19,7 @@ const CapacityScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<'Available' | 'Busy' | 'Full'>('Available');
+  const navigation = useNavigation<any>();
 
   const capacityData: CapacityData = {
     current: 75,
@@ -53,8 +56,8 @@ const CapacityScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Capacity</Text>
-        <TouchableOpacity style={styles.settingsButton}>
-          <AppIcon.Settings width={24} height={24} color="#6B7280" />
+        <TouchableOpacity onPress={() => navigation.navigate(SCREENS.MAIN.PROFILE)} style={styles.settingsButton}>
+          <AppIcon.Person width={24} height={24} color="#6B7280" />
         </TouchableOpacity>
       </View>
 

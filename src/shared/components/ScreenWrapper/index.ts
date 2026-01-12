@@ -1,3 +1,2 @@
 export { default as ScreenWrapper } from './ScreenWrapper';
-export type { ScreenWrapperProps, PaddingValue } from './@types';
-
+export type { IScreenWrapperProps, IPaddingObject, IGradientPoint, GradientType } from './@types';

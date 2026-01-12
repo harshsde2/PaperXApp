@@ -1,21 +1,20 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  ViewStyle,
-  StatusBar,
-  ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@theme';
-import { ScreenWrapperProps, PaddingValue } from './@types';
-import { styles } from './styles';
+import { View, ScrollView, StyleSheet, ViewStyle, StatusBar, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Canvas, RadialGradient, Rect, vec, LinearGradient } from '@shopify/react-native-skia';
+import { useTheme } from '@theme/index';
+import { IScreenWrapperProps } from './@types';
 
-const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
+const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
   children,
   safeArea = true,
   safeAreaEdges = ['top', 'bottom', 'left', 'right'],
+  gradient = 'none',
+  gradientColors = [],
+  gradientStart = { x: 0, y: 0 },
+  gradientEnd = { x: 0, y: 1 },
+  gradientCenter,
+  gradientRadius,
   padding,
   paddingHorizontal,
   paddingVertical,
@@ -33,7 +32,9 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   style,
 }) => {
   const theme = useTheme();
-
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const screenHeight = height + insets.top;
   const resolvedBackgroundColor = backgroundColor || theme.colors.background.primary;
 
   const resolvedPadding = useMemo(() => {
@@ -67,8 +68,56 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
 
   const containerStyle: ViewStyle = {
     flex,
-    backgroundColor: resolvedBackgroundColor,
+    backgroundColor: gradient === 'none' ? resolvedBackgroundColor : 'transparent',
     ...style,
+  };
+
+  const renderGradient = () => {
+    if (gradient === 'none') {
+      return null;
+    }
+
+    if (gradient === 'linear') {
+      return (
+        <Canvas style={[StyleSheet.absoluteFill]}>
+          <Rect x={0} y={0} width={width} height={screenHeight}>
+            <LinearGradient
+              start={vec(gradientStart.x * width, gradientStart.y * height)}
+              end={vec(gradientEnd.x * width, gradientEnd.y * height)}
+              colors={gradientColors.length > 0 ? gradientColors : [resolvedBackgroundColor, resolvedBackgroundColor]}
+            />
+          </Rect>
+        </Canvas>
+      );
+    }
+
+    if (gradient === 'radial') {
+      const centerX = gradientCenter?.x ?? width / 2;
+      const centerY = gradientCenter?.y ?? height / 2;
+      const radius = gradientRadius ?? Math.max(width, height) * 0.7;
+
+      const validColors = gradientColors.length > 0 
+        ? gradientColors.filter(color => color && typeof color === 'string')
+        : [resolvedBackgroundColor, resolvedBackgroundColor];
+
+      if (validColors.length === 0) {
+        validColors.push(resolvedBackgroundColor, resolvedBackgroundColor);
+      }
+
+      return (
+        <Canvas style={StyleSheet.absoluteFill}>
+          <Rect x={0} y={0} width={width} height={height}>
+            <RadialGradient
+              c={vec(centerX, centerY)}
+              r={radius}
+              colors={validColors}
+            />
+          </Rect>
+        </Canvas>
+      );
+    }
+
+    return null;
   };
 
   const renderContent = () => {
@@ -87,7 +136,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
     }
 
     return (
-      <View style={[paddingStyle, contentStyle]}>
+      <View style={[paddingStyle, contentStyle, { flex: 1 }]}>
         {children}
       </View>
     );
@@ -101,13 +150,18 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       <StatusBar
         barStyle={statusBarStyle}
         hidden={statusBarHidden}
-        backgroundColor={resolvedBackgroundColor}
+
+        backgroundColor={gradient === 'none' ? resolvedBackgroundColor : 'transparent'}
+        translucent={gradient !== 'none'}
       />
+      <View style={[StyleSheet.absoluteFill]}>
+        {renderGradient()}
+        {backgroundElement}
+      </View>
       <Wrapper
-        style={containerStyle}
+        style={[containerStyle,{flex:1}]}
         edges={edges}
       >
-        {backgroundElement}
         {renderContent()}
         {loading && (
           <View style={styles.loadingOverlay}>
@@ -121,5 +175,14 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   );
 };
 
-export default ScreenWrapper;
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+});
 
+export default ScreenWrapper;

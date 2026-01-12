@@ -23,6 +23,10 @@ target 'PaperXApp' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  # Google Maps SDK for iOS
+  pod 'GoogleMaps'
+  pod 'Google-Maps-iOS-Utils'
+
   post_install do |installer|
     react_native_post_install(
       installer,

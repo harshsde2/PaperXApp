@@ -1,70 +1,68 @@
 import { StyleSheet } from 'react-native';
+import { baseColors, baseTypography, baseSpacing } from '@theme/tokens/base';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: baseColors.blue50,
   },
-  topSection: {
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: baseSpacing[6],
+  },
+  header: {
+    alignItems: 'center',
+    paddingTop: baseSpacing[4],
+  },
+  visualContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1E3A8A',
+    marginTop: -baseSpacing[8], // Pull up slightly to balance layout
   },
   bottomSection: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    gap: 12,
     width: '100%',
+    alignItems: 'center',
+    gap: baseSpacing[6],
+    marginBottom: baseSpacing[4],
   },
-  button: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 8,
+  headline: {
+    fontFamily: baseTypography.fontFamily.bold,
+    fontSize: 28, // Slightly smaller than before to fit graphics
+    lineHeight: 36,
+    color: baseColors.black,
+    textAlign: 'center',
+  },
+  subheadline: {
+    fontFamily: baseTypography.fontFamily.medium,
+    fontSize: baseTypography.fontSize.sm, // Smaller for subtitle
+    color: baseColors.blue600, // Primary color for subtitle as per example (theme.colors.primary)
+    textAlign: 'center',
+    paddingHorizontal: baseSpacing[2],
+    lineHeight: 22,
+  },
+  actionButton: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: baseSpacing[2],
+    backgroundColor: baseColors.blue800, // Main brand color (800)
+    paddingVertical: 18,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: baseColors.blue800,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  primaryButton: {
-    backgroundColor: '#1E3A8A',
-  },
-  secondaryButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#1E3A8A',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButtonText: {
-    color: '#1E3A8A',
-    fontSize: 16,
-    fontWeight: '600',
+  actionButtonText: {
+    fontFamily: baseTypography.fontFamily.semibold,
+    fontSize: baseTypography.fontSize.lg,
+    color: baseColors.white,
   },
 });
-

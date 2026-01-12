@@ -57,7 +57,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) => {
       {Array.from({ length }).map((_, index) => (
         <TextInput
           key={index}
-          ref={(ref) => (inputRefs.current[index] = ref)}
+          ref={(ref: any) => (inputRefs.current[index] = ref)}
           style={[
             styles.input,
             focusedIndex === index && styles.inputFocused,

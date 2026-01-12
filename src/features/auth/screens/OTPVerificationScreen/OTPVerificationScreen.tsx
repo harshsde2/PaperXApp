@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, TouchableOpacity, Alert, ActivityIndicator, useWindowDimensions, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { Text } from '@shared/components/Text';
@@ -15,6 +15,8 @@ import {
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
+import { baseColors } from '@theme/tokens/base';
+import { Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
 
 type OTPFormData = {
   otp: string;
@@ -26,9 +28,52 @@ const OTPVerificationScreen = () => {
   const { mobile, purpose } = route.params;
   const theme = useTheme();
   const styles = createStyles(theme);
+  const { width, height } = useWindowDimensions();
 
   const [timeLeft, setTimeLeft] = useState(120);
   const [canResend, setCanResend] = useState(false);
+
+  // Gradient Colors (Same as SplashScreen and LoginScreen)
+  const gradientColors = [
+    baseColors.blue50,    // Lightest blue
+    '#FFFFFF',            // White
+    baseColors.blue100,
+    baseColors.blue200,
+    baseColors.blue300,   // Slightly darker middle
+    baseColors.blue200,
+    baseColors.blue100,
+    '#FFFFFF',
+  ];
+
+  const GridBackground = useMemo(() => {
+    const gridSize = 40;
+    const path = Skia.Path.Make();
+    
+    // Vertical lines
+    for (let i = 0; i <= width; i += gridSize) {
+      path.moveTo(i, 0);
+      path.lineTo(i, height);
+    }
+
+    // Horizontal lines
+    for (let i = 0; i <= height; i += gridSize) {
+      path.moveTo(0, i);
+      path.lineTo(width, i);
+    }
+
+    return (
+      <Canvas style={StyleSheet.absoluteFill}>
+        <Group opacity={0.3}>
+          <Path 
+            path={path} 
+            color="white" 
+            style="stroke" 
+            strokeWidth={1} 
+          />
+        </Group>
+      </Canvas>
+    );
+  }, [width, height]);
 
   const { control, handleSubmit, formState: { isValid }, setValue, watch } = useForm<OTPFormData>({
     defaultValues: {
@@ -113,8 +158,14 @@ const OTPVerificationScreen = () => {
   return (
     <ScreenWrapper
       scrollable
-      backgroundColor={theme.colors.background.secondary}
+      safeArea={true}
       safeAreaEdges={['top']}
+      gradient="linear"
+      gradientColors={gradientColors}
+      gradientStart={{ x: 1, y: 0 }}
+      gradientEnd={{ x: 0, y: 1 }}
+      // backgroundElement={GridBackground}
+      statusBarStyle="dark-content"
       paddingHorizontal={theme.spacing[4]}
       contentContainerStyle={styles.scrollContent}
     >

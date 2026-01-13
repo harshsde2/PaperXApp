@@ -392,6 +392,48 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   roleBadgeValue: {
     textTransform: 'capitalize',
   },
+  roleBadgeActive: {
+    backgroundColor: theme.colors.primary.DEFAULT,
+    borderColor: theme.colors.primary.dark,
+  },
+  roleBadgeDisabled: {
+    opacity: 0.6,
+  },
+  roleBadgeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  roleBadgeLeft: {
+    flex: 1,
+  },
+  activeRoleIndicator: {
+    backgroundColor: theme.colors.success.DEFAULT,
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.md,
+    marginLeft: theme.spacing[2],
+  },
+  activeRoleText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.text.inverse,
+    textTransform: 'uppercase',
+  },
+  switchRoleText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: theme.colors.primary.DEFAULT,
+    marginLeft: theme.spacing[2],
+  },
+  roleSwitchHint: {
+    fontSize: 12,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing[2],
+    fontStyle: 'italic',
+    lineHeight: 16,
+  },
   // Contact Info Enhancements
   contactLabelRow: {
     flexDirection: 'row',

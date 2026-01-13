@@ -39,30 +39,30 @@ const BRAND_TYPE_ID_MAP: Record<string, number> = {
   'food-beverage': 1,
   'packaged-food': 2,
   'snacks-confectionery': 3,
-  'dairy': 4,
+  dairy: 4,
   'frozen-food': 5,
-  'beverage': 6,
+  beverage: 6,
   'alcoholic-beverage': 7,
   'tobacco-nicotine': 8,
-  'pharmaceutical': 9,
+  pharmaceutical: 9,
   'otc-nutraceutical': 10,
   'ayurvedic-herbal': 11,
   'medical-device': 12,
   'diagnostic-kit': 13,
   'health-supplement': 14,
-  'cosmetics': 15,
-  'skincare': 16,
-  'haircare': 17,
+  cosmetics: 15,
+  skincare: 16,
+  haircare: 17,
   'perfume-fragrance': 18,
   'luxury-beauty': 19,
-  'grooming': 20,
+  grooming: 20,
   'apparel-clothing': 21,
   'garment-export': 22,
-  'footwear': 23,
+  footwear: 23,
   'fashion-accessories': 24,
-  'jewellery': 25,
-  'watch': 26,
-  'eyewear': 27,
+  jewellery: 25,
+  watch: 26,
+  eyewear: 27,
   'consumer-electronics': 28,
   'mobile-accessories': 29,
   'electrical-appliances': 30,
@@ -74,36 +74,36 @@ const BRAND_TYPE_ID_MAP: Record<string, number> = {
   'subscription-box': 36,
   'marketplace-private-label': 37,
   'quick-commerce': 38,
-  'bakery': 39,
+  bakery: 39,
   'patisserie-cake': 40,
   'qsr-fast-food': 41,
   'restaurant-chain': 42,
   'cloud-kitchen': 43,
-  'cafe': 44,
-  'catering': 45,
+  cafe: 44,
+  catering: 45,
   'corporate-gifting': 46,
   'promotional-merchandise': 47,
   'office-supplies': 48,
   'industrial-goods': 49,
-  'chemical': 50,
+  chemical: 50,
   'paints-coatings': 51,
   'school-education': 52,
   'publishing-house': 53,
   'book-publisher': 54,
-  'edtech': 55,
-  'stationery': 56,
+  edtech: 55,
+  stationery: 56,
   'notebook-diary': 57,
   'agro-products': 58,
-  'seeds': 59,
-  'fertilizer': 60,
+  seeds: 59,
+  fertilizer: 60,
   'organic-natural': 61,
   'tea-coffee': 62,
-  'spices': 63,
+  spices: 63,
   'home-furnishing': 64,
-  'furniture': 65,
+  furniture: 65,
   'home-decor': 66,
-  'kitchenware': 67,
-  'lighting': 68,
+  kitchenware: 67,
+  lighting: 68,
   'event-management': 69,
   'festive-gifting': 70,
   'wedding-gifting': 71,
@@ -557,7 +557,8 @@ const BrandRegistrationScreen = () => {
   const { isKeyboardVisible } = useKeyboard();
 
   // API mutation hook
-  const { mutate: completeBrandProfile, isPending: isSubmitting } = useCompleteBrandProfile();
+  const { mutate: completeBrandProfile, isPending: isSubmitting } =
+    useCompleteBrandProfile();
 
   // Redux dispatch
   const dispatch = useAppDispatch();
@@ -639,7 +640,7 @@ const BrandRegistrationScreen = () => {
     const mobileOrEmailValid = isMobileOrEmailValid;
     const cityValid = cityValue?.trim().length > 0;
 
-    const valid = 
+    const valid =
       companyNameValid &&
       brandTypesValid &&
       contactPersonValid &&
@@ -710,14 +711,17 @@ const BrandRegistrationScreen = () => {
     (data: BrandRegistrationFormData) => {
       // Validate that at least one brand type is selected
       if (selectedBrandTypes.size === 0) {
-        Alert.alert('Validation Error', 'Please select at least one brand type');
+        Alert.alert(
+          'Validation Error',
+          'Please select at least one brand type',
+        );
         return;
       }
 
       // Parse mobile/email - API expects separate fields
       const isEmail = isValidEmail(mobileOrEmailValue || '');
       const isMobile = isValidMobile(mobileOrEmailValue || '');
-      
+
       let mobile = profileData?.mobile || '';
       let email = '';
 
@@ -733,13 +737,17 @@ const BrandRegistrationScreen = () => {
         .filter((id): id is number => id !== undefined && !isNaN(id));
 
       if (brandTypeIds.length === 0) {
-        Alert.alert('Validation Error', 'Please select at least one valid brand type');
+        Alert.alert(
+          'Validation Error',
+          'Please select at least one valid brand type',
+        );
         return;
       }
 
       // Prepare API request data
       const apiData = {
-        company_name: companyNameValue?.trim() || profileData?.company_name || '',
+        company_name:
+          companyNameValue?.trim() || profileData?.company_name || '',
         brand_name: companyNameValue?.trim() || profileData?.company_name || '',
         contact_person_name: contactPersonNameValue?.trim() || '',
         mobile: mobile,
@@ -748,7 +756,7 @@ const BrandRegistrationScreen = () => {
         city: cityValue?.trim() || profileData?.city || '',
         location: cityValue?.trim() || profileData?.city || '',
         latitude: 28.6139,
-        longitude: 77.2090,
+        longitude: 77.209,
         brand_type_ids: brandTypeIds,
       };
 
@@ -757,9 +765,11 @@ const BrandRegistrationScreen = () => {
         onSuccess: (response: any) => {
           dispatch(
             showToast({
-              message: response.message || 'Brand registration completed successfully!',
+              message:
+                response.message ||
+                'Brand registration completed successfully!',
               type: 'success',
-            })
+            }),
           );
 
           const updatedProfileData: UpdateProfileResponse = {
@@ -780,7 +790,8 @@ const BrandRegistrationScreen = () => {
           ) {
             const secondaryRole =
               updatedProfileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
-            const firstSecondaryScreen = getFirstRegistrationScreen(secondaryRole);
+            const firstSecondaryScreen =
+              getFirstRegistrationScreen(secondaryRole);
 
             if (
               firstSecondaryScreen &&
@@ -802,7 +813,8 @@ const BrandRegistrationScreen = () => {
         },
         onError: (error: any) => {
           console.error('Brand profile completion error:', error);
-          let errorMessage = 'Failed to complete registration. Please try again.';
+          let errorMessage =
+            'Failed to complete registration. Please try again.';
           if (error?.message) {
             errorMessage = error.message;
           } else if (error?.response?.data?.error?.message) {
@@ -811,45 +823,46 @@ const BrandRegistrationScreen = () => {
             errorMessage = error.response.data.message;
           }
 
-        dispatch(
-          showToast({
-            message: errorMessage,
-            type: 'error',
-          })
-        );
+          dispatch(
+            showToast({
+              message: errorMessage,
+              type: 'error',
+            }),
+          );
 
-        const isSecondaryRoleCompletion =
-          profileData?.secondary_role === ROLES.BRAND;
+          const isSecondaryRoleCompletion =
+            profileData?.secondary_role === ROLES.BRAND;
 
-        if (isSecondaryRoleCompletion) {
-          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-            profileData: profileData,
-          });
-        } else if (
-          profileData?.has_secondary_role === 1 &&
-          profileData?.secondary_role
-        ) {
-          const secondaryRole =
-            profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
-          const firstSecondaryScreen = getFirstRegistrationScreen(secondaryRole);
-
-          if (
-            firstSecondaryScreen &&
-            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
-          ) {
-            (navigation.navigate as any)(firstSecondaryScreen, {
+          if (isSecondaryRoleCompletion) {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
               profileData: profileData,
             });
+          } else if (
+            profileData?.has_secondary_role === 1 &&
+            profileData?.secondary_role
+          ) {
+            const secondaryRole =
+              profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+            const firstSecondaryScreen =
+              getFirstRegistrationScreen(secondaryRole);
+
+            if (
+              firstSecondaryScreen &&
+              firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+            ) {
+              (navigation.navigate as any)(firstSecondaryScreen, {
+                profileData: profileData,
+              });
+            } else {
+              navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+                profileData: profileData,
+              });
+            }
           } else {
             navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
               profileData: profileData,
             });
           }
-        } else {
-          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-            profileData: profileData,
-          });
-        }
         },
       });
     },
@@ -868,7 +881,6 @@ const BrandRegistrationScreen = () => {
       dispatch,
     ],
   );
-
 
   return (
     <>
@@ -1312,119 +1324,122 @@ const BrandRegistrationScreen = () => {
 
           {/* Brand Type Selection Modal */}
           <Modal
-          visible={showBrandTypeModal}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowBrandTypeModal(false)}
-        >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              justifyContent: 'flex-end',
-            }}
+            visible={showBrandTypeModal}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setShowBrandTypeModal(false)}
           >
-            <View style={styles.brandTypeModal}>
-              <View style={styles.brandTypeModalHeader}>
-                <Text
-                  variant="h5"
-                  fontWeight="bold"
-                  style={styles.brandTypeModalTitle}
-                >
-                  Select Brand Type(s)
-                </Text>
-                <TouchableOpacity
-                  style={styles.brandTypeModalClose}
-                  onPress={() => {
-                    setShowBrandTypeModal(false);
-                    setBrandTypeSearchQuery('');
-                  }}
-                  activeOpacity={0.7}
-                >
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <View style={styles.brandTypeModal}>
+                <View style={styles.brandTypeModalHeader}>
                   <Text
-                    variant="bodyMedium"
-                    fontWeight="semibold"
-                    color={theme.colors.primary.DEFAULT}
+                    variant="h5"
+                    fontWeight="bold"
+                    style={styles.brandTypeModalTitle}
                   >
-                    Done
+                    Select Brand Type(s)
                   </Text>
-                </TouchableOpacity>
-              </View>
-
-              {selectedBrandTypes.size > 0 && (
-                <View style={styles.selectedCountBadge}>
-                  <Text variant="captionSmall" style={styles.selectedCountText}>
-                    {selectedBrandTypes.size} Selected
-                  </Text>
+                  <TouchableOpacity
+                    style={styles.brandTypeModalClose}
+                    onPress={() => {
+                      setShowBrandTypeModal(false);
+                      setBrandTypeSearchQuery('');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      variant="bodyMedium"
+                      fontWeight="semibold"
+                      color={theme.colors.primary.DEFAULT}
+                    >
+                      Done
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              )}
 
-              <View style={styles.brandTypeSearchContainer}>
-                <View style={styles.brandTypeSearchIcon}>
-                  <AppIcon.Search
-                    width={20}
-                    height={20}
-                    color={theme.colors.text.tertiary}
+                {selectedBrandTypes.size > 0 && (
+                  <View style={styles.selectedCountBadge}>
+                    <Text
+                      variant="captionSmall"
+                      style={styles.selectedCountText}
+                    >
+                      {selectedBrandTypes.size} Selected
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.brandTypeSearchContainer}>
+                  <View style={styles.brandTypeSearchIcon}>
+                    <AppIcon.Search
+                      width={20}
+                      height={20}
+                      color={theme.colors.text.tertiary}
+                    />
+                  </View>
+                  <TextInput
+                    style={styles.brandTypeSearchInput}
+                    placeholder="Search brand types..."
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    value={brandTypeSearchQuery}
+                    onChangeText={setBrandTypeSearchQuery}
                   />
                 </View>
-                <TextInput
-                  style={styles.brandTypeSearchInput}
-                  placeholder="Search brand types..."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={brandTypeSearchQuery}
-                  onChangeText={setBrandTypeSearchQuery}
-                />
-              </View>
 
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {filteredBrandTypes.map(category => (
-                  <View key={category.id} style={styles.brandTypeCategory}>
-                    <Text
-                      variant="captionMedium"
-                      style={styles.brandTypeCategoryTitle}
-                    >
-                      {category.title}
-                    </Text>
-                    {category.options.map(option => {
-                      const isSelected = selectedBrandTypes.has(option.id);
-                      return (
-                        <TouchableOpacity
-                          key={option.id}
-                          style={styles.brandTypeOption}
-                          onPress={() => toggleBrandType(option.id)}
-                          activeOpacity={0.7}
-                        >
-                          {isSelected ? (
-                            <AppIcon.TickCheckedBox
-                              width={24}
-                              height={24}
-                              color={theme.colors.primary.DEFAULT}
-                            />
-                          ) : (
-                            <AppIcon.UntickCheckedBox
-                              width={24}
-                              height={24}
-                              color={theme.colors.border.primary}
-                            />
-                          )}
-                          <Text
-                            variant="bodyMedium"
-                            style={[
-                              styles.brandTypeOptionLabel,
-                              isSelected && styles.brandTypeOptionSelected,
-                            ]}
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {filteredBrandTypes.map(category => (
+                    <View key={category.id} style={styles.brandTypeCategory}>
+                      <Text
+                        variant="captionMedium"
+                        style={styles.brandTypeCategoryTitle}
+                      >
+                        {category.title}
+                      </Text>
+                      {category.options.map(option => {
+                        const isSelected = selectedBrandTypes.has(option.id);
+                        return (
+                          <TouchableOpacity
+                            key={option.id}
+                            style={styles.brandTypeOption}
+                            onPress={() => toggleBrandType(option.id)}
+                            activeOpacity={0.7}
                           >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                ))}
-              </ScrollView>
+                            {isSelected ? (
+                              <AppIcon.TickCheckedBox
+                                width={24}
+                                height={24}
+                                color={theme.colors.primary.DEFAULT}
+                              />
+                            ) : (
+                              <AppIcon.UntickCheckedBox
+                                width={24}
+                                height={24}
+                                color={theme.colors.border.primary}
+                              />
+                            )}
+                            <Text
+                              variant="bodyMedium"
+                              style={[
+                                styles.brandTypeOptionLabel,
+                                isSelected && styles.brandTypeOptionSelected,
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
         </ScreenWrapper>
       </KeyboardAvoidingView>
 
@@ -1471,7 +1486,10 @@ const BrandRegistrationScreen = () => {
             disabled={!isFormValid || isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color={theme.colors.text.inverse} size="small" />
+              <ActivityIndicator
+                color={theme.colors.text.inverse}
+                size="small"
+              />
             ) : (
               <>
                 <Text

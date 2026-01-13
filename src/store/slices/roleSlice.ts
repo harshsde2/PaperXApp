@@ -17,12 +17,21 @@ const roleSlice = createSlice({
       state,
       action: PayloadAction<SetRolesPayload>
     ) => {
-      state.primaryRole = action.payload.primaryRole;
-      state.secondaryRole = action.payload.secondaryRole || null;
-      state.activeRole = action.payload.primaryRole;
-      state.availableRoles = action.payload.secondaryRole
+      const newAvailableRoles = action.payload.secondaryRole
         ? [action.payload.primaryRole, action.payload.secondaryRole]
         : [action.payload.primaryRole];
+      
+      state.primaryRole = action.payload.primaryRole;
+      state.secondaryRole = action.payload.secondaryRole || null;
+      state.availableRoles = newAvailableRoles;
+      
+      // Only set activeRole to primary if:
+      // 1. activeRole is not set yet, OR
+      // 2. current activeRole is not in the new available roles
+      if (!state.activeRole || !newAvailableRoles.includes(state.activeRole)) {
+        state.activeRole = action.payload.primaryRole;
+      }
+      // Otherwise, preserve the current activeRole
     },
     setActiveRole: (state, action: PayloadAction<UserRole>) => {
       if (state.availableRoles.includes(action.payload)) {

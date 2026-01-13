@@ -1,9 +1,10 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useEffect } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAppSelector } from '@store/hooks';
+import { useAppSelector, useAppDispatch } from '@store/hooks';
 import { useLogout, useGetProfile } from '@services/api';
 import { storageService } from '@services/storage/storageService';
+import { setRoles, setActiveRole } from '@store/slices/roleSlice';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { Section } from '@shared/components/Section';
@@ -16,13 +17,16 @@ import { createStyles } from './styles';
 import type { UserProfile } from '@services/api/types';
 import { AppIcon } from '@assets/svgs';
 import { ROLES } from '@utils/constants';
+import { UserRole } from '@shared/types';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const route = useRoute();
   const theme = useTheme();
   const styles = createStyles(theme);
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { activeRole, availableRoles, primaryRole: reduxPrimaryRole, secondaryRole: reduxSecondaryRole } = useAppSelector((state) => state.role);
   const logoutMutation = useLogout();
   
   // Fetch user profile from API
@@ -88,6 +92,53 @@ const ProfileScreen = () => {
   const udyamCertificate = userData?.udyam_certificate || null;
   const avatarUrl = userData?.avatar || null;
 
+  // Helper function to normalize role from API format to UserRole type
+  const normalizeRole = (role: string): UserRole => {
+    const normalized = role.toLowerCase().replace(/\s+/g, '-');
+    // Convert "machine-dealer" to "machineDealer" to match UserRole type
+    if (normalized === 'machine-dealer') {
+      return 'machineDealer';
+    }
+    // Map other roles
+    const roleMap: Record<string, UserRole> = {
+      'dealer': 'dealer',
+      'converter': 'converter',
+      'brand': 'brand',
+      'mill': 'mill',
+      'scrap-dealer': 'scrapDealer',
+    };
+    return roleMap[normalized] || 'dealer';
+  };
+
+  // Initialize role slice when profile data loads (only once or when roles change)
+  useEffect(() => {
+    if (profileData && primaryRole && primaryRole !== 'Not Set') {
+      const normalizedPrimaryRole = normalizeRole(primaryRole);
+      const normalizedSecondaryRole = hasSecondaryRole && secondaryRole
+        ? normalizeRole(secondaryRole)
+        : undefined;
+
+      // Only update roles if they've changed or haven't been set yet
+      const rolesChanged = 
+        reduxPrimaryRole !== normalizedPrimaryRole || 
+        reduxSecondaryRole !== normalizedSecondaryRole;
+      
+      if (!reduxPrimaryRole || rolesChanged) {
+        // Set roles from profile data (this will preserve activeRole if it's valid)
+        dispatch(setRoles({
+          primaryRole: normalizedPrimaryRole,
+          secondaryRole: normalizedSecondaryRole,
+        }));
+      }
+      
+      // Only set active role to primary if it's not set yet
+      // The setRoles action will handle preserving activeRole if it's already valid
+      if (!activeRole) {
+        dispatch(setActiveRole(normalizedPrimaryRole));
+      }
+    }
+  }, [profileData, primaryRole, secondaryRole, hasSecondaryRole, dispatch, reduxPrimaryRole, reduxSecondaryRole, activeRole]);
+
   // Build roles array
   const roles: string[] = [];
   if (primaryRole && primaryRole !== 'Not Set') {
@@ -96,6 +147,15 @@ const ProfileScreen = () => {
   if (hasSecondaryRole && secondaryRole) {
     roles.push(secondaryRole);
   }
+
+  // Handle role switch
+  const handleRoleSwitch = (role: string) => {
+    const normalizedRole = normalizeRole(role);
+    dispatch(setActiveRole(normalizedRole));
+    // Navigate back to dashboard to refresh with new role
+    // @ts-ignore - Navigation params type issue
+    navigation.navigate('MainTabs', { screen: 'Dashboard' });
+  };
 
   // Check profile completion status
   const hasEmail = !!userData?.email;
@@ -256,24 +316,62 @@ const ProfileScreen = () => {
         </Card>
       )}
 
-      {/* Roles Section */}
+      {/* Roles Section with Role Switcher */}
       {roles.length > 0 && (
         <Section
           title="Roles"
           style={styles.section}
         >
           <View style={styles.rolesContainer}>
-            {roles.map((role, index) => (
-              <Card key={index} variant="compact" style={styles.roleBadge}>
-                <Text variant="captionSmall" fontWeight="semibold" color={theme.colors.primary.dark} style={styles.roleBadgeLabel}>
-                  {index === 0 ? 'Primary' : 'Secondary'}
-                </Text>
-                <Text variant="bodyMedium" fontWeight="semibold" color={theme.colors.text.primary} style={styles.roleBadgeValue}>
-                  {role}
-                </Text>
-              </Card>
-            ))}
+            {roles.map((role, index) => {
+              const normalizedRole = normalizeRole(role);
+              // Compare with activeRole (which is in SharedUserRole format)
+              const isActive = activeRole === normalizedRole;
+              const isPrimary = index === 0;
+              
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleRoleSwitch(role)}
+                  disabled={isActive || roles.length === 1}
+                  activeOpacity={0.7}
+                >
+                  <Card 
+                    variant="compact" 
+                    style={[
+                      styles.roleBadge,
+                      isActive && styles.roleBadgeActive,
+                      roles.length === 1 && styles.roleBadgeDisabled
+                    ]}
+                  >
+                    <View style={styles.roleBadgeContent}>
+                      <View style={styles.roleBadgeLeft}>
+                        <Text variant="captionSmall" fontWeight="semibold" color={theme.colors.primary.dark} style={styles.roleBadgeLabel}>
+                          {isPrimary ? 'Primary' : 'Secondary'}
+                        </Text>
+                        <Text variant="bodyMedium" fontWeight="semibold" color={theme.colors.text.primary} style={styles.roleBadgeValue}>
+                          {role}
+                        </Text>
+                      </View>
+                      {isActive && (
+                        <View style={styles.activeRoleIndicator}>
+                          <Text style={styles.activeRoleText}>Active</Text>
+                        </View>
+                      )}
+                      {!isActive && roles.length > 1 && (
+                        <Text style={styles.switchRoleText}>Tap to switch →</Text>
+                      )}
+                    </View>
+                  </Card>
+                </TouchableOpacity>
+              );
+            })}
           </View>
+          {roles.length > 1 && (
+            <Text style={styles.roleSwitchHint}>
+              Switch between roles to view role-specific dashboards and features
+            </Text>
+          )}
         </Section>
       )}
 

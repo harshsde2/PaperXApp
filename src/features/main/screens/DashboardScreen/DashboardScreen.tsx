@@ -3,6 +3,7 @@ import { View, ActivityIndicator, RefreshControl } from 'react-native';
 import { useAppSelector } from '@store/hooks';
 import { useGetProfile, useGetDashboard } from '@services/api';
 import type { DashboardRole } from '@services/api';
+import { useActiveRole } from '@shared/hooks/useActiveRole';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { ProfileCompletionCard } from './components/ProfileCompletionCard';
@@ -17,16 +18,16 @@ const DashboardScreen = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { data: profileData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useGetProfile();
   
-  // Get role for dashboard API
-  const primaryRole = (profileData?.primary_role || user?.primaryRole || 'dealer').toLowerCase().replace(' ', '-') as DashboardRole;
+  // Get active role from Redux (supports role switching)
+  const activeRole = useActiveRole() as DashboardRole;
   
-  // Fetch dashboard data based on role
+  // Fetch dashboard data based on active role
   const { 
     data: dashboardData, 
     isLoading: isDashboardLoading, 
     isError: isDashboardError,
     refetch: refetchDashboard 
-  } = useGetDashboard({ role: primaryRole });
+  } = useGetDashboard({ role: activeRole });
   
   const isLoading = isProfileLoading || isDashboardLoading;
   const isError = isProfileError || isDashboardError;
@@ -109,9 +110,9 @@ const DashboardScreen = () => {
   //   );
   // }
 
-  // Render role-specific dashboard views
+  // Render role-specific dashboard views based on active role
   const renderRoleDashboard = () => {
-    switch (primaryRole) {
+    switch (activeRole) {
       case 'dealer':
         return <DealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
       case 'machine-dealer':

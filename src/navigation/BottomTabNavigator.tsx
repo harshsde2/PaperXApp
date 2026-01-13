@@ -2,7 +2,9 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useAppSelector } from '@store/hooks';
+import { useActiveRole } from '@shared/hooks/useActiveRole';
 import { AppIcon } from '@assets/svgs';
 import { Text } from '@shared/components/Text';
 import { SCREENS, TAB_CONFIGS, UserRole } from './constants';
@@ -66,19 +68,102 @@ const getScreenComponent = (screenName: string) => {
 // Custom Tab Bar Component
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { user } = useAppSelector((reduxState) => reduxState.auth);
+  const stackNavigation = useNavigation<any>();
   
-  // Use primaryRole from Redux store - this is set during login
-  const primaryRole = (user?.primaryRole || 'dealer').toLowerCase().replace(' ', '-') as UserRole;
-  const tabConfig = TAB_CONFIGS[primaryRole] || TAB_CONFIGS.dealer;
+  // Use activeRole from Redux (supports role switching)
+  const activeRole = useActiveRole();
+  const tabConfig = TAB_CONFIGS[activeRole] || TAB_CONFIGS.dealer;
+
+  const handlePostPress = () => {
+    stackNavigation.navigate(SCREENS.MAIN.POST);
+  };
+
+  // Split tabs into left and right sides for Post button in center
+  const totalTabs = state.routes.length;
+  const middleIndex = Math.floor(totalTabs / 2);
+  const leftTabs = state.routes.slice(0, middleIndex);
+  const rightTabs = state.routes.slice(middleIndex);
 
   return (
     <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom || 12 }]}>
-      {state.routes.map((route, index) => {
+      {/* Left side tabs */}
+      {leftTabs.map((route) => {
         const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
+        const isFocused = state.index === state.routes.findIndex(r => r.key === route.key);
         
-        // Find the tab config for this route
+        const config = tabConfig.find(t => t.name === route.name);
+        if (!config) return null;
+
+        const IconComponent = getIconComponent(config.icon);
+        const label = config.label;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        const onLongPress = () => {
+          navigation.emit({
+            type: 'tabLongPress',
+            target: route.key,
+          });
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={styles.tabItem}
+          >
+            <View style={[styles.iconContainer, isFocused && styles.iconContainerActive]}>
+              <IconComponent
+                width={24}
+                height={24}
+                color={isFocused ? '#2563EB' : '#9CA3AF'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: isFocused ? '#2563EB' : '#6B7280' },
+              ]}
+            >
+              {label}
+            </Text>
+            {isFocused && <View style={styles.activeIndicator} />}
+          </TouchableOpacity>
+        );
+      })}
+
+      {/* Post Button in the center */}
+      <TouchableOpacity
+        style={styles.postButton}
+        onPress={handlePostPress}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Post Requirement"
+      >
+        <View style={styles.postButtonInner}>
+          <Text style={styles.postButtonText}>+</Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Right side tabs */}
+      {rightTabs.map((route) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === state.routes.findIndex(r => r.key === route.key);
+        
         const config = tabConfig.find(t => t.name === route.name);
         if (!config) return null;
 
@@ -138,12 +223,9 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
 };
 
 const BottomTabNavigator: React.FC = () => {
-  const { user } = useAppSelector((state) => state.auth);
-  
-  // Use user's primaryRole from Redux store (already available after login)
-  // The CustomTabBar will also check profile data for the most up-to-date role
-  const primaryRole = (user?.primaryRole || 'dealer').toLowerCase().replace(' ', '-') as UserRole;
-  const tabConfig = TAB_CONFIGS[primaryRole] || TAB_CONFIGS.dealer;
+  // Use activeRole from Redux (supports role switching)
+  const activeRole = useActiveRole();
+  const tabConfig = TAB_CONFIGS[activeRole] || TAB_CONFIGS.dealer;
   const initialRouteName = tabConfig[0]?.name || SCREENS.MAIN.DASHBOARD;
 
   return (
@@ -178,6 +260,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabItem: {
     flex: 1,
@@ -209,6 +293,37 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: '#2563EB',
     borderRadius: 2,
+  },
+  postButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+    marginTop: -24,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 10,
+  },
+  postButtonInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  postButtonText: {
+    fontSize: 32,
+    fontWeight: '300',
+    color: '#FFFFFF',
+    lineHeight: 36,
+    marginTop: -2,
   },
 });
 

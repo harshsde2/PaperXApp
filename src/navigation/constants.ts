@@ -35,6 +35,7 @@ export const SCREENS = {
     CAPACITY: 'Capacity',
     SESSIONS: 'Sessions',
     PROFILE: 'Profile',
+    POST: 'Post',
   },
 } as const;
 

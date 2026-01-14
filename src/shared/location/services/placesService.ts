@@ -1,55 +1,50 @@
 /**
  * Places Service
- * Handles Google Places API for address autocomplete and place details
+ * Handles place search and details
+ *
+ * NOTE:
+ * - Currently uses OpenStreetMap Nominatim (free) for search and details.
+ * - The previous Google Places implementation is kept commented and can be
+ *   restored when Google APIs are configured.
  */
 
 import { PlacePrediction, PlaceDetails, Coordinates } from '../types';
-import { GOOGLE_PLACES_API, getServerApiKey, COUNTRY_RESTRICTION } from '../constants';
-
-interface AutocompleteResponse {
-  predictions: AutocompletePrediction[];
-  status: string;
-  error_message?: string;
-}
-
-interface AutocompletePrediction {
-  place_id: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
-  };
-  description: string;
-  types: string[];
-}
-
-interface PlaceDetailsResponse {
-  result: PlaceDetailsResult;
-  status: string;
-  error_message?: string;
-}
-
-interface PlaceDetailsResult {
-  place_id: string;
-  name: string;
-  formatted_address: string;
-  geometry: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
-  address_components: AddressComponent[];
-  types: string[];
-}
-
-interface AddressComponent {
-  long_name: string;
-  short_name: string;
-  types: string[];
-}
+import { COUNTRY_RESTRICTION } from '../constants';
 
 /**
- * Search for places using autocomplete
+ * Nominatim Search Response Types
+ */
+interface NominatimSearchResult {
+  place_id: number;
+  licence: string;
+  osm_type?: string;
+  osm_id?: number;
+  lat: string;
+  lon: string;
+  class?: string;
+  type?: string;
+  display_name: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    county?: string;
+    state_district?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
+    country_code?: string;
+    road?: string;
+    house_number?: string;
+    suburb?: string;
+    neighbourhood?: string;
+  };
+}
+
+interface NominatimLookupResponse extends Array<NominatimSearchResult> {}
+
+/**
+ * Search for places using Nominatim
  */
 export const searchPlaces = async (
   query: string,
@@ -61,112 +56,134 @@ export const searchPlaces = async (
 
   try {
     const encodedQuery = encodeURIComponent(query);
-    let url = `${GOOGLE_PLACES_API.AUTOCOMPLETE}?input=${encodedQuery}&key=${getServerApiKey()}&components=country:${COUNTRY_RESTRICTION}&types=address`;
-    
-    if (sessionToken) {
-      url += `&sessiontoken=${sessionToken}`;
+
+    // Limit by country if COUNTRY_RESTRICTION is set (e.g., "in" for India)
+    // Nominatim uses "countrycodes" parameter with ISO 3166-1alpha2 country codes
+    const countryParam = COUNTRY_RESTRICTION
+      ? `&countrycodes=${COUNTRY_RESTRICTION.toLowerCase()}`
+      : '';
+
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodedQuery}&format=json&addressdetails=1&limit=10${countryParam}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'PaperXApp/1.0 (contact: dev@paperx.app)',
+        Referer: 'https://paperx.app',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const response = await fetch(url);
-    const data: AutocompleteResponse = await response.json();
+    const data: NominatimSearchResult[] = await response.json();
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      console.warn('[Places] Autocomplete warning:', data.status, data.error_message);
-    }
-
-    if (!data.predictions) {
+    if (!data || !data.length) {
       return [];
     }
 
-    return data.predictions.map((prediction) => ({
-      placeId: prediction.place_id,
-      mainText: prediction.structured_formatting.main_text,
-      secondaryText: prediction.structured_formatting.secondary_text,
-      fullText: prediction.description,
-    }));
+    return data.map(result => {
+      const parts = result.display_name.split(',');
+      const mainText = parts[0]?.trim() || result.display_name;
+      const secondaryText = parts.slice(1).join(',').trim();
+
+      const address = result.address || {};
+      const city =
+        address.city || address.town || address.village || address.county;
+
+      return {
+        placeId: result.place_id.toString(),
+        mainText,
+        secondaryText,
+        fullText: result.display_name,
+        latitude: parseFloat(result.lat),
+        longitude: parseFloat(result.lon),
+        address: {
+          formattedAddress: result.display_name,
+          streetAddress: mainText || undefined,
+          city,
+          state: address.state,
+          country: address.country,
+          pincode: address.postcode,
+          placeId: result.place_id.toString(),
+        },
+      };
+    });
   } catch (error) {
-    console.error('[Places] Search error:', error);
+    console.error('[Places] Search error (Nominatim):', error);
     throw error;
   }
 };
 
 /**
- * Get place details by place ID
+ * Get place details by place ID using Nominatim lookup
  */
 export const getPlaceDetails = async (
   placeId: string,
   sessionToken?: string,
 ): Promise<PlaceDetails> => {
   try {
-    let url = `${GOOGLE_PLACES_API.DETAILS}?place_id=${placeId}&key=${getServerApiKey()}&fields=name,formatted_address,geometry,address_components,types,place_id`;
-    
-    if (sessionToken) {
-      url += `&sessiontoken=${sessionToken}`;
+    const url = `https://nominatim.openstreetmap.org/lookup?format=json&addressdetails=1&place_ids=${placeId}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'PaperXApp/1.0 (contact: dev@paperx.app)',
+        Referer: 'https://paperx.app',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const response = await fetch(url);
-    const data: PlaceDetailsResponse = await response.json();
+    const data: NominatimLookupResponse = await response.json();
 
-    if (data.status !== 'OK') {
-      throw new Error(data.error_message || `Failed to get place details: ${data.status}`);
+    if (!data || !data.length) {
+      throw new Error('Place not found');
     }
 
-    const result = data.result;
-    const addressComponents = parseAddressComponents(result.address_components);
+    const result = data[0];
+    const address = result.address || {};
+
+    // Build street address / name
+    let streetAddress = '';
+    if (result.display_name) {
+      const parts = result.display_name.split(',');
+      streetAddress = parts[0]?.trim() || '';
+    }
+    if (!streetAddress && address.road) {
+      streetAddress = address.road;
+    }
+
+    const city =
+      address.city || address.town || address.village || address.county;
 
     return {
-      placeId: result.place_id,
-      name: result.name,
-      latitude: result.geometry.location.lat,
-      longitude: result.geometry.location.lng,
+      placeId: result.place_id.toString(),
+      name: streetAddress || city || result.display_name,
+      latitude: parseFloat(result.lat),
+      longitude: parseFloat(result.lon),
       address: {
-        formattedAddress: result.formatted_address,
-        ...addressComponents,
-        placeId: result.place_id,
+        formattedAddress: result.display_name,
+        streetAddress: streetAddress || undefined,
+        city,
+        state: address.state,
+        country: address.country,
+        pincode: address.postcode,
+        placeId: result.place_id.toString(),
       },
-      types: result.types,
+      // Map Nominatim class/type to a simple types array
+      types: [result.class, result.type].filter(Boolean) as string[],
     };
   } catch (error) {
-    console.error('[Places] Get details error:', error);
+    console.error('[Places] Get details error (Nominatim):', error);
     throw error;
   }
 };
 
 /**
- * Parse address components from place details
- */
-const parseAddressComponents = (components: AddressComponent[]) => {
-  const getComponent = (types: string[]): string | undefined => {
-    const component = components.find((c) =>
-      types.some((type) => c.types.includes(type))
-    );
-    return component?.long_name;
-  };
-
-  const streetNumber = getComponent(['street_number']);
-  const route = getComponent(['route']);
-  const sublocality = getComponent(['sublocality', 'sublocality_level_1']);
-  
-  let streetAddress = '';
-  if (streetNumber && route) {
-    streetAddress = `${streetNumber} ${route}`;
-  } else if (route) {
-    streetAddress = route;
-  } else if (sublocality) {
-    streetAddress = sublocality;
-  }
-
-  return {
-    streetAddress: streetAddress || undefined,
-    city: getComponent(['locality', 'administrative_area_level_2']),
-    state: getComponent(['administrative_area_level_1']),
-    country: getComponent(['country']),
-    pincode: getComponent(['postal_code']),
-  };
-};
-
-/**
  * Search for places near a location
+ * For Nominatim, we reuse the same searchPlaces function and ignore radius.
  */
 export const searchNearbyPlaces = async (
   coords: Coordinates,
@@ -177,27 +194,9 @@ export const searchNearbyPlaces = async (
     return [];
   }
 
-  try {
-    const encodedQuery = encodeURIComponent(query);
-    const url = `${GOOGLE_PLACES_API.AUTOCOMPLETE}?input=${encodedQuery}&key=${getServerApiKey()}&location=${coords.latitude},${coords.longitude}&radius=${radius}&components=country:${COUNTRY_RESTRICTION}&types=address`;
-
-    const response = await fetch(url);
-    const data: AutocompleteResponse = await response.json();
-
-    if (!data.predictions) {
-      return [];
-    }
-
-    return data.predictions.map((prediction) => ({
-      placeId: prediction.place_id,
-      mainText: prediction.structured_formatting.main_text,
-      secondaryText: prediction.structured_formatting.secondary_text,
-      fullText: prediction.description,
-    }));
-  } catch (error) {
-    console.error('[Places] Nearby search error:', error);
-    throw error;
-  }
+  // For now, delegate to searchPlaces (Nominatim does not support a simple nearby search
+  // in the same way; we can add viewbox-bounded searches later if needed).
+  return searchPlaces(query);
 };
 
 /**

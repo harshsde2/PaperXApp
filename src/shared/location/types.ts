@@ -33,6 +33,10 @@ export interface PlacePrediction {
   mainText: string;
   secondaryText: string;
   fullText: string;
+  // Optional extra data (filled when using Nominatim)
+  latitude?: number;
+  longitude?: number;
+  address?: LocationAddress;
 }
 
 export interface PlaceDetails extends Location {

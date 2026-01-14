@@ -13,6 +13,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   Alert,
+  Keyboard,
 } from 'react-native';
 import MapView, { Region, MapPressEvent } from 'react-native-maps';
 import { useTheme } from '@theme/index';
@@ -63,14 +64,41 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       : DEFAULT_REGION,
   );
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+  const [locationType, setLocationType] = useState<'current' | 'search' | 'map' | null>(null);
 
   const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
   const { getFullLocation } = useGeocoding();
 
-  // Animate to region
-  const animateToRegion = useCallback(
-    (newRegion: MapRegion, duration: number = 500) => {
-      mapRef.current?.animateToRegion(newRegion, duration);
+  // Navigate map to specific coordinates
+  const navigateToLocation = useCallback(
+    (latitude: number, longitude: number, zoomLevel: { latitudeDelta: number; longitudeDelta: number } = ZOOM_LEVELS.STREET) => {
+      const newRegion: MapRegion = {
+        latitude,
+        longitude,
+        ...zoomLevel,
+      };
+
+      setRegion(newRegion);
+
+      // Try to animate the map
+      if (mapRef.current) {
+        try {
+          mapRef.current.animateToRegion(newRegion as Region, 800);
+        } catch (error) {
+          console.error('[LocationPicker] Error animating to region:', error);
+        }
+      } else {
+        // If mapRef not ready, try again after a short delay
+        setTimeout(() => {
+          if (mapRef.current) {
+            try {
+              mapRef.current.animateToRegion(newRegion as Region, 800);
+            } catch (error) {
+              console.error('[LocationPicker] Error animating to region:', error);
+            }
+          }
+        }, 300);
+      }
     },
     [],
   );
@@ -80,8 +108,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     async (event: MapPressEvent) => {
       if (!allowMapTap) return;
 
+      Keyboard.dismiss();
       const { coordinate } = event.nativeEvent;
       setIsLoadingAddress(true);
+      setLocationType('map');
 
       // Set location immediately with coordinates
       setSelectedLocation({
@@ -89,11 +119,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         longitude: coordinate.longitude,
       });
 
-      // Animate to the selected location
-      animateToRegion({
-        ...coordinate,
-        ...ZOOM_LEVELS.STREET,
-      });
+      // Navigate to the tapped location
+      navigateToLocation(coordinate.latitude, coordinate.longitude);
 
       // Get address for the coordinates
       try {
@@ -107,12 +134,18 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         setIsLoadingAddress(false);
       }
     },
-    [allowMapTap, animateToRegion, getFullLocation],
+    [allowMapTap, navigateToLocation, getFullLocation],
   );
 
   // Handle place selection from search
   const handlePlaceSelect = useCallback(
     (place: PlaceDetails) => {
+      console.log('[LocationPicker] Search place selected:', place);
+      Keyboard.dismiss();
+
+      // Clear current location state - user is searching for a different location
+      setLocationType('search');
+
       const newLocation: Location = {
         latitude: place.latitude,
         longitude: place.longitude,
@@ -121,30 +154,27 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       };
 
       setSelectedLocation(newLocation);
-      animateToRegion({
-        latitude: place.latitude,
-        longitude: place.longitude,
-        ...ZOOM_LEVELS.STREET,
-      });
+
+      // Navigate map to the searched location
+      navigateToLocation(place.latitude, place.longitude, ZOOM_LEVELS.STREET);
     },
-    [animateToRegion],
+    [navigateToLocation],
   );
 
   // Handle current location button
   const handleCurrentLocation = useCallback(async () => {
+    Keyboard.dismiss();
     setIsLoadingAddress(true);
-    
+    setLocationType('current');
+
     try {
-      console.log('[LocationPicker] handleCurrentLocation called');
+      console.log('[LocationPicker] Getting current location...');
       const coords = await getCurrentLocation();
-      console.log('[LocationPicker] Got coords:', coords);
-      
+      console.log('[LocationPicker] Got current coords:', coords);
+
       if (coords) {
-        // Animate to current location
-        animateToRegion({
-          ...coords,
-          ...ZOOM_LEVELS.NEIGHBORHOOD,
-        });
+        // Navigate to current location first
+        navigateToLocation(coords.latitude, coords.longitude, ZOOM_LEVELS.NEIGHBORHOOD);
 
         // Get full location with address
         try {
@@ -152,15 +182,21 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           if (location) {
             setSelectedLocation(location);
           } else {
-            setSelectedLocation(coords);
+            setSelectedLocation({
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+            });
           }
         } catch (error) {
           console.error('[LocationPicker] Error getting full location:', error);
-          setSelectedLocation(coords);
+          setSelectedLocation({
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          });
         }
       } else {
-        console.log('[LocationPicker] No coords returned, using default location');
-        // If no coords, show an alert
+        console.log('[LocationPicker] No coords returned');
+        setLocationType(null);
         Alert.alert(
           'Location Not Available',
           'Unable to get your current location. Please search for an address or tap on the map to select a location.',
@@ -169,6 +205,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       }
     } catch (error) {
       console.error('[LocationPicker] Error in handleCurrentLocation:', error);
+      setLocationType(null);
       Alert.alert(
         'Location Error',
         'There was an error getting your location. Please try again or search for an address.',
@@ -177,12 +214,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     } finally {
       setIsLoadingAddress(false);
     }
-  }, [getCurrentLocation, animateToRegion, getFullLocation]);
+  }, [getCurrentLocation, navigateToLocation, getFullLocation]);
 
   // Handle marker drag end
   const handleMarkerDragEnd = useCallback(
     async (_marker: MarkerData, newCoords: Coordinates) => {
       setIsLoadingAddress(true);
+      setLocationType('map');
       setSelectedLocation({
         latitude: newCoords.latitude,
         longitude: newCoords.longitude,
@@ -225,6 +263,20 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         ]
       : []),
   ];
+
+  // Get location type label
+  const getLocationTypeLabel = () => {
+    switch (locationType) {
+      case 'current':
+        return 'Current Location';
+      case 'search':
+        return 'Searched Location';
+      case 'map':
+        return 'Selected on Map';
+      default:
+        return '';
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -294,6 +346,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
               color={theme.colors.primary.DEFAULT}
             />
             <View style={styles.addressTextContainer}>
+              {/* Location Type Badge */}
+              {locationType && (
+                <View style={[styles.locationTypeBadge, { backgroundColor: theme.colors.primary.DEFAULT + '20' }]}>
+                  <Text variant="captionSmall" style={{ color: theme.colors.primary.DEFAULT }}>
+                    {getLocationTypeLabel()}
+                  </Text>
+                </View>
+              )}
               {selectedLocation.name && (
                 <Text variant="bodyMedium" fontWeight="semibold" style={{ color: theme.colors.text.primary }}>
                   {selectedLocation.name}
@@ -414,6 +474,13 @@ const styles = StyleSheet.create({
   addressTextContainer: {
     flex: 1,
     gap: 4,
+  },
+  locationTypeBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 4,
   },
   footer: {
     padding: 16,

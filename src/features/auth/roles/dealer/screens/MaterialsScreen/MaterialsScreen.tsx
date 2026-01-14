@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -20,11 +20,9 @@ import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { useGetMaterialsInfinite, Material, MaterialGrade } from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Constants for optimization
-const ITEMS_PER_PAGE = 50;
-const ESTIMATED_ITEM_HEIGHT = 56;
+const ITEMS_PER_PAGE = 5;
+const END_REACHED_THRESHOLD = 0.2;
 
-// Types for flattened list
 interface FlatListItem {
   type: 'category' | 'material' | 'grade';
   id: string;
@@ -37,7 +35,6 @@ interface FlatListItem {
   };
 }
 
-// Memoized Grade Item Component
 interface GradeItemProps {
   materialId: number;
   materialName: string;
@@ -103,7 +100,6 @@ const GradeItem = memo(
 
 GradeItem.displayName = 'GradeItem';
 
-// Memoized Chip Component
 interface SelectionChipProps {
   selectionKey: string;
   materialName: string;
@@ -142,10 +138,8 @@ const MaterialsScreen = () => {
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
 
-  // Get profileData from route params (passed from RoleSelectionScreen)
   const { profileData } = route.params || {};
 
-  // Fetch materials with infinite pagination
   const {
     data,
     isLoading,
@@ -157,33 +151,29 @@ const MaterialsScreen = () => {
   } = useGetMaterialsInfinite(ITEMS_PER_PAGE);
 
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Optimized selection using Set for O(1) lookups
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [selectedMaterials, setSelectedMaterials] = useState<Map<string, SelectedMaterial>>(
     new Map()
   );
 
-  // Flatten all pages into a single materials array
+  const isLoadingMoreRef = useRef(false);
+  const scrollViewRef = useRef<FlatList>(null);
   const allMaterials = useMemo(() => {
     if (!data?.pages) return [];
     return data.pages.flatMap(page => page.materials);
   }, [data?.pages]);
 
-  // Generate selection key
   const getSelectionKey = useCallback(
     (materialId: number, gradeId: number) => `${materialId}-${gradeId}`,
     []
   );
 
-  // Check if grade is selected - O(1) lookup
   const isGradeSelected = useCallback(
     (materialId: number, gradeId: number) =>
       selectedKeys.has(getSelectionKey(materialId, gradeId)),
     [selectedKeys, getSelectionKey]
   );
 
-  // Handle grade toggle - optimized with Set
   const handleGradeToggle = useCallback(
     (
     materialId: number,
@@ -223,7 +213,6 @@ const MaterialsScreen = () => {
     [getSelectionKey]
   );
 
-  // Handle chip removal
   const handleRemoveChip = useCallback((key: string) => {
     setSelectedKeys(prev => {
       const newSet = new Set(prev);
@@ -238,13 +227,11 @@ const MaterialsScreen = () => {
     });
   }, []);
 
-  // Filter and flatten materials for FlatList
   const flatListData = useMemo((): FlatListItem[] => {
     const query = searchQuery.toLowerCase().trim();
     const items: FlatListItem[] = [];
     const categoryMap = new Map<string, Material[]>();
 
-    // Group by category
     allMaterials.forEach(material => {
       const category = material.category || 'Other';
       if (!categoryMap.has(category)) {
@@ -253,7 +240,6 @@ const MaterialsScreen = () => {
       categoryMap.get(category)!.push(material);
     });
 
-    // Build flattened list with filtering
     categoryMap.forEach((materials, category) => {
       const filteredMaterials: { material: Material; filteredGrades: MaterialGrade[] }[] = [];
 
@@ -261,7 +247,6 @@ const MaterialsScreen = () => {
         const matchesMaterial = !query || material.name.toLowerCase().includes(query);
         const grades = material.grades || [];
 
-        // Filter grades based on search
         const filteredGrades = query
           ? grades.filter(
               grade =>
@@ -269,7 +254,6 @@ const MaterialsScreen = () => {
             )
           : grades;
 
-        // Include if material name matches or has matching grades
         if (matchesMaterial || filteredGrades.length > 0) {
           filteredMaterials.push({
             material,
@@ -279,16 +263,13 @@ const MaterialsScreen = () => {
       });
 
       if (filteredMaterials.length > 0) {
-        // Add category header
         items.push({
           type: 'category',
           id: `cat-${category}`,
           data: { category },
         });
 
-        // Add materials and grades
         filteredMaterials.forEach(({ material, filteredGrades }) => {
-          // Add material header
           items.push({
             type: 'material',
             id: `mat-${material.id}`,
@@ -299,7 +280,6 @@ const MaterialsScreen = () => {
             },
           });
 
-          // Add grades
           if (filteredGrades.length > 0) {
             filteredGrades.forEach(grade => {
               items.push({
@@ -315,7 +295,6 @@ const MaterialsScreen = () => {
               });
             });
           } else {
-            // No grades - show "All Grades" option
             items.push({
               type: 'grade',
               id: `grade-${material.id}-0`,
@@ -335,13 +314,11 @@ const MaterialsScreen = () => {
     return items;
   }, [allMaterials, searchQuery]);
 
-  // Selected materials list for chips
   const selectedMaterialsList = useMemo(
     () => Array.from(selectedMaterials.entries()),
     [selectedMaterials]
   );
 
-  // Handle save and continue
   const handleSaveAndContinue = useCallback(() => {
     const selectedData = Array.from(selectedMaterials.values()).map(item => ({
       material_id: item.materialId,
@@ -359,14 +336,63 @@ const MaterialsScreen = () => {
     });
   }, [selectedMaterials, navigation, profileData]);
 
-  // Load more handler for infinite scroll
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const hasMorePages = useMemo(() => {
+    if (!data?.pages || data.pages.length === 0) return true;
+    const lastPage = data.pages[data.pages.length - 1];
+    const hasNext = lastPage?.pagination?.has_next === true;
+    const gotFullPage = (lastPage?.materials?.length || 0) >= ITEMS_PER_PAGE;
+    return hasNext || gotFullPage;
+  }, [data?.pages]);
 
-  // Render item for FlatList
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMoreRef.current || isFetchingNextPage) {
+      return;
+    }
+
+    const canLoadMore = hasNextPage !== false || hasMorePages;
+    
+    if (!canLoadMore) {
+      return;
+    }
+
+    isLoadingMoreRef.current = true;
+
+    fetchNextPage().catch((error) => {
+      console.error('Error fetching next page:', error);
+      isLoadingMoreRef.current = false;
+    });
+  }, [hasNextPage, hasMorePages, isFetchingNextPage, fetchNextPage]);
+
+  React.useEffect(() => {
+    if (!isFetchingNextPage) {
+      const timer = setTimeout(() => {
+        isLoadingMoreRef.current = false;
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isFetchingNextPage]);
+
+  const handleScroll = useCallback(
+    (event: any) => {
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      
+      if (!contentSize.height || !layoutMeasurement.height) {
+        return;
+      }
+
+      const distanceFromEnd = contentSize.height - (layoutMeasurement.height + contentOffset.y);
+      const paddingToBottom = 500;
+      
+      const isCloseToBottom = distanceFromEnd < paddingToBottom;
+      const canLoadMore = (hasNextPage !== false || hasMorePages) && !isFetchingNextPage && !isLoadingMoreRef.current;
+
+      if (isCloseToBottom && canLoadMore) {
+        handleLoadMore();
+      }
+    },
+    [hasNextPage, hasMorePages, isFetchingNextPage, handleLoadMore]
+  );
+
   const renderItem: ListRenderItem<FlatListItem> = useCallback(
     ({ item }) => {
       switch (item.type) {
@@ -423,20 +449,8 @@ const MaterialsScreen = () => {
     [styles, theme, isGradeSelected, handleGradeToggle]
   );
 
-  // Key extractor
   const keyExtractor = useCallback((item: FlatListItem) => item.id, []);
 
-  // Get item layout for better performance
-  const getItemLayout = useCallback(
-    (_: any, index: number) => ({
-      length: ESTIMATED_ITEM_HEIGHT,
-      offset: ESTIMATED_ITEM_HEIGHT * index,
-      index,
-    }),
-    []
-  );
-
-  // Footer component for loading more
   const ListFooterComponent = useCallback(() => {
     if (isFetchingNextPage) {
       return (
@@ -448,7 +462,6 @@ const MaterialsScreen = () => {
     return null;
   }, [isFetchingNextPage, theme]);
 
-  // Empty component
   const ListEmptyComponent = useCallback(() => {
     if (isLoading) return null;
     return (
@@ -462,7 +475,6 @@ const MaterialsScreen = () => {
     );
   }, [isLoading, searchQuery, theme]);
 
-  // Header component with search and chips
   const ListHeaderComponent = useCallback(
     () => (
       <>
@@ -515,11 +527,9 @@ const MaterialsScreen = () => {
     ]
   );
 
-  // Calculate bottom padding for scrollable content
   const buttonHeight = 60;
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
 
-  // Loading state
   if (isLoading) {
     return (
       <ScreenWrapper
@@ -547,7 +557,6 @@ const MaterialsScreen = () => {
     );
   }
 
-  // Error state
   if (isError) {
     return (
       <ScreenWrapper
@@ -589,6 +598,7 @@ const MaterialsScreen = () => {
         safeAreaEdges={[]}
       >
         <FlatList
+          ref={scrollViewRef}
           data={flatListData}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
@@ -600,17 +610,19 @@ const MaterialsScreen = () => {
             { paddingHorizontal: theme.spacing[4], paddingBottom: bottomPadding },
           ]}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          initialNumToRender={20}
-          maxToRenderPerBatch={15}
-          windowSize={10}
+          onEndReachedThreshold={END_REACHED_THRESHOLD}
+          onScroll={handleScroll}
+          scrollEnabled={true}
+          initialNumToRender={15}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           removeClippedSubviews={true}
-          getItemLayout={getItemLayout}
+          updateCellsBatchingPeriod={50}
           showsVerticalScrollIndicator={false}
-                      />
+          scrollEventThrottle={16}
+        />
       </ScreenWrapper>
 
-      {/* Floating Bottom Button */}
       <FloatingBottomContainer>
         <TouchableOpacity
           style={[styles.button, selectedKeys.size === 0 && { opacity: 0.5 }]}

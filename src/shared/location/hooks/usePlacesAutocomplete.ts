@@ -41,6 +41,8 @@ export const usePlacesAutocomplete = (
   const sessionTokenRef = useRef<string>(generateSessionToken());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Store predictions in ref to avoid stale closure issues
+  const predictionsRef = useRef<PlacePrediction[]>([]);
 
   // Regenerate session token when a place is selected (per Google's recommendations)
   const refreshSessionToken = useCallback(() => {
@@ -81,11 +83,13 @@ export const usePlacesAutocomplete = (
           }
 
           setPredictions(results);
+          predictionsRef.current = results; // Update ref as well
           setLoading(false);
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Search failed';
           setError(errorMessage);
           setPredictions([]);
+          predictionsRef.current = [];
           setLoading(false);
         }
       }, debounceMs);
@@ -100,14 +104,43 @@ export const usePlacesAutocomplete = (
       setError(null);
 
       try {
-        const details = await getPlaceDetails(placeId, sessionTokenRef.current);
-        setSelectedPlace(details);
-        setPredictions([]); // Clear predictions after selection
-        refreshSessionToken(); // Generate new session token for next search
+        // Build details directly from the existing prediction (Nominatim path)
+        const prediction = predictionsRef.current.find(p => p.placeId === placeId);
+
+        if (
+          prediction &&
+          prediction.latitude !== undefined &&
+          prediction.longitude !== undefined
+        ) {
+          const details: PlaceDetails = {
+            placeId: prediction.placeId,
+            name: prediction.address?.streetAddress || prediction.mainText,
+            latitude: prediction.latitude,
+            longitude: prediction.longitude,
+            address: prediction.address || {
+              formattedAddress: prediction.fullText,
+            },
+            types: [],
+          };
+
+          setSelectedPlace(details);
+          setPredictions([]); // Clear predictions after selection
+          predictionsRef.current = []; // Clear ref as well
+          refreshSessionToken(); // Generate new session token for next search
+          setLoading(false);
+          return details;
+        }
+
+        // If for some reason we don't have prediction data, just fail gracefully
+        console.warn(
+          '[Places] No prediction data found for placeId, skipping details lookup:',
+          placeId,
+        );
         setLoading(false);
-        return details;
+        return null;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to get place details';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to get place details';
         setError(errorMessage);
         setLoading(false);
         return null;
@@ -119,6 +152,7 @@ export const usePlacesAutocomplete = (
   // Clear predictions
   const clearPredictions = useCallback(() => {
     setPredictions([]);
+    predictionsRef.current = [];
     setError(null);
   }, []);
 

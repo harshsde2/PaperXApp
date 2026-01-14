@@ -32,6 +32,8 @@ import {
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
+import { LocationPicker } from '@shared/location';
+import type { Location } from '@shared/location/types';
 
 // Mapping from brand type string IDs to numeric IDs for API
 // This should match your backend brand type IDs
@@ -580,21 +582,31 @@ const BrandRegistrationScreen = () => {
   } = useForm<BrandRegistrationFormData>({
     defaultValues: {
       companyName: '',
+      brandName: '',
       brandTypes: [],
       contactPersonName: '',
-      mobileOrEmail: '',
+      mobile: '',
+      email: '',
       gstNumber: '',
       city: '',
+      location: '',
+      latitude: undefined,
+      longitude: undefined,
     },
     mode: 'onChange', // Changed to onChange for real-time validation
   });
 
   // Watch form values
   const companyNameValue = watch('companyName');
+  const brandNameValue = watch('brandName');
   const contactPersonNameValue = watch('contactPersonName');
-  const mobileOrEmailValue = watch('mobileOrEmail');
+  const mobileValue = watch('mobile');
+  const emailValue = watch('email');
   const gstNumberValue = watch('gstNumber');
   const cityValue = watch('city');
+  const locationValue = watch('location');
+  const latitudeValue = watch('latitude');
+  const longitudeValue = watch('longitude');
   const brandTypesValue = watch('brandTypes');
 
   // Local state for brand types selection
@@ -606,6 +618,8 @@ const BrandRegistrationScreen = () => {
   const [showBrandTypeModal, setShowBrandTypeModal] = useState(false);
   const [brandTypeSearchQuery, setBrandTypeSearchQuery] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showManualLocationEntry, setShowManualLocationEntry] = useState(false);
 
   // Sync selectedBrandTypes with form value
   useEffect(() => {
@@ -626,35 +640,81 @@ const BrandRegistrationScreen = () => {
     return mobileRegex.test(cleaned) && cleaned.length === 10;
   };
 
-  const isMobileOrEmailValid = useMemo(() => {
-    if (!mobileOrEmailValue?.trim()) return false;
-    return (
-      isValidEmail(mobileOrEmailValue) || isValidMobile(mobileOrEmailValue)
-    );
-  }, [mobileOrEmailValue]);
+  const isMobileValid = useMemo(() => {
+    if (!mobileValue?.trim()) return false;
+    return isValidMobile(mobileValue);
+  }, [mobileValue]);
+
+  const isEmailValid = useMemo(() => {
+    if (!emailValue?.trim()) return false;
+    return isValidEmail(emailValue);
+  }, [emailValue]);
+
+  // Handle location selection from LocationPicker
+  const handleLocationSelect = useCallback(
+    (location: Location) => {
+      setValue('location', location.address?.streetAddress || location.address?.formattedAddress || location.name || '', {
+        shouldValidate: true,
+      });
+      setValue('city', location.address?.city || cityValue || '', {
+        shouldValidate: true,
+      });
+      setValue('latitude', location.latitude, {
+        shouldValidate: true,
+      });
+      setValue('longitude', location.longitude, {
+        shouldValidate: true,
+      });
+      setShowLocationPicker(false);
+      
+      dispatch(
+        showToast({
+          message: 'Location selected successfully!',
+          type: 'success',
+        }),
+      );
+    },
+    [setValue, cityValue, dispatch],
+  );
 
   const isFormValid = useMemo(() => {
     const companyNameValid = companyNameValue?.trim().length > 0;
+    const brandNameValid = brandNameValue?.trim().length > 0;
     const brandTypesValid = selectedBrandTypes.size > 0;
     const contactPersonValid = contactPersonNameValue?.trim().length > 0;
-    const mobileOrEmailValid = isMobileOrEmailValid;
+    const mobileValid = isMobileValid;
+    const emailValid = isEmailValid;
     const cityValid = cityValue?.trim().length > 0;
+    const locationValid = locationValue?.trim().length > 0;
+    // Coordinates are required if location was selected from map, optional if manually entered
+    const coordinatesValid = showManualLocationEntry 
+      ? true 
+      : latitudeValue !== undefined && longitudeValue !== undefined;
 
     const valid =
       companyNameValid &&
+      brandNameValid &&
       brandTypesValid &&
       contactPersonValid &&
-      mobileOrEmailValid &&
-      cityValid;
+      mobileValid &&
+      emailValid &&
+      cityValid &&
+      locationValid &&
+      coordinatesValid;
 
     // Debug log (remove in production)
     if (__DEV__) {
       console.log('Form Validation:', {
         companyName: companyNameValid,
+        brandName: brandNameValid,
         brandTypes: brandTypesValid,
         contactPerson: contactPersonValid,
-        mobileOrEmail: mobileOrEmailValid,
+        mobile: mobileValid,
+        email: emailValid,
         city: cityValid,
+        location: locationValid,
+        coordinates: coordinatesValid,
+        manualEntry: showManualLocationEntry,
         overall: valid,
       });
     }
@@ -662,10 +722,16 @@ const BrandRegistrationScreen = () => {
     return valid;
   }, [
     companyNameValue,
+    brandNameValue,
     selectedBrandTypes.size,
     contactPersonNameValue,
-    isMobileOrEmailValid,
+    isMobileValid,
+    isEmailValid,
     cityValue,
+    locationValue,
+    latitudeValue,
+    longitudeValue,
+    showManualLocationEntry,
   ]);
 
   // Filtered brand types based on search
@@ -718,19 +784,6 @@ const BrandRegistrationScreen = () => {
         return;
       }
 
-      // Parse mobile/email - API expects separate fields
-      const isEmail = isValidEmail(mobileOrEmailValue || '');
-      const isMobile = isValidMobile(mobileOrEmailValue || '');
-
-      let mobile = profileData?.mobile || '';
-      let email = '';
-
-      if (isEmail) {
-        email = mobileOrEmailValue || '';
-      } else if (isMobile) {
-        mobile = mobileOrEmailValue?.replace(/\D/g, '') || mobile;
-      }
-
       // Convert brand type string IDs to numeric IDs for API
       const brandTypeIds = Array.from(selectedBrandTypes)
         .map(id => BRAND_TYPE_ID_MAP[id])
@@ -748,17 +801,19 @@ const BrandRegistrationScreen = () => {
       const apiData = {
         company_name:
           companyNameValue?.trim() || profileData?.company_name || '',
-        brand_name: companyNameValue?.trim() || profileData?.company_name || '',
+        brand_name: brandNameValue?.trim() || profileData?.brand_name || '',
         contact_person_name: contactPersonNameValue?.trim() || '',
-        mobile: mobile,
-        email: email || undefined,
+        mobile: mobileValue?.replace(/\D/g, '') || profileData?.mobile || '',
+        email: emailValue?.trim() || profileData?.email || '',
         gst: gstNumberValue?.trim() || profileData?.gst_in || undefined,
         city: cityValue?.trim() || profileData?.city || '',
-        location: cityValue?.trim() || profileData?.city || '',
-        latitude: 28.6139,
-        longitude: 77.209,
+        location: locationValue?.trim() || profileData?.location || '',
+        latitude: latitudeValue || profileData?.latitude || 28.6139,
+        longitude: longitudeValue || profileData?.longitude || 77.209,
         brand_type_ids: brandTypeIds,
       };
+
+      console.log('API Data:', JSON.stringify(apiData, null, 2));
 
       // Call API
       completeBrandProfile(apiData, {
@@ -869,10 +924,15 @@ const BrandRegistrationScreen = () => {
     [
       selectedBrandTypes,
       companyNameValue,
+      brandNameValue,
       contactPersonNameValue,
-      mobileOrEmailValue,
+      mobileValue,
+      emailValue,
       gstNumberValue,
       cityValue,
+      locationValue,
+      latitudeValue,
+      longitudeValue,
       isValidEmail,
       isValidMobile,
       completeBrandProfile,
@@ -913,14 +973,14 @@ const BrandRegistrationScreen = () => {
             </View>
 
             <View style={styles.formContainer}>
-              {/* Company / Brand Name */}
+              {/* Company Name */}
               <View style={styles.inputContainer}>
                 <Text
                   variant="bodyMedium"
                   fontWeight="medium"
                   style={styles.label}
                 >
-                  Company / Brand Name
+                  Company Name
                 </Text>
                 <Controller
                   control={control}
@@ -942,11 +1002,68 @@ const BrandRegistrationScreen = () => {
                       >
                         <TextInput
                           style={styles.input}
-                          placeholder="e.g. Acme Packaging Ltd."
+                          placeholder="e.g. ABC Brands Pvt Ltd"
                           placeholderTextColor={theme.colors.text.tertiary}
                           value={value}
                           onChangeText={onChange}
                           onFocus={() => setFocusedInput('companyName')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                        />
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Brand Name */}
+              <View style={styles.inputContainer}>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="medium"
+                  style={styles.label}
+                >
+                  Brand Name
+                </Text>
+                <Controller
+                  control={control}
+                  name="brandName"
+                  rules={
+                    validationRules.required('Please enter brand name') as any
+                  }
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'brandName' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. ABC Premium"
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('brandName')}
                           onBlur={() => {
                             onBlur();
                             setFocusedInput(null);
@@ -1103,28 +1220,27 @@ const BrandRegistrationScreen = () => {
                 />
               </View>
 
-              {/* Mobile Number OR Email */}
+              {/* Mobile Number */}
               <View style={styles.inputContainer}>
                 <Text
                   variant="bodyMedium"
                   fontWeight="medium"
                   style={styles.label}
                 >
-                  Mobile Number OR Email
+                  Mobile Number
                 </Text>
                 <Controller
                   control={control}
-                  name="mobileOrEmail"
+                  name="mobile"
                   rules={
                     {
-                      required: 'Please enter mobile number or email',
+                      required: 'Please enter mobile number',
                       validate: (value: string) => {
                         if (!value?.trim())
-                          return 'Please enter mobile number or email';
+                          return 'Please enter mobile number';
                         return (
-                          isValidEmail(value) ||
                           isValidMobile(value) ||
-                          'Please enter a valid mobile number or email'
+                          'Please enter a valid mobile number'
                         );
                       },
                     } as any
@@ -1137,17 +1253,98 @@ const BrandRegistrationScreen = () => {
                       <View
                         style={[
                           styles.inputWrapper,
-                          focusedInput === 'mobileOrEmail' &&
+                          focusedInput === 'mobile' &&
                             styles.inputWrapperFocused,
                         ]}
                       >
                         <TextInput
                           style={styles.input}
-                          placeholder="Enter mobile or email"
+                          placeholder="Enter mobile number"
                           placeholderTextColor={theme.colors.text.tertiary}
                           value={value}
                           onChangeText={onChange}
-                          onFocus={() => setFocusedInput('mobileOrEmail')}
+                          onFocus={() => setFocusedInput('mobile')}
+                          onBlur={() => {
+                            onBlur();
+                            setFocusedInput(null);
+                          }}
+                          keyboardType="phone-pad"
+                          maxLength={10}
+                        />
+                        {isMobileValid && (
+                          <View style={styles.validationIcon}>
+                            <AppIcon.TickCheckedBox
+                              width={20}
+                              height={20}
+                              color={
+                                (theme.colors.success as any)?.DEFAULT ||
+                                theme.colors.primary.DEFAULT
+                              }
+                            />
+                          </View>
+                        )}
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Email */}
+              <View style={styles.inputContainer}>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="medium"
+                  style={styles.label}
+                >
+                  Email
+                </Text>
+                <Controller
+                  control={control}
+                  name="email"
+                  rules={
+                    {
+                      required: 'Please enter email',
+                      validate: (value: string) => {
+                        if (!value?.trim())
+                          return 'Please enter email';
+                        return (
+                          isValidEmail(value) ||
+                          'Please enter a valid email address'
+                        );
+                      },
+                    } as any
+                  }
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'email' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter email address"
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={value}
+                          onChangeText={onChange}
+                          onFocus={() => setFocusedInput('email')}
                           onBlur={() => {
                             onBlur();
                             setFocusedInput(null);
@@ -1155,7 +1352,7 @@ const BrandRegistrationScreen = () => {
                           keyboardType="email-address"
                           autoCapitalize="none"
                         />
-                        {isMobileOrEmailValid && (
+                        {isEmailValid && (
                           <View style={styles.validationIcon}>
                             <AppIcon.TickCheckedBox
                               width={20}
@@ -1252,14 +1449,14 @@ const BrandRegistrationScreen = () => {
                 />
               </View>
 
-              {/* City / Location */}
+              {/* City */}
               <View style={styles.inputContainer}>
                 <Text
                   variant="bodyMedium"
                   fontWeight="medium"
                   style={styles.label}
                 >
-                  City / Location
+                  City
                 </Text>
                 <Controller
                   control={control}
@@ -1285,7 +1482,7 @@ const BrandRegistrationScreen = () => {
                         </View>
                         <TextInput
                           style={styles.input}
-                          placeholder="Search city."
+                          placeholder="Enter city"
                           placeholderTextColor={theme.colors.text.tertiary}
                           value={value}
                           onChangeText={onChange}
@@ -1295,12 +1492,103 @@ const BrandRegistrationScreen = () => {
                             setFocusedInput(null);
                           }}
                         />
-                        <View style={styles.inputIconRight}>
-                          <AppIcon.Search
+                      </View>
+                      {error && (
+                        <Text
+                          variant="captionSmall"
+                          style={{
+                            color:
+                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                            marginTop: 4,
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Location */}
+              <View style={styles.inputContainer}>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="medium"
+                  style={styles.label}
+                >
+                  Location
+                </Text>
+                <Controller
+                  control={control}
+                  name="location"
+                  rules={validationRules.required('Please select or enter location') as any}
+                  render={({ field: { value }, fieldState: { error } }) => (
+                    <>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          focusedInput === 'location' &&
+                            styles.inputWrapperFocused,
+                        ]}
+                      >
+                        <View style={styles.inputIconLeft}>
+                          <AppIcon.Location
                             width={20}
                             height={20}
                             color={theme.colors.text.tertiary}
                           />
+                        </View>
+                        {showManualLocationEntry ? (
+                          <TextInput
+                            style={styles.input}
+                            placeholder="Enter location manually"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={value}
+                            onChangeText={(text) => {
+                              setValue('location', text, { shouldValidate: true });
+                            }}
+                            onFocus={() => setFocusedInput('location')}
+                            onBlur={() => {
+                              setFocusedInput(null);
+                            }}
+                          />
+                        ) : (
+                          <TouchableOpacity
+                            style={{ flex: 1, justifyContent: 'center' }}
+                            onPress={() => setShowLocationPicker(true)}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              variant="bodyMedium"
+                              style={[
+                                !value
+                                  ? { color: theme.colors.text.tertiary }
+                                  : { color: theme.colors.text.primary },
+                              ]}
+                            >
+                              {value || 'Select location on map'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        <View style={styles.inputIconRight}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setShowManualLocationEntry(!showManualLocationEntry);
+                              if (!showManualLocationEntry) {
+                                setValue('location', '', { shouldValidate: true });
+                                setValue('latitude', undefined, { shouldValidate: true });
+                                setValue('longitude', undefined, { shouldValidate: true });
+                              }
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <AppIcon.Search
+                              width={20}
+                              height={20}
+                              color={theme.colors.text.tertiary}
+                            />
+                          </TouchableOpacity>
                         </View>
                       </View>
                       {error && (
@@ -1314,6 +1602,26 @@ const BrandRegistrationScreen = () => {
                         >
                           {error.message}
                         </Text>
+                      )}
+                      {!showManualLocationEntry && (
+                        <TouchableOpacity
+                          onPress={() => setShowLocationPicker(true)}
+                          style={{
+                            marginTop: theme.spacing[2],
+                            padding: theme.spacing[2],
+                            backgroundColor: theme.colors.primary.DEFAULT,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Text
+                            variant="bodyMedium"
+                            style={{ color: theme.colors.text.inverse }}
+                          >
+                            {value ? 'Change Location on Map' : 'Select Location on Map'}
+                          </Text>
+                        </TouchableOpacity>
                       )}
                     </>
                   )}
@@ -1440,6 +1748,34 @@ const BrandRegistrationScreen = () => {
               </View>
             </View>
           </Modal>
+
+          {/* Location Picker Modal */}
+          <Modal
+            visible={showLocationPicker}
+            animationType="slide"
+            presentationStyle="fullScreen"
+            onRequestClose={() => setShowLocationPicker(false)}
+          >
+            <LocationPicker
+              initialLocation={
+                latitudeValue && longitudeValue
+                  ? {
+                      latitude: latitudeValue,
+                      longitude: longitudeValue,
+                      address: {
+                        formattedAddress: locationValue || '',
+                        streetAddress: locationValue || '',
+                      },
+                    }
+                  : undefined
+              }
+              onLocationSelect={handleLocationSelect}
+              onCancel={() => setShowLocationPicker(false)}
+              allowMapTap={true}
+              confirmButtonText="Confirm Location"
+              title="Select Location"
+            />
+          </Modal>
         </ScreenWrapper>
       </KeyboardAvoidingView>
 
@@ -1471,11 +1807,17 @@ const BrandRegistrationScreen = () => {
                 if (__DEV__) {
                   console.log('Button disabled. Form state:', {
                     companyName: companyNameValue,
+                    brandName: brandNameValue,
                     brandTypes: selectedBrandTypes.size,
                     contactPerson: contactPersonNameValue,
-                    mobileOrEmail: mobileOrEmailValue,
+                    mobile: mobileValue,
+                    email: emailValue,
                     city: cityValue,
-                    isMobileOrEmailValid,
+                    location: locationValue,
+                    latitude: latitudeValue,
+                    longitude: longitudeValue,
+                    isMobileValid,
+                    isEmailValid,
                     isFormValid,
                     isSubmitting,
                   });

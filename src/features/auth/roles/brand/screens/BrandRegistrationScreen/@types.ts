@@ -20,10 +20,15 @@ export interface BrandTypeCategory {
 
 export interface BrandRegistrationFormData {
   companyName: string;
+  brandName: string;
   brandTypes: string[];
   contactPersonName: string;
-  mobileOrEmail: string;
+  mobile: string;
+  email: string;
   gstNumber?: string;
   city: string;
+  location: string;
+  latitude?: number;
+  longitude?: number;
 }
 

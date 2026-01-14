@@ -91,7 +91,7 @@ export const useGetMaterials = () => {
  * Optimized for large lists with page-based loading
  * API: GET /api/v1/materials?page=1&per_page=50
  */
-export const useGetMaterialsInfinite = (perPage: number = 50) => {
+export const useGetMaterialsInfinite = (perPage: number = 5) => {
   return useInfiniteQuery({
     queryKey: queryKeys.reference.materialsInfinite(perPage),
     queryFn: async ({ pageParam = 1 }): Promise<{
@@ -152,10 +152,18 @@ export const useGetMaterialsInfinite = (perPage: number = 50) => {
       };
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.has_next) {
+    getNextPageParam: (lastPage, allPages) => {
+      // Check if there's a next page based on pagination info
+      if (lastPage.pagination.has_next === true) {
         return lastPage.pagination.current_page + 1;
       }
+      
+      // Fallback: if we got a full page of items, assume there might be more
+      // This handles cases where the API doesn't return has_next correctly
+      if (lastPage.materials.length >= perPage) {
+        return allPages.length + 1;
+      }
+      
       return undefined;
     },
     staleTime: 1000 * 60 * 30, // 30 minutes

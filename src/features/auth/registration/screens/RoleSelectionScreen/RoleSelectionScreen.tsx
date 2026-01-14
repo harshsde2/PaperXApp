@@ -49,7 +49,7 @@ const RoleSelectionScreen = () => {
   const geographyOptions = [
     { id: 'local' as Geography, label: 'Local', icon: AppIcon.Location },
     { id: 'state' as Geography, label: 'State', icon: AppIcon.State },
-    { id: 'panIndia' as Geography, label: 'Pan-India', icon: AppIcon.Globe },
+    { id: 'pan india' as Geography, label: 'Pan-India', icon: AppIcon.Globe },
   ];
 
   const handleSecondaryRoleToggle = (value: boolean) => {

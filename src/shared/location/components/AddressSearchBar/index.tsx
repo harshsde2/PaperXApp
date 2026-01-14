@@ -60,11 +60,34 @@ const AddressSearchBar: React.FC<AddressSearchBarProps> = ({
     async (prediction: PlacePrediction) => {
       Keyboard.dismiss();
       setQuery(prediction.fullText);
-      clearPredictions();
 
+      // IMPORTANT: Call selectPlace BEFORE clearPredictions
+      // because selectPlace looks for prediction data in the ref
       const details = await selectPlace(prediction.placeId);
+      
+      // Clear predictions after getting details
+      clearPredictions();
+      
       if (details) {
+        console.log('[AddressSearchBar] Place selected with details:', details);
         onPlaceSelect(details);
+      } else {
+        console.warn('[AddressSearchBar] No details returned for prediction:', prediction);
+        // Fallback: build details from prediction directly if selectPlace fails
+        if (prediction.latitude !== undefined && prediction.longitude !== undefined) {
+          const fallbackDetails: PlaceDetails = {
+            placeId: prediction.placeId,
+            name: prediction.mainText,
+            latitude: prediction.latitude,
+            longitude: prediction.longitude,
+            address: prediction.address || {
+              formattedAddress: prediction.fullText,
+            },
+            types: [],
+          };
+          console.log('[AddressSearchBar] Using fallback details:', fallbackDetails);
+          onPlaceSelect(fallbackDetails);
+        }
       }
     },
     [selectPlace, clearPredictions, onPlaceSelect],

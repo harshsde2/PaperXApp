@@ -6,6 +6,7 @@ import { useTheme } from '@theme/index';
 import { useAppSelector } from '@store/hooks';
 import { useGetProfile } from '@services/api';
 import { Text } from '@shared/components/Text';
+import { WalletBadge } from '@shared/components/WalletBadge';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { styles } from '../styles';
@@ -29,6 +30,10 @@ export const DashboardHeader: React.FC = () => {
 
   const handleProfilePress = () => {
     navigation.navigate(SCREENS.MAIN.PROFILE);
+  };
+
+  const handleWalletPress = () => {
+    navigation.navigate(SCREENS.WALLET.MAIN);
   };
 
   const renderBrandHeader = () => (
@@ -64,15 +69,8 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </View>
 
-        {/* Notification Bell */}
-        <TouchableOpacity 
-          style={styles.notificationButtonContainer}
-          onPress={handleNotificationPress}
-          activeOpacity={0.7}
-        >
-          <AppIcon.Transactions width={24} height={24} />
-          <View style={styles.notificationBadge} />
-        </TouchableOpacity>
+        {/* Wallet Badge */}
+        <WalletBadge onPress={handleWalletPress} />
       </View>
     </View>
   );
@@ -102,15 +100,8 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Notification Bell */}
-        <TouchableOpacity 
-          style={styles.notificationButtonContainer}
-          onPress={handleNotificationPress}
-          activeOpacity={0.7}
-        >
-          <AppIcon.Notification  width={24} height={24} />
-          <View style={styles.notificationBadge} />
-        </TouchableOpacity>
+        {/* Wallet Badge */}
+        <WalletBadge onPress={handleWalletPress} />
       </View>
     </View>
   );
@@ -137,15 +128,8 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </View>
 
-        {/* Notification Bell */}
-        <TouchableOpacity 
-          style={styles.notificationButtonContainer}
-          onPress={handleNotificationPress}
-          activeOpacity={0.7}
-        >
-          <AppIcon.Transactions width={24} height={24} />
-          <View style={styles.notificationBadge} />
-        </TouchableOpacity>
+        {/* Wallet Badge */}
+        <WalletBadge onPress={handleWalletPress} />
       </View>
     </View>
   );
@@ -173,15 +157,8 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </View>
 
-        {/* Notification Bell */}
-        <TouchableOpacity 
-          style={styles.notificationButtonContainer}
-          onPress={handleNotificationPress}
-          activeOpacity={0.7}
-        >
-          <AppIcon.Transactions width={24} height={24} />
-          <View style={styles.notificationBadge} />
-        </TouchableOpacity>
+        {/* Wallet Badge */}
+        <WalletBadge onPress={handleWalletPress} />
       </View>
     </View>
   );

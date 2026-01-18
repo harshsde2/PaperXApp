@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import type { DealerDashboardData } from '@services/api';
+import { SCREENS } from '@navigation/constants';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profil
     lockedSessions: apiData?.locked_sessions_count ?? 0,
     expiredSessions: apiData?.expired_sessions_count ?? 0,
     unreadNotifications: apiData?.unread_notifications_count ?? 0,
+    postedRequirements: apiData?.posted_requirements_count ?? 0,
   };
 
   return (
@@ -140,12 +142,18 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profil
           <Text style={styles.additionalCardSubtitle}>View all opportunities</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.additionalCard} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.additionalCard} 
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate(SCREENS.MAIN.REQUIREMENTS)}
+        >
           <View style={styles.additionalIconContainer}>
-            <AppIcon.Sessions width={24} height={24} color="#4F46E5" />
+            <AppIcon.Inquiries width={24} height={24} color="#4F46E5" />
           </View>
-          <Text style={styles.additionalCardTitle}>Sessions</Text>
-          <Text style={styles.additionalCardSubtitle}>View all sessions</Text>
+          <Text style={styles.additionalCardTitle}>My Requirements</Text>
+          <Text style={styles.additionalCardSubtitle}>
+            {dashboardData.postedRequirements} posted
+          </Text>
         </TouchableOpacity>
       </View>
 

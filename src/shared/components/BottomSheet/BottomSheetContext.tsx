@@ -148,6 +148,13 @@ export const BottomSheetProvider: React.FC<IBottomSheetProviderProps> = ({ child
     snapToIndex(0);
   }, [snapToIndex]);
 
+  // Update content without re-animating (for when sheet is already open)
+  const updateContent = useCallback((newContent: ReactNode) => {
+    if (isOpenRef.current && isVisible) {
+      setContent(newContent);
+    }
+  }, [isVisible]);
+
   const handleSnapToIndex = useCallback((index: number) => {
     snapToIndex(index);
   }, [snapToIndex]);
@@ -273,6 +280,7 @@ export const BottomSheetProvider: React.FC<IBottomSheetProviderProps> = ({ child
 
   const contextValue: IBottomSheetContextValue = {
     open: openSheet,
+    updateContent,
     close: closeSheet,
     snapToIndex,
     expand,

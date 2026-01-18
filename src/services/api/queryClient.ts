@@ -93,6 +93,10 @@ export const queryKeys = {
       [...queryKeys.dealer.all, 'notifications', params] as const,
     notificationsInfinite: (params?: Record<string, any>) =>
       [...queryKeys.dealer.all, 'notifications', 'infinite', params] as const,
+    requirements: (params?: Record<string, any>) =>
+      [...queryKeys.dealer.all, 'requirements', params] as const,
+    requirementsInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.dealer.all, 'requirements', 'infinite', params] as const,
   },
 
   // Machine Dealer
@@ -170,6 +174,17 @@ export const queryKeys = {
     all: ['notifications'] as const,
     lists: () => [...queryKeys.notifications.all, 'list'] as const,
     unreadCount: () => [...queryKeys.notifications.all, 'unread-count'] as const,
+  },
+
+  // Wallet
+  wallet: {
+    all: ['wallet'] as const,
+    balance: () => [...queryKeys.wallet.all, 'balance'] as const,
+    creditPacks: () => [...queryKeys.wallet.all, 'credit-packs'] as const,
+    transactions: (params?: Record<string, any>) =>
+      [...queryKeys.wallet.all, 'transactions', params] as const,
+    transactionsInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.wallet.all, 'transactions', 'infinite', params] as const,
   },
 } as const;
 

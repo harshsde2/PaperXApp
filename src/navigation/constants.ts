@@ -36,6 +36,14 @@ export const SCREENS = {
     SESSIONS: 'Sessions',
     PROFILE: 'Profile',
     POST: 'Post',
+    POST_TO_BUY: 'PostToBuy',
+    REQUIREMENTS: 'Requirements',
+  },
+  WALLET: {
+    MAIN: 'WalletMain',
+    CREDIT_PACKS: 'CreditPacks',
+    TRANSACTION_HISTORY: 'TransactionHistory',
+    ADD_CUSTOM_CREDITS: 'AddCustomCredits',
   },
 } as const;
 

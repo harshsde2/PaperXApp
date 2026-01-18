@@ -32,6 +32,7 @@ export interface IBottomSheetRef {
 
 export interface IBottomSheetContextValue {
   open: (content: ReactNode, config?: IBottomSheetConfig) => void;
+  updateContent: (content: ReactNode) => void;
   close: () => void;
   snapToIndex: (index: number) => void;
   expand: () => void;

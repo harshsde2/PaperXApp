@@ -420,3 +420,137 @@ export interface MarkAllNotificationsReadResponse {
   message?: string;
   marked_count: number;
 }
+
+// ============================================
+// POST REQUIREMENT
+// ============================================
+
+export type InquiryType = 'material' | 'machine' | 'job';
+export type IntentType = 'buy' | 'sell';
+export type ThicknessUnit = 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON';
+export type QuantityUnit = 'kg' | 'tons' | 'sheets' | 'reams' | 'rolls' | 'pieces';
+export type PriceUnit = 'per_sheet' | 'per_kg' | 'per_ton' | 'per_ream' | 'per_roll' | 'per_piece';
+
+export interface PostRequirementRequest {
+  inquiry_type: InquiryType;
+  intent: IntentType;
+  title: string;
+  description: string;
+  material_ids: number[];
+  thickness?: number;
+  thickness_unit?: ThicknessUnit;
+  size?: string;
+  quantity: number;
+  quantity_unit: QuantityUnit;
+  price?: number;
+  price_unit?: PriceUnit;
+  price_negotiable: boolean;
+  urgency: UrgencyType;
+  location: string;
+  latitude: number;
+  longitude: number;
+  deadline?: string; // ISO date string
+}
+
+export interface PostRequirementMaterial {
+  id: number;
+  name: string;
+  category: string;
+  created_at: string | null;
+  updated_at: string | null;
+  pivot: {
+    inquiry_id: number;
+    material_id: number;
+  };
+}
+
+export interface PostRequirementResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: number;
+    poster_id: number;
+    poster_type: string;
+    inquiry_type: InquiryType;
+    intent: IntentType;
+    title: string;
+    description: string;
+    urgency: UrgencyType;
+    quantity: string;
+    quantity_unit: QuantityUnit;
+    size?: string;
+    price?: string;
+    price_unit?: PriceUnit;
+    price_negotiable: boolean;
+    approx_price_note?: string | null;
+    thickness?: number;
+    thickness_unit?: ThicknessUnit;
+    machine_condition?: string | null;
+    job_type?: string | null;
+    timeline_days?: number | null;
+    location: string;
+    latitude: string;
+    longitude: string;
+    specs?: any;
+    attachment_paths?: string[] | null;
+    deadline?: string;
+    status: string;
+    posting_fee_paid: boolean;
+    posting_fee_amount?: number | null;
+    updated_at: string;
+    created_at: string;
+    materials: PostRequirementMaterial[];
+    machines: any[];
+  };
+}
+
+// ============================================
+// GET REQUIREMENTS
+// ============================================
+
+export interface RequirementMaterial {
+  id: number;
+  name: string;
+}
+
+export interface RequirementListItem {
+  id: number;
+  inquiry_type: InquiryType;
+  intent: IntentType;
+  title: string;
+  description: string;
+  status: string;
+  urgency: UrgencyType;
+  quantity: string;
+  quantity_unit: QuantityUnit;
+  size?: string;
+  price?: string;
+  price_unit?: PriceUnit;
+  price_negotiable: boolean;
+  thickness?: string;
+  thickness_unit?: ThicknessUnit;
+  machine_condition?: string | null;
+  job_type?: string | null;
+  timeline_days?: number | null;
+  location: string;
+  latitude: string;
+  longitude: string;
+  materials: RequirementMaterial[];
+  machines: any[];
+  responses_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetRequirementsParams {
+  inquiry_type?: InquiryType;
+  intent?: IntentType;
+  status?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface GetRequirementsResponse {
+  requirements: RequirementListItem[];
+  pagination?: PaginationMeta;
+}

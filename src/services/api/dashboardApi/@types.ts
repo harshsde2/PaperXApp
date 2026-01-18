@@ -71,6 +71,7 @@ export interface DealerDashboardData {
   locked_sessions_count: number;
   expired_sessions_count: number;
   unread_notifications_count: number;
+  posted_requirements_count: number;
 }
 
 // ============================================

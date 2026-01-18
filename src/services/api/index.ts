@@ -165,6 +165,20 @@ export type {
   GetNotificationsResponse,
   MarkNotificationReadResponse,
   MarkAllNotificationsReadResponse,
+  // Post Requirement Types
+  InquiryType,
+  IntentType,
+  ThicknessUnit,
+  QuantityUnit,
+  PriceUnit,
+  PostRequirementRequest,
+  PostRequirementResponse,
+  PostRequirementMaterial,
+  // Get Requirements Types
+  GetRequirementsParams,
+  GetRequirementsResponse,
+  RequirementListItem,
+  RequirementMaterial,
 } from './dealerApi/@types';
 
 // ============================================
@@ -268,3 +282,49 @@ export type {
   NewInquiry,
   MachineOpportunity,
 } from './dashboardApi';
+
+// ============================================
+// WALLET API
+// ============================================
+
+export * from './walletApi/walletApi';
+export type {
+  // Enums & Constants
+  WalletStatus,
+  TransactionDirection,
+  PaymentMethod,
+  AddedTransactionType,
+  DeductedTransactionType,
+  TransactionType,
+  // Balance
+  WalletBalance,
+  GetWalletBalanceResponse,
+  // Credit Packs
+  CreditPack,
+  GetCreditPacksResponse,
+  // Calculate
+  CalculateCreditsRequest,
+  CalculateCreditsResponse,
+  // Purchase
+  PurchaseCreditsFromPackRequest,
+  PurchaseCreditsCustomRequest,
+  PurchaseCreditsRequest,
+  PurchaseCreditsResponse,
+  // Add
+  AddCreditsRequest,
+  AddCreditsResponse,
+  // Deduct
+  DeductCreditsRequest,
+  DeductCreditsSuccessResponse,
+  DeductCreditsErrorResponse,
+  DeductCreditsResponse,
+  // Transactions
+  WalletTransaction,
+  GetTransactionsParams,
+  TransactionsPagination,
+  GetTransactionsResponse,
+  // Error
+  InsufficientBalanceError,
+  // Hook Return Types
+  UseWalletReturn,
+} from './walletApi/@types';

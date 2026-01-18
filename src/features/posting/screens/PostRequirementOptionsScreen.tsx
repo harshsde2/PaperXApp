@@ -103,12 +103,13 @@ const PostRequirementOptionsScreen: React.FC = () => {
   const options = getOptionsForRole(activeRole);
 
   const handleOptionPress = (option: PostRequirementOptionConfig) => {
-    // TODO: Navigate to appropriate posting flow based on option.id
-    // For now, just log the selection
-    console.log('Selected option:', option.id);
-    
-    // Example navigation (update based on your actual posting flow):
-    // navigation.navigate('RequirementDetailsScreen', { postType: option.id });
+    // Navigate to appropriate posting flow based on option.id
+    if (option.id === 'post-to-buy-material') {
+      navigation.navigate('PostToBuy' as any);
+    } else {
+      // TODO: Add other posting screens as needed
+      console.log('Selected option:', option.id);
+    }
   };
 
   return (

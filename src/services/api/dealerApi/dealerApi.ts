@@ -56,6 +56,13 @@ import type {
   MarkNotificationReadResponse,
   MarkAllNotificationsReadResponse,
   DealerNotification,
+  // Post Requirement Types
+  PostRequirementRequest,
+  PostRequirementResponse,
+  // Get Requirements Types
+  GetRequirementsParams,
+  GetRequirementsResponse,
+  RequirementListItem,
 } from './@types';
 
 // ============================================
@@ -581,5 +588,83 @@ export const useMarkAllNotificationsRead = () => {
     onError: (error: Error) => {
       console.error('Mark all notifications read error:', error);
     },
+  });
+};
+
+// ============================================
+// POST REQUIREMENT
+// ============================================
+
+export const usePostDealerRequirement = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: PostRequirementRequest): Promise<PostRequirementResponse> => {
+      const response = await api.post<PostRequirementResponse>(
+        DEALER_ENDPOINTS.POST_REQUIREMENT,
+        data
+      );
+      return extractData<PostRequirementResponse>(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dealer.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dealer.dashboard() });
+    },
+    onError: (error: Error) => {
+      console.error('Post dealer requirement error:', error);
+    },
+  });
+};
+
+// ============================================
+// GET REQUIREMENTS
+// ============================================
+
+export const useGetRequirements = (params?: GetRequirementsParams) => {
+  return useQuery({
+    queryKey: queryKeys.dealer.requirements(params),
+    queryFn: async (): Promise<GetRequirementsResponse> => {
+      const response = await api.get<{ success: boolean; message: string; data: RequirementListItem[]; meta?: any }>(
+        DEALER_ENDPOINTS.REQUIREMENTS,
+        { params }
+      );
+      const responseData = response.data as any;
+      // Handle the API response structure: { success, message, data: [...], meta: {...} }
+      const requirements = responseData?.data || [];
+      const meta = responseData?.meta;
+      return {
+        requirements,
+        pagination: meta,
+      };
+    },
+    staleTime: 1000 * 60, // 1 minute
+  });
+};
+
+export const useGetRequirementsInfinite = (params?: Omit<GetRequirementsParams, 'page'>) => {
+  return useInfiniteQuery({
+    queryKey: queryKeys.dealer.requirementsInfinite(params),
+    queryFn: async ({ pageParam = 1 }): Promise<GetRequirementsResponse> => {
+      const response = await api.get<{ success: boolean; message: string; data: RequirementListItem[]; meta?: any }>(
+        DEALER_ENDPOINTS.REQUIREMENTS,
+        { params: { ...params, page: pageParam } }
+      );
+      const responseData = response.data as any;
+      // Handle the API response structure: { success, message, data: [...], meta: {...} }
+      const requirements = responseData?.data || [];
+      const meta = responseData?.meta;
+      return {
+        requirements,
+        pagination: meta,
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.pagination && lastPage.pagination.current_page < lastPage.pagination.last_page) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    staleTime: 1000 * 60,
   });
 };

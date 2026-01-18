@@ -17,6 +17,7 @@ const formatScreenTitle = (routeName: string): string => {
     OTPVerification: 'Verify Identity',
   };
 
+
   if (screenNameMap[routeName]) {
     return screenNameMap[routeName];
   }
@@ -53,6 +54,9 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   const shouldShowBackButton = showBackButton !== undefined ? showBackButton : canGoBack;
   const displayTitle = title || (route?.name ? formatScreenTitle(route.name) : '');
 
+  const isDark = route?.name?.toLowerCase().includes('creditpacks');
+
+
   const handleBackPress = () => {
     if (canGoBack) {
       navigation.goBack();
@@ -66,7 +70,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor:isDark ? '#000' : '#fff', borderBottomColor:isDark ? 'rgba(255, 215, 0, 0.2)' : '#E5E5E5'}]}>
       <View style={[styles.contentWrapper, { paddingVertical: theme.spacing[2] }]}>
         {shouldShowBackButton ? (
           <TouchableOpacity
@@ -74,14 +78,14 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
             onPress={handleBackPress}
             activeOpacity={0.7}
           >
-            <AppIcon.ArrowLeft width={24} height={24} color={theme.colors.text.primary} />
+            <AppIcon.ArrowLeft width={24} height={24} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
         ) : (
           <View style={[styles.leftButton, leftButtonStyle]} />
         )}
 
         <View style={[styles.titleContainer, titleContainerStyle]}>
-          <Text variant="h4" fontWeight="semibold" numberOfLines={1} style={[styles.titleText, titleStyle]}>
+          <Text variant="h4" fontWeight="semibold"  numberOfLines={1} style={[styles.titleText, titleStyle, { color: isDark ? '#fff' : '#000' }]}>
             {displayTitle}
           </Text>
         </View>

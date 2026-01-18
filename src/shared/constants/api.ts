@@ -74,6 +74,10 @@ export const DEALER_ENDPOINTS = {
   NOTIFICATIONS: `${API_VERSION}/dealer/notifications`,
   MARK_NOTIFICATION_READ: (id: number | string) => `${API_VERSION}/dealer/notification/${id}/read`,
   MARK_ALL_NOTIFICATIONS_READ: `${API_VERSION}/dealer/notifications/read-all`,
+
+  // Requirements/Posts
+  POST_REQUIREMENT: `${API_VERSION}/dealer/requirement/post`,
+  REQUIREMENTS: `${API_VERSION}/dealer/requirements`,
 } as const;
 
 // Machine Dealer Endpoints
@@ -166,6 +170,17 @@ export const PAYMENT_ENDPOINTS = {
   CREATE_PAYMENT: `${API_VERSION}/payments/create`,
   VERIFY_PAYMENT: `${API_VERSION}/payments/verify`,
   PAYMENT_HISTORY: `${API_VERSION}/payments/history`,
+} as const;
+
+// Wallet Endpoints
+export const WALLET_ENDPOINTS = {
+  BALANCE: `${API_VERSION}/wallet`,
+  CREDIT_PACKS: `${API_VERSION}/wallet/credit-packs`,
+  CALCULATE: `${API_VERSION}/wallet/calculate`,
+  PURCHASE: `${API_VERSION}/wallet/purchase`,
+  ADD: `${API_VERSION}/wallet/add`,
+  TRANSACTIONS: `${API_VERSION}/wallet/transactions`,
+  DEDUCT: `${API_VERSION}/wallet/deduct`,
 } as const;
 
 // File Upload Endpoints

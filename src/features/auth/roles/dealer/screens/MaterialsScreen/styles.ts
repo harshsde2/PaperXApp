@@ -13,6 +13,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     marginBottom: theme.spacing[4],
   },
+  chipContent: {
+    flex: 1,
+  },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -76,6 +79,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingVertical: theme.spacing[2],
     borderRadius: theme.borderRadius.full,
     gap: theme.spacing[2],
+    width: '100%',
   },
   chipText: {
     color: theme.colors.text.inverse,
@@ -84,11 +88,10 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     marginLeft: theme.spacing[1],
   },
   categorySection: {
-    marginBottom: theme.spacing[6],
+    marginBottom: theme.spacing[2],
   },
   categoryHeader: {
     color: theme.colors.text.tertiary,
-    marginBottom: theme.spacing[3],
     letterSpacing: 0.5,
   },
   materialItem: {

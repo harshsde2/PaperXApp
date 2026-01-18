@@ -6,5 +6,6 @@ export type SelectThicknessScreenNavigationProp = StackNavigationProp<
   'SelectThickness'
 >;
 
-export type ThicknessUnit = 'GSM' | 'MM' | 'MICRON';
+// Use string to support all units returned by API (e.g. GSM, BF, MICRON, OUNCE, etc.)
+export type ThicknessUnit = string;
 

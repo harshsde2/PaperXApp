@@ -53,6 +53,8 @@ export const queryKeys = {
       [...queryKeys.reference.all, 'machines', params] as const,
     materialFinishes: (params?: Record<string, any>) =>
       [...queryKeys.reference.all, 'material-finishes', params] as const,
+    materialFinishesInfinite: (perPage?: number) =>
+      [...queryKeys.reference.all, 'material-finishes', 'infinite', perPage] as const,
     materialMills: (params?: Record<string, any>) =>
       [...queryKeys.reference.all, 'material-mills', params] as const,
     materialThicknessTypes: (params?: Record<string, any>) =>

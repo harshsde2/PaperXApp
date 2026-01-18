@@ -16,6 +16,7 @@ import type {
   GetMachinesResponse,
   GetMaterialFinishesParams,
   GetMaterialFinishesResponse,
+  GetMaterialFinishesPaginatedResponse,
   GetMaterialMillsParams,
   GetMaterialMillsResponse,
   GetMaterialThicknessTypesParams,
@@ -242,9 +243,9 @@ export const useGetMachines = (params?: GetMachinesParams) => {
 // ============================================
 
 /**
- * Get material finishes by material ID
+ * Get material finishes (with optional material_id and pagination)
  */
-export const useGetMaterialFinishes = (params: GetMaterialFinishesParams) => {
+export const useGetMaterialFinishes = (params?: GetMaterialFinishesParams) => {
   return useQuery({
     queryKey: queryKeys.reference.materialFinishes(params),
     queryFn: async (): Promise<MaterialFinish[]> => {
@@ -272,8 +273,89 @@ export const useGetMaterialFinishes = (params: GetMaterialFinishesParams) => {
 
       return [];
     },
-    enabled: !!params.material_id,
     staleTime: 1000 * 60 * 30,
+  });
+};
+
+/**
+ * Get material finishes with infinite pagination
+ * Optimized for large lists with page-based loading
+ * API: GET /api/v1/material-finishes?page=1&per_page=50
+ */
+export const useGetMaterialFinishesInfinite = (perPage: number = 50, params?: Omit<GetMaterialFinishesParams, 'page' | 'per_page'>) => {
+  return useInfiniteQuery({
+    queryKey: queryKeys.reference.materialFinishes({ ...params, infinite: true, perPage }),
+    queryFn: async ({ pageParam = 1 }): Promise<{
+      finishes: MaterialFinish[];
+      pagination: {
+        current_page: number;
+        per_page: number;
+        total_pages: number;
+        total_items: number;
+        has_next: boolean;
+      };
+    }> => {
+      const response = await api.get<GetMaterialFinishesPaginatedResponse>(
+        REFERENCE_ENDPOINTS.MATERIAL_FINISHES,
+        {
+          params: {
+            ...params,
+            page: pageParam,
+            per_page: perPage,
+          },
+        }
+      );
+      const responseData = response.data as any;
+
+      // Extract finishes array
+      let finishes: MaterialFinish[] = [];
+      if (responseData?.success && Array.isArray(responseData?.data)) {
+        finishes = responseData.data;
+      } else if (responseData?.data?.finishes) {
+        finishes = responseData.data.finishes;
+      } else if (responseData?.finishes) {
+        finishes = responseData.finishes;
+      } else if (Array.isArray(responseData?.data)) {
+        finishes = responseData.data;
+      } else if (Array.isArray(responseData)) {
+        finishes = responseData;
+      }
+
+      // Extract pagination info
+      const pagination = responseData?.meta || responseData?.pagination || {
+        current_page: pageParam,
+        per_page: perPage,
+        total_pages: 1,
+        total_items: finishes.length,
+        last_page: 1,
+      };
+
+      return {
+        finishes,
+        pagination: {
+          current_page: pagination.current_page ?? pageParam,
+          per_page: pagination.per_page ?? perPage,
+          total_pages: pagination.last_page ?? pagination.total_pages ?? 1,
+          total_items: pagination.total ?? finishes.length,
+          has_next: (pagination.current_page ?? pageParam) < (pagination.last_page ?? pagination.total_pages ?? 1),
+        },
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Check if there's a next page based on pagination info
+      if (lastPage.pagination.has_next === true) {
+        return lastPage.pagination.current_page + 1;
+      }
+      
+      // Fallback: if we got a full page of items, assume there might be more
+      if (lastPage.finishes.length >= perPage) {
+        return allPages.length + 1;
+      }
+      
+      return undefined;
+    },
+    staleTime: 1000 * 60 * 30, // 30 minutes
   });
 };
 

@@ -217,7 +217,64 @@ export const createStyles = (theme: Theme) =>
       fontSize: 12,
       lineHeight: 16,
     },
-    button: {
+    selectedRangesContainer: {
+      marginBottom: theme.spacing[4],
+    },
+    selectedRangesTitle: {
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing[3],
+    },
+    rangeChip: {
+      marginBottom: theme.spacing[2],
+      padding: theme.spacing[3],
+      backgroundColor: theme.colors.surface.primary,
+    },
+    rangeChipContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    rangeChipInfo: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: theme.spacing[2],
+    },
+    rangeChipValue: {
+      color: theme.colors.text.primary,
+    },
+    rangeChipUnit: {
+      color: theme.colors.text.secondary,
+    },
+    removeButton: {
+      padding: theme.spacing[1],
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: theme.spacing[3],
+      width: '100%',
+    },
+    addButton: {
+      flex: 1,
+      backgroundColor: theme.colors.surface.secondary || theme.colors.background.tertiary,
+      paddingVertical: theme.spacing[4],
+      borderRadius: theme.borderRadius.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+    },
+    addButtonDisabled: {
+      opacity: 0.5,
+    },
+    addButtonText: {
+      color: theme.colors.primary.DEFAULT,
+      fontWeight: '600',
+    },
+    addButtonTextDisabled: {
+      color: theme.colors.text.tertiary,
+    },
+    continueButton: {
+      flex: 1,
       backgroundColor: theme.colors.primary.DEFAULT,
       paddingVertical: theme.spacing[4],
       borderRadius: theme.borderRadius.lg,
@@ -225,9 +282,12 @@ export const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       justifyContent: 'center',
       gap: theme.spacing[2],
-      width: '100%',
     },
-    buttonText: {
+    continueButtonDisabled: {
+      opacity: 0.5,
+      backgroundColor: theme.colors.surface.secondary || theme.colors.background.tertiary,
+    },
+    continueButtonText: {
       color: theme.colors.text.inverse,
     },
   });

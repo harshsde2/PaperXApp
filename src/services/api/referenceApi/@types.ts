@@ -130,10 +130,32 @@ export interface MaterialFinish {
 export interface GetMaterialFinishesParams {
   material_id?: number;
   type?: FinishType;
+  page?: number;
+  per_page?: number;
 }
 
 export interface GetMaterialFinishesResponse {
-  finishes: MaterialFinish[];
+  success: boolean;
+  message: string;
+  data: MaterialFinish[];
+  meta?: {
+    current_page: number;
+    total: number;
+    per_page: number;
+    last_page: number;
+  };
+}
+
+export interface GetMaterialFinishesPaginatedResponse {
+  success: boolean;
+  message: string;
+  data: MaterialFinish[];
+  meta: {
+    current_page: number;
+    total: number;
+    per_page: number;
+    last_page: number;
+  };
 }
 
 // ============================================

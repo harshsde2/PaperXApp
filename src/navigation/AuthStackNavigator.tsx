@@ -30,6 +30,10 @@ type RegistrationScreenParams = {
   profileData?: any;
 };
 
+type DealerRegistrationScreenParams = {
+  dealerRegistrationData?: any;
+};
+
 export type AuthStackParamList = {
   Splash: undefined;
   Login: undefined;
@@ -45,13 +49,59 @@ export type AuthStackParamList = {
     udyamCertificateName?: string;
     udyamCertificateType?: string;
   };
-  VerificationStatus: RegistrationScreenParams;
+  VerificationStatus: DealerRegistrationScreenParams & RegistrationScreenParams;
   // Dealer screens
-  Materials: RegistrationScreenParams;
-  MillBrandDetails: RegistrationScreenParams;
-  MaterialSpecs: RegistrationScreenParams;
-  SelectThickness: RegistrationScreenParams;
-  ManageWarehouses: RegistrationScreenParams;
+  Materials: DealerRegistrationScreenParams & RegistrationScreenParams;
+  MillBrandDetails: DealerRegistrationScreenParams & {
+    // Optional callback used when selecting brand details from Materials screen
+    onBrandDetailsSelected?: (details: {
+      brand_id: number | null;
+      agent_type: string | null;
+    }) => void;
+    // Optional key to link back to selected material-grade
+    materialKey?: string;
+  };
+  MaterialSpecs: DealerRegistrationScreenParams & {
+    // Optional callback used when selecting specs from Materials screen
+    onSpecsSelected?: (specs: {
+      finish_ids: number[];
+      coating_ids: number[];
+      surface_ids: number[];
+      grade_ids: number[];
+      variant_ids: number[];
+      custom_specs: string[];
+    }) => void;
+    // Optional callback for brand details selection (opens after specs)
+    onBrandDetailsSelected?: (details: {
+      brand_id: number | null;
+      agent_type: string | null;
+    }) => void;
+    // Optional key to link back to selected material-grade
+    materialKey?: string;
+  };
+  SelectThickness: DealerRegistrationScreenParams & {
+    // Optional callback used when selecting thickness from Materials screen
+    onThicknessSelected?: (thicknessRanges: Array<{ unit: string; min: number; max: number }>) => void;
+    // Optional callback for specs selection (opens after thickness)
+    onSpecsSelected?: (specs: {
+      finish_ids: number[];
+      coating_ids: number[];
+      surface_ids: number[];
+      grade_ids: number[];
+      variant_ids: number[];
+      custom_specs: string[];
+    }) => void;
+    // Optional callback for brand details selection (opens after specs)
+    onBrandDetailsSelected?: (details: {
+      brand_id: number | null;
+      agent_type: string | null;
+    }) => void;
+    // Optional key or identifiers to link back to selected material-grade
+    materialKey?: string;
+    // Material for which we are selecting thickness
+    materialId: number;
+  };
+  ManageWarehouses: DealerRegistrationScreenParams & RegistrationScreenParams;
   // Converter screens
   ConverterType: RegistrationScreenParams;
   FinishedProducts: RegistrationScreenParams;
@@ -106,14 +156,26 @@ const AuthStackNavigator = () => {
       <Stack.Screen
         name={SCREENS.AUTH.MILL_BRAND_DETAILS}
         component={MillBrandDetailsScreen}
+        options={{
+          animation: 'slide_from_bottom',
+          presentation: 'transparentModal',
+        }}
       />
       <Stack.Screen
         name={SCREENS.AUTH.MATERIAL_SPECS}
         component={MaterialSpecsScreen}
+        options={{
+          animation: 'slide_from_bottom',
+          presentation: 'transparentModal',
+        }}
       />
       <Stack.Screen
         name={SCREENS.AUTH.SELECT_THICKNESS}
         component={SelectThicknessScreen}
+        options={{
+          animation: 'slide_from_bottom',
+          presentation: 'transparentModal',
+        }}
       />
       <Stack.Screen
         name={SCREENS.AUTH.MANAGE_WAREHOUSES}

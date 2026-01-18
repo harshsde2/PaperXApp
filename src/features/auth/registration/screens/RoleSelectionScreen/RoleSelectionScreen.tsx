@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Switch,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import { RoleSelectionScreenNavigationProp, RoleSelectionScreenRouteProp } from './@types';
+import {
+  RoleSelectionScreenNavigationProp,
+  RoleSelectionScreenRouteProp,
+} from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { useUpdateProfile } from '@services/api';
@@ -34,16 +43,38 @@ const RoleSelectionScreen = () => {
     udyamCertificateType,
   } = route.params || {};
 
-  const [primaryRole, setPrimaryRole] = useState<PrimaryRole>(ROLES.DEALER as PrimaryRole);
+  const [primaryRole, setPrimaryRole] = useState<PrimaryRole>(
+    ROLES.DEALER as PrimaryRole,
+  );
   const [hasSecondaryRole, setHasSecondaryRole] = useState(false);
   const [secondaryRole, setSecondaryRole] = useState<PrimaryRole | null>(null);
   const [geography, setGeography] = useState<Geography>('local');
 
   const primaryRoles = [
-    { id: ROLES.DEALER as PrimaryRole, label: 'Dealer / Distributor', icon:   AppIcon.Dealer },
-    { id: ROLES.CONVERTER as PrimaryRole, label: 'Converter / Manufacturer', icon: AppIcon.Converter },
-    { id: ROLES.BRAND as PrimaryRole, label: 'Brand / End User', icon: AppIcon.Brand },
-    { id: ROLES.MACHINE_DEALER as PrimaryRole, label: 'Machine Dealer', icon: AppIcon.MachineDealer },
+    {
+      id: ROLES.DEALER as PrimaryRole,
+      label: 'Dealer / Distributor',
+      icon: AppIcon.Dealer,
+      isComplete: true,
+    },
+    {
+      id: ROLES.CONVERTER as PrimaryRole,
+      label: 'Converter / Manufacturer',
+      icon: AppIcon.Converter,
+      isComplete: false,
+    },
+    {
+      id: ROLES.BRAND as PrimaryRole,
+      label: 'Brand / End User',
+      icon: AppIcon.Brand,
+      isComplete: true,
+    },
+    {
+      id: ROLES.MACHINE_DEALER as PrimaryRole,
+      label: 'Machine Dealer',
+      icon: AppIcon.MachineDealer,
+      isComplete: false,
+    },
   ];
 
   const geographyOptions = [
@@ -91,25 +122,29 @@ const RoleSelectionScreen = () => {
 
       // Get the first registration screen for the selected role
       // primaryRole is already a valid UserRole value (matches ROLES constants)
-      const firstScreen = getFirstRegistrationScreen(primaryRole as typeof ROLES[keyof typeof ROLES]);
+      const firstScreen = getFirstRegistrationScreen(
+        primaryRole as (typeof ROLES)[keyof typeof ROLES],
+      );
 
       if (firstScreen && firstScreen !== SCREENS.AUTH.VERIFICATION_STATUS) {
         // Navigate to role-specific registration flow
         // Pass profile data so it can be used at the end of registration
         // Type assertion needed because firstScreen is a dynamic string
-        (navigation.navigate as any)(firstScreen, { profileData: response });
+        (navigation.navigate as any)(firstScreen, {
+          profileData: response,
+        } as any);
       } else {
         // Role has no specific registration screens, go directly to verification
         navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
           profileData: response,
-        });
+        } as any);
       }
     } catch (error: any) {
       console.error('Update profile error:', error);
       Alert.alert(
         'Registration Failed',
         error?.message || 'Failed to update profile. Please try again.',
-        [{ text: 'OK' }]
+        [{ text: 'OK' }],
       );
     }
   };
@@ -120,17 +155,15 @@ const RoleSelectionScreen = () => {
     onSelect: (roleId: PrimaryRole) => void,
   ) => (
     <View style={styles.roleGrid}>
-      {roles.map((role) => {
+      {roles.map(role => {
         const isSelected = selectedRole === role.id;
         return (
           <TouchableOpacity
             key={role.id}
-            style={[
-              styles.roleCard,
-              isSelected && styles.roleCardSelected,
-            ]}
+            style={[styles.roleCard, isSelected && styles.roleCardSelected, !role.isComplete && styles.roleCardIncomplete]}
             onPress={() => onSelect(role.id)}
             activeOpacity={0.7}
+            disabled={!role.isComplete}
           >
             {isSelected && (
               <View style={styles.checkmarkContainer}>
@@ -153,15 +186,17 @@ const RoleSelectionScreen = () => {
               />
             )}
             <Text
-              variant='h6'
-              fontWeight='semibold'
-              style={[
-                styles.roleLabel,
-                isSelected && styles.roleLabelSelected,
-              ]}
+              variant="h6"
+              fontWeight="semibold"
+              style={[styles.roleLabel, isSelected && styles.roleLabelSelected]}
             >
               {role.label}
             </Text>
+            {!role.isComplete && (
+              <Text variant="bodySmall" size={8} style={styles.roleCompleteText}>
+                This role is not Available for now 
+              </Text>
+            )}
           </TouchableOpacity>
         );
       })}
@@ -189,15 +224,21 @@ const RoleSelectionScreen = () => {
           <Text variant="bodySmall" style={styles.sectionSubtitle}>
             Select the main function of your business.
           </Text>
+          <View pointerEvents={!hasSecondaryRole ? 'auto' : 'none'} style={[{opacity: !hasSecondaryRole ? 1 : 0.5}]}>
 
           {renderRoleGrid(primaryRoles, primaryRole, setPrimaryRole)}
+          </View>
         </View>
 
         {/* Secondary Role Section */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.secondaryRoleHeader}>
             <View style={styles.secondaryRoleHeaderLeft}>
-              <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
+              <Text
+                variant="h4"
+                fontWeight="semibold"
+                style={styles.sectionTitle}
+              >
                 Secondary Role
               </Text>
               <Text variant="bodySmall" style={styles.sectionSubtitle}>
@@ -218,10 +259,14 @@ const RoleSelectionScreen = () => {
           </View>
           {hasSecondaryRole && (
             <View style={styles.secondaryRoleGridContainer}>
-              {renderRoleGrid(primaryRoles, secondaryRole, handleSecondaryRoleSelect)}
+              {renderRoleGrid(
+                primaryRoles,
+                secondaryRole,
+                handleSecondaryRoleSelect,
+              )}
             </View>
           )}
-        </View>
+        </View> */}
 
         {/* Operating Geography Section */}
         <View style={styles.section}>
@@ -233,7 +278,7 @@ const RoleSelectionScreen = () => {
           </Text>
 
           <View style={styles.geographyList}>
-            {geographyOptions.map((option) => {
+            {geographyOptions.map(option => {
               const isSelected = geography === option.id;
               const Icon = option.icon;
               return (
@@ -253,9 +298,7 @@ const RoleSelectionScreen = () => {
                         isSelected && styles.radioButtonSelected,
                       ]}
                     >
-                      {isSelected && (
-                        <View style={styles.radioButtonInner} />
-                      )}
+                      {isSelected && <View style={styles.radioButtonInner} />}
                     </View>
                     <Text
                       variant="bodyMedium"

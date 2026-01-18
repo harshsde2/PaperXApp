@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useCallback, useRef } from 'react';
+import React, { useState, useLayoutEffect, useCallback } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -50,7 +50,7 @@ const ManageWarehousesScreen = () => {
   const styles = createStyles(theme);
   const dispatch = useAppDispatch();
 
-  const { profileData } = route.params || {};
+  const { dealerRegistrationData } = route.params || {};
 
   const [noWarehouse, setNoWarehouse] = useState(false);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
@@ -58,6 +58,7 @@ const ManageWarehousesScreen = () => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [editingLocation, setEditingLocation] =
     useState<WarehouseLocation | null>(null);
+  const [expandedLocationIds, setExpandedLocationIds] = useState<string[]>([]);
 
   const activeLocationsCount = locations.length;
 
@@ -65,8 +66,8 @@ const ManageWarehousesScreen = () => {
     useCompleteDealerProfile();
 
   console.log(
-    '[ManageWarehouses] Profile data:',
-    JSON.stringify(profileData, null, 2),
+    '[ManageWarehouses] dealerRegistrationData data:',
+    JSON.stringify(dealerRegistrationData, null, 2),
   );
 
   // Generate unique ID for new locations
@@ -74,39 +75,24 @@ const ManageWarehousesScreen = () => {
     `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const transformDataForAPI = (): CompleteDealerProfileRequest | null => {
-    if (!profileData) {
-      setError('Profile data is missing. Please go back and try again.');
+    if (!dealerRegistrationData) {
+      setError('Registration data is missing. Please go back and try again.');
       return null;
     }
 
     try {
-      const materials = (profileData.materials || []).map((material: any) => {
-        const relationship =
-          profileData.mill_brand_details?.relationship || 'independent-dealer';
-        const agentType: AgentType =
-          relationship === 'authorized-agent'
-            ? 'AUTHORIZED_AGENT'
-            : 'INDEPENDENT_DEALER';
-
-        const brandId = profileData.mill_brand_details?.mill_brand_id || 1;
-        const finishIds = profileData.material_specs?.finish_ids || [];
-
-        const thicknessRanges = profileData.thickness
-          ? [
-              {
-                unit: profileData.thickness.unit as 'GSM' | 'MM' | 'MICRON',
-                min: profileData.thickness.min,
-                max: profileData.thickness.max,
-              },
-            ]
-          : [];
-
+      // Materials are already in the correct format from MaterialsScreen
+      const materials = (dealerRegistrationData.materials || []).map((material: any) => {
         return {
           material_id: Number(material.material_id),
-          brand_id: Number(brandId),
-          agent_type: agentType,
-          finish_ids: finishIds.map((id: any) => Number(id)),
-          thickness_ranges: thicknessRanges,
+          brand_id: material.brand_id !== null && material.brand_id !== undefined ? Number(material.brand_id) : null,
+          agent_type: material.agent_type as AgentType | null,
+          finish_ids: (material.finish_ids || []).map((id: any) => Number(id)),
+          thickness_ranges: (material.thickness_ranges || []).map((range: any) => ({
+            unit: range.unit as 'GSM' | 'MM' | 'MICRON',
+            min: Number(range.min),
+            max: Number(range.max),
+          })),
         };
       });
 
@@ -153,6 +139,7 @@ const ManageWarehousesScreen = () => {
     }
 
     const requestData = transformDataForAPI();
+
     if (!requestData) {
       return;
     }
@@ -187,11 +174,20 @@ const ManageWarehousesScreen = () => {
       return;
     }
 
+    const finalData = {
+      ...requestData,
+      'machines_available.0': [1, 2, 3],
+      capacity_daily: 1000.5,
+      capacity_monthly: 30000.0,
+      capacity_unit: 'kg',
+    };
+
     console.log(
       '[ManageWarehouses] Request data:',
-      JSON.stringify(requestData, null, 2),
+      JSON.stringify(finalData, null, 2),
     );
-    completeProfileMutation(requestData, {
+    
+    completeProfileMutation(finalData, {
       onSuccess: response => {
         dispatch(
           showToast({
@@ -200,13 +196,15 @@ const ManageWarehousesScreen = () => {
           }),
         );
 
+        // For navigation, we still need profileData if it exists, otherwise use response
+        const profileData = dealerRegistrationData?.profileData;
         const updatedProfileData: UpdateProfileResponse = {
-          ...profileData,
+          ...(profileData || {}),
           ...response, // Merge API response to get latest profile data
         };
 
         const isSecondaryRoleCompletion =
-          profileData?.secondary_role === ROLES.DEALER;
+          dealerRegistrationData?.profileData?.secondary_role === ROLES.DEALER;
 
         if (isSecondaryRoleCompletion) {
           navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
@@ -240,16 +238,17 @@ const ManageWarehousesScreen = () => {
         }
       },
       onError: (err: any) => {
+        const profileData = dealerRegistrationData?.profileData;
         const isSecondaryRoleCompletion =
           profileData?.secondary_role === ROLES.DEALER;
 
         if (isSecondaryRoleCompletion) {
           navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-            profileData: profileData,
+            profileData: profileData || {},
           });
         } else if (
-          profileData.has_secondary_role === 1 &&
-          profileData.secondary_role
+          profileData?.has_secondary_role === 1 &&
+          profileData?.secondary_role
         ) {
           const secondaryRole =
             profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
@@ -261,16 +260,16 @@ const ManageWarehousesScreen = () => {
             firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
           ) {
             (navigation.navigate as any)(firstSecondaryScreen, {
-              profileData: profileData,
+              profileData: profileData || {},
             });
           } else {
             navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-              profileData: profileData,
+              profileData: profileData || {},
             });
           }
         } else {
           navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-            profileData: profileData,
+            profileData: profileData || {},
           });
         }
 
@@ -324,17 +323,27 @@ const ManageWarehousesScreen = () => {
         longitude: location.longitude,
       };
 
-      if (editingLocation) {
-        // Update existing location
-        setLocations(prev =>
-          prev.map(loc =>
-            loc.id === editingLocation.id ? warehouseLocation : loc,
-          ),
-        );
-      } else {
+      setLocations(prev => {
+        const exists = prev.find(loc => loc.id === warehouseLocation.id);
+
+        if (exists) {
+          // Update existing location
+          return prev.map(loc =>
+            loc.id === warehouseLocation.id ? warehouseLocation : loc,
+          );
+        }
+
         // Add new location
-        setLocations(prev => [...prev, warehouseLocation]);
-      }
+        return [...prev, warehouseLocation];
+      });
+
+      // Ensure the newly added/updated location is expanded
+      setExpandedLocationIds(prev => {
+        if (prev.includes(warehouseLocation.id)) {
+          return prev;
+        }
+        return [...prev, warehouseLocation.id];
+      });
 
       setShowLocationPicker(false);
       setEditingLocation(null);
@@ -368,6 +377,9 @@ const ManageWarehousesScreen = () => {
             style: 'destructive',
             onPress: () => {
               setLocations(prev => prev.filter(loc => loc.id !== locationId));
+              setExpandedLocationIds(prev =>
+                prev.filter(id => id !== locationId),
+              );
               dispatch(
                 showToast({
                   message: 'Location removed',
@@ -398,6 +410,14 @@ const ManageWarehousesScreen = () => {
         ...loc,
         isPrimary: loc.id === locationId,
       })),
+    );
+  }, []);
+
+  const toggleLocationExpanded = useCallback((locationId: string) => {
+    setExpandedLocationIds(prev =>
+      prev.includes(locationId)
+        ? prev.filter(id => id !== locationId)
+        : [...prev, locationId],
     );
   }, []);
 
@@ -465,240 +485,299 @@ const ManageWarehousesScreen = () => {
 
           {/* Locations Header */}
           <View style={styles.locationsHeader}>
-            <Text variant="h5" fontWeight="bold" style={styles.locationsTitle}>
-              Your Locations
-            </Text>
-            <Text variant="captionMedium" style={styles.locationsCount}>
-              {activeLocationsCount} Active
-            </Text>
+            <View style={styles.locationsHeaderLeft}>
+              <Text
+                variant="h5"
+                fontWeight="bold"
+                style={styles.locationsTitle}
+              >
+                Your Warehouses
+              </Text>
+              <Text variant="captionMedium" style={styles.locationsSubtitle}>
+                Add, edit and set your primary dispatch locations
+              </Text>
+            </View>
+            <View style={styles.locationsBadge}>
+              <Text
+                variant="captionSmall"
+                fontWeight="semibold"
+                style={styles.locationsBadgeText}
+              >
+                {activeLocationsCount} Active
+              </Text>
+            </View>
           </View>
 
           {/* Location Cards with Maps */}
-          {locations.map(location => (
-            <Card key={location.id} style={styles.locationCard}>
-              {location.isPrimary && (
-                <View style={styles.primaryBadge}>
-                  <Text
-                    variant="captionSmall"
-                    fontWeight="semibold"
-                    style={styles.primaryBadgeText}
-                  >
-                    PRIMARY
-                  </Text>
-                </View>
-              )}
-              <Text
-                variant="h6"
-                fontWeight="semibold"
-                style={styles.locationName}
+          {locations.map(location => {
+            const isExpanded = expandedLocationIds.includes(location.id);
+
+            return (
+              <Card
+                key={location.id}
+                style={[
+                  styles.locationCard,
+                  location.isPrimary && styles.locationCardPrimary,
+                ]}
               >
-                {location.name}
-              </Text>
-              <Text variant="bodySmall" style={styles.locationAddress}>
-                {location.address}
-              </Text>
-              <Text variant="bodySmall" style={styles.locationCity}>
-                {location.city}, {location.state} {location.zipCode}
-              </Text>
-
-              {/* Action Buttons */}
-              <View style={styles.locationActions}>
+                {/* Header Row */}
                 <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleEdit(location)}
-                  activeOpacity={0.7}
+                  style={styles.locationHeaderRow}
+                  activeOpacity={0.8}
+                  onPress={() => toggleLocationExpanded(location.id)}
                 >
-                  <AppIcon.Edit
-                    width={15}
-                    height={15}
-                    color={theme.colors.primary.DEFAULT}
-                  />
-                  <Text
-                    variant="bodySmall"
-                    style={[
-                      styles.actionButtonText,
-                      { color: theme.colors.primary.DEFAULT },
-                    ]}
-                  >
-                    Edit
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleRemove(location.id)}
-                  activeOpacity={0.7}
-                >
-                  <AppIcon.Delete
-                    width={17}
-                    height={17}
-                    color={theme.colors.error.DEFAULT}
-                  />
-                  <Text
-                    variant="bodySmall"
-                    style={[
-                      styles.actionButtonText,
-                      { color: theme.colors.error.DEFAULT },
-                    ]}
-                  >
-                    Remove
-                  </Text>
-                </TouchableOpacity>
-                {!location.isPrimary && (
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleSetPrimary(location.id)}
-                    activeOpacity={0.7}
-                  >
-                    <AppIcon.Location
-                      width={15}
-                      height={15}
-                      color={theme.colors.text.secondary}
-                    />
-                    <Text variant="bodySmall" style={styles.actionButtonText}>
-                      Set Primary
+                  <View style={styles.locationHeaderText}>
+                    <View style={styles.locationTitleRow}>
+                      <Text
+                        variant="h6"
+                        fontWeight="semibold"
+                        style={styles.locationName}
+                        numberOfLines={1}
+                      >
+                        {location.name}
+                      </Text>
+                      {location.isPrimary && (
+                        <View style={styles.primaryBadge}>
+                          <Text
+                            variant="captionSmall"
+                            fontWeight="semibold"
+                            style={styles.primaryBadgeText}
+                          >
+                            PRIMARY
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text
+                      variant="bodySmall"
+                      style={styles.locationSummary}
+                      numberOfLines={1}
+                    >
+                      {location.city}, {location.state} {location.zipCode}
                     </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Mini Map View */}
-              <View style={styles.mapContainer}>
-                <MapView
-                  provider={PROVIDER_GOOGLE}
-                  style={styles.miniMap}
-                  initialRegion={{
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    ...ZOOM_LEVELS.STREET,
-                  }}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  rotateEnabled={false}
-                  pitchEnabled={false}
-                >
-                  <Marker
-                    coordinate={{
-                      latitude: location.latitude,
-                      longitude: location.longitude,
-                    }}
-                    pinColor={
-                      location.isPrimary
-                        ? theme.colors.primary.DEFAULT
-                        : theme.colors.error.DEFAULT
-                    }
+                  </View>
+                  <AppIcon.ChevronDown
+                    width={18}
+                    height={18}
+                    color={theme.colors.text.secondary}
+                    style={[
+                      styles.chevronIcon,
+                      isExpanded && styles.chevronIconExpanded,
+                    ]}
                   />
-                </MapView>
-              </View>
-            </Card>
-          ))}
+                </TouchableOpacity>
+
+                {/* Expanded Content */}
+                {isExpanded && (
+                  <>
+                    <Text variant="bodySmall" style={styles.locationAddress}>
+                      {location.address}
+                    </Text>
+
+                    {/* Action Buttons */}
+                    <View style={styles.locationActions}>
+                      <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => handleEdit(location)}
+                        activeOpacity={0.7}
+                      >
+                        <AppIcon.Edit
+                          width={18}
+                          height={18}
+                          color={theme.colors.primary.DEFAULT}
+                        />
+                        <Text
+                          variant="bodySmall"
+                          style={[
+                            styles.actionButtonText,
+                            { color: theme.colors.primary.DEFAULT },
+                          ]}
+                        >
+                          Edit
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => handleRemove(location.id)}
+                        activeOpacity={0.7}
+                      >
+                        <AppIcon.Delete
+                          width={18}
+                          height={18}
+                          color={theme.colors.error.DEFAULT}
+                        />
+                        <Text
+                          variant="bodySmall"
+                          style={[
+                            styles.actionButtonText,
+                            { color: theme.colors.error.DEFAULT },
+                          ]}
+                        >
+                          Remove
+                        </Text>
+                      </TouchableOpacity>
+                      {!location.isPrimary && (
+                        <TouchableOpacity
+                          style={styles.actionButton}
+                          onPress={() => handleSetPrimary(location.id)}
+                          activeOpacity={0.7}
+                        >
+                          <AppIcon.Location
+                            width={18}
+                            height={18}
+                            color={theme.colors.text.secondary}
+                          />
+                          <Text
+                            variant="bodySmall"
+                            style={styles.actionButtonText}
+                          >
+                            Set Primary
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    {/* Larger Map View */}
+                    <View style={styles.mapContainer}>
+                      <MapView
+                        provider={PROVIDER_GOOGLE}
+                        style={styles.miniMap}
+                        initialRegion={{
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                          ...ZOOM_LEVELS.STREET,
+                        }}
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        rotateEnabled={false}
+                        pitchEnabled={false}
+                      >
+                        <Marker
+                          coordinate={{
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                          }}
+                          pinColor={
+                            location.isPrimary
+                              ? theme.colors.primary.DEFAULT
+                              : theme.colors.error.DEFAULT
+                          }
+                        />
+                      </MapView>
+                    </View>
+                  </>
+                )}
+              </Card>
+            );
+          })}
 
           {/* Empty State */}
           {locations.length === 0 && !noWarehouse && (
             <Card style={styles.emptyStateCard}>
               <AppIcon.Location
-                width={48}
-                height={48}
+                width={56}
+                height={56}
                 color={theme.colors.text.tertiary}
               />
               <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.text.secondary,
-                  marginTop: 12,
-                  textAlign: 'center',
-                }}
+                variant="h6"
+                fontWeight="bold"
+                style={styles.emptyStateTitle}
               >
-                No warehouse locations added yet.{'\n'}
-                Add your first location to continue.
+                Add your first warehouse
+              </Text>
+              <Text variant="bodyMedium" style={styles.emptyStateDescription}>
+                Save the locations you dispatch from most often so buyers see
+                accurate delivery options.
               </Text>
             </Card>
           )}
 
           {/* Add Location Card */}
-          <TouchableOpacity
-            style={styles.addLocationCard}
-            onPress={handleAddLocation}
-            activeOpacity={0.7}
-          >
-            <View style={styles.addLocationContent}>
-              <View style={styles.addLocationIcon}>
-                <Text style={styles.addLocationIconText}>+</Text>
+          {!noWarehouse && (
+            <TouchableOpacity
+              style={styles.addLocationCard}
+              onPress={handleAddLocation}
+              activeOpacity={0.7}
+            >
+              <View style={styles.addLocationContent}>
+                <View style={styles.addLocationIcon}>
+                  <Text style={styles.addLocationIconText}>+</Text>
+                </View>
+                <Text
+                  variant="bodyMedium"
+                  fontWeight="semibold"
+                  style={styles.addLocationTitle}
+                >
+                  Add New Location
+                </Text>
+                <Text
+                  variant="captionMedium"
+                  style={styles.addLocationDescription}
+                >
+                  Search address or drop a pin on the map
+                </Text>
               </View>
-              <Text
-                variant="bodyMedium"
-                fontWeight="semibold"
-                style={styles.addLocationTitle}
-              >
-                Add New Location
-              </Text>
-              <Text
-                variant="captionMedium"
-                style={styles.addLocationDescription}
-              >
-                Search address or drop a pin on map
-              </Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
         </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
+      </ScreenWrapper>
+      {/* Footer */}
+      <View style={styles.footer}>
+        {!noWarehouse && (
           <TouchableOpacity
-            style={styles.searchButton}
+            style={styles.secondaryButton}
             onPress={handleSearchAddress}
             activeOpacity={0.8}
           >
             <AppIcon.Search
               width={20}
               height={20}
-              color={theme.colors.text.inverse}
+              color={theme.colors.primary.DEFAULT}
             />
-            <Text variant="buttonMedium" style={styles.searchButtonText}>
+            <Text variant="buttonMedium" style={styles.secondaryButtonText}>
               SEARCH ADDRESS
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.searchButton,
-              {
-                marginTop: 12,
-                backgroundColor: isPending
-                  ? theme.colors.primary.light
-                  : theme.colors.primary.DEFAULT,
-              },
-            ]}
-            onPress={handleSave}
-            activeOpacity={0.8}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <ActivityIndicator
-                size="small"
+        )}
+        <TouchableOpacity
+          style={[
+            styles.primaryButton,
+            {
+              marginTop: 12,
+              backgroundColor: isPending
+                ? theme.colors.primary.light
+                : theme.colors.primary.DEFAULT,
+            },
+          ]}
+          onPress={handleSave}
+          activeOpacity={0.8}
+          disabled={isPending}
+        >
+          {isPending ? (
+            <ActivityIndicator size="small" color={theme.colors.text.inverse} />
+          ) : (
+            <>
+              <Text variant="buttonMedium" style={styles.primaryButtonText}>
+                Complete Registration
+              </Text>
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
                 color={theme.colors.text.inverse}
               />
-            ) : (
-              <>
-                <Text variant="buttonMedium" style={styles.searchButtonText}>
-                  Complete Registration
-                </Text>
-                <AppIcon.ArrowRight
-                  width={20}
-                  height={20}
-                  color={theme.colors.text.inverse}
-                />
-              </>
-            )}
-          </TouchableOpacity>
-
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text variant="bodySmall" style={styles.errorText}>
-                {error}
-              </Text>
-            </View>
+            </>
           )}
-        </View>
-      </ScreenWrapper>
+        </TouchableOpacity>
+
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text variant="bodySmall" style={styles.errorText}>
+              {error}
+            </Text>
+          </View>
+        )}
+      </View>
 
       {/* Location Picker Modal */}
       <Modal

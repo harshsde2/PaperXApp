@@ -59,6 +59,14 @@ export const createStyles = (theme: Theme) =>
       color: theme.colors.text.primary,
       fontFamily: theme.fontFamily.regular,
     },
+    locationInput: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingLeft: theme.spacing[2],
+    },
+    inputIconLeft: {
+      marginRight: theme.spacing[2],
+    },
     textArea: {
       borderWidth: 1,
       borderColor: theme.colors.border.primary,

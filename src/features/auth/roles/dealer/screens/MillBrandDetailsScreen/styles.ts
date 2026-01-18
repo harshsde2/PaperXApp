@@ -91,7 +91,7 @@ export const createStyles = (theme: Theme) =>
     },
     relationshipLabel: {
       color: theme.colors.text.primary,
-      marginBottom: theme.spacing[0.5],
+      marginBottom: theme.spacing[1],
     },
     relationshipSubtext: {
       color: theme.colors.text.tertiary,

@@ -9,6 +9,7 @@ const Card: React.FC<CardProps> = ({
   variant = 'default',
   onPress,
   testID,
+  activeOpacity = 0.7,
 }) => {
   const cardStyle = [
     styles.card,
@@ -21,7 +22,7 @@ const Card: React.FC<CardProps> = ({
       <TouchableOpacity
         style={[cardStyle, styles.cardPressable]}
         onPress={onPress}
-        activeOpacity={0.7}
+        activeOpacity={activeOpacity}
         testID={testID}
       >
         {children}

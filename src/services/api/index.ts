@@ -83,6 +83,7 @@ export type {
   MaterialFinish,
   GetMaterialFinishesParams,
   GetMaterialFinishesResponse,
+  GetMaterialFinishesPaginatedResponse,
   // Material Mills
   MaterialMill,
   GetMaterialMillsParams,

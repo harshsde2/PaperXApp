@@ -1,6 +1,5 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import { PlaceDetails } from '@shared/location/types';
 
 export type MachineDealerRegistrationScreenNavigationProp = StackNavigationProp<
   AuthStackParamList,
@@ -10,11 +9,9 @@ export type MachineDealerRegistrationScreenNavigationProp = StackNavigationProp<
 export type MachineDealerRegistrationFormData = {
   contactPersonName: string;
   email: string;
-  businessAddress: string;
+  city: string;
+  location: string;
+  latitude?: number;
+  longitude?: number;
   businessDescription: string;
-};
-
-export type SelectedLocation = {
-  placeDetails: PlaceDetails;
-  addressString: string;
 };

@@ -74,10 +74,7 @@ const SplashScreen = () => {
         
         {/* Header / Logo */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          {/* <AppIcon.LogoWithName width={200} height={60} color={baseColors.black} /> */}
-          <Text variant="h1" style={styles.headline}>
-            Logo
-          </Text>
+          <AppIcon.AppLogo width={200} height={200} color={baseColors.black} />
         </View>
 
         {/* Bottom Section */}

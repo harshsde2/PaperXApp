@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
@@ -11,7 +11,7 @@ import { MaterialSpecsScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import { useGetMaterialFinishes, MaterialFinish } from '@services/api';
+import { useGetMaterialFinishesInfinite, MaterialFinish } from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Type mapping for display
@@ -30,18 +30,25 @@ const MaterialSpecsScreen = () => {
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
 
-  // Get profileData from route params
-  const { profileData } = route.params || {};
+  // Get params from route
+  const { onSpecsSelected, materialKey, onBrandDetailsSelected } = route.params || {};
 
-  // Get first material_id from selected materials if available
-  const firstMaterialId = profileData?.materials?.[0]?.material_id;
-  console.log('firstMaterialId', firstMaterialId);
+  // Fetch material finishes from API with pagination (no material_id needed)
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetMaterialFinishesInfinite(50);
 
-  // Fetch material finishes from API (without material_id to get all, or with material_id for specific material)
-  const { data: finishes = [], isLoading, isError, refetch } = useGetMaterialFinishes({
-    material_id: firstMaterialId, // Optional - if not provided, API returns all finishes
-  });
-
+  // Flatten all pages into a single array
+  const finishes = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.finishes);
+  }, [data?.pages]);
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [selectedOptions, setSelectedOptions] = useState<Set<number>>(new Set());
@@ -108,8 +115,8 @@ const MaterialSpecsScreen = () => {
 
   let totalSelectedCount = selectedOptions.size;
 
-  //todo: add custom specs to the material specs data
-  totalSelectedCount = 1
+  // //todo: add custom specs to the material specs data
+  // totalSelectedCount = 1
 
   const handleClearAll = () => {
     setSelectedOptions(new Set());
@@ -127,20 +134,38 @@ const MaterialSpecsScreen = () => {
     });
 
     const materialSpecsData = {
-      finish_ids: selectedFinishes.filter(f => f.type === 'finish').map(f => f.id),
-      coating_ids: selectedFinishes.filter(f => f.type === 'coating').map(f => f.id),
-      surface_ids: selectedFinishes.filter(f => f.type === 'surface').map(f => f.id),
-      grade_ids: selectedFinishes.filter(f => f.type === 'grade').map(f => f.id),
-      variant_ids: selectedFinishes.filter(f => f.type === 'variant').map(f => f.id),
+      finish_ids: selectedFinishes.filter(f => f.type === 'finish').map(f => f.id).filter((id): id is number => id !== undefined),
+      coating_ids: selectedFinishes.filter(f => f.type === 'coating').map(f => f.id).filter((id): id is number => id !== undefined),
+      surface_ids: selectedFinishes.filter(f => f.type === 'surface').map(f => f.id).filter((id): id is number => id !== undefined),
+      grade_ids: selectedFinishes.filter(f => f.type === 'grade').map(f => f.id).filter((id): id is number => id !== undefined),
+      variant_ids: selectedFinishes.filter(f => f.type === 'variant').map(f => f.id).filter((id): id is number => id !== undefined),
       custom_specs: customInput.trim() ? [customInput.trim()] : [],
     };
 
-    navigation.navigate(SCREENS.AUTH.SELECT_THICKNESS, {
-      profileData: {
-        ...profileData,
-        material_specs: materialSpecsData,
-      },
-    });
+    if (onSpecsSelected) {
+      // Called from Materials screen via callback (after thickness selection)
+      onSpecsSelected(materialSpecsData);
+      
+      // If onBrandDetailsSelected is provided, navigate to MillBrandDetailsScreen
+      if (onBrandDetailsSelected) {
+        navigation.navigate(SCREENS.AUTH.MILL_BRAND_DETAILS, {
+          onBrandDetailsSelected,
+          materialKey,
+        });
+        return;
+      }
+      
+      // Otherwise, close both modals and return to MaterialsScreen
+      if (navigation.canGoBack()) {
+        navigation.pop(2);
+      } else {
+        navigation.goBack();
+      }
+      return;
+    }
+
+    // Fallback: existing flow if no callback is provided
+    navigation.goBack();
   };
 
   const handleAddCustom = () => {
@@ -150,6 +175,30 @@ const MaterialSpecsScreen = () => {
       setCustomInput('');
     }
   };
+
+  // Infinite scroll handling
+  const isLoadingMoreRef = useRef(false);
+
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMoreRef.current || isFetchingNextPage || !hasNextPage) {
+      return;
+    }
+
+    isLoadingMoreRef.current = true;
+    fetchNextPage().catch((error) => {
+      console.error('Error fetching next page:', error);
+      isLoadingMoreRef.current = false;
+    });
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  React.useEffect(() => {
+    if (!isFetchingNextPage) {
+      const timer = setTimeout(() => {
+        isLoadingMoreRef.current = false;
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isFetchingNextPage]);
 
   // Calculate bottom padding for scrollable content
   const buttonHeight = 100; // Approximate footer height
@@ -161,7 +210,30 @@ const MaterialSpecsScreen = () => {
         scrollable
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
+        contentContainerStyle={{
+          ...styles.scrollContent,
+          paddingBottom: bottomPadding,
+        }}
+        scrollViewProps={{
+          onScroll: (event: any) => {
+            const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+            
+            if (!contentSize.height || !layoutMeasurement.height) {
+              return;
+            }
+
+            const distanceFromEnd = contentSize.height - (layoutMeasurement.height + contentOffset.y);
+            const paddingToBottom = 500;
+            
+            const isCloseToBottom = distanceFromEnd < paddingToBottom;
+            const canLoadMore = hasNextPage && !isFetchingNextPage && !isLoadingMoreRef.current;
+
+            if (isCloseToBottom && canLoadMore) {
+              handleLoadMore();
+            }
+          },
+          scrollEventThrottle: 16,
+        }}
       >
         <View style={styles.container}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>
@@ -205,16 +277,16 @@ const MaterialSpecsScreen = () => {
               </View>
             </Card>
           ) : (
-            sections.map(section => {
+            <>
+              {sections.map(section => {
               const isExpanded = expandedSections.has(section.id);
               const selectedCount = getSelectedCountForSection(section.id);
 
               return (
-                <Card key={section.id} style={styles.card}>
+                <Card activeOpacity={0.9} onPress={() => toggleSection(section.id)} key={section.id} style={styles.card}>
                   <TouchableOpacity
                     style={styles.sectionHeader}
-                    onPress={() => toggleSection(section.id)}
-                    activeOpacity={0.7}
+                    disabled={true}
                   >
                     <View style={styles.sectionHeaderLeft}>
                       <Text variant="bodyMedium" fontWeight="semibold" style={styles.sectionTitle}>
@@ -284,7 +356,18 @@ const MaterialSpecsScreen = () => {
                   )}
                 </Card>
               );
-            })
+            })}
+              {isFetchingNextPage && (
+                <Card style={styles.card}>
+                  <View style={{ padding: theme.spacing[4], alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                    <Text variant="captionMedium" style={{ marginTop: theme.spacing[2], color: theme.colors.text.secondary }}>
+                      Loading more...
+                    </Text>
+                  </View>
+                </Card>
+              )}
+            </>
           )}
 
           <Card style={styles.card}>

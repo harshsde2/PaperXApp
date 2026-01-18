@@ -5,6 +5,14 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
     paddingBottom: theme.spacing[6],
   },
+  roleCompleteText: {
+    color: 'red',
+    marginTop: theme.spacing[2],
+    
+  },
+  roleCardIncomplete: {
+    opacity: 0.5,
+  },
   container: {
     flex: 1,
     padding: theme.spacing[4],

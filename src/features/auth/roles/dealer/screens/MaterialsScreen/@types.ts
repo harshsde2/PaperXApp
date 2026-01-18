@@ -6,6 +6,12 @@ export type MaterialsScreenNavigationProp = StackNavigationProp<
   'Materials'
 >;
 
+export interface ThicknessRange {
+  unit: string;
+  min: number;
+  max: number;
+}
+
 // Selection tracking - we track by "materialId-gradeId" combo
 export interface SelectedMaterial {
   materialId: number;
@@ -13,6 +19,10 @@ export interface SelectedMaterial {
   gradeId: number;
   gradeName: string;
   category: string;
+  thicknessRanges?: ThicknessRange[];
+  finishIds?: number[];
+  brandId?: number | null;
+  agentType?: string | null;
 }
 
 // For display purposes - grouped by category

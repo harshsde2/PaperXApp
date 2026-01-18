@@ -14,10 +14,18 @@ import { FloatingBottomContainer } from '@shared/components/FloatingBottomContai
 import { AppIcon } from '@assets/svgs';
 import { useTheme, Theme } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
-import { MaterialsScreenNavigationProp, SelectedMaterial } from './@types';
+import {
+  MaterialsScreenNavigationProp,
+  SelectedMaterial,
+  ThicknessRange,
+} from './@types';
 import { createStyles } from './styles';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import { useGetMaterialsInfinite, Material, MaterialGrade } from '@services/api';
+import {
+  useGetMaterialsInfinite,
+  Material,
+  MaterialGrade,
+} from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ITEMS_PER_PAGE = 5;
@@ -47,7 +55,7 @@ interface GradeItemProps {
     materialName: string,
     gradeId: number,
     gradeName: string,
-    category: string
+    category: string,
   ) => void;
   styles: ReturnType<typeof createStyles>;
   theme: Theme;
@@ -95,7 +103,7 @@ const GradeItem = memo(
         )}
       </TouchableOpacity>
     );
-  }
+  },
 );
 
 GradeItem.displayName = 'GradeItem';
@@ -104,12 +112,20 @@ interface SelectionChipProps {
   selectionKey: string;
   materialName: string;
   gradeName: string;
+  thicknessLabel?: string;
   onRemove: (key: string) => void;
   styles: ReturnType<typeof createStyles>;
 }
 
 const SelectionChip = memo(
-  ({ selectionKey, materialName, gradeName, onRemove, styles }: SelectionChipProps) => {
+  ({
+    selectionKey,
+    materialName,
+    gradeName,
+    thicknessLabel,
+    onRemove,
+    styles,
+  }: SelectionChipProps) => {
     const handlePress = useCallback(() => {
       onRemove(selectionKey);
     }, [selectionKey, onRemove]);
@@ -120,13 +136,16 @@ const SelectionChip = memo(
         onPress={handlePress}
         activeOpacity={0.8}
       >
-        <Text variant="bodySmall" fontWeight="medium" style={styles.chipText}>
-          {materialName} - {gradeName}
-        </Text>
+        <View style={styles.chipContent}>
+          <Text variant="bodySmall" fontWeight="medium" style={styles.chipText}>
+            {materialName} - {gradeName}
+            {thicknessLabel ? ` • ${thicknessLabel}` : ''}
+          </Text>
+        </View>
         <Text style={styles.chipText}>×</Text>
       </TouchableOpacity>
     );
-  }
+  },
 );
 
 SelectionChip.displayName = 'SelectionChip';
@@ -140,6 +159,8 @@ const MaterialsScreen = () => {
 
   const { profileData } = route.params || {};
 
+  console.log('profileData', JSON.stringify(profileData, null, 2));
+
   const {
     data,
     isLoading,
@@ -152,9 +173,9 @@ const MaterialsScreen = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
-  const [selectedMaterials, setSelectedMaterials] = useState<Map<string, SelectedMaterial>>(
-    new Map()
-  );
+  const [selectedMaterials, setSelectedMaterials] = useState<
+    Map<string, SelectedMaterial>
+  >(new Map());
 
   const isLoadingMoreRef = useRef(false);
   const scrollViewRef = useRef<FlatList>(null);
@@ -165,52 +186,124 @@ const MaterialsScreen = () => {
 
   const getSelectionKey = useCallback(
     (materialId: number, gradeId: number) => `${materialId}-${gradeId}`,
-    []
+    [],
   );
 
   const isGradeSelected = useCallback(
     (materialId: number, gradeId: number) =>
       selectedKeys.has(getSelectionKey(materialId, gradeId)),
-    [selectedKeys, getSelectionKey]
+    [selectedKeys, getSelectionKey],
   );
 
   const handleGradeToggle = useCallback(
     (
-    materialId: number,
-    materialName: string,
-    gradeId: number,
-    gradeName: string,
-    category: string
-  ) => {
-    const key = getSelectionKey(materialId, gradeId);
+      materialId: number,
+      materialName: string,
+      gradeId: number,
+      gradeName: string,
+      category: string,
+    ) => {
+      const key = getSelectionKey(materialId, gradeId);
 
-      setSelectedKeys(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(key)) {
+      // If already selected, just remove selection (and its thickness)
+      if (selectedKeys.has(key)) {
+        setSelectedKeys(prev => {
+          const newSet = new Set(prev);
           newSet.delete(key);
-        } else {
-          newSet.add(key);
-        }
-        return newSet;
-      });
+          return newSet;
+        });
 
-      setSelectedMaterials(prev => {
-        const newMap = new Map(prev);
-        if (newMap.has(key)) {
+        setSelectedMaterials(prev => {
+          const newMap = new Map(prev);
           newMap.delete(key);
-    } else {
+          return newMap;
+        });
+
+        return;
+      }
+
+      // If not selected yet, open thickness selector as a modal, then specs selector
+      // and capture both results via callbacks
+      const onThicknessSelected = (thicknessRanges: ThicknessRange[]) => {
+        // Store thickness ranges temporarily - will be finalized after specs selection
+        setSelectedKeys(prev => {
+          const newSet = new Set(prev);
+          newSet.add(key);
+          return newSet;
+        });
+
+        setSelectedMaterials(prev => {
+          const newMap = new Map(prev);
           newMap.set(key, {
+            materialId,
+            materialName,
+            gradeId,
+            gradeName,
+            category,
+            thicknessRanges: thicknessRanges,
+          });
+          return newMap;
+        });
+      };
+
+      const onSpecsSelected = (specs: {
+        finish_ids: number[];
+        coating_ids: number[];
+        surface_ids: number[];
+        grade_ids: number[];
+        variant_ids: number[];
+        custom_specs: string[];
+      }) => {
+        // Update the material with finish_ids (combining all finish-related IDs)
+        setSelectedMaterials(prev => {
+          const newMap = new Map(prev);
+          const existing = newMap.get(key);
+          if (existing) {
+            // Combine all finish-related IDs into finish_ids array
+            const allFinishIds = [
+              ...specs.finish_ids,
+              ...specs.coating_ids,
+              ...specs.surface_ids,
+              ...specs.grade_ids,
+              ...specs.variant_ids,
+            ];
+            newMap.set(key, {
+              ...existing,
+              finishIds: allFinishIds.length > 0 ? allFinishIds : undefined,
+            });
+          }
+          return newMap;
+        });
+      };
+
+      const onBrandDetailsSelected = (details: {
+        brand_id: number | null;
+        agent_type: string | null;
+      }) => {
+        // Update the material with brand_id and agent_type
+        setSelectedMaterials(prev => {
+          const newMap = new Map(prev);
+          const existing = newMap.get(key);
+          if (existing) {
+            newMap.set(key, {
+              ...existing,
+              brandId: details.brand_id,
+              agentType: details.agent_type,
+            });
+          }
+          return newMap;
+        });
+      };
+
+      navigation.navigate(SCREENS.AUTH.SELECT_THICKNESS, {
+        onThicknessSelected,
+        onSpecsSelected,
+        onBrandDetailsSelected,
+        materialKey: key,
         materialId,
-        materialName,
-        gradeId,
-        gradeName,
-        category,
-      });
-    }
-        return newMap;
       });
     },
-    [getSelectionKey]
+    [getSelectionKey, navigation, selectedKeys],
   );
 
   const handleRemoveChip = useCallback((key: string) => {
@@ -241,16 +334,20 @@ const MaterialsScreen = () => {
     });
 
     categoryMap.forEach((materials, category) => {
-      const filteredMaterials: { material: Material; filteredGrades: MaterialGrade[] }[] = [];
+      const filteredMaterials: {
+        material: Material;
+        filteredGrades: MaterialGrade[];
+      }[] = [];
 
       materials.forEach(material => {
-        const matchesMaterial = !query || material.name.toLowerCase().includes(query);
+        const matchesMaterial =
+          !query || material.name.toLowerCase().includes(query);
         const grades = material.grades || [];
 
         const filteredGrades = query
           ? grades.filter(
               grade =>
-                matchesMaterial || grade.name.toLowerCase().includes(query)
+                matchesMaterial || grade.name.toLowerCase().includes(query),
             )
           : grades;
 
@@ -316,7 +413,7 @@ const MaterialsScreen = () => {
 
   const selectedMaterialsList = useMemo(
     () => Array.from(selectedMaterials.entries()),
-    [selectedMaterials]
+    [selectedMaterials],
   );
 
   const handleSaveAndContinue = useCallback(() => {
@@ -326,15 +423,25 @@ const MaterialsScreen = () => {
       grade_id: item.gradeId,
       grade_name: item.gradeName,
       category: item.category,
+      finish_ids: item.finishIds || [],
+      brand_id: item.brandId ?? null,
+      agent_type: item.agentType ?? null,
+      thickness_ranges:
+        item.thicknessRanges?.map(range => ({
+          unit: range.unit,
+          min: range.min,
+          max: range.max,
+        })) || [],
     }));
 
-    navigation.navigate(SCREENS.AUTH.MILL_BRAND_DETAILS, {
-      profileData: {
-        ...profileData,
+    // console.log('selectedData', JSON.stringify(selectedData, null, 2));
+    navigation.navigate(SCREENS.AUTH.MANAGE_WAREHOUSES, {
+      dealerRegistrationData: {
+        profileData: profileData,
         materials: selectedData,
       },
-    });
-  }, [selectedMaterials, navigation, profileData]);
+    } as any);
+  }, [selectedMaterials, navigation]);
 
   const hasMorePages = useMemo(() => {
     if (!data?.pages || data.pages.length === 0) return true;
@@ -350,14 +457,14 @@ const MaterialsScreen = () => {
     }
 
     const canLoadMore = hasNextPage !== false || hasMorePages;
-    
+
     if (!canLoadMore) {
       return;
     }
 
     isLoadingMoreRef.current = true;
 
-    fetchNextPage().catch((error) => {
+    fetchNextPage().catch(error => {
       console.error('Error fetching next page:', error);
       isLoadingMoreRef.current = false;
     });
@@ -374,24 +481,31 @@ const MaterialsScreen = () => {
 
   const handleScroll = useCallback(
     (event: any) => {
-      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-      
+      const { layoutMeasurement, contentOffset, contentSize } =
+        event.nativeEvent;
+
       if (!contentSize.height || !layoutMeasurement.height) {
         return;
       }
 
-      const distanceFromEnd = contentSize.height - (layoutMeasurement.height + contentOffset.y);
+      const distanceFromEnd =
+        contentSize.height - (layoutMeasurement.height + contentOffset.y);
       const paddingToBottom = 500;
-      
+
       const isCloseToBottom = distanceFromEnd < paddingToBottom;
-      const canLoadMore = (hasNextPage !== false || hasMorePages) && !isFetchingNextPage && !isLoadingMoreRef.current;
+      const canLoadMore =
+        (hasNextPage !== false || hasMorePages) &&
+        !isFetchingNextPage &&
+        !isLoadingMoreRef.current;
 
       if (isCloseToBottom && canLoadMore) {
         handleLoadMore();
       }
     },
-    [hasNextPage, hasMorePages, isFetchingNextPage, handleLoadMore]
+    [hasNextPage, hasMorePages, isFetchingNextPage, handleLoadMore],
   );
+
+  // console.log('selectedMaterialsList', selectedMaterialsList);
 
   const renderItem: ListRenderItem<FlatListItem> = useCallback(
     ({ item }) => {
@@ -435,7 +549,10 @@ const MaterialsScreen = () => {
               gradeId={item.data.gradeId!}
               gradeName={item.data.gradeName!}
               category={item.data.category!}
-              isSelected={isGradeSelected(item.data.materialId!, item.data.gradeId!)}
+              isSelected={isGradeSelected(
+                item.data.materialId!,
+                item.data.gradeId!,
+              )}
               onToggle={handleGradeToggle}
               styles={styles}
               theme={theme}
@@ -446,7 +563,7 @@ const MaterialsScreen = () => {
           return null;
       }
     },
-    [styles, theme, isGradeSelected, handleGradeToggle]
+    [styles, theme, isGradeSelected, handleGradeToggle],
   );
 
   const keyExtractor = useCallback((item: FlatListItem) => item.id, []);
@@ -454,8 +571,13 @@ const MaterialsScreen = () => {
   const ListFooterComponent = useCallback(() => {
     if (isFetchingNextPage) {
       return (
-        <View style={{ paddingVertical: theme.spacing[4], alignItems: 'center' }}>
-          <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+        <View
+          style={{ paddingVertical: theme.spacing[4], alignItems: 'center' }}
+        >
+          <ActivityIndicator
+            size="small"
+            color={theme.colors.primary.DEFAULT}
+          />
         </View>
       );
     }
@@ -466,7 +588,10 @@ const MaterialsScreen = () => {
     if (isLoading) return null;
     return (
       <View style={{ paddingVertical: theme.spacing[8], alignItems: 'center' }}>
-        <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary }}>
+        <Text
+          variant="bodyMedium"
+          style={{ color: theme.colors.text.tertiary }}
+        >
           {searchQuery
             ? 'No materials found matching your search'
             : 'No materials available'}
@@ -474,58 +599,6 @@ const MaterialsScreen = () => {
       </View>
     );
   }, [isLoading, searchQuery, theme]);
-
-  const ListHeaderComponent = useCallback(
-    () => (
-      <>
-        <Text variant="h3" fontWeight="bold" style={styles.title}>
-          What materials do you deal in?
-        </Text>
-
-        <Text variant="bodyMedium" style={styles.description}>
-          Select the specific grades of paper, machinery, or packaging materials
-          you buy or sell to get better matches.
-        </Text>
-
-        <View style={styles.searchContainer}>
-          <View style={styles.searchIcon}>
-            <Text style={{ fontSize: 18, color: theme.colors.text.tertiary }}>
-              🔍
-            </Text>
-          </View>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search materials (e.g., Duplex Board)"
-            placeholderTextColor={theme.colors.text.tertiary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        {selectedMaterialsList.length > 0 && (
-          <View style={styles.selectedChipsContainer}>
-            {selectedMaterialsList.map(([key, material]) => (
-              <SelectionChip
-                key={key}
-                selectionKey={key}
-                materialName={material.materialName}
-                gradeName={material.gradeName}
-                onRemove={handleRemoveChip}
-                styles={styles}
-              />
-            ))}
-          </View>
-        )}
-      </>
-    ),
-    [
-      styles,
-      theme,
-      searchQuery,
-      selectedMaterialsList,
-      handleRemoveChip,
-    ]
-  );
 
   const buttonHeight = 60;
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
@@ -542,7 +615,10 @@ const MaterialsScreen = () => {
             { justifyContent: 'center', alignItems: 'center' },
           ]}
         >
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+          <ActivityIndicator
+            size="large"
+            color={theme.colors.primary.DEFAULT}
+          />
           <Text
             variant="bodyMedium"
             style={{
@@ -588,8 +664,8 @@ const MaterialsScreen = () => {
           </TouchableOpacity>
         </View>
       </ScreenWrapper>
-      );
-    }
+    );
+  }
 
   return (
     <>
@@ -597,30 +673,85 @@ const MaterialsScreen = () => {
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
       >
-        <FlatList
-          ref={scrollViewRef}
-          data={flatListData}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          ListHeaderComponent={ListHeaderComponent}
-          ListFooterComponent={ListFooterComponent}
-          ListEmptyComponent={ListEmptyComponent}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingHorizontal: theme.spacing[4], paddingBottom: bottomPadding },
-          ]}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={END_REACHED_THRESHOLD}
-          onScroll={handleScroll}
-          scrollEnabled={true}
-          initialNumToRender={15}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          removeClippedSubviews={true}
-          updateCellsBatchingPeriod={50}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-        />
+        <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+          <Text variant="h3" fontWeight="bold" style={styles.title}>
+            What materials do you deal in?
+          </Text>
+
+          <Text variant="bodyMedium" style={styles.description}>
+            Select the specific grades of paper, machinery, or packaging
+            materials you buy or sell to get better matches.
+          </Text>
+
+          <View style={styles.searchContainer}>
+            <View style={styles.searchIcon}>
+              <AppIcon.Search
+                width={20}
+                height={20}
+                color={theme.colors.text.tertiary}
+              />
+            </View>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search materials (e.g., Duplex Board)"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+
+          {selectedMaterialsList.length > 0 && (
+            <View style={styles.selectedChipsContainer}>
+              {selectedMaterialsList.map(([key, material]) => {
+                const thicknessRanges = material.thicknessRanges || [];
+                const thicknessLabel =
+                  thicknessRanges.length > 0
+                    ? thicknessRanges.length === 1
+                      ? `${thicknessRanges[0].min}-${thicknessRanges[0].max} ${thicknessRanges[0].unit}`
+                      : `${thicknessRanges.length} ranges`
+                    : undefined;
+
+                return (
+                  <SelectionChip
+                    key={key}
+                    selectionKey={key}
+                    materialName={material.materialName}
+                    gradeName={material.gradeName}
+                    thicknessLabel={thicknessLabel}
+                    onRemove={handleRemoveChip}
+                    styles={styles}
+                  />
+                );
+              })}
+            </View>
+          )}
+
+          <FlatList
+            ref={scrollViewRef}
+            data={flatListData}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            ListFooterComponent={ListFooterComponent}
+            ListEmptyComponent={ListEmptyComponent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: bottomPadding },
+            ]}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={END_REACHED_THRESHOLD}
+            onScroll={handleScroll}
+            scrollEnabled={true}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            updateCellsBatchingPeriod={50}
+            showsVerticalScrollIndicator={false}
+            scrollEventThrottle={16}
+            keyboardShouldPersistTaps="always"
+            keyboardDismissMode="none"
+          />
+        </View>
       </ScreenWrapper>
 
       <FloatingBottomContainer>

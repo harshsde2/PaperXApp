@@ -45,6 +45,7 @@ import Inquiries from './Inquiries.svg';
 import Capacity from './Capacity.svg';
 import Sessions from './Sessions.svg';
 import Profile from './Profile.svg';
+import AppLogo from './AppLogo.svg';
 
 
 
@@ -96,4 +97,5 @@ export const AppIcon = {
   Capacity,
   Sessions,
   Profile,
+  AppLogo,
 };

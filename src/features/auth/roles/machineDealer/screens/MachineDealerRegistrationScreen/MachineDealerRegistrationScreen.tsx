@@ -1,15 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { View, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
-import { AddressSearchBar } from '@shared/location/components';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
-import { PlaceDetails } from '@shared/location/types';
 import { useCompleteMachineDealerProfile } from '@services/api';
 import type { CompleteMachineDealerProfileRequest } from '@services/api';
 import type { UpdateProfileResponse } from '@services/api';
@@ -20,11 +18,12 @@ import { ROLES } from '@utils/constants';
 import {
   MachineDealerRegistrationScreenNavigationProp,
   MachineDealerRegistrationFormData,
-  SelectedLocation,
 } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
+import { LocationPicker } from '@shared/location';
+import type { Location } from '@shared/location/types';
 
 const MachineDealerRegistrationScreen = () => {
   const navigation = useNavigation<MachineDealerRegistrationScreenNavigationProp>();
@@ -40,29 +39,47 @@ const MachineDealerRegistrationScreen = () => {
     defaultValues: {
       contactPersonName: '',
       email: '',
-      businessAddress: '',
+      city: '',
+      location: '',
+      latitude: undefined,
+      longitude: undefined,
       businessDescription: '',
     },
     mode: 'onBlur',
   });
 
-  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  
+  const cityValue = watch('city');
+  const locationValue = watch('location');
+  const latitudeValue = watch('latitude');
+  const longitudeValue = watch('longitude');
 
-  const handlePlaceSelect = useCallback(
-    (placeDetails: PlaceDetails) => {
-      const addressString = placeDetails.address?.formattedAddress || placeDetails.name || '';
-      setSelectedLocation({
-        placeDetails,
-        addressString,
+  const handleLocationSelect = useCallback(
+    (location: Location) => {
+      setValue('location', location.address?.streetAddress || location.address?.formattedAddress || location.name || '', {
+        shouldValidate: true,
       });
-      setValue('businessAddress', addressString);
+      setValue('city', location.address?.city || cityValue || '', {
+        shouldValidate: true,
+      });
+      setValue('latitude', location.latitude, {
+        shouldValidate: true,
+      });
+      setValue('longitude', location.longitude, {
+        shouldValidate: true,
+      });
+      setShowLocationPicker(false);
+      
+      dispatch(
+        showToast({
+          message: 'Location selected successfully!',
+          type: 'success',
+        }),
+      );
     },
-    [setValue]
+    [setValue, cityValue, dispatch],
   );
-
-  const handleCurrentLocationPress = useCallback(() => {
-    // TODO: Implement current location functionality
-  }, []);
 
   const onSubmit = (data: MachineDealerRegistrationFormData) => {
     if (!profileData) {
@@ -70,22 +87,25 @@ const MachineDealerRegistrationScreen = () => {
       return;
     }
 
-    // if (!selectedLocation?.placeDetails) {
-    //   Alert.alert('Error', 'Please select a business location.');
-    //   return;
-    // }
+    // Validate location is selected
+    if (!data.location.trim() || !data.latitude || !data.longitude) {
+      Alert.alert('Error', 'Please select a business location on the map.');
+      return;
+    }
 
     const requestData: CompleteMachineDealerProfileRequest = {
       company_name: profileData.company_name || '',
-      gst: profileData.gst_in || undefined,
+      gst: profileData.gst || profileData.gst_in || undefined,
       contact_person_name: data.contactPersonName.trim(),
       mobile: profileData.mobile || '',
       email: data.email.trim() || undefined,
-      city: profileData.city || '',
-      location: data.businessAddress.trim() || selectedLocation?.addressString || '',
-      latitude: selectedLocation?.placeDetails?.latitude || 0,
-      longitude: selectedLocation?.placeDetails?.longitude || 0,
+      city: data.city.trim() || profileData.city || '',
+      location: data.location.trim(),
+      latitude: data.latitude,
+      longitude: data.longitude,
     };
+
+    // console.log('[MachineDealerRegistration] Request data:', JSON.stringify(requestData, null, 2));
 
     completeProfileMutation(requestData, {
       onSuccess: response => {
@@ -264,29 +284,55 @@ const MachineDealerRegistrationScreen = () => {
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Business Address
+                  City
+                </Text>
+              </View>
+              <FormInput
+                name="city"
+                control={control}
+                placeholder="e.g. Mumbai"
+                rules={validationRules.required('Please enter city') as any}
+                inputStyle={styles.input}
+                containerStyle={{ marginBottom: 0 }}
+                showLabel={false}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                  Location
                 </Text>
               </View>
               <Controller
                 control={control}
-                name="businessAddress"
+                name="location"
+                rules={validationRules.required('Please select or enter location') as any}
                 render={({ field: { value }, fieldState: { error } }) => (
                   <>
-                    <View style={styles.addressContainer}>
-                      <AddressSearchBar
-                        placeholder="Search address or pincode"
-                        onPlaceSelect={handlePlaceSelect}
-                        onCurrentLocationPress={handleCurrentLocationPress}
-                        showCurrentLocationButton={true}
-                      />
-                    </View>
-                    {selectedLocation && (
-                      <View style={styles.addressPreview}>
-                        <Text variant="bodySmall" style={styles.addressPreviewText}>
-                          {selectedLocation.addressString}
-                        </Text>
+                    <TouchableOpacity
+                      style={[styles.input, styles.locationInput]}
+                      onPress={() => setShowLocationPicker(true)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.inputIconLeft}>
+                        <AppIcon.Location
+                          width={20}
+                          height={20}
+                          color={theme.colors.text.tertiary}
+                        />
                       </View>
-                    )}
+                      <Text
+                        variant="bodyMedium"
+                        style={[
+                          !value
+                            ? { color: theme.colors.text.tertiary }
+                            : { color: theme.colors.text.primary },
+                        ]}
+                      >
+                        {value || 'Select location on map'}
+                      </Text>
+                    </TouchableOpacity>
                     {error && (
                       <Text
                         variant="captionSmall"
@@ -297,6 +343,26 @@ const MachineDealerRegistrationScreen = () => {
                       >
                         {error.message}
                       </Text>
+                    )}
+                    {value && (
+                      <TouchableOpacity
+                        onPress={() => setShowLocationPicker(true)}
+                        style={{
+                          marginTop: theme.spacing[2],
+                          padding: theme.spacing[2],
+                          backgroundColor: theme.colors.primary.DEFAULT,
+                          borderRadius: 8,
+                          alignItems: 'center',
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <Text
+                          variant="bodyMedium"
+                          style={{ color: theme.colors.text.inverse }}
+                        >
+                          Change Location on Map
+                        </Text>
+                      </TouchableOpacity>
                     )}
                   </>
                 )}
@@ -378,6 +444,34 @@ const MachineDealerRegistrationScreen = () => {
           </View>
         </View>
       </ScreenWrapper>
+
+      {/* Location Picker Modal */}
+      <Modal
+        visible={showLocationPicker}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowLocationPicker(false)}
+      >
+        <LocationPicker
+          initialLocation={
+            latitudeValue && longitudeValue
+              ? {
+                  latitude: latitudeValue,
+                  longitude: longitudeValue,
+                  address: {
+                    formattedAddress: locationValue || '',
+                    streetAddress: locationValue || '',
+                  },
+                }
+              : undefined
+          }
+          onLocationSelect={handleLocationSelect}
+          onCancel={() => setShowLocationPicker(false)}
+          allowMapTap={true}
+          confirmButtonText="Confirm Location"
+          title="Select Location"
+        />
+      </Modal>
     </View>
   );
 };

@@ -6,14 +6,57 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingBottom: theme.spacing[6],
   },
   button: {
-
+    backgroundColor: theme.colors.primary.DEFAULT,
+    paddingVertical: theme.spacing[4],
+    borderRadius: theme.borderRadius.lg,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: theme.spacing[2],
+    width: '100%',
   },
   buttonText: {
+    color: theme.colors.text.inverse,
   },
   container: {
     flex: 1,
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    paddingTop: theme.spacing[4],
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface.primary,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: theme.spacing[3],
+    marginBottom: theme.spacing[4],
+  },
+  searchIcon: {
+    marginRight: theme.spacing[2],
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: theme.spacing[3],
+    fontSize: 16,
+    color: theme.colors.text.primary,
+    fontFamily: theme.fontFamily.regular,
+  },
+  materialItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.secondary,
+  },
+  materialItemContent: {
+    flex: 1,
+  },
+  materialItemName: {
+    color: theme.colors.text.primary,
+    marginBottom: 2,
   },
   title: {
     marginBottom: theme.spacing[1],

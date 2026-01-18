@@ -68,6 +68,7 @@ const CompanyDetailsScreen = () => {
       gstin: '123456789012345',
       state: 'Maharashtra',
       city: 'Mumbai',
+      udyamCertificateNumber: '',
     },
     mode: 'onBlur',
   });
@@ -149,6 +150,7 @@ const CompanyDetailsScreen = () => {
       gstIn: data.gstin.trim() || undefined,
       state: data.state.trim() || undefined,
       city: data.city.trim() || undefined,
+      udyamCertificateNumber: data.udyamCertificateNumber?.trim() || undefined,
       udyamCertificateBase64: selectedFile?.base64,
       udyamCertificateName: selectedFile?.name,
       udyamCertificateType: selectedFile?.type,
@@ -271,16 +273,16 @@ const CompanyDetailsScreen = () => {
                 <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                   GSTIN
                 </Text>
-                <Text variant="captionMedium" style={styles.optionalLabel}>
-                  (Optional)
-                </Text>
               </View>
               <FormInput
                 name="gstin"
                 control={control}
                 placeholder="15-DIGIT GST NUMBER"
                 maxLength={15}
-                rules={validationRules.gstin() as any}
+                rules={validationRules.combine(
+                  validationRules.required('Please enter GSTIN'),
+                  validationRules.gstin('Please enter a valid 15-digit GSTIN')
+                ) as any}
                 helperText="Auto-verifies your business type."
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
@@ -376,6 +378,25 @@ const CompanyDetailsScreen = () => {
                   High Trust
                 </Text>
               </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                  UDYAM Certificate Number
+                </Text>
+                <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary }}>
+                  (Optional)
+                </Text>
+              </View>
+              <FormInput
+                name="udyamCertificateNumber"
+                control={control}
+                placeholder="Enter UDYAM Certificate Number"
+                inputStyle={styles.input}
+                containerStyle={{ marginBottom: 0 }}
+                showLabel={false}
+              />
             </View>
 
             {selectedFile ? (

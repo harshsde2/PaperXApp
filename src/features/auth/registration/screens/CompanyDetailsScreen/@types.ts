@@ -11,6 +11,7 @@ export type CompanyDetailsFormData = {
   gstin: string;
   state: string;
   city: string;
+  udyamCertificateNumber?: string;
 };
 
 export type SelectedFile = {

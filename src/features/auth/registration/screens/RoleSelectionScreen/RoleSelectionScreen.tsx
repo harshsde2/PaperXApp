@@ -38,6 +38,7 @@ const RoleSelectionScreen = () => {
     gstIn,
     state,
     city,
+    udyamCertificateNumber,
     udyamCertificateBase64,
     udyamCertificateName,
     udyamCertificateType,
@@ -109,6 +110,11 @@ const RoleSelectionScreen = () => {
         has_secondary_role: hasSecondaryRole ? 1 : 0,
         operation_area: geography,
       };
+
+      // Add UDYAM certificate number if provided
+      if (udyamCertificateNumber) {
+        updateData.udyam_certificate_number = udyamCertificateNumber;
+      }
 
       // Add UDYAM certificate if provided (as base64)
       if (udyamCertificateBase64) {

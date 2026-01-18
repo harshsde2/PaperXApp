@@ -26,7 +26,9 @@ export interface BrandRegistrationFormData {
   mobile: string;
   email: string;
   gstNumber?: string;
+  state: string;
   city: string;
+  address?: string;
   location: string;
   latitude?: number;
   longitude?: number;

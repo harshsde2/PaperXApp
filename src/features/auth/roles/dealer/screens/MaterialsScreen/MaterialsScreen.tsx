@@ -32,14 +32,14 @@ const ITEMS_PER_PAGE = 5;
 const END_REACHED_THRESHOLD = 0.2;
 
 interface FlatListItem {
-  type: 'category' | 'material' | 'grade';
+  type: 'grade';
   id: string;
   data: {
-    category?: string;
-    materialId?: number;
-    materialName?: string;
-    gradeId?: number;
-    gradeName?: string;
+    materialId: number;
+    materialName: string;
+    gradeId: number;
+    gradeName: string;
+    category: string;
   };
 }
 
@@ -181,7 +181,18 @@ const MaterialsScreen = () => {
   const scrollViewRef = useRef<FlatList>(null);
   const allMaterials = useMemo(() => {
     if (!data?.pages) return [];
-    return data.pages.flatMap(page => page.materials);
+    const allMaterialsList = data.pages.flatMap(page => page.materials);
+    
+    // Deduplicate materials by name and category (normalized) to avoid duplicates across pages
+    const materialsMap = new Map<string, Material>();
+    allMaterialsList.forEach(material => {
+      const key = `${(material.name || '').toLowerCase().trim()}-${(material.category || 'Other').toLowerCase().trim()}`;
+      if (!materialsMap.has(key)) {
+        materialsMap.set(key, material);
+      }
+    });
+    
+    return Array.from(materialsMap.values());
   }, [data?.pages]);
 
   const getSelectionKey = useCallback(
@@ -323,89 +334,40 @@ const MaterialsScreen = () => {
   const flatListData = useMemo((): FlatListItem[] => {
     const query = searchQuery.toLowerCase().trim();
     const items: FlatListItem[] = [];
-    const categoryMap = new Map<string, Material[]>();
+    const seenGrades = new Set<string>(); // Track unique grade names to prevent duplicates
 
+    // Flatten all grades from all materials into a single list
     allMaterials.forEach(material => {
+      const grades = material.grades || [];
       const category = material.category || 'Other';
-      if (!categoryMap.has(category)) {
-        categoryMap.set(category, []);
-      }
-      categoryMap.get(category)!.push(material);
-    });
 
-    categoryMap.forEach((materials, category) => {
-      const filteredMaterials: {
-        material: Material;
-        filteredGrades: MaterialGrade[];
-      }[] = [];
-
-      materials.forEach(material => {
-        const matchesMaterial =
-          !query || material.name.toLowerCase().includes(query);
-        const grades = material.grades || [];
-
-        const filteredGrades = query
-          ? grades.filter(
-              grade =>
-                matchesMaterial || grade.name.toLowerCase().includes(query),
-            )
-          : grades;
-
-        if (matchesMaterial || filteredGrades.length > 0) {
-          filteredMaterials.push({
-            material,
-            filteredGrades: query ? filteredGrades : grades,
-          });
+      grades.forEach(grade => {
+        // Create unique key for grade using normalized grade name (case-insensitive)
+        const gradeKey = (grade.name || '').toLowerCase().trim();
+        
+        // Skip if we've already seen this grade name
+        if (seenGrades.has(gradeKey)) {
+          return;
         }
-      });
+        
+        // Filter by grade name only (optimized search)
+        const matchesGrade = !query || grade.name.toLowerCase().includes(query);
 
-      if (filteredMaterials.length > 0) {
-        items.push({
-          type: 'category',
-          id: `cat-${category}`,
-          data: { category },
-        });
-
-        filteredMaterials.forEach(({ material, filteredGrades }) => {
+        if (matchesGrade) {
+          seenGrades.add(gradeKey);
           items.push({
-            type: 'material',
-            id: `mat-${material.id}`,
+            type: 'grade',
+            id: `grade-${material.id}-${grade.id}`,
             data: {
               materialId: material.id,
               materialName: material.name,
+              gradeId: grade.id,
+              gradeName: grade.name,
               category,
             },
           });
-
-          if (filteredGrades.length > 0) {
-            filteredGrades.forEach(grade => {
-              items.push({
-                type: 'grade',
-                id: `grade-${material.id}-${grade.id}`,
-                data: {
-                  materialId: material.id,
-                  materialName: material.name,
-                  gradeId: grade.id,
-                  gradeName: grade.name,
-                  category,
-                },
-              });
-            });
-          } else {
-            items.push({
-              type: 'grade',
-              id: `grade-${material.id}-0`,
-              data: {
-                materialId: material.id,
-                materialName: material.name,
-                gradeId: 0,
-                gradeName: 'All Grades',
-                category,
-              },
-            });
-          }
-        });
-      }
+        }
+      });
     });
 
     return items;
@@ -509,59 +471,22 @@ const MaterialsScreen = () => {
 
   const renderItem: ListRenderItem<FlatListItem> = useCallback(
     ({ item }) => {
-      switch (item.type) {
-        case 'category':
-          return (
-            <View style={styles.categorySection}>
-              <Text
-                variant="captionMedium"
-                fontWeight="semibold"
-                style={styles.categoryHeader}
-              >
-                {item.data.category}
-              </Text>
-            </View>
-          );
-
-        case 'material':
-          return (
-            <View
-              style={[
-                styles.materialItem,
-                { borderBottomWidth: 0, paddingBottom: theme.spacing[1] },
-              ]}
-            >
-              <Text
-                variant="bodyMedium"
-                fontWeight="semibold"
-                style={styles.materialItemName}
-              >
-                {item.data.materialName}
-              </Text>
-            </View>
-          );
-
-        case 'grade':
-          return (
-            <GradeItem
-              materialId={item.data.materialId!}
-              materialName={item.data.materialName!}
-              gradeId={item.data.gradeId!}
-              gradeName={item.data.gradeName!}
-              category={item.data.category!}
-              isSelected={isGradeSelected(
-                item.data.materialId!,
-                item.data.gradeId!,
-              )}
-              onToggle={handleGradeToggle}
-              styles={styles}
-              theme={theme}
-            />
-          );
-
-        default:
-          return null;
-      }
+      return (
+        <GradeItem
+          materialId={item.data.materialId}
+          materialName={item.data.materialName}
+          gradeId={item.data.gradeId}
+          gradeName={item.data.gradeName}
+          category={item.data.category}
+          isSelected={isGradeSelected(
+            item.data.materialId,
+            item.data.gradeId,
+          )}
+          onToggle={handleGradeToggle}
+          styles={styles}
+          theme={theme}
+        />
+      );
     },
     [styles, theme, isGradeSelected, handleGradeToggle],
   );
@@ -593,8 +518,8 @@ const MaterialsScreen = () => {
           style={{ color: theme.colors.text.tertiary }}
         >
           {searchQuery
-            ? 'No materials found matching your search'
-            : 'No materials available'}
+            ? 'No grades found matching your search'
+            : 'No grades available'}
         </Text>
       </View>
     );
@@ -693,7 +618,7 @@ const MaterialsScreen = () => {
             </View>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search materials (e.g., Duplex Board)"
+              placeholder="Search grades (e.g., White Back)"
               placeholderTextColor={theme.colors.text.tertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}

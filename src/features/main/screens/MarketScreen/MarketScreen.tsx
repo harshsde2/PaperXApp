@@ -95,14 +95,14 @@ const MarketScreen: React.FC = () => {
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={[styles.tab, selectedTab === 'prices' && styles.tabActive]}
           onPress={() => setSelectedTab('prices')}
         >
           <Text style={[styles.tabText, selectedTab === 'prices' && styles.tabTextActive]}>
             Live Prices
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity 
           style={[styles.tab, selectedTab === 'insights' && styles.tabActive]}
           onPress={() => setSelectedTab('insights')}
@@ -121,7 +121,7 @@ const MarketScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        {selectedTab === 'prices' ? (
+        {/* {selectedTab === 'prices' ? (
           <>
             <View style={styles.updateInfo}>
               <Text style={styles.updateText}>Last updated: 10 mins ago</Text>
@@ -131,9 +131,9 @@ const MarketScreen: React.FC = () => {
             </View>
             {mockMarketData.map(renderPriceCard)}
           </>
-        ) : (
-          mockInsights.map(renderInsightCard)
-        )}
+        ) : ( */}
+          {mockInsights.map(renderInsightCard)}
+        {/* )} */}
       </ScrollView>
     </View>
   );

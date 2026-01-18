@@ -45,6 +45,7 @@ export type AuthStackParamList = {
     gstIn?: string;
     state?: string;
     city?: string;
+    udyamCertificateNumber?: string;
     udyamCertificateBase64?: string;
     udyamCertificateName?: string;
     udyamCertificateType?: string;

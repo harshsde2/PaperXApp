@@ -1,13 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { View, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -20,14 +13,6 @@ import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGetMaterialThicknessTypes, MaterialThicknessType } from '@services/api';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CONTAINER_PADDING = 16;
-const SLIDER_PADDING = 16;
-const SLIDER_WIDTH = SCREEN_WIDTH - CONTAINER_PADDING * 2 - SLIDER_PADDING * 2;
-const MIN_VALUE = 100;
-const MAX_VALUE = 499;
-const STEP = 1;
 
 const SelectThicknessScreen = () => {
   const navigation = useNavigation<SelectThicknessScreenNavigationProp>();
@@ -64,36 +49,9 @@ const SelectThicknessScreen = () => {
   }, [thicknessTypes]);
 
   const [unit, setUnit] = useState<ThicknessUnit>(primaryUnitFromApi || 'GSM');
-  const [minValue, setMinValue] = useState(150);
-  const [maxValue, setMaxValue] = useState(300);
+  const [minValue, setMinValue] = useState<number | string>(150);
+  const [maxValue, setMaxValue] = useState<number | string>(300);
   const [selectedRanges, setSelectedRanges] = useState<Array<{ unit: ThicknessUnit; min: number; max: number; id: string }>>([]);
-
-  // Animated values for slider handles (in pixels, 0 to SLIDER_WIDTH)
-  const minPosition = useSharedValue(0);
-  const maxPosition = useSharedValue(0);
-  const minContext = useSharedValue(0);
-  const maxContext = useSharedValue(0);
-  const isMinDragging = useSharedValue(false);
-  const isMaxDragging = useSharedValue(false);
-
-  // Convert value to position (0 to SLIDER_WIDTH)
-  const valueToPosition = useCallback((value: number) => {
-    'worklet';
-    return ((value - MIN_VALUE) / (MAX_VALUE - MIN_VALUE)) * SLIDER_WIDTH;
-  }, []);
-
-  // Convert position to value
-  const positionToValue = useCallback((position: number) => {
-    'worklet';
-    const ratio = Math.max(0, Math.min(1, position / SLIDER_WIDTH));
-    return Math.round(MIN_VALUE + ratio * (MAX_VALUE - MIN_VALUE));
-  }, []);
-
-  // Initialize positions and unit when API data is ready
-  useEffect(() => {
-    minPosition.value = valueToPosition(minValue);
-    maxPosition.value = valueToPosition(maxValue);
-  }, []);
 
   useEffect(() => {
     if (primaryUnitFromApi) {
@@ -101,156 +59,54 @@ const SelectThicknessScreen = () => {
     }
   }, [primaryUnitFromApi]);
 
-  // Update min value from position
-  const updateMinValue = useCallback(
-    (value: number) => {
-      const clampedValue = Math.max(MIN_VALUE, Math.min(value, maxValue - STEP));
-      setMinValue(clampedValue);
-    },
-    [maxValue]
-  );
-
-  // Update max value from position
-  const updateMaxValue = useCallback(
-    (value: number) => {
-      const clampedValue = Math.max(minValue + STEP, Math.min(value, MAX_VALUE));
-      setMaxValue(clampedValue);
-    },
-    [minValue]
-  );
-
-  // Min handle gesture
-  const minGesture = Gesture.Pan()
-    .onStart(() => {
-      'worklet';
-      minContext.value = minPosition.value;
-      isMinDragging.value = true;
-    })
-    .onUpdate(event => {
-      'worklet';
-      const newPosition = Math.max(0, Math.min(minContext.value + event.translationX, maxPosition.value - 20));
-      minPosition.value = newPosition;
-      const newValue = positionToValue(newPosition);
-      runOnJS(updateMinValue)(newValue);
-    })
-    .onEnd(() => {
-      'worklet';
-      isMinDragging.value = false;
-      const finalValue = positionToValue(minPosition.value);
-      minPosition.value = withSpring(valueToPosition(finalValue), {
-        damping: 15,
-        stiffness: 150,
-      });
-    });
-
-  // Max handle gesture
-  const maxGesture = Gesture.Pan()
-    .onStart(() => {
-      'worklet';
-      maxContext.value = maxPosition.value;
-      isMaxDragging.value = true;
-    })
-    .onUpdate(event => {
-      'worklet';
-      const newPosition = Math.max(minPosition.value + 20, Math.min(maxContext.value + event.translationX, SLIDER_WIDTH));
-      maxPosition.value = newPosition;
-      const newValue = positionToValue(newPosition);
-      runOnJS(updateMaxValue)(newValue);
-    })
-    .onEnd(() => {
-      'worklet';
-      isMaxDragging.value = false;
-      const finalValue = positionToValue(maxPosition.value);
-      maxPosition.value = withSpring(valueToPosition(finalValue), {
-        damping: 15,
-        stiffness: 150,
-      });
-    });
-
-  // Animated styles
-  const minHandleStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: minPosition.value - 12 }],
-      scale: withSpring(isMinDragging.value ? 1.15 : 1, {
-        damping: 15,
-        stiffness: 300,
-      }),
-    };
-  });
-
-  const maxHandleStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: maxPosition.value - 12 }],
-      scale: withSpring(isMaxDragging.value ? 1.15 : 1, {
-        damping: 15,
-        stiffness: 300,
-      }),
-    };
-  });
-
-  const activeTrackStyle = useAnimatedStyle(() => {
-    const left = minPosition.value;
-    const width = Math.max(0, maxPosition.value - minPosition.value);
-    return {
-      left,
-      width,
-    };
-  });
-
-  const minLabelStyle = useAnimatedStyle(() => {
-    // Label is already positioned relative to the handle container (which moves)
-    // Only animate opacity when dragging
-    return {
-      opacity: withSpring(isMinDragging.value ? 1 : 0.8, {
-        damping: 15,
-        stiffness: 300,
-      }),
-      transform: [
-        { scale: withSpring(isMinDragging.value ? 1.1 : 1, { damping: 15, stiffness: 300 }) },
-      ],
-    };
-  });
-
-  const maxLabelStyle = useAnimatedStyle(() => {
-    // Label is already positioned relative to the handle container (which moves)
-    // Only animate opacity when dragging
-    return {
-      opacity: withSpring(isMaxDragging.value ? 1 : 0.8, {
-        damping: 15,
-        stiffness: 300,
-      }),
-      transform: [
-        { scale: withSpring(isMaxDragging.value ? 1.1 : 1, { damping: 15, stiffness: 300 }) },
-      ],
-    };
-  });
-
   const handleMinValueChange = (value: string) => {
+    // Allow empty string for clearing
+    if (value === '') {
+      setMinValue('');
+      return;
+    }
+    
     const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= MIN_VALUE && numValue <= maxValue) {
+    if (!isNaN(numValue)) {
+      // Allow any positive number, validation happens on add
       setMinValue(numValue);
-      minPosition.value = withSpring(valueToPosition(numValue), {
-        damping: 15,
-        stiffness: 150,
-      });
     }
   };
 
   const handleMaxValueChange = (value: string) => {
+    // Allow empty string for clearing
+    if (value === '') {
+      setMaxValue('');
+      return;
+    }
+    
     const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= minValue && numValue <= MAX_VALUE) {
+    if (!isNaN(numValue)) {
+      // Allow any positive number, validation happens on add
       setMaxValue(numValue);
-      maxPosition.value = withSpring(valueToPosition(numValue), {
-        damping: 15,
-        stiffness: 150,
-      });
     }
   };
 
   const handleAddThickness = () => {
+    // Validate values
+    const minNum = typeof minValue === 'number' ? minValue : parseInt(String(minValue), 10);
+    const maxNum = typeof maxValue === 'number' ? maxValue : parseInt(String(maxValue), 10);
+
+    if (isNaN(minNum) || isNaN(maxNum)) {
+      return; // Don't add if values are invalid
+    }
+
+    if (minNum <= 0 || maxNum <= 0) {
+      return; // Don't add if values are not positive
+    }
+
+    if (minNum >= maxNum) {
+      return; // Don't add if min is greater than or equal to max
+    }
+
     // Check if this range already exists
     const isDuplicate = selectedRanges.some(
-      range => range.unit === unit && range.min === minValue && range.max === maxValue
+      range => range.unit === unit && range.min === minNum && range.max === maxNum
     );
 
     if (isDuplicate) {
@@ -259,9 +115,9 @@ const SelectThicknessScreen = () => {
 
     const newRange = {
       unit,
-      min: minValue,
-      max: maxValue,
-      id: `${unit}-${minValue}-${maxValue}-${Date.now()}`,
+      min: minNum,
+      max: maxNum,
+      id: `${unit}-${minNum}-${maxNum}-${Date.now()}`,
     };
 
     setSelectedRanges(prev => [...prev, newRange]);
@@ -269,8 +125,6 @@ const SelectThicknessScreen = () => {
     // Reset to default values for next entry
     setMinValue(150);
     setMaxValue(300);
-    minPosition.value = valueToPosition(150);
-    maxPosition.value = valueToPosition(300);
   };
 
   const handleRemoveRange = (id: string) => {
@@ -354,17 +208,6 @@ const SelectThicknessScreen = () => {
           })}
           </View>
 
-          {/* Selected Range Card */}
-          <Card style={styles.selectedRangeCard}>
-          <Text variant="captionMedium" fontWeight="semibold" style={styles.selectedRangeLabel}>
-            CURRENT RANGE
-          </Text>
-          <Text variant="h2" fontWeight="bold" style={styles.selectedRangeValue}>
-            {minValue} - {maxValue}{' '}
-            <Text style={styles.selectedRangeUnit}>{unit}</Text>
-          </Text>
-          </Card>
-
           {/* Selected Ranges List */}
           {selectedRanges.length > 0 && (
             <View style={styles.selectedRangesContainer}>
@@ -399,51 +242,16 @@ const SelectThicknessScreen = () => {
             </View>
           )}
 
-          {/* Range Slider */}
-          <View style={styles.sliderContainer}>
-          <View style={styles.sliderLabels}>
-            <Text variant="captionSmall" style={styles.sliderLabel}>
-              {MIN_VALUE}
+          {/* Current Range Card */}
+          <Card style={styles.selectedRangeCard}>
+            <Text variant="captionMedium" fontWeight="semibold" style={styles.selectedRangeLabel}>
+              CURRENT RANGE
             </Text>
-            <Text variant="captionSmall" style={styles.sliderLabel}>
-              {MAX_VALUE}
+            <Text variant="h2" fontWeight="bold" style={styles.selectedRangeValue}>
+              {minValue || '--'} - {maxValue || '--'}{' '}
+              <Text style={styles.selectedRangeUnit}>{unit}</Text>
             </Text>
-          </View>
-
-          <View style={styles.sliderTrackContainer}>
-            <View style={styles.sliderTrack}>
-              <Animated.View style={[styles.sliderActiveTrack, activeTrackStyle]} />
-            </View>
-
-            {/* Min Handle */}
-            <GestureDetector gesture={minGesture}>
-              <Animated.View style={[styles.sliderHandleContainer, minHandleStyle]}>
-                <Animated.View style={[styles.sliderHandleLabel, minLabelStyle]}>
-                  <Text variant="captionSmall" fontWeight="semibold" style={styles.sliderHandleLabelText}>
-                    {minValue}
-                  </Text>
-                </Animated.View>
-                <View style={styles.sliderHandle} />
-              </Animated.View>
-            </GestureDetector>
-
-            {/* Max Handle */}
-            <GestureDetector gesture={maxGesture}>
-              <Animated.View style={[styles.sliderHandleContainer, maxHandleStyle]}>
-                <Animated.View style={[styles.sliderHandleLabel, maxLabelStyle]}>
-                  <Text variant="captionSmall" fontWeight="semibold" style={styles.sliderHandleLabelText}>
-                    {maxValue}
-                  </Text>
-                </Animated.View>
-                <View style={styles.sliderHandle} />
-              </Animated.View>
-            </GestureDetector>
-          </View>
-
-          <Text variant="captionSmall" style={styles.sliderHint}>
-            Drag handles to adjust range
-          </Text>
-          </View>
+          </Card>
 
           {/* Min/Max Input Fields */}
           <View style={styles.inputsRow}>
@@ -456,6 +264,8 @@ const SelectThicknessScreen = () => {
                 value={minValue.toString()}
                 onChangeText={handleMinValueChange}
                 keyboardType="numeric"
+                placeholder="Enter min value"
+                placeholderTextColor={theme.colors.text.tertiary}
                 style={styles.inputValue}
               />
               <Text variant="bodySmall" style={styles.inputUnit}>
@@ -473,6 +283,8 @@ const SelectThicknessScreen = () => {
                 value={maxValue.toString()}
                 onChangeText={handleMaxValueChange}
                 keyboardType="numeric"
+                placeholder="Enter max value"
+                placeholderTextColor={theme.colors.text.tertiary}
                 style={styles.inputValue}
               />
               <Text variant="bodySmall" style={styles.inputUnit}>

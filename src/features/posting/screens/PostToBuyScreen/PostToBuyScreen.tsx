@@ -97,8 +97,8 @@ MaterialItem.displayName = 'MaterialItem';
 
 const INQUIRY_TYPE_OPTIONS = [
   { label: 'Material', value: 'material' },
-//   { label: 'Machine', value: 'machine' },
-//   { label: 'Job', value: 'job' },
+  { label: 'Machine', value: 'machine' },
+  { label: 'Job', value: 'job' },
 ];
 
 const THICKNESS_UNIT_OPTIONS = [

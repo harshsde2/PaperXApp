@@ -37,6 +37,7 @@ export const SCREENS = {
     PROFILE: 'Profile',
     POST: 'Post',
     POST_TO_BUY: 'PostToBuy',
+    POST_BRAND_REQUIREMENT: 'PostBrandRequirement',
     REQUIREMENTS: 'Requirements',
   },
   WALLET: {

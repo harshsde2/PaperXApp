@@ -172,6 +172,7 @@ const MillBrandDetailsScreen = () => {
                 value={selectedBrand?.name || ''}
                 placeholder="Select Mill / Brand"
                 onPress={openBrandSelector}
+                style={{ opacity: preferNotToDisclose ? 0.5 : 1 }}
                 disabled={preferNotToDisclose}
               />
               <TouchableOpacity
@@ -225,14 +226,14 @@ const MillBrandDetailsScreen = () => {
                 >
                   I prefer not to disclose the mill name
                 </Text>
-                <Text variant="captionSmall" style={styles.disclosureSubtext}>
+                {/* <Text variant="captionSmall" style={styles.disclosureSubtext}>
                   This may reduce matchmaking accuracy slightly.
-                </Text>
+                </Text> */}
               </View>
             </TouchableOpacity>
           </Card>
 
-          <Card style={styles.card}>
+          <Card style={[styles.card,{opacity: preferNotToDisclose ? 0.5 : 1}]}>
             <View style={styles.relationshipSection}>
               <Text
                 variant="bodyMedium"
@@ -252,6 +253,7 @@ const MillBrandDetailsScreen = () => {
                     ]}
                     onPress={() => setRelationship(option.id)}
                     activeOpacity={0.7}
+                    disabled={preferNotToDisclose}
                   >
                     <View style={styles.relationshipLeft}>
                       <View

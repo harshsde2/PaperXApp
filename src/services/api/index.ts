@@ -253,6 +253,13 @@ export type {
   BrandSessionItem,
   // Reference Types
   BrandType,
+  // Post Requirement Types
+  BrandRequirementType,
+  BrandPackagingType,
+  BrandTimeline,
+  BrandUrgency,
+  PostBrandRequirementRequest,
+  PostBrandRequirementResponse,
 } from './brandApi/@types';
 
 // ============================================

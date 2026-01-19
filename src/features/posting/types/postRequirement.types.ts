@@ -1,4 +1,5 @@
 export type PostRequirementOption = 
+  | 'post-to-post-requirement'
   | 'post-to-buy-material'
   | 'post-to-sell-material'
   | 'post-to-sell-machine'

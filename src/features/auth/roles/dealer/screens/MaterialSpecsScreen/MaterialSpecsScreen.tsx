@@ -381,7 +381,7 @@ const MaterialSpecsScreen = () => {
       >
         <View style={[styles.container, { paddingBottom: bottomPadding }]}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>
-            Select Finishes, Coating, Surface, Grade, Variant
+            Select Finishes / Coating / Grade / Variant
           </Text>
           <Text variant="bodyMedium" style={styles.description}>
             Specify technical attributes for your request. Multiple selections allowed.

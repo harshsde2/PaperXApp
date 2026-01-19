@@ -108,3 +108,38 @@ export interface BrandType {
   description?: string;
 }
 
+// ============================================
+// POST REQUIREMENT
+// ============================================
+
+export type BrandRequirementType = 'Packaging' | 'Printing' | 'Labels' | 'Other';
+export type BrandPackagingType = 'Boxes' | 'Bags' | 'Pouches' | 'Cartons' | 'Containers' | 'Other';
+export type BrandTimeline = '1-2 Days' | '3-5 Days' | '1 Week' | '2 Weeks' | '1 Month' | 'Flexible';
+export type BrandUrgency = 'normal' | 'urgent';
+
+export interface PostBrandRequirementRequest {
+  requirement_type: BrandRequirementType;
+  packaging_type?: BrandPackagingType;
+  quantity_range: string;
+  timeline: BrandTimeline;
+  special_needs?: string;
+  design_attachments?: string[];
+  title: string;
+  description: string;
+  urgency: BrandUrgency;
+  location: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface PostBrandRequirementResponse {
+  success: boolean;
+  message: string;
+  data: {
+    inquiry_id: number;
+    session_id: number;
+    matched_converters_count: number;
+    message: string;
+  };
+}

@@ -4,6 +4,7 @@ import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '@features/main/screens/ProfileScreen/ProfileScreen';
 import PostRequirementOptionsScreen from '@features/posting/screens/PostRequirementOptionsScreen';
 import PostToBuyScreen from '@features/posting/screens/PostToBuyScreen/PostToBuyScreen';
+import PostBrandRequirementScreen from '@features/posting/screens/PostBrandRequirementScreen/PostBrandRequirementScreen';
 import RequirementsListScreen from '@features/posting/screens/RequirementsListScreen/RequirementsListScreen';
 import {
   WalletScreen,
@@ -18,6 +19,7 @@ export type MainStackParamList = {
   Profile: undefined;
   Post: undefined;
   PostToBuy: undefined;
+  PostBrandRequirement: undefined;
   Requirements: undefined;
   // Wallet Screens
   WalletMain: undefined;
@@ -64,6 +66,15 @@ const MainNavigator = () => {
         component={PostToBuyScreen}
         options={{
           headerShown: true,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.MAIN.POST_BRAND_REQUIREMENT} 
+        component={PostBrandRequirementScreen}
+        options={{
+          headerShown: true,
+          title: 'Post Requirement',
           animation: 'slide_from_right',
         }}
       />

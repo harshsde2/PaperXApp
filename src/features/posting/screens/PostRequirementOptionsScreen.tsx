@@ -6,6 +6,7 @@ import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import type { PostRequirementOption, PostRequirementOptionConfig, UserRole } from '../types/postRequirement.types';
+import { SCREENS } from '@navigation/constants';
 
 // Role-specific options configuration
 const DEALER_OPTIONS: PostRequirementOptionConfig[] = [
@@ -72,9 +73,9 @@ const MACHINE_DEALER_OPTIONS: PostRequirementOptionConfig[] = [
   },
 ];
 
-const BRAND_OPTIONS: PostRequirementOptionConfig[] = [
+export const BRAND_OPTIONS: PostRequirementOptionConfig[] = [
   {
-    id: 'post-to-buy-material',
+    id: 'post-to-post-requirement',
     title: 'Post Requirement',
     description: 'Post your packaging or product requirement',
   },
@@ -102,10 +103,14 @@ const PostRequirementOptionsScreen: React.FC = () => {
   const activeRole = useActiveRole();
   const options = getOptionsForRole(activeRole);
 
+  console.log('options', options);
+
   const handleOptionPress = (option: PostRequirementOptionConfig) => {
     // Navigate to appropriate posting flow based on option.id
     if (option.id === 'post-to-buy-material') {
-      navigation.navigate('PostToBuy' as any);
+      navigation.navigate(SCREENS.MAIN.POST_TO_BUY as any);
+    } else if (option.id === 'post-to-post-requirement') {
+      navigation.navigate(SCREENS.MAIN.POST_BRAND_REQUIREMENT as any);
     } else {
       // TODO: Add other posting screens as needed
       console.log('Selected option:', option.id);

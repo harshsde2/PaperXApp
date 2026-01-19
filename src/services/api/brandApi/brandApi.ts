@@ -11,6 +11,8 @@ import type {
   CompleteBrandProfileRequest,
   CompleteBrandProfileResponse,
   BrandDashboardResponse,
+  PostBrandRequirementRequest,
+  PostBrandRequirementResponse,
 } from './@types';
 
 // ============================================
@@ -69,3 +71,30 @@ export const useGetBrandDashboard = () => {
   });
 };
 
+// ============================================
+// POST REQUIREMENT
+// ============================================
+
+export const usePostBrandRequirement = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      data: PostBrandRequirementRequest
+    ): Promise<PostBrandRequirementResponse> => {
+      const response = await api.post<PostBrandRequirementResponse>(
+        BRAND_ENDPOINTS.POST_REQUIREMENT,
+        data
+      );
+      return extractData<PostBrandRequirementResponse>(response);
+    },
+    onSuccess: () => {
+      // Invalidate dashboard and requirements queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.brand.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brand.dashboard() });
+    },
+    onError: (error: Error) => {
+      console.error('Post brand requirement error:', error);
+    },
+  });
+};

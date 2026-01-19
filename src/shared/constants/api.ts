@@ -110,6 +110,10 @@ export const BRAND_ENDPOINTS = {
 
   // Dashboard
   DASHBOARD: `${API_VERSION}/brand/dashboard`,
+
+  // Requirements
+  POST_REQUIREMENT: `${API_VERSION}/brand/requirement/post`,
+  REQUIREMENTS: `${API_VERSION}/brand/requirements`,
 } as const;
 
 // Registration Endpoints (Legacy - keeping for backward compatibility)

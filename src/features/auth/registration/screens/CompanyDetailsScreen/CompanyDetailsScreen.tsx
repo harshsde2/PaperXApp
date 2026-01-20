@@ -398,6 +398,11 @@ const CompanyDetailsScreen = () => {
                 showLabel={false}
               />
             </View>
+            <View style={styles.orContainer}>
+              <View style={styles.orLine} />
+              <Text variant="captionSmall" style={styles.orText}>Or</Text>
+              <View style={styles.orLine} />
+            </View>
 
             {selectedFile ? (
               <View style={styles.uploadedFileContainer}>

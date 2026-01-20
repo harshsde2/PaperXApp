@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity } from 'react-native';
+import { View, TextInput, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
+import { DropdownButton } from '@shared/components/DropdownButton';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { SelectThicknessScreenNavigationProp, ThicknessUnit } from './@types';
@@ -20,6 +21,7 @@ const SelectThicknessScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const [isUnitModalVisible, setIsUnitModalVisible] = useState(false);
 
   // Get params from route
   const { onThicknessSelected, materialId, materialKey, onSpecsSelected, onBrandDetailsSelected } = route.params || {};
@@ -58,6 +60,15 @@ const SelectThicknessScreen = () => {
       setUnit(primaryUnitFromApi);
     }
   }, [primaryUnitFromApi]);
+
+  const handleUnitSelect = useCallback((selectedUnit: ThicknessUnit) => {
+    setUnit(selectedUnit);
+    setIsUnitModalVisible(false);
+  }, []);
+
+  const openUnitSelector = useCallback(() => {
+    setIsUnitModalVisible(true);
+  }, []);
 
   const handleMinValueChange = (value: string) => {
     // Allow empty string for clearing
@@ -182,30 +193,16 @@ const SelectThicknessScreen = () => {
         }}
       >
         <View style={styles.container}>
-          {/* Unit Segmented Control */}
-          <View style={styles.segmentedControl}>
-          {availableUnits.map(option => {
-            const isSelected = unit === option;
-            return (
-              <TouchableOpacity
-                key={option}
-                style={[styles.segmentedOption, isSelected && styles.segmentedOptionSelected]}
-                onPress={() => setUnit(option)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  variant="bodyMedium"
-                  fontWeight={isSelected ? 'semibold' : 'regular'}
-                  style={[
-                    styles.segmentedOptionText,
-                    isSelected && styles.segmentedOptionTextSelected,
-                  ]}
-                >
-                  {option}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {/* Unit Dropdown */}
+          <View style={styles.unitDropdownContainer}>
+            <Text variant="bodyMedium" fontWeight="medium" style={styles.unitDropdownLabel}>
+              Select Unit
+            </Text>
+            <DropdownButton
+              value={unit}
+              placeholder="Select Unit"
+              onPress={openUnitSelector}
+            />
           </View>
 
           {/* Selected Ranges List */}
@@ -332,6 +329,55 @@ const SelectThicknessScreen = () => {
           </TouchableOpacity>
         </View>
       </FloatingBottomContainer>
+
+      {/* Unit Selection Modal */}
+      <Modal
+        visible={isUnitModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsUnitModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setIsUnitModalVisible(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+            <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+              Select Unit
+            </Text>
+            {availableUnits.map((unitOption) => {
+              const isSelected = unit === unitOption;
+              return (
+                <TouchableOpacity
+                  key={unitOption}
+                  style={[
+                    styles.unitOption,
+                    isSelected && styles.unitOptionSelected,
+                  ]}
+                  onPress={() => handleUnitSelect(unitOption)}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.radioButton,
+                      isSelected && styles.radioButtonSelected,
+                    ]}
+                  >
+                    {isSelected && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <Text
+                    variant="bodyMedium"
+                    fontWeight={isSelected ? 'semibold' : 'regular'}
+                    style={isSelected ? styles.unitOptionTextSelected : styles.unitOptionText}
+                  >
+                    {unitOption}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 };

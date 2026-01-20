@@ -22,6 +22,7 @@ import { createStyles } from './styles';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { useGetBrands } from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { appContent } from '@utils/appContent';
 
 const MillBrandDetailsScreen = () => {
   const navigation = useNavigation<MillBrandDetailsScreenNavigationProp>();
@@ -155,8 +156,7 @@ const MillBrandDetailsScreen = () => {
       >
         <View style={styles.container}>
           <Text variant="bodyMedium" style={styles.description}>
-            Please specify the origin of the materials you are listing. Accurate
-            sourcing helps us match you with the right buyers.
+            {appContent.MillBrandDetails.Subheadline}
           </Text>
 
           <Card style={styles.card}>

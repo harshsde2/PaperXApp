@@ -100,7 +100,7 @@ export const MaterialsSelectionContent = memo(({
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text variant="h4" fontWeight="semibold" style={styles.title}>
-          Select Materials
+          Select Material
         </Text>
         {selectedCount > 0 && onClear && (
           <TouchableOpacity
@@ -117,7 +117,7 @@ export const MaterialsSelectionContent = memo(({
       {selectedCount > 0 && (
         <View style={styles.selectedCountContainer}>
           <Text variant="bodySmall" style={styles.selectedCountText}>
-            {selectedCount} material(s) selected
+            1 material selected
           </Text>
         </View>
       )}

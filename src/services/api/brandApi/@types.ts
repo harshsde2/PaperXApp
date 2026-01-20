@@ -114,32 +114,38 @@ export interface BrandType {
 
 export type BrandRequirementType = 'Packaging' | 'Printing' | 'Labels' | 'Other';
 export type BrandPackagingType = 'Boxes' | 'Bags' | 'Pouches' | 'Cartons' | 'Containers' | 'Other';
-export type BrandTimeline = '1-2 Days' | '3-5 Days' | '1 Week' | '2 Weeks' | '1 Month' | 'Flexible';
-export type BrandUrgency = 'normal' | 'urgent';
+export type BrandTimeline = 'Urgent 1-2 Days' | 'Normal 3-5 Days';
 
 export interface PostBrandRequirementRequest {
   requirement_type: BrandRequirementType;
-  packaging_type?: BrandPackagingType;
-  quantity_range: string;
-  timeline: BrandTimeline;
-  special_needs?: string;
-  design_attachments?: string[];
-  title: string;
-  description: string;
-  urgency: BrandUrgency;
-  location: string;
-  city: string;
-  latitude: number;
-  longitude: number;
+  packaging_type?: BrandPackagingType | null; // Only required when requirement_type is 'Packaging'
+  quantity_range: string; // Required - e.g., "100-500", "500-1000", etc.
+  timeline: BrandTimeline; // Required - delivery timeline
+  description: string; // Required - special requirements or brief description
+  location: string; // Required - full address
+  city: string; // Required - city name
+  latitude: number; // Required - GPS latitude
+  longitude: number; // Required - GPS longitude
 }
 
 export interface PostBrandRequirementResponse {
   success: boolean;
   message: string;
   data: {
-    inquiry_id: number;
-    session_id: number;
-    matched_converters_count: number;
-    message: string;
+    id: number;
+    brand_id: number;
+    requirement_type: BrandRequirementType;
+    packaging_type?: BrandPackagingType | null;
+    quantity_range: string;
+    timeline: BrandTimeline;
+    description: string;
+    location: string;
+    city: string;
+    latitude: string;
+    longitude: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    matched_converters_count?: number;
   };
 }

@@ -11,6 +11,7 @@ import { Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
 import { AppIcon } from '@assets/svgs';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { View, TouchableOpacity } from 'react-native';
+import { appContent } from '@utils/appContent';
 
 const SplashScreen = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
@@ -80,11 +81,11 @@ const SplashScreen = () => {
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
           <Text style={styles.headline}>
-            The Future of Paper Trading
+            {appContent.splashScreen.headline}
           </Text>
           
           <Text style={styles.subheadline}>
-            Smart, session-based matchmaking for the paper and packaging ecosystem. Connect with verified players today.
+            {appContent.splashScreen.subheadline}
           </Text>
 
           <TouchableOpacity
@@ -92,7 +93,7 @@ const SplashScreen = () => {
             onPress={() => navigation.navigate(SCREENS.AUTH.LOGIN)}
             activeOpacity={0.8}
           >
-            <Text style={styles.actionButtonText}>Let's start</Text>
+            <Text style={styles.actionButtonText}>{appContent.splashScreen.actionButtonText}</Text>
             <AppIcon.ArrowRight width={20} height={20} color={baseColors.white} />
           </TouchableOpacity>
         </View>

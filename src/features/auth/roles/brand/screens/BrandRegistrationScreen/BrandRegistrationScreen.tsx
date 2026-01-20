@@ -1224,7 +1224,7 @@ const BrandRegistrationScreen = () => {
                         fontWeight="medium"
                         style={styles.label}
                       >
-                        Brand Type(s)
+                        Operation Industry
                       </Text>
                       <TouchableOpacity
                         style={styles.brandTypeSelector}
@@ -1510,7 +1510,7 @@ const BrandRegistrationScreen = () => {
                     fontWeight="medium"
                     style={styles.label}
                   >
-                    GST Number
+                    GST Number (Optional)
                   </Text>
                 </View>
                 <Controller

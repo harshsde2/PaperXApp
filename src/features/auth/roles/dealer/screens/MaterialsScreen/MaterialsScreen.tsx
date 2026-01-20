@@ -27,6 +27,7 @@ import {
   MaterialGrade,
 } from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { appContent } from '@utils/appContent';
 
 const ITEMS_PER_PAGE = 5;
 const END_REACHED_THRESHOLD = 0.2;
@@ -600,12 +601,11 @@ const MaterialsScreen = () => {
       >
         <View style={[styles.container, { paddingBottom: bottomPadding }]}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>
-            What materials do you deal in?
+            {appContent.MaterialRegistration.Headline}
           </Text>
 
           <Text variant="bodyMedium" style={styles.description}>
-            Select the specific grades of paper, machinery, or packaging
-            materials you buy or sell to get better matches.
+            {appContent.MaterialRegistration.Subheadline}
           </Text>
 
           <View style={styles.searchContainer}>
@@ -618,7 +618,7 @@ const MaterialsScreen = () => {
             </View>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search grades (e.g., White Back)"
+              placeholder="Search Materials"
               placeholderTextColor={theme.colors.text.tertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -687,7 +687,7 @@ const MaterialsScreen = () => {
           disabled={selectedKeys.size === 0}
         >
           <Text variant="buttonMedium" style={styles.buttonText}>
-            Save & Continue ({selectedKeys.size} selected)
+            {appContent.MaterialRegistration.ActionButtonText} ({selectedKeys.size} selected)
           </Text>
           <AppIcon.ArrowRight
             width={20}

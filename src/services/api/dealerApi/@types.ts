@@ -430,26 +430,29 @@ export type IntentType = 'buy' | 'sell';
 export type ThicknessUnit = 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON';
 export type QuantityUnit = 'kg' | 'tons' | 'sheets' | 'reams' | 'rolls' | 'pieces';
 export type PriceUnit = 'per_sheet' | 'per_kg' | 'per_ton' | 'per_ream' | 'per_roll' | 'per_piece';
+export type SizeUnit = 'inches' | 'cm' | 'mm';
+export type LocationSource = 'saved' | 'manual';
+export type VisibilityType = 'dealers' | 'converters' | 'manufacturers' | 'all';
 
 export interface PostRequirementRequest {
   inquiry_type: InquiryType;
   intent: IntentType;
-  title: string;
-  description: string;
-  material_ids: number[];
-  thickness?: number;
-  thickness_unit?: ThicknessUnit;
-  size?: string;
+  material_id: number; // Single material selection (required)
+  thickness: number; // Required
+  thickness_unit: ThicknessUnit; // Required
+  size: string; // Required - format "WxH" (e.g., "28x40")
+  size_unit: SizeUnit; // Required
+  finish_ids?: number[] | null; // Selected grade/finish/variant IDs (optional)
   quantity: number;
   quantity_unit: QuantityUnit;
-  price?: number;
-  price_unit?: PriceUnit;
-  price_negotiable: boolean;
   urgency: UrgencyType;
+  visibility: VisibilityType; // Who can see the requirement (required)
+  // Location fields
+  location_id?: number | null; // ID of saved location (if selected from saved locations)
+  location_source: LocationSource; // Whether location is from saved or manual
   location: string;
   latitude: number;
   longitude: number;
-  deadline?: string; // ISO date string
 }
 
 export interface PostRequirementMaterial {
@@ -464,6 +467,16 @@ export interface PostRequirementMaterial {
   };
 }
 
+export interface PostRequirementFinish {
+  id: number;
+  name: string;
+  type: string;
+  pivot?: {
+    inquiry_id: number;
+    finish_id: number;
+  };
+}
+
 export interface PostRequirementResponse {
   success: boolean;
   message: string;
@@ -473,33 +486,31 @@ export interface PostRequirementResponse {
     poster_type: string;
     inquiry_type: InquiryType;
     intent: IntentType;
-    title: string;
-    description: string;
     urgency: UrgencyType;
+    visibility: VisibilityType;
     quantity: string;
     quantity_unit: QuantityUnit;
-    size?: string;
-    price?: string;
-    price_unit?: PriceUnit;
-    price_negotiable: boolean;
-    approx_price_note?: string | null;
-    thickness?: number;
-    thickness_unit?: ThicknessUnit;
-    machine_condition?: string | null;
-    job_type?: string | null;
-    timeline_days?: number | null;
+    size: string;
+    size_unit: SizeUnit;
+    thickness: number;
+    thickness_unit: ThicknessUnit;
+    material_id: number;
+    finish_ids?: number[] | null;
+    // Location fields
+    location_id?: number | null;
+    location_source?: LocationSource;
     location: string;
     latitude: string;
     longitude: string;
     specs?: any;
     attachment_paths?: string[] | null;
-    deadline?: string;
     status: string;
     posting_fee_paid: boolean;
     posting_fee_amount?: number | null;
     updated_at: string;
     created_at: string;
-    materials: PostRequirementMaterial[];
+    material?: PostRequirementMaterial; // Single material
+    finishes?: PostRequirementFinish[];
     machines: any[];
   };
 }

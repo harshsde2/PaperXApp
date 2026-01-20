@@ -11,29 +11,12 @@ export const createStyles = (theme: Theme) =>
       padding: theme.spacing[4],
       gap: theme.spacing[4],
     },
-    segmentedControl: {
-      flexDirection: 'row',
-      backgroundColor: theme.colors.surface.secondary || theme.colors.background.tertiary,
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing[1],
+    unitDropdownContainer: {
       marginBottom: theme.spacing[2],
     },
-    segmentedOption: {
-      flex: 1,
-      paddingVertical: theme.spacing[2],
-      borderRadius: theme.borderRadius.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    segmentedOptionSelected: {
-      backgroundColor: theme.colors.surface.primary || theme.colors.background.secondary,
-    },
-    segmentedOptionText: {
-      color: theme.colors.text.tertiary,
-    },
-    segmentedOptionTextSelected: {
-      color: theme.colors.primary.DEFAULT,
-      fontWeight: '600',
+    unitDropdownLabel: {
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing[2],
     },
     selectedRangeCard: {
       padding: theme.spacing[4],
@@ -289,5 +272,64 @@ export const createStyles = (theme: Theme) =>
     },
     continueButtonText: {
       color: theme.colors.text.inverse,
+    },
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing[4],
+    },
+    modalContent: {
+      backgroundColor: theme.colors.surface.primary,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing[4],
+      width: '100%',
+      maxWidth: 400,
+    },
+    modalTitle: {
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing[4],
+    },
+    unitOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[4],
+      borderRadius: theme.borderRadius.lg,
+      marginBottom: theme.spacing[2],
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      backgroundColor: theme.colors.surface.primary,
+    },
+    unitOptionSelected: {
+      backgroundColor: theme.colors.primary.light || `${theme.colors.primary.DEFAULT}15`,
+      borderColor: theme.colors.primary.DEFAULT,
+    },
+    unitOptionText: {
+      color: theme.colors.text.primary,
+    },
+    unitOptionTextSelected: {
+      color: theme.colors.primary.DEFAULT,
+    },
+    radioButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: theme.colors.border.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: theme.spacing[3],
+    },
+    radioButtonSelected: {
+      borderColor: theme.colors.primary.DEFAULT,
+    },
+    radioButtonInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.colors.primary.DEFAULT,
     },
   });

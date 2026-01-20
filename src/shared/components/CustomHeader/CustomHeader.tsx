@@ -15,6 +15,7 @@ const formatScreenTitle = (routeName: string): string => {
     Login: 'Login Account',
     Signup: 'Sign Up',
     OTPVerification: 'Verify Identity',
+    MillBrandDetails: 'Mills Associated Details',
   };
 
 

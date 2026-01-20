@@ -5,6 +5,23 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
     paddingBottom: theme.spacing[6],
   },
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing[2],
+    marginBottom: theme.spacing[4],
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.border.primary,
+  },
+  orText: {
+    color: theme.colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
   container: {
     flex: 1,
     padding: theme.spacing[3],
@@ -237,7 +254,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   fileName: {
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing[0.5],
+    marginBottom: theme.spacing[1],
   },
   fileSize: {
     color: theme.colors.text.tertiary,

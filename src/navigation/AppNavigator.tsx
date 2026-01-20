@@ -50,6 +50,7 @@ const AppNavigator = () => {
                 isVerified: userData.verified !== undefined ? userData.verified : true,
                 companyName: userData.company_name || null,
                 udyamVerifiedAt: userData.udyam_verified_at || null,
+                ...userData,
               },
               token: token,
             })

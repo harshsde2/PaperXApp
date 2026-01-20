@@ -29,7 +29,6 @@ import {
   BrandRequirementType,
   BrandPackagingType,
   BrandTimeline,
-  BrandUrgency,
 } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
@@ -64,17 +63,8 @@ const QUANTITY_RANGE_OPTIONS: DropdownOption[] = [
 ];
 
 const TIMELINE_OPTIONS: DropdownOption<BrandTimeline>[] = [
-  { label: '1-2 Days', value: '1-2 Days' },
-  { label: '3-5 Days', value: '3-5 Days' },
-  { label: '1 Week', value: '1 Week' },
-  { label: '2 Weeks', value: '2 Weeks' },
-  { label: '1 Month', value: '1 Month' },
-  { label: 'Flexible', value: 'Flexible' },
-];
-
-const URGENCY_OPTIONS: DropdownOption<BrandUrgency>[] = [
-  { label: 'Normal', value: 'normal' },
-  { label: 'Urgent', value: 'urgent' },
+  { label: 'Urgent 1-2 Days', value: 'Urgent 1-2 Days' },
+  { label: 'Normal 3-5 Days', value: 'Normal 3-5 Days' },
 ];
 
 const PostBrandRequirementScreen = () => {
@@ -91,12 +81,8 @@ const PostBrandRequirementScreen = () => {
       requirement_type: 'Packaging',
       packaging_type: 'Boxes',
       quantity_range: '',
-      timeline: '3-5 Days',
-      special_needs: '',
-      design_attachments: [],
-      title: '',
+      timeline: 'Normal 3-5 Days',
       description: '',
-      urgency: 'normal',
       location: '',
       city: '',
       latitude: undefined,
@@ -111,7 +97,6 @@ const PostBrandRequirementScreen = () => {
   const [showPackagingTypePicker, setShowPackagingTypePicker] = useState(false);
   const [showQuantityRangePicker, setShowQuantityRangePicker] = useState(false);
   const [showTimelinePicker, setShowTimelinePicker] = useState(false);
-  const [showUrgencyPicker, setShowUrgencyPicker] = useState(false);
 
   // Watch values
   const requirementType = watch('requirement_type');
@@ -125,7 +110,7 @@ const PostBrandRequirementScreen = () => {
                       location.address?.streetAddress || 
                       location.name || '';
       const city = location.address?.city || 
-                   location.address?.subLocality || 
+                   location.address?.city || 
                    location.name || '';
       
       setValue('location', address, { shouldValidate: true });
@@ -147,13 +132,13 @@ const PostBrandRequirementScreen = () => {
   const onSubmit = useCallback(
     (data: PostBrandRequirementFormData) => {
       // Validate required fields
-      if (!data.title.trim()) {
-        Alert.alert('Validation Error', 'Please enter a title');
+      if (!data.requirement_type) {
+        Alert.alert('Validation Error', 'Please select a requirement type');
         return;
       }
 
-      if (!data.description.trim()) {
-        Alert.alert('Validation Error', 'Please enter a description');
+      if (data.requirement_type === 'Packaging' && !data.packaging_type) {
+        Alert.alert('Validation Error', 'Please select a packaging type');
         return;
       }
 
@@ -162,31 +147,42 @@ const PostBrandRequirementScreen = () => {
         return;
       }
 
+      if (!data.timeline) {
+        Alert.alert('Validation Error', 'Please select a timeline');
+        return;
+      }
+
+      if (!data.description.trim()) {
+        Alert.alert('Validation Error', 'Please enter a description');
+        return;
+      }
+
       if (!data.latitude || !data.longitude) {
         Alert.alert('Validation Error', 'Please select a location on map');
+        return;
+      }
+
+      if (!data.location.trim()) {
+        Alert.alert('Validation Error', 'Please select a valid location');
         return;
       }
 
       // Prepare API request
       const apiData = {
         requirement_type: data.requirement_type,
-        packaging_type: data.requirement_type === 'Packaging' ? data.packaging_type : undefined,
+        packaging_type: data.requirement_type === 'Packaging' ? data.packaging_type : null,
         quantity_range: data.quantity_range,
         timeline: data.timeline,
-        special_needs: data.special_needs?.trim() || undefined,
-        design_attachments: data.design_attachments.length > 0 ? data.design_attachments : undefined,
-        title: data.title.trim(),
         description: data.description.trim(),
-        urgency: data.urgency,
         location: data.location.trim(),
         city: data.city.trim(),
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude: data.latitude!,
+        longitude: data.longitude!,
       };
 
       console.log('Brand Requirement API Data:', JSON.stringify(apiData, null, 2));
 
-      postRequirement(apiData as any, {
+      postRequirement(apiData, {
         onSuccess: (response) => {
           dispatch(
             showToast({
@@ -306,7 +302,7 @@ const PostBrandRequirementScreen = () => {
             {requirementType === 'Packaging' && (
               <View style={styles.formGroup}>
                 <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Packaging Type *
+                  What Packaging / Printing service are you looking for? 
                 </Text>
                 <Controller
                   control={control}
@@ -322,21 +318,11 @@ const PostBrandRequirementScreen = () => {
               </View>
             )}
 
-            {/* Title */}
-            <FormInput
-              name="title"
-              control={control}
-              label="Title *"
-              placeholder="e.g., Need custom packaging boxes"
-              rules={validationRules.required('Please enter title') as any}
-              containerStyle={styles.formGroup}
-            />
-
             {/* Description */}
             <FormInput
               name="description"
               control={control}
-              label="Description *"
+              label="Description (Special Requirements or Brief Description of the requirement)"
               placeholder="e.g., Looking for custom printed boxes for product launch"
               rules={validationRules.required('Please enter description') as any}
               multiline
@@ -347,7 +333,7 @@ const PostBrandRequirementScreen = () => {
             {/* Quantity Range */}
             <View style={styles.formGroup}>
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Quantity Range *
+                Quantity Range (in Pieces) 
               </Text>
               <Controller
                 control={control}
@@ -369,7 +355,7 @@ const PostBrandRequirementScreen = () => {
             {/* Timeline */}
             <View style={styles.formGroup}>
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Timeline *
+                Timeline 
               </Text>
               <Controller
                 control={control}
@@ -388,39 +374,10 @@ const PostBrandRequirementScreen = () => {
               />
             </View>
 
-            {/* Urgency */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Urgency
-              </Text>
-              <Controller
-                control={control}
-                name="urgency"
-                render={({ field: { value } }) => (
-                  <DropdownButton
-                    value={URGENCY_OPTIONS.find((opt) => opt.value === value)?.label}
-                    placeholder="Select Urgency"
-                    onPress={() => setShowUrgencyPicker(true)}
-                  />
-                )}
-              />
-            </View>
-
-            {/* Special Needs */}
-            <FormInput
-              name="special_needs"
-              control={control}
-              label="Special Requirements (Optional)"
-              placeholder="e.g., Need eco-friendly packaging with custom printing"
-              multiline
-              numberOfLines={3}
-              containerStyle={styles.formGroup}
-            />
-
             {/* Location */}
             <View style={styles.formGroup}>
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Location *
+                Location
               </Text>
               <Controller
                 control={control}
@@ -529,15 +486,6 @@ const PostBrandRequirementScreen = () => {
         TIMELINE_OPTIONS,
         (value) => setValue('timeline', value, { shouldValidate: true }),
         watch('timeline')
-      )}
-
-      {renderPickerModal(
-        showUrgencyPicker,
-        () => setShowUrgencyPicker(false),
-        'Select Urgency',
-        URGENCY_OPTIONS,
-        (value) => setValue('urgency', value, { shouldValidate: true }),
-        watch('urgency')
       )}
 
       {/* Submit Button */}

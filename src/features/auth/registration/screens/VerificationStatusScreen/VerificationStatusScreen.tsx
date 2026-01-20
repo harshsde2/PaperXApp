@@ -24,6 +24,8 @@ const VerificationStatusScreen = () => {
   // Get profile data from route params
   const { profileData } = route.params || {};
 
+  console.log('profileData', JSON.stringify(profileData, null, 2));
+
   // console.log('[VerificationStatus] Profile data:', JSON.stringify(profileData, null, 2));
   // NOTE: Do NOT update Redux state or storage on screen load
   // State will be updated only when user clicks "Proceed to Dashboard" button
@@ -55,6 +57,7 @@ const VerificationStatusScreen = () => {
         updateUser({
           companyName: profileData.company_name || null,
           udyamVerifiedAt: profileData.udyam_verified_at || null,
+          ...profileData,
         })
       );
       console.log('[VerificationStatus] Redux state updated, navigating to dashboard');

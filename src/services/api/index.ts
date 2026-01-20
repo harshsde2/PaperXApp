@@ -257,7 +257,6 @@ export type {
   BrandRequirementType,
   BrandPackagingType,
   BrandTimeline,
-  BrandUrgency,
   PostBrandRequirementRequest,
   PostBrandRequirementResponse,
 } from './brandApi/@types';

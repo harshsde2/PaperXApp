@@ -6,7 +6,6 @@ import type {
   BrandRequirementType,
   BrandPackagingType,
   BrandTimeline,
-  BrandUrgency,
 } from '@services/api';
 
 export interface PostBrandRequirementFormData {
@@ -14,11 +13,7 @@ export interface PostBrandRequirementFormData {
   packaging_type?: BrandPackagingType;
   quantity_range: string;
   timeline: BrandTimeline;
-  special_needs: string;
-  design_attachments: string[];
-  title: string;
   description: string;
-  urgency: BrandUrgency;
   location: string;
   city: string;
   latitude?: number;

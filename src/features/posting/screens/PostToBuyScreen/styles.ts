@@ -163,4 +163,33 @@ export const createStyles = (theme: Theme) =>
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border.secondary,
     },
+    locationOptionSelected: {
+      backgroundColor: theme.colors.primary.light || theme.colors.primary.DEFAULT + '10',
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing[1],
+    },
+    locationOptionContent: {
+      flex: 1,
+    },
+    locationOptionTitle: {
+      color: theme.colors.text.primary,
+      marginBottom: 2,
+    },
+    locationOptionSubtitle: {
+      color: theme.colors.text.tertiary,
+    },
+    sectionLabel: {
+      color: theme.colors.text.tertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing[2],
+    },
+    mapSelectButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface.secondary,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[3],
+    },
   });

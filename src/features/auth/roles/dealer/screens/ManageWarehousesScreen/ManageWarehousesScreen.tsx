@@ -238,41 +238,7 @@ const ManageWarehousesScreen = () => {
         }
       },
       onError: (err: any) => {
-        const profileData = dealerRegistrationData?.profileData;
-        const isSecondaryRoleCompletion =
-          profileData?.secondary_role === ROLES.DEALER;
-
-        if (isSecondaryRoleCompletion) {
-          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-            profileData: profileData || {},
-          });
-        } else if (
-          profileData?.has_secondary_role === 1 &&
-          profileData?.secondary_role
-        ) {
-          const secondaryRole =
-            profileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
-          const firstSecondaryScreen =
-            getFirstRegistrationScreen(secondaryRole);
-
-          if (
-            firstSecondaryScreen &&
-            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
-          ) {
-            (navigation.navigate as any)(firstSecondaryScreen, {
-              profileData: profileData || {},
-            });
-          } else {
-            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-              profileData: profileData || {},
-            });
-          }
-        } else {
-          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-            profileData: profileData || {},
-          });
-        }
-
+        
         console.error('[ManageWarehouses] API error:', err.response);
 
         let errorMessage = 'Failed to complete registration. Please try again.';

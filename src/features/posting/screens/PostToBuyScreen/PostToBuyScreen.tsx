@@ -5,12 +5,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
-  ListRenderItem,
   Alert,
   Modal,
   StyleSheet,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -24,10 +23,8 @@ import { useTheme, Theme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGetMaterialsInfinite, Material, useGetMaterialFinishesInfinite, MaterialFinish } from '@services/api';
-import { usePostDealerRequirement } from '@services/api';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
-import { MainStackParamList } from '@navigation/MainNavigator';
 import { SCREENS } from '@navigation/constants';
 import { createStyles } from './styles';
 import { PostToBuyFormData, SizeUnit, SavedLocation, VisibilityType } from './@types';
@@ -120,15 +117,14 @@ const QUANTITY_UNIT_OPTIONS = [
 ];
 
 const URGENCY_OPTIONS = [
-  { label: 'Normal 3-5 Days', value: 'Normal 3-5 Days' },
-  { label: 'Urgent 1-2 Days', value: 'Urgent 1-2 Days' },
+  { label: 'Normal 3-5 Days', value: 'normal' },
+  { label: 'Urgent 1-2 Days', value: 'urgent' },
 ];
 
 const VISIBILITY_OPTIONS: { label: string; value: VisibilityType }[] = [
-  { label: 'Other Dealers', value: 'dealers' },
+  { label: 'Other Raw Material Dealers', value: 'dealers' },
   { label: 'Converters', value: 'converters' },
-  { label: 'Manufacturers', value: 'manufacturers' },
-  { label: 'All (Dealers, Converters & Manufacturers)', value: 'all' },
+  { label: 'All (Raw Material Dealers, Converters)', value: 'all' },
 ];
 
 // Special option for manual location selection
@@ -148,10 +144,14 @@ const PostToBuyScreen = () => {
   const dispatch = useAppDispatch();
 
   const user = useAppSelector((state) => state.auth.user);
+  const token = useAppSelector((state) => state.auth.token);
 
-  console.log('user ->', JSON.stringify(user, null, 2));
+  // Get intent from route params, default to 'buy' for backward compatibility
+  const intent = (route.params?.intent as 'buy' | 'sell') || 'buy';
+  const isSellMode = intent === 'sell';
 
-  const { mutate: postRequirement, isPending: isSubmitting } = usePostDealerRequirement();
+  // console.log('token ->', JSON.stringify(token, null, 2));
+
 
   const {
     data: materialsData,
@@ -197,7 +197,7 @@ const PostToBuyScreen = () => {
   const { control, handleSubmit, setValue, watch } = useForm<PostToBuyFormData>({
     defaultValues: {
       inquiry_type: 'material',
-      intent: 'buy',
+      intent: intent,
       material_id: undefined,
       thickness: undefined,
       thickness_unit: 'GSM',
@@ -620,26 +620,34 @@ const PostToBuyScreen = () => {
 
       console.log('apiData', JSON.stringify(apiData, null, 2));
 
-      postRequirement(apiData, {
-        onSuccess: (response) => {
-          dispatch(
-            showToast({
-              message: response.message || 'Requirement posted successfully!',
-              type: 'success',
-            }),
-          );
-          // Navigate to dashboard tab screen
-          navigation.navigate(SCREENS.MAIN.TABS, {
-            screen: SCREENS.MAIN.DASHBOARD,
-          });
-        },
-        onError: (error: any) => {
-          const errorMessage = error?.response?.data?.message || error?.message || 'Failed to post requirement. Please try again.';
-          Alert.alert('Error', errorMessage);
-        },
+      // Generate reference number
+      const refNumber = `#${Math.floor(Math.random() * 9000) + 1000}`;
+      
+      // Determine urgency label for display
+      const isUrgent = data.urgency === 'urgent';
+      const urgencyLabel = isUrgent ? 'Urgent 1-2 Days' : 'Normal 3-5 Days';
+
+      // Prepare listing details for payment confirmation
+      const listingDetails = {
+        title: selectedMaterialName || 'Material Requirement',
+        referenceNumber: refNumber,
+        grade: selectedFinishesDisplay || 'Standard',
+        materialName: selectedMaterialName || 'Material',
+        quantity: String(data.quantity),
+        quantityUnit: data.quantity_unit,
+        urgency: urgencyLabel,
+        tags: isUrgent 
+          ? ['Material', 'Urgent'] 
+          : ['Material'],
+      };
+
+      // Navigate to payment confirmation screen
+      navigation.navigate(SCREENS.MAIN.PAYMENT_CONFIRMATION, {
+        listingDetails,
+        formData: apiData,
       });
     },
-    [postRequirement, dispatch, navigation],
+    [navigation, selectedMaterialName, selectedFinishesDisplay],
   );
 
   const buttonHeight = 60;
@@ -654,10 +662,12 @@ const PostToBuyScreen = () => {
       >
         <View style={[styles.container, { paddingBottom: bottomPadding }]}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>
-            Post to Buy
+            {isSellMode ? 'Post to Sell' : 'Post to Buy'}
           </Text>
           <Text variant="bodyMedium" style={styles.description}>
-            Fill in the details to post your requirement
+            {isSellMode 
+              ? 'Fill in the details to post your material for sale'
+              : 'Fill in the details to post your requirement'}
           </Text>
 
           <View style={styles.formContainer}>
@@ -955,7 +965,7 @@ const PostToBuyScreen = () => {
             {/* Location */}
             <View style={styles.formGroup}>
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Delivery Location
+                {isSellMode ? 'Pickup Location' : 'Delivery Location'}
               </Text>
               <Controller
                 control={control}
@@ -980,7 +990,7 @@ const PostToBuyScreen = () => {
                             ]}
                             numberOfLines={1}
                           >
-                            {displayValue || 'Select delivery location'}
+                            {displayValue || (isSellMode ? 'Select pickup location' : 'Select delivery location')}
                           </Text>
                           {locationSourceValue === 'saved' && locationIdValue && (
                             <Text
@@ -1206,7 +1216,7 @@ const PostToBuyScreen = () => {
           <View style={[styles.modalContent, { maxHeight: '80%' }]}>
             <View style={styles.modalHeader}>
               <Text variant="h4" fontWeight="semibold">
-                Select Delivery Location
+                {isSellMode ? 'Select Pickup Location' : 'Select Delivery Location'}
               </Text>
               <TouchableOpacity onPress={() => setShowLocationDropdown(false)}>
                 <Text style={{ fontSize: 24 }}>×</Text>
@@ -1315,7 +1325,9 @@ const PostToBuyScreen = () => {
                         variant="captionSmall" 
                         style={{ color: theme.colors.text.tertiary }}
                       >
-                        Choose a custom delivery location
+                        {isSellMode 
+                          ? 'Choose a custom pickup location'
+                          : 'Choose a custom delivery location'}
                       </Text>
                     </View>
                     <AppIcon.ChevronRight
@@ -1501,25 +1513,18 @@ const PostToBuyScreen = () => {
 
       <FloatingBottomContainer>
         <TouchableOpacity
-          style={[styles.button, isSubmitting && { opacity: 0.5 }]}
+          style={styles.button}
           onPress={handleSubmit(onSubmit)}
           activeOpacity={0.8}
-          disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color={theme.colors.text.inverse} size="small" />
-          ) : (
-            <>
-              <Text variant="buttonMedium" style={styles.buttonText}>
-                Post Requirement
-              </Text>
-              <AppIcon.ArrowRight
-                width={20}
-                height={20}
-                color={theme.colors.text.inverse}
-              />
-            </>
-          )}
+          <Text variant="buttonMedium" style={styles.buttonText}>
+            Continue to Payment
+          </Text>
+          <AppIcon.ArrowRight
+            width={20}
+            height={20}
+            color={theme.colors.text.inverse}
+          />
         </TouchableOpacity>
       </FloatingBottomContainer>
     </>

@@ -108,7 +108,9 @@ const PostRequirementOptionsScreen: React.FC = () => {
   const handleOptionPress = (option: PostRequirementOptionConfig) => {
     // Navigate to appropriate posting flow based on option.id
     if (option.id === 'post-to-buy-material') {
-      navigation.navigate(SCREENS.MAIN.POST_TO_BUY as any);
+      navigation.navigate(SCREENS.MAIN.POST_TO_BUY as any, { intent: 'buy' });
+    } else if (option.id === 'post-to-sell-material') {
+      navigation.navigate(SCREENS.MAIN.POST_TO_BUY as any, { intent: 'sell' });
     } else if (option.id === 'post-to-post-requirement') {
       navigation.navigate(SCREENS.MAIN.POST_BRAND_REQUIREMENT as any);
     } else {

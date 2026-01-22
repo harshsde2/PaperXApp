@@ -46,6 +46,7 @@ import Capacity from './Capacity.svg';
 import Sessions from './Sessions.svg';
 import Profile from './Profile.svg';
 import AppLogo from './AppLogo.svg';
+import Satellite from './Satellite.svg';
 
 
 
@@ -98,4 +99,5 @@ export const AppIcon = {
   Sessions,
   Profile,
   AppLogo,
+  Satellite,
 };

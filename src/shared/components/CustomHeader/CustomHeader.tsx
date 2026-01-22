@@ -6,8 +6,11 @@ import { Text } from '@shared/components/Text';
 import { CustomHeaderProps } from './@types';
 import { styles } from './styles';
 import { AppIcon } from '@assets/svgs';
+import { SCREENS } from '@navigation/constants';
 
 const formatScreenTitle = (routeName: string): string => {
+
+
   // Handle specific screen name mappings
   const screenNameMap: Record<string, string> = {
     Dashboard: 'Dashboard',
@@ -53,7 +56,21 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   const insets = useSafeAreaInsets();
   const canGoBack = navigation.canGoBack();
   const shouldShowBackButton = showBackButton !== undefined ? showBackButton : canGoBack;
-  const displayTitle = title || (route?.name ? formatScreenTitle(route.name) : '');
+
+  let mainName = route?.name as string;
+  if(route?.name === SCREENS.MAIN.POST_TO_BUY) {
+    const intent = route?.params?.intent;
+    if(intent === 'buy') {
+      mainName = 'Post to Buy';
+    } else if(intent === 'sell') {
+      mainName = 'Post to Sell';
+    }
+  }
+
+  const displayTitle = title || (mainName ? formatScreenTitle(mainName) : '');
+
+  
+
 
   const isDark = route?.name?.toLowerCase().includes('creditpacks');
 

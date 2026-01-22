@@ -6,11 +6,19 @@ import PostRequirementOptionsScreen from '@features/posting/screens/PostRequirem
 import PostToBuyScreen from '@features/posting/screens/PostToBuyScreen/PostToBuyScreen';
 import PostBrandRequirementScreen from '@features/posting/screens/PostBrandRequirementScreen/PostBrandRequirementScreen';
 import RequirementsListScreen from '@features/posting/screens/RequirementsListScreen/RequirementsListScreen';
+import PaymentConfirmationScreen from '@features/posting/screens/PaymentConfirmationScreen/PaymentConfirmationScreen';
+import MatchmakingSuccessScreen from '@features/posting/screens/MatchmakingSuccessScreen/MatchmakingSuccessScreen';
 import {
   WalletScreen,
   CreditPacksScreen,
   TransactionHistoryScreen,
 } from '@features/wallet';
+import {
+  SessionDashboardScreen,
+  SessionDetailsScreen,
+  SessionLockedScreen,
+  SessionChatScreen,
+} from '@features/sessions';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { SCREENS } from './constants';
 
@@ -18,14 +26,57 @@ export type MainStackParamList = {
   MainTabs: undefined;
   Profile: undefined;
   Post: undefined;
-  PostToBuy: undefined;
+  PostToBuy: { intent?: 'buy' | 'sell' } | undefined;
   PostBrandRequirement: undefined;
   Requirements: undefined;
+  PaymentConfirmation: {
+    listingDetails: {
+      id?: string;
+      title: string;
+      referenceNumber: string;
+      grade: string;
+      materialName: string;
+      quantity: string;
+      quantityUnit: string;
+      urgency: string;
+      imageUrl?: string;
+      tags: string[];
+    };
+    formData: any;
+  };
+  MatchmakingSuccess: {
+    requirementDetails: {
+      id: string;
+      materialName: string;
+      quantity: string;
+      deadline: string;
+      imageUrl?: string;
+    };
+    creditsDeducted: number;
+  };
   // Wallet Screens
   WalletMain: undefined;
   CreditPacks: undefined;
   TransactionHistory: undefined;
   AddCustomCredits: undefined;
+  // Session Screens
+  SessionDashboard: {
+    initialTab?: 'all' | 'finding_matches' | 'active' | 'locked';
+  };
+  SessionDetails: {
+    sessionId: string;
+    session?: any;
+  };
+  SessionLocked: {
+    sessionId: string;
+    session?: any;
+  };
+  SessionChat: {
+    sessionId: string;
+    partnerId: string;
+    partnerName: string;
+    inquiryRef?: string;
+  };
 };
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -87,6 +138,23 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
+      <Stack.Screen 
+        name={SCREENS.MAIN.PAYMENT_CONFIRMATION} 
+        component={PaymentConfirmationScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.MAIN.MATCHMAKING_SUCCESS} 
+        component={MatchmakingSuccessScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_bottom',
+          gestureEnabled: false,
+        }}
+      />
       {/* Wallet Screens */}
       <Stack.Screen 
         name={SCREENS.WALLET.MAIN} 
@@ -112,6 +180,39 @@ const MainNavigator = () => {
         options={{
           headerShown: true,
           title: 'Transaction History',
+          animation: 'slide_from_right',
+        }}
+      />
+      {/* Session Screens */}
+      <Stack.Screen 
+        name={SCREENS.SESSIONS.DASHBOARD} 
+        component={SessionDashboardScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.SESSIONS.DETAILS} 
+        component={SessionDetailsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.SESSIONS.LOCKED} 
+        component={SessionLockedScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.SESSIONS.CHAT} 
+        component={SessionChatScreen}
+        options={{
+          headerShown: false,
           animation: 'slide_from_right',
         }}
       />

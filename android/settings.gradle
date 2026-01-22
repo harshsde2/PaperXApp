@@ -1,6 +1,16 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+
+// Set PATH to include nvm node for autolinking
+def nodePath = "/Users/harshpal/.nvm/versions/node/v22.12.0/bin"
+def currentPath = System.getenv("PATH") ?: ""
+System.setProperty("PATH", "$nodePath:$currentPath")
+
+// Configure autolinking
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> 
+    ex.autolinkLibrariesFromCommand()
+}
+
 rootProject.name = 'PaperXApp'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')

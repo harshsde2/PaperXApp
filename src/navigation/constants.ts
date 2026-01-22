@@ -39,12 +39,20 @@ export const SCREENS = {
     POST_TO_BUY: 'PostToBuy',
     POST_BRAND_REQUIREMENT: 'PostBrandRequirement',
     REQUIREMENTS: 'Requirements',
+    PAYMENT_CONFIRMATION: 'PaymentConfirmation',
+    MATCHMAKING_SUCCESS: 'MatchmakingSuccess',
   },
   WALLET: {
     MAIN: 'WalletMain',
     CREDIT_PACKS: 'CreditPacks',
     TRANSACTION_HISTORY: 'TransactionHistory',
     ADD_CUSTOM_CREDITS: 'AddCustomCredits',
+  },
+  SESSIONS: {
+    DASHBOARD: 'SessionDashboard',
+    DETAILS: 'SessionDetails',
+    LOCKED: 'SessionLocked',
+    CHAT: 'SessionChat',
   },
 } as const;
 

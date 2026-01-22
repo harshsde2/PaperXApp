@@ -114,7 +114,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profil
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.actionCardPrimary} activeOpacity={0.85}>
+          <TouchableOpacity onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY)} style={styles.actionCardPrimary} activeOpacity={0.85}>
             <View style={styles.actionIcon}>
               <AppIcon.Market width={28} height={28} color="#FFFFFF" />
             </View>
@@ -122,7 +122,11 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profil
             <Text style={styles.actionSubtitlePrimary}>Find Materials</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionCardSecondary} activeOpacity={0.85}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY, { intent: 'sell' })} 
+            style={styles.actionCardSecondary} 
+            activeOpacity={0.85}
+          >
             <View style={styles.actionIconSecondary}>
               <AppIcon.Inquiries width={28} height={28} color="#2563EB" />
             </View>

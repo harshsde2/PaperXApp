@@ -200,6 +200,15 @@ export const queryKeys = {
       [...queryKeys.sessions.all, 'history', 'infinite', params] as const,
     detail: (id: number | string) => [...queryKeys.sessions.all, 'detail', id] as const,
   },
+
+  // Inquiries
+  inquiries: {
+    all: ['inquiries'] as const,
+    detail: (id: number | string) => [...queryKeys.inquiries.all, 'detail', id] as const,
+    responses: (id: number | string) => [...queryKeys.inquiries.all, id, 'responses'] as const,
+    matchmakingResponses: (id: number | string, params?: Record<string, any>) =>
+      [...queryKeys.inquiries.all, id, 'matchmaking-responses', params] as const,
+  },
 } as const;
 
 export default queryClient;

@@ -236,3 +236,48 @@ export interface MarkDealFailedResponse {
   message: string;
   data: SessionDetail;
 }
+
+// ============================================
+// MATCHMAKING RESPONSE
+// ============================================
+
+export interface MatchmakingResponseDealer {
+  id: number | null;
+  company_name: string | null;
+  location: string;
+}
+
+export interface MatchmakingResponseItem {
+  id: number;
+  match_type: 'exact_match' | 'slight_variation' | 'nearest';
+  distance_km: number | null;
+  dealer: MatchmakingResponseDealer;
+  quantity_offered: number;
+  quoted_price: number | null;
+  price_status: 'agreed' | 'negotiable' | 'needs_more_details' | null;
+  additional_details: string | null;
+  responded_at: string;
+  is_shortlisted: boolean;
+}
+
+export interface MatchmakingResponsesCountdown {
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+export interface GetMatchmakingResponsesResponse {
+  inquiry: {
+    id: number;
+    title: string;
+    items: SessionItem[];
+  };
+  countdown: MatchmakingResponsesCountdown | null;
+  responses_count: number;
+  responses: MatchmakingResponseItem[];
+  filter: 'all' | 'exact_match' | 'slight_variation' | 'nearest';
+}
+
+export interface GetMatchmakingResponsesParams {
+  filter?: 'all' | 'exact_match' | 'slight_variation' | 'nearest';
+}

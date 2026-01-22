@@ -348,6 +348,7 @@ export {
   useLockSession,
   useRepublishSession,
   useMarkDealFailed,
+  useGetMatchmakingResponses,
 } from './sessionApi/sessionApi';
 export type {
   // Common Types
@@ -381,4 +382,10 @@ export type {
   RepublishSessionResponse,
   // Mark Deal Failed
   MarkDealFailedResponse,
+  // Matchmaking Responses
+  MatchmakingResponseItem,
+  MatchmakingResponseDealer,
+  MatchmakingResponsesCountdown,
+  GetMatchmakingResponsesResponse,
+  GetMatchmakingResponsesParams,
 } from './sessionApi/@types';

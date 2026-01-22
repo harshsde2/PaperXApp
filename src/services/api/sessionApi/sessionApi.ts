@@ -6,7 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '../client';
-import { SESSION_ENDPOINTS } from '@shared/constants/api';
+import { SESSION_ENDPOINTS, INQUIRY_ENDPOINTS } from '@shared/constants/api';
 import { queryKeys } from '../queryClient';
 import type {
   GetActiveSessionsParams,
@@ -19,6 +19,8 @@ import type {
   RepublishSessionResponse,
   MarkDealFailedResponse,
   SessionDetail,
+  GetMatchmakingResponsesParams,
+  GetMatchmakingResponsesResponse,
 } from './@types';
 
 // ============================================
@@ -218,5 +220,30 @@ export const useMarkDealFailed = () => {
     onError: (error: Error) => {
       console.error('[useMarkDealFailed] Error:', error);
     },
+  });
+};
+
+// ============================================
+// GET MATCHMAKING RESPONSES
+// ============================================
+
+export const useGetMatchmakingResponses = (
+  inquiryId: number | string,
+  params?: GetMatchmakingResponsesParams
+) => {
+  return useQuery({
+    queryKey: queryKeys.inquiries.matchmakingResponses(inquiryId, params),
+    queryFn: async (): Promise<GetMatchmakingResponsesResponse> => {
+      const response = await api.get<{ data: GetMatchmakingResponsesResponse }>(
+        INQUIRY_ENDPOINTS.MATCHMAKING_RESPONSES(inquiryId),
+        {
+          params,
+        }
+      );
+      return extractData<GetMatchmakingResponsesResponse>(response);
+    },
+    enabled: !!inquiryId,
+    staleTime: 1000 * 30, // 30 seconds
+    gcTime: 0, // Don't cache - always fresh
   });
 };

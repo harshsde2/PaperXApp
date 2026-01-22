@@ -18,73 +18,14 @@ import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
+import { useGetActiveSessions } from '@services/api';
+import type { ActiveSessionListItem, SessionFilter } from '@services/api';
 import { Session, SessionTabType } from '../../@types';
 import { SessionTabBar } from '../../components/SessionTabBar';
 import { SessionCard } from '../../components/SessionCard';
 import { SessionDashboardScreenRouteProp } from './@types';
 import { createStyles } from './styles';
-
-// Mock data for demonstration
-const MOCK_SESSIONS: Session[] = [
-  {
-    id: '1',
-    inquiryId: 'INQ-001',
-    title: '50k Units Sustainable Cardboard',
-    category: 'Packaging',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'active',
-    isUrgent: true,
-    biddingEndsAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(),
-    responsesReceived: 8,
-    totalExpectedResponses: 10,
-    materialName: 'Cardboard',
-    quantity: '50000',
-    quantityUnit: 'units',
-  },
-  {
-    id: '2',
-    inquiryId: 'INQ-002',
-    title: 'Aluminum Foil Roll - 200m',
-    category: 'Raw Materials',
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'finding_matches',
-    isUrgent: false,
-    responsesReceived: 2,
-    totalExpectedResponses: 15,
-    materialName: 'Aluminum Foil',
-    quantity: '200',
-    quantityUnit: 'meters',
-  },
-  {
-    id: '3',
-    inquiryId: 'INQ-003',
-    title: 'Eco-friendly Adhesive Tape',
-    category: 'Office Supplies',
-    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'locked',
-    isUrgent: false,
-    responsesReceived: 12,
-    totalExpectedResponses: 15,
-    materialName: 'Adhesive Tape',
-    quantity: '5000',
-    quantityUnit: 'rolls',
-  },
-  {
-    id: '4',
-    inquiryId: 'INQ-004',
-    title: 'Rigid PVC Films - Industrial Grade',
-    category: 'Industrial Materials',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'active',
-    isUrgent: true,
-    biddingEndsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    responsesReceived: 5,
-    totalExpectedResponses: 12,
-    materialName: 'PVC Films',
-    quantity: '2000',
-    quantityUnit: 'kg',
-  },
-];
+import { useAppSelector } from '@store/hooks';
 
 const SessionDashboardScreen = () => {
   const navigation = useNavigation<any>();
@@ -92,28 +33,88 @@ const SessionDashboardScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const token = useAppSelector((state) => state.auth.token);
+  console.log('token ->', JSON.stringify(token, null, 2));
 
   const initialTab = route.params?.initialTab || 'all';
   const [activeTab, setActiveTab] = useState<SessionTabType>(initialTab);
-  const [isLoading, setIsLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  // Filter sessions based on active tab
-  const filteredSessions = useMemo(() => {
-    if (activeTab === 'all') return MOCK_SESSIONS;
-    return MOCK_SESSIONS.filter((session) => session.status === activeTab);
+  // Map frontend tab to API filter
+  const apiFilter: SessionFilter = useMemo(() => {
+    if (activeTab === 'all') return 'all';
+    return activeTab;
   }, [activeTab]);
+
+  // Fetch active sessions from API
+  const {
+    data: sessionsResponse,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useGetActiveSessions({
+    filter: apiFilter,
+    per_page: 50,
+  });
+
+  console.log('sessionsResponse ->', JSON.stringify(sessionsResponse, null, 2));
+
+  const sessions = sessionsResponse?.data || [];
+  const refreshing = isRefetching;
+
+  // Transform API data to frontend Session type
+  const transformedSessions: Session[] = useMemo(() => {
+    return sessions.map((session: ActiveSessionListItem) => {
+      const firstItem = session.items[0];
+      const totalQuantity = session.items.reduce((sum, item) => sum + item.quantity, 0);
+      
+      // Map status from API to frontend
+      let frontendStatus: SessionTabType = 'active';
+      if (session.status === 'MATCHING') {
+        frontendStatus = 'finding_matches';
+      } else if (session.status === 'LOCKED') {
+        frontendStatus = 'locked';
+      } else if (session.status === 'RESPONSES_RECEIVED' || session.status === 'CHAT_ACTIVE') {
+        frontendStatus = 'active';
+      }
+
+      return {
+        id: String(session.id),
+        inquiryId: `INQ-${String(session.inquiry_id).padStart(3, '0')}`,
+        title: session.title,
+        category: firstItem?.material_category || 'Material',
+        createdAt: session.created_at,
+        status: frontendStatus,
+        isUrgent: session.urgency === 'urgent',
+        biddingEndsAt: session.countdown
+          ? new Date(Date.now() + 
+              (session.countdown.days * 24 * 60 * 60 * 1000) +
+              (session.countdown.hours * 60 * 60 * 1000) +
+              (session.countdown.minutes * 60 * 1000) +
+              (session.countdown.seconds * 1000)
+            ).toISOString()
+          : undefined,
+        responsesReceived: session.responses_received || 0,
+        totalExpectedResponses: session.matching_progress?.total || session.matched_dealers_count || 15,
+        materialName: firstItem?.material_category || 'Material',
+        quantity: String(totalQuantity),
+        quantityUnit: firstItem?.quantity_unit || 'units',
+      };
+    });
+  }, [sessions]);
+
+  // Filter sessions based on active tab (already filtered by API, but keeping for consistency)
+  const filteredSessions = useMemo(() => {
+    if (activeTab === 'all') return transformedSessions;
+    return transformedSessions.filter((session) => session.status === activeTab);
+  }, [transformedSessions, activeTab]);
 
   const handleTabChange = useCallback((tab: SessionTabType) => {
     setActiveTab(tab);
   }, []);
 
   const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setRefreshing(false);
-  }, []);
+    await refetch();
+  }, [refetch]);
 
   const handleSessionPress = useCallback(
     (session: Session) => {

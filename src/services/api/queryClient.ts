@@ -186,6 +186,20 @@ export const queryKeys = {
     transactionsInfinite: (params?: Record<string, any>) =>
       [...queryKeys.wallet.all, 'transactions', 'infinite', params] as const,
   },
+
+  // Sessions (Unified for all roles)
+  sessions: {
+    all: ['sessions'] as const,
+    active: (params?: Record<string, any>) =>
+      [...queryKeys.sessions.all, 'active', params] as const,
+    activeInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.sessions.all, 'active', 'infinite', params] as const,
+    history: (params?: Record<string, any>) =>
+      [...queryKeys.sessions.all, 'history', params] as const,
+    historyInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.sessions.all, 'history', 'infinite', params] as const,
+    detail: (id: number | string) => [...queryKeys.sessions.all, 'detail', id] as const,
+  },
 } as const;
 
 export default queryClient;

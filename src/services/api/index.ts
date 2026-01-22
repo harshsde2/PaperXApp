@@ -334,3 +334,51 @@ export type {
   // Hook Return Types
   UseWalletReturn,
 } from './walletApi/@types';
+
+// ============================================
+// SESSION API (Unified for all roles)
+// ============================================
+
+export {
+  useGetActiveSessions,
+  useGetActiveSessionsInfinite,
+  useGetSessionHistory,
+  useGetSessionHistoryInfinite,
+  useGetSessionDetail,
+  useLockSession,
+  useRepublishSession,
+  useMarkDealFailed,
+} from './sessionApi/sessionApi';
+export type {
+  // Common Types
+  SessionStatus,
+  SessionStatusLabel,
+  SessionFilter,
+  HistoryFilter,
+  // Session Item
+  SessionItem,
+  // Countdown
+  SessionCountdown,
+  // Matching Progress
+  MatchingProgress,
+  // Active Sessions
+  ActiveSessionListItem,
+  GetActiveSessionsParams,
+  GetActiveSessionsResponse,
+  // History
+  HistorySessionListItem,
+  HistoryMonthGroup,
+  GetSessionHistoryParams,
+  GetSessionHistoryResponse,
+  // Session Detail
+  SelectedPartner,
+  SessionDetail,
+  GetSessionDetailResponse,
+  // Lock Session
+  LockSessionRequest,
+  LockSessionResponse,
+  // Republish Session
+  RepublishSessionResponse,
+  // Mark Deal Failed
+  MarkDealFailedResponse,
+} from './sessionApi/@types';

@@ -192,3 +192,31 @@ export const UPLOAD_ENDPOINTS = {
   SINGLE: `${API_VERSION}/upload/single`,
   MULTIPLE: `${API_VERSION}/upload/multiple`,
 } as const;
+
+// Session Endpoints (Unified for all roles)
+export const SESSION_ENDPOINTS = {
+  // Get active sessions (Sourcing Hub)
+  ACTIVE: `${API_VERSION}/sessions/active`,
+  // Get session history
+  HISTORY: `${API_VERSION}/sessions/history`,
+  // Get session details
+  DETAIL: (id: number | string) => `${API_VERSION}/sessions/${id}`,
+  // Lock session (select dealers)
+  LOCK: (id: number | string) => `${API_VERSION}/sessions/${id}/lock`,
+  // Republish session
+  REPUBLISH: (id: number | string) => `${API_VERSION}/sessions/${id}/republish`,
+  // Mark deal as failed
+  DEAL_FAILED: (id: number | string) => `${API_VERSION}/sessions/${id}/deal-failed`,
+} as const;
+
+// Inquiry Endpoints
+export const INQUIRY_ENDPOINTS = {
+  // Get inquiry details
+  DETAIL: (id: number | string) => `${API_VERSION}/inquiries/${id}`,
+  // Get responses for inquiry (brand/converter only)
+  RESPONSES: (id: number | string) => `${API_VERSION}/inquiries/${id}/responses`,
+  // Get matchmaking responses with filters
+  MATCHMAKING_RESPONSES: (id: number | string) => `${API_VERSION}/inquiries/${id}/matchmaking-responses`,
+  // Shortlist/Reject response
+  SHORTLIST_RESPONSE: (id: number | string) => `${API_VERSION}/inquiries/responses/${id}/shortlist`,
+} as const;

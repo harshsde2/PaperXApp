@@ -108,9 +108,7 @@ const LoginScreen = () => {
     >
       <View style={[styles.container, { paddingTop: 60 }]}>
         <View style={{alignItems: 'center', marginBottom: 40 }}>
-           <Text variant="h2" style={styles.logo}>
-             Logo
-           </Text>
+          <AppIcon.ZupplyMainLogo width={100} height={100} color={baseColors.black} />
         </View>
 
         <Text variant="h1" style={styles.title}>

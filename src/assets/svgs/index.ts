@@ -47,6 +47,7 @@ import Sessions from './Sessions.svg';
 import Profile from './Profile.svg';
 import AppLogo from './AppLogo.svg';
 import Satellite from './Satellite.svg';
+import ZupplyMainLogo from './ZupplyMainLogo.svg';
 
 
 
@@ -100,4 +101,5 @@ export const AppIcon = {
   Profile,
   AppLogo,
   Satellite,
+  ZupplyMainLogo,
 };

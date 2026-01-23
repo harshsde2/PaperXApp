@@ -64,11 +64,11 @@ const CompanyDetailsScreen = () => {
 
   const { control, handleSubmit, setValue, watch } = useForm<CompanyDetailsFormData>({
     defaultValues: {
-      companyName: 'sneha enterprises',
-      gstin: '123456789012345',
-      state: 'Maharashtra',
-      city: 'Mumbai',
-      udyamCertificateNumber: '',
+      companyName: 'JB Craft Paper LLP',
+      gstin: '27AAQCS6171R1Z5',
+      state: 'Gujarat',
+      city: 'Surat',
+      udyamCertificateNumber: '911234567890',
     },
     mode: 'onBlur',
   });

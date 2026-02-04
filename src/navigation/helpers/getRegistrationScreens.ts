@@ -27,7 +27,7 @@ export const REGISTRATION_FLOWS: Record<UserRole, ScreenName[]> = {
 
   // Converter Registration Flow
   [ROLES.CONVERTER]: [
-    SCREENS.AUTH.CONVERTER_TYPE,      // Step 1: Converter type selection
+    SCREENS.AUTH.CONVERTER_REGISTRATION,      // Step 1: Converter type selection
     SCREENS.AUTH.FINISHED_PRODUCTS,   // Step 2: Finished products
     SCREENS.AUTH.MACHINERY,           // Step 3: Machinery selection
     SCREENS.AUTH.SCRAP_GENERATION,    // Step 4: Scrap categories

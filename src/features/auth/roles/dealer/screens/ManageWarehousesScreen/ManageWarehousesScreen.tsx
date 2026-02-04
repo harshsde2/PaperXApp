@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useLayoutEffect, useCallback, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -73,6 +73,25 @@ const ManageWarehousesScreen = () => {
   // Generate unique ID for new locations
   const generateId = () =>
     `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Prefill with Pune location for demo/testing
+  useEffect(() => {
+    if (locations.length === 0) {
+      const puneLocation: WarehouseLocation = {
+        id: generateId(),
+        name: 'Pune Warehouse',
+        address: '123, Business Park, Hinjewadi',
+        city: 'Pune',
+        state: 'Maharashtra',
+        zipCode: '411057',
+        isPrimary: true,
+        latitude: 18.5912,
+        longitude: 73.7415,
+      };
+      setLocations([puneLocation]);
+      setExpandedLocationIds([puneLocation.id]);
+    }
+  }, []); // Only run once on mount
 
   const transformDataForAPI = (): CompleteDealerProfileRequest | null => {
     if (!dealerRegistrationData) {

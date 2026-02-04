@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { useAppSelector } from '@store/hooks';
 import { useGetProfile, useGetDashboard } from '@services/api';
 import type { DashboardRole } from '@services/api';
@@ -16,22 +16,30 @@ import { styles } from './styles';
 
 const DashboardScreen = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const { data: profileData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useGetProfile();
-  
+  const {
+    data: profileData,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+    isRefetching: isProfileRefetching,
+    refetch: refetchProfile,
+  } = useGetProfile();
+
   // Get active role from Redux (supports role switching)
   const activeRole = useActiveRole() as DashboardRole;
-  
+
   // Fetch dashboard data based on active role
-  const { 
-    data: dashboardData, 
-    isLoading: isDashboardLoading, 
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
     isError: isDashboardError,
-    refetch: refetchDashboard 
+    isRefetching: isDashboardRefetching,
+    refetch: refetchDashboard,
   } = useGetDashboard({ role: activeRole });
-  
+
   const isLoading = isProfileLoading || isDashboardLoading;
   const isError = isProfileError || isDashboardError;
-  
+  const isRefreshing = isProfileRefetching || isDashboardRefetching;
+
   const refetch = () => {
     refetchProfile();
     refetchDashboard();
@@ -112,17 +120,48 @@ const DashboardScreen = () => {
 
   // Render role-specific dashboard views based on active role
   const renderRoleDashboard = () => {
+    const refreshProps = { onRefresh: refetch, refreshing: isRefreshing };
     switch (activeRole) {
       case 'dealer':
-        return <DealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
+        return (
+          <DealerDashboardView
+            profileData={profileData}
+            dashboardData={dashboardData}
+            {...refreshProps}
+          />
+        );
       case 'machine-dealer':
-        return <MachineDealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
+        return (
+          <MachineDealerDashboardView
+            profileData={profileData}
+            dashboardData={dashboardData}
+            {...refreshProps}
+          />
+        );
       case 'converter':
-        return <ConverterDashboardView profileData={profileData} dashboardData={dashboardData} />;
+        return (
+          <ConverterDashboardView
+            profileData={profileData}
+            dashboardData={dashboardData}
+            {...refreshProps}
+          />
+        );
       case 'brand':
-        return <BrandDashboardView profileData={profileData} dashboardData={dashboardData} />;
+        return (
+          <BrandDashboardView
+            profileData={profileData}
+            dashboardData={dashboardData}
+            {...refreshProps}
+          />
+        );
       default:
-        return <DealerDashboardView profileData={profileData} dashboardData={dashboardData} />;
+        return (
+          <DealerDashboardView
+            profileData={profileData}
+            dashboardData={dashboardData}
+            {...refreshProps}
+          />
+        );
     }
   };
 

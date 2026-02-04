@@ -1,15 +1,26 @@
-import React from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  RefreshControl,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import type { ConverterDashboardData } from '@services/api';
+import type { ActiveSessionListItem } from '@services/api/sessionApi/@types';
+import { SCREENS } from '@navigation/constants';
 
 const { width } = Dimensions.get('window');
 
 interface ConverterDashboardViewProps {
   profileData: any;
   dashboardData?: ConverterDashboardData;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 // Default/fallback data
@@ -24,10 +35,18 @@ const defaultData = {
   productionCapacity: { current: 0, max: 100, unit: '%' },
 };
 
-export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({ profileData, dashboardData: apiData }) => {
+export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
+  profileData,
+  dashboardData: apiData,
+  onRefresh,
+  refreshing = false,
+}) => {
   const navigation = useNavigation<any>();
 
   // Use API data with fallback to default data
+  // Handle both snake_case (from converter API) and camelCase (from dashboard API)
+  const activeSessionsData = (apiData as any)?.activeSessions || (apiData as any)?.active_sessions || [];
+  
   const dashboardData = {
     inquiriesCount: apiData?.inquiriesCount ?? defaultData.inquiriesCount,
     newInquiries: apiData?.newInquiries ?? defaultData.newInquiries,
@@ -35,15 +54,104 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({ 
     avgResponseChange: apiData?.avgResponseChange ?? defaultData.avgResponseChange,
     winRate: apiData?.winRate ?? defaultData.winRate,
     newInquiriesList: apiData?.newInquiriesList ?? defaultData.newInquiriesList,
-    activeSessions: apiData?.activeSessions ?? defaultData.activeSessions,
-    productionCapacity: apiData?.productionCapacity?.current ?? defaultData.productionCapacity.current,
+    activeSessions: activeSessionsData as ActiveSessionListItem[], // Top 5 active sessions from API
+    productionCapacity: {
+      current: apiData?.productionCapacity?.current ?? defaultData.productionCapacity.current,
+      max: apiData?.productionCapacity?.max ?? defaultData.productionCapacity.max,
+      unit: apiData?.productionCapacity?.unit ?? defaultData.productionCapacity.unit,
+    },
+  };
+
+  // Transform API session data to component format
+  const transformedSessions = useMemo(() => {
+    if (!dashboardData.activeSessions || dashboardData.activeSessions.length === 0) {
+      return [];
+    }
+
+    return dashboardData.activeSessions.slice(0, 5).map((session: ActiveSessionListItem) => {
+      const firstItem = session.items?.[0];
+      const totalQuantity = session.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+      
+      // Map API status to component status
+      let status: 'NEGOTIATION' | 'PENDING_INFO' | 'WAITING' | 'ACTIVE' = 'ACTIVE';
+      if (session.status === 'RESPONSES_RECEIVED' || session.status === 'CHAT_ACTIVE') {
+        status = 'NEGOTIATION';
+      } else if (session.status === 'MATCHING') {
+        status = 'WAITING';
+      }
+
+      // Format time remaining from countdown
+      let timeRemaining = '';
+      if (session.countdown) {
+        const { days, hours, minutes } = session.countdown;
+        if (days > 0) {
+          timeRemaining = `${days}d ${hours}h`;
+        } else if (hours > 0) {
+          timeRemaining = `${hours}h ${minutes}m`;
+        } else {
+          timeRemaining = `${minutes}m`;
+        }
+      }
+
+      // Get company name from title or use default
+      const companyName = session.title.split('-')[0]?.trim() || 'Company';
+      const companyAvatar = companyName.charAt(0).toUpperCase();
+
+      // Description from material and quantity
+      const materialName = firstItem?.material_category || 'Material';
+      const quantityUnit = firstItem?.quantity_unit || 'units';
+      const description = `${materialName} • ${totalQuantity} ${quantityUnit}`;
+
+      // Step progress (simplified - you may want to get this from API)
+      const stepProgress = session.responses_received > 0 ? 2 : 1;
+      const totalSteps = 4;
+      const step = session.responses_received > 0 ? 'Reviewing Responses' : 'Waiting for Responses';
+      const waitingOn = session.responses_received > 0 ? 'Reviewing' : 'Waiting for responses';
+      const actionRequired = session.status === 'RESPONSES_RECEIVED';
+
+      return {
+        id: String(session.id),
+        status,
+        timeRemaining,
+        companyAvatar,
+        company: companyName,
+        description,
+        actionRequired,
+        stepProgress,
+        totalSteps,
+        step,
+        waitingOn,
+      };
+    });
+  }, [dashboardData.activeSessions]);
+
+  const handleViewAllSessions = () => {
+    navigation.navigate(SCREENS.SESSIONS.DASHBOARD, {
+      initialTab: 'all',
+    });
+  };
+
+  const handleSessionPress = (sessionId: string) => {
+    navigation.navigate(SCREENS.SESSIONS.DETAILS, {
+      sessionId,
+    });
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
+          />
+        ) : undefined
+      }
     >
       {/* Status Pills */}
       <View style={styles.statusPillsContainer}>
@@ -54,7 +162,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({ 
         </View>
         <View style={[styles.statusPill, styles.statusPillOutline]}>
           <AppIcon.Capacity width={14} height={14} color="#6B7280" />
-          <Text style={styles.statusPillTextMuted}>Capacity: {dashboardData.productionCapacity}%</Text>
+          <Text style={styles.statusPillTextMuted}>Capacity: {dashboardData.productionCapacity.current}%</Text>
         </View>
       </View>
 
@@ -138,56 +246,73 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({ 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Active Sessions</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
+          {transformedSessions.length > 0 && (
+            <TouchableOpacity onPress={handleViewAllSessions}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {dashboardData.activeSessions.map((session) => (
-          <View key={session.id} style={styles.sessionCard}>
-            <View style={styles.sessionHeader}>
-              <View style={styles.sessionStatusBadge}>
-                <View style={[styles.sessionStatusDot, { backgroundColor: session.status === 'NEGOTIATION' ? '#16A34A' : '#F59E0B' }]} />
-                <Text style={styles.sessionStatusText}>{session.status.replace('_', ' ')}</Text>
-              </View>
-              <View style={styles.sessionTimeContainer}>
-                <AppIcon.Sessions width={14} height={14} color="#6B7280" />
-                <Text style={styles.sessionTimeText}>{session.timeRemaining}</Text>
-              </View>
-            </View>
-
-            <View style={styles.sessionContent}>
-              <View style={styles.sessionAvatar}>
-                <Text style={styles.sessionAvatarText}>{session.companyAvatar}</Text>
-              </View>
-              <View style={styles.sessionInfo}>
-                <Text style={styles.sessionCompany}>{session.company}</Text>
-                <Text style={styles.sessionDescription}>{session.description}</Text>
-              </View>
-              {session.actionRequired && (
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionButtonText}>Action</Text>
-                </TouchableOpacity>
-              )}
-              {!session.actionRequired && (
-                <TouchableOpacity style={styles.chatButton}>
-                  <AppIcon.Messages width={20} height={20} color="#6B7280" />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <View style={styles.sessionProgress}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${(session.stepProgress / session.totalSteps) * 100}%` }]} />
-              </View>
-            </View>
-
-            <View style={styles.sessionFooter}>
-              <Text style={styles.sessionStep}>Step {session.stepProgress}/{session.totalSteps}: {session.step}</Text>
-              <Text style={styles.sessionWaiting}>{session.actionRequired ? 'Your Turn' : session.waitingOn}</Text>
-            </View>
+        {transformedSessions.length === 0 ? (
+          <View style={styles.emptySessionsContainer}>
+            <Text style={styles.emptySessionsText}>No active sessions</Text>
+            <TouchableOpacity style={styles.viewAllButton} onPress={handleViewAllSessions}>
+              <Text style={styles.viewAllButtonText}>View All Sessions</Text>
+            </TouchableOpacity>
           </View>
-        ))}
+        ) : (
+          transformedSessions.map((session) => (
+            <TouchableOpacity
+              key={session.id}
+              style={styles.sessionCard}
+              onPress={() => handleSessionPress(session.id)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.sessionHeader}>
+                <View style={styles.sessionStatusBadge}>
+                  <View style={[styles.sessionStatusDot, { backgroundColor: session.status === 'NEGOTIATION' ? '#16A34A' : '#F59E0B' }]} />
+                  <Text style={styles.sessionStatusText}>{session.status.replace('_', ' ')}</Text>
+                </View>
+                {session.timeRemaining && (
+                  <View style={styles.sessionTimeContainer}>
+                    <AppIcon.Sessions width={14} height={14} color="#6B7280" />
+                    <Text style={styles.sessionTimeText}>{session.timeRemaining}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.sessionContent}>
+                <View style={styles.sessionAvatar}>
+                  <Text style={styles.sessionAvatarText}>{session.companyAvatar}</Text>
+                </View>
+                <View style={styles.sessionInfo}>
+                  <Text style={styles.sessionCompany}>{session.company}</Text>
+                  <Text style={styles.sessionDescription}>{session.description}</Text>
+                </View>
+                {session.actionRequired ? (
+                  <TouchableOpacity style={styles.actionButton}>
+                    <Text style={styles.actionButtonText}>Action</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.chatButton}>
+                    <AppIcon.Messages width={20} height={20} color="#6B7280" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.sessionProgress}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: `${(session.stepProgress / session.totalSteps) * 100}%` }]} />
+                </View>
+              </View>
+
+              <View style={styles.sessionFooter}>
+                <Text style={styles.sessionStep}>Step {session.stepProgress}/{session.totalSteps}: {session.step}</Text>
+                <Text style={styles.sessionWaiting}>{session.actionRequired ? 'Your Turn' : session.waitingOn}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </View>
 
       {/* Production Capacity Card */}
@@ -197,7 +322,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({ 
         </View>
         <Text style={styles.capacityTitle}>Production Capacity</Text>
         <Text style={styles.capacityDescription}>
-          You are at {dashboardData.productionCapacity}% capacity. Increase visibility to receive more inquiries?
+          You are at {dashboardData.productionCapacity.current}% capacity. Increase visibility to receive more inquiries?
         </Text>
         <TouchableOpacity>
           <Text style={styles.adjustLink}>Adjust Settings</Text>
@@ -574,6 +699,26 @@ const styles = StyleSheet.create({
   },
   adjustLink: {
     fontSize: 15,
+    fontWeight: '600',
+    color: '#2563EB',
+  },
+  emptySessionsContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptySessionsText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginBottom: 12,
+  },
+  viewAllButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: '#EEF2FF',
+  },
+  viewAllButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#2563EB',
   },

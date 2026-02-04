@@ -20,9 +20,11 @@ import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { useGetActiveSessions } from '@services/api';
 import type { ActiveSessionListItem, SessionFilter } from '@services/api';
+import { USE_DUMMY_DATA } from '@shared/constants/config';
 import { Session, SessionTabType } from '../../@types';
 import { SessionTabBar } from '../../components/SessionTabBar';
 import { SessionCard } from '../../components/SessionCard';
+import { getDummySessionsByTab } from '../../dummyData';
 import { SessionDashboardScreenRouteProp } from './@types';
 import { createStyles } from './styles';
 import { useAppSelector } from '@store/hooks';
@@ -45,24 +47,38 @@ const SessionDashboardScreen = () => {
     return activeTab;
   }, [activeTab]);
 
-  // Fetch active sessions from API
+  // Fetch active sessions from API (disabled in dummy mode)
   const {
     data: sessionsResponse,
-    isLoading,
+    isLoading: isApiLoading,
     isRefetching,
     refetch,
-  } = useGetActiveSessions({
-    filter: apiFilter,
-    per_page: 50,
-  });
+  } = useGetActiveSessions(
+    {
+      filter: apiFilter,
+      per_page: 50,
+    },
+    {
+      enabled: !USE_DUMMY_DATA, // Disable API calls in dummy mode
+    }
+  );
 
   console.log('sessionsResponse ->', JSON.stringify(sessionsResponse, null, 2));
+  console.log('USE_DUMMY_DATA ->', USE_DUMMY_DATA);
 
-  const sessions = sessionsResponse?.data || [];
-  const refreshing = isRefetching;
+  // Use dummy data or API data based on config
+  const sessions = USE_DUMMY_DATA ? [] : (sessionsResponse?.data || []);
+  const isLoading = USE_DUMMY_DATA ? false : isApiLoading;
+  const refreshing = USE_DUMMY_DATA ? false : isRefetching;
 
-  // Transform API data to frontend Session type
+  // Transform API data to frontend Session type OR use dummy data
   const transformedSessions: Session[] = useMemo(() => {
+    // Use dummy data in demo mode
+    if (USE_DUMMY_DATA) {
+      return getDummySessionsByTab(activeTab);
+    }
+
+    // Transform API data to frontend Session type
     return sessions.map((session: ActiveSessionListItem) => {
       const firstItem = session.items[0];
       const totalQuantity = session.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -100,10 +116,15 @@ const SessionDashboardScreen = () => {
         quantityUnit: firstItem?.quantity_unit || 'units',
       };
     });
-  }, [sessions]);
+  }, [sessions, activeTab]);
 
-  // Filter sessions based on active tab (already filtered by API, but keeping for consistency)
+  // Filter sessions based on active tab
+  // In dummy mode, data is already filtered by getDummySessionsByTab
+  // In API mode, filter the transformed sessions
   const filteredSessions = useMemo(() => {
+    if (USE_DUMMY_DATA) {
+      return transformedSessions; // Already filtered by tab in dummy mode
+    }
     if (activeTab === 'all') return transformedSessions;
     return transformedSessions.filter((session) => session.status === activeTab);
   }, [transformedSessions, activeTab]);

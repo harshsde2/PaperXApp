@@ -6,6 +6,7 @@ export interface User {
   id: string;
   mobile: string;
   primaryRole: UserRole;
+  primary_role: UserRole;
   secondaryRole?: UserRole;
   isVerified: boolean;
   companyName?: string | null;

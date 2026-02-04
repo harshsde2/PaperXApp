@@ -25,13 +25,10 @@ import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  usePostBrandRequirement,
   BrandRequirementType,
   BrandPackagingType,
   BrandTimeline,
 } from '@services/api';
-import { useAppDispatch } from '@store/hooks';
-import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
 import { createStyles } from './styles';
 import { PostBrandRequirementFormData, DropdownOption } from './@types';
@@ -72,9 +69,6 @@ const PostBrandRequirementScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-  const dispatch = useAppDispatch();
-
-  const { mutate: postRequirement, isPending: isSubmitting } = usePostBrandRequirement();
 
   const { control, handleSubmit, setValue, watch } = useForm<PostBrandRequirementFormData>({
     defaultValues: {
@@ -118,15 +112,8 @@ const PostBrandRequirementScreen = () => {
       setValue('latitude', location.latitude, { shouldValidate: true });
       setValue('longitude', location.longitude, { shouldValidate: true });
       setShowLocationPicker(false);
-
-      dispatch(
-        showToast({
-          message: 'Location selected successfully!',
-          type: 'success',
-        })
-      );
     },
-    [setValue, dispatch]
+    [setValue]
   );
 
   const onSubmit = useCallback(
@@ -168,9 +155,8 @@ const PostBrandRequirementScreen = () => {
       }
 
       // Prepare API request
-      const apiData = {
+      const apiData: any = {
         requirement_type: data.requirement_type,
-        packaging_type: data.requirement_type === 'Packaging' ? data.packaging_type : null,
         quantity_range: data.quantity_range,
         timeline: data.timeline,
         description: data.description.trim(),
@@ -180,31 +166,54 @@ const PostBrandRequirementScreen = () => {
         longitude: data.longitude!,
       };
 
+      // Only include packaging_type if requirement_type is Packaging
+      if (data.requirement_type === 'Packaging' && data.packaging_type) {
+        apiData.packaging_type = data.packaging_type;
+      }
+
       console.log('Brand Requirement API Data:', JSON.stringify(apiData, null, 2));
 
-      postRequirement(apiData, {
-        onSuccess: (response) => {
-          dispatch(
-            showToast({
-              message: response.message || 'Requirement posted successfully!',
-              type: 'success',
-            })
-          );
-          // Navigate to dashboard
-          navigation.navigate(SCREENS.MAIN.TABS, {
-            screen: SCREENS.MAIN.HOME,
-          });
-        },
-        onError: (error: any) => {
-          const errorMessage =
-            error?.response?.data?.message ||
-            error?.message ||
-            'Failed to post requirement. Please try again.';
-          Alert.alert('Error', errorMessage);
-        },
+      // Generate reference number
+      const refNumber = `#${Math.floor(Math.random() * 9000) + 1000}`;
+      
+      // Determine urgency label for display
+      const isUrgent = data.timeline === 'Urgent 1-2 Days';
+      const urgencyLabel = isUrgent ? 'Urgent 1-2 Days' : 'Normal 3-5 Days';
+
+      // Get requirement type display name
+      const requirementTypeName = REQUIREMENT_TYPE_OPTIONS.find(
+        opt => opt.value === data.requirement_type
+      )?.label || data.requirement_type;
+
+      // Get packaging type display name if applicable
+      const packagingTypeName = data.requirement_type === 'Packaging' && data.packaging_type
+        ? PACKAGING_TYPE_OPTIONS.find(opt => opt.value === data.packaging_type)?.label || data.packaging_type
+        : '';
+
+      // Prepare listing details for payment confirmation
+      const listingDetails = {
+        title: packagingTypeName 
+          ? `${requirementTypeName} - ${packagingTypeName}`
+          : requirementTypeName,
+        referenceNumber: refNumber,
+        grade: packagingTypeName || requirementTypeName,
+        materialName: packagingTypeName || requirementTypeName,
+        quantity: data.quantity_range,
+        quantityUnit: 'pieces',
+        urgency: urgencyLabel,
+        tags: isUrgent 
+          ? [requirementTypeName, 'Urgent'] 
+          : [requirementTypeName],
+      };
+
+      // Navigate to payment confirmation screen
+      navigation.navigate(SCREENS.MAIN.PAYMENT_CONFIRMATION, {
+        listingDetails,
+        formData: apiData,
+        requirementType: 'brand', // Add flag to identify brand requirement
       });
     },
-    [postRequirement, dispatch, navigation]
+    [navigation],
   );
 
   const buttonHeight = 60;
@@ -491,25 +500,18 @@ const PostBrandRequirementScreen = () => {
       {/* Submit Button */}
       <FloatingBottomContainer>
         <TouchableOpacity
-          style={[styles.button, isSubmitting && styles.buttonDisabled]}
+          style={styles.button}
           onPress={handleSubmit(onSubmit)}
           activeOpacity={0.8}
-          disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color={theme.colors.text.inverse} size="small" />
-          ) : (
-            <>
-              <Text variant="buttonMedium" style={styles.buttonText}>
-                Post Requirement
-              </Text>
-              <AppIcon.ArrowRight
-                width={20}
-                height={20}
-                color={theme.colors.text.inverse}
-              />
-            </>
-          )}
+          <Text variant="buttonMedium" style={styles.buttonText}>
+            Continue to Payment
+          </Text>
+          <AppIcon.ArrowRight
+            width={20}
+            height={20}
+            color={theme.colors.text.inverse}
+          />
         </TouchableOpacity>
       </FloatingBottomContainer>
     </>

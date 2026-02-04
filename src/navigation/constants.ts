@@ -12,7 +12,7 @@ export const SCREENS = {
     MATERIAL_SPECS: 'MaterialSpecs',
     SELECT_THICKNESS: 'SelectThickness',
     MANAGE_WAREHOUSES: 'ManageWarehouses',
-    CONVERTER_TYPE: 'ConverterType',
+    CONVERTER_REGISTRATION: 'ConverterRegistration',
     FINISHED_PRODUCTS: 'FinishedProducts',
     MACHINERY: 'Machinery',
     SCRAP_GENERATION: 'ScrapGeneration',

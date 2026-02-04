@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Dimensions, ImageBackground } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  ImageBackground,
+  RefreshControl,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -10,9 +18,16 @@ const { width } = Dimensions.get('window');
 interface MachineDealerDashboardViewProps {
   profileData: any;
   dashboardData?: MachineDealerDashboardData;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
-export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProps> = ({ profileData, dashboardData: apiData }) => {
+export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProps> = ({
+  profileData,
+  dashboardData: apiData,
+  onRefresh,
+  refreshing = false,
+}) => {
   const navigation = useNavigation<any>();
   const companyName = profileData?.company_name || 'Industrial Solutions';
 
@@ -96,10 +111,20 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
+          />
+        ) : undefined
+      }
     >
       {/* Title Section */}
       <View style={styles.titleSection}>

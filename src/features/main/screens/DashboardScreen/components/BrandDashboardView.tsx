@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  RefreshControl,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -10,6 +17,8 @@ const { width } = Dimensions.get('window');
 interface BrandDashboardViewProps {
   profileData: any;
   dashboardData?: BrandDashboardData;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 // Default/fallback data
@@ -20,7 +29,12 @@ const defaultData = {
   recentInquiries: [],
 };
 
-export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({ profileData, dashboardData: apiData }) => {
+export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
+  profileData,
+  dashboardData: apiData,
+  onRefresh,
+  refreshing = false,
+}) => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<'inquiries' | 'messages'>('inquiries');
 
@@ -33,10 +47,20 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({ profileD
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
+          />
+        ) : undefined
+      }
     >
       {/* Title Section */}
       <View style={styles.titleSection}>

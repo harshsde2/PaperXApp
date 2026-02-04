@@ -43,6 +43,12 @@ export const REFERENCE_ENDPOINTS = {
 
   // Brands (Mills)
   BRANDS: `${API_VERSION}/brands`,
+
+  // Converter Reference Data
+  CONVERTER_TYPES: `${API_VERSION}/converter-types`,
+  FINISHED_PRODUCTS: `${API_VERSION}/finished-products`,
+  SCRAP_TYPES: `${API_VERSION}/scrap-types`,
+  CONVERTER_REFERENCE_DATA: `${API_VERSION}/converter-reference-data`,
 } as const;
 
 // Dealer Endpoints
@@ -101,6 +107,9 @@ export const CONVERTER_ENDPOINTS = {
 
   // Dashboard
   DASHBOARD: `${API_VERSION}/converter/dashboard`,
+
+  // Requirements
+  POST_REQUIREMENT: `${API_VERSION}/converter/requirement/post`,
 } as const;
 
 // Brand Endpoints
@@ -199,7 +208,9 @@ export const SESSION_ENDPOINTS = {
   ACTIVE: `${API_VERSION}/sessions/active`,
   // Get session history
   HISTORY: `${API_VERSION}/sessions/history`,
-  // Get session details
+  // Get session by inquiry id (e.g. from requirements list; use session id for detail)
+  BY_INQUIRY: (inquiryId: number | string) => `${API_VERSION}/sessions/by-inquiry/${inquiryId}`,
+  // Get session details (use session id, not inquiry id)
   DETAIL: (id: number | string) => `${API_VERSION}/sessions/${id}`,
   // Lock session (select dealers)
   LOCK: (id: number | string) => `${API_VERSION}/sessions/${id}/lock`,

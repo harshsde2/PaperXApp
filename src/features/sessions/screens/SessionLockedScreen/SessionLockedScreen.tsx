@@ -3,7 +3,7 @@
  * Shows locked session with shortlisted partners
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -18,45 +18,13 @@ import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
+import { USE_DUMMY_DATA } from '@shared/constants/config';
 import { ShortlistedPartner } from '../../@types';
+import { getDummyShortlistedPartners } from '../../dummyData';
 import { SessionLockedScreenRouteProp } from './@types';
 import { createStyles } from './styles';
 
 const BANNER_HEIGHT = 200;
-
-// Mock shortlisted partners
-const MOCK_PARTNERS: ShortlistedPartner[] = [
-  {
-    id: 'partner-1',
-    sessionId: '1',
-    supplierId: 'sup-001',
-    supplierName: 'EcoPack Solutions',
-    isVerified: true,
-    specialty: 'Sustainable Plastics Specialist',
-    location: {
-      city: 'Mumbai',
-      country: 'India',
-    },
-    matchType: 'exact_match',
-    hasUnreadMessages: true,
-    lastMessageAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'partner-2',
-    sessionId: '1',
-    supplierId: 'sup-002',
-    supplierName: 'Global Fiber Co.',
-    isVerified: true,
-    specialty: 'Recycled Paper & Cardboard',
-    location: {
-      city: 'Delhi',
-      country: 'India',
-    },
-    matchType: 'exact_match',
-    hasUnreadMessages: false,
-    lastMessageAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
 
 const SessionLockedScreen = () => {
   const navigation = useNavigation<any>();
@@ -66,6 +34,11 @@ const SessionLockedScreen = () => {
   const insets = useSafeAreaInsets();
 
   const { sessionId, session } = route.params || {};
+
+  // Get shortlisted partners for this session
+  const partners = useMemo(() => {
+    return getDummyShortlistedPartners(sessionId || '3');
+  }, [sessionId]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -78,8 +51,8 @@ const SessionLockedScreen = () => {
 
   const handleGoToChat = useCallback(() => {
     // Navigate to first partner's chat or chat list
-    if (MOCK_PARTNERS.length > 0) {
-      const partner = MOCK_PARTNERS[0];
+    if (partners.length > 0) {
+      const partner = partners[0];
       navigation.navigate(SCREENS.SESSIONS.CHAT, {
         sessionId,
         partnerId: partner.supplierId,
@@ -87,7 +60,7 @@ const SessionLockedScreen = () => {
         inquiryRef: session?.inquiryId,
       });
     }
-  }, [navigation, sessionId, session]);
+  }, [navigation, sessionId, session, partners]);
 
   return (
     <ScreenWrapper safeAreaEdges={[]} backgroundColor={theme.colors.background.secondary}>
@@ -111,7 +84,7 @@ const SessionLockedScreen = () => {
         {/* Hero Banner with Gradient */}
         <View style={styles.heroBanner}>
           <Canvas style={{ position: 'absolute', width: '100%', height: BANNER_HEIGHT }}>
-            <RoundedRect x={0} y={0} width={400} height={BANNER_HEIGHT} r={0}>
+            <RoundedRect x={0} y={0} width={550} height={BANNER_HEIGHT} r={0}>
               <LinearGradient
                 start={vec(0, 0)}
                 end={vec(400, BANNER_HEIGHT)}
@@ -144,11 +117,11 @@ const SessionLockedScreen = () => {
         {/* Section Header */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Shortlisted Partners</Text>
-          <Text style={styles.sectionCount}>{MOCK_PARTNERS.length} Selected</Text>
+          <Text style={styles.sectionCount}>{partners.length} Selected</Text>
         </View>
 
         {/* Partner Cards */}
-        {MOCK_PARTNERS.map((partner) => (
+        {partners.map((partner) => (
           <View key={partner.id} style={styles.partnerCard}>
             <View style={styles.partnerInfo}>
               <View>

@@ -27,6 +27,7 @@ export interface CostBreakdownItem {
 export interface PaymentConfirmationRouteParams {
   listingDetails: ListingDetails;
   formData: any;
+  requirementType?: 'dealer' | 'brand'; // Optional flag to identify requirement type
 }
 
 export type PaymentConfirmationScreenNavigationProp = NativeStackNavigationProp<any>;

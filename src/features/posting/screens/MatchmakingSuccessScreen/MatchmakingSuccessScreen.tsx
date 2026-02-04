@@ -114,7 +114,7 @@ const MatchmakingSuccessScreen = () => {
   const handleViewActiveSession = useCallback(() => {
     // Navigate to sessions dashboard
     navigation.navigate(SCREENS.SESSIONS.DASHBOARD, {
-      initialTab: 'finding_matches',
+      initialTab: 'all',
     });
   }, [navigation]);
 

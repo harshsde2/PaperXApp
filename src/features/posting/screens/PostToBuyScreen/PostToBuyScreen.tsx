@@ -146,11 +146,13 @@ const PostToBuyScreen = () => {
   const user = useAppSelector((state) => state.auth.user);
   const token = useAppSelector((state) => state.auth.token);
 
+  
+
   // Get intent from route params, default to 'buy' for backward compatibility
   const intent = (route.params?.intent as 'buy' | 'sell') || 'buy';
   const isSellMode = intent === 'sell';
 
-  // console.log('token ->', JSON.stringify(token, null, 2));
+  console.log('user ->', JSON.stringify(user, null, 2));
 
 
   const {
@@ -645,6 +647,7 @@ const PostToBuyScreen = () => {
       navigation.navigate(SCREENS.MAIN.PAYMENT_CONFIRMATION, {
         listingDetails,
         formData: apiData,
+        requirementType: user?.primary_role,
       });
     },
     [navigation, selectedMaterialName, selectedFinishesDisplay],

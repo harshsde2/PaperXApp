@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  RefreshControl,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -11,14 +18,19 @@ const { width } = Dimensions.get('window');
 interface DealerDashboardViewProps {
   profileData: any;
   dashboardData?: DealerDashboardData;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
-export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profileData, dashboardData: apiData }) => {
+export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
+  profileData,
+  dashboardData: apiData,
+  onRefresh,
+  refreshing = false,
+}) => {
   const navigation = useNavigation<any>();
 
   const companyName = profileData?.company_name || 'Your Company';
-
-  console.log('apiData', apiData);
 
   // Use API data with fallback to defaults
   const dashboardData = {
@@ -31,10 +43,20 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profil
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
+          />
+        ) : undefined
+      }
     >
       {/* Title Section */}
       <View style={styles.titleSection}>
@@ -149,7 +171,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({ profil
         <TouchableOpacity 
           style={styles.additionalCard} 
           activeOpacity={0.7}
-          onPress={() => navigation.navigate(SCREENS.MAIN.REQUIREMENTS)}
+          onPress={() => navigation.navigate(SCREENS.SESSIONS.DASHBOARD)}
         >
           <View style={styles.additionalIconContainer}>
             <AppIcon.Inquiries width={24} height={24} color="#4F46E5" />

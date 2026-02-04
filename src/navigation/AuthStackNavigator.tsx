@@ -23,6 +23,7 @@ import FactoryLocationScreen from '@features/auth/roles/converter/screens/Factor
 import ConfirmRegistrationScreen from '@features/auth/roles/converter/screens/ConfirmRegistrationScreen/ConfirmRegistrationScreen';
 import BrandRegistrationScreen from '@features/auth/roles/brand/screens/BrandRegistrationScreen/BrandRegistrationScreen';
 import MachineDealerRegistrationScreen from '@features/auth/roles/machineDealer/screens/MachineDealerRegistrationScreen/MachineDealerRegistrationScreen';
+import ConverterRegistrationScreen from '@features/auth/roles/converter/screens/ConverterRegistrationScreen/ConverterRegistrationScreen';
 import { CustomHeader } from '@shared/components/CustomHeader';
 
 // Common params for role-specific registration screens
@@ -104,7 +105,7 @@ export type AuthStackParamList = {
   };
   ManageWarehouses: DealerRegistrationScreenParams & RegistrationScreenParams;
   // Converter screens
-  ConverterType: RegistrationScreenParams;
+  ConverterRegistration: RegistrationScreenParams;
   FinishedProducts: RegistrationScreenParams;
   Machinery: RegistrationScreenParams;
   ScrapGeneration: RegistrationScreenParams;
@@ -183,8 +184,8 @@ const AuthStackNavigator = () => {
         component={ManageWarehousesScreen}
       />
       <Stack.Screen
-        name={SCREENS.AUTH.CONVERTER_TYPE}
-        component={ConverterTypeScreen}
+        name={SCREENS.AUTH.CONVERTER_REGISTRATION}
+        component={ConverterRegistrationScreen}
         options={{ headerShown: true }}
       />
       <Stack.Screen

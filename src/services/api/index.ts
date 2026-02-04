@@ -345,11 +345,13 @@ export {
   useGetSessionHistory,
   useGetSessionHistoryInfinite,
   useGetSessionDetail,
+  useFetchSessionByInquiry,
   useLockSession,
   useRepublishSession,
   useMarkDealFailed,
   useGetMatchmakingResponses,
 } from './sessionApi/sessionApi';
+export type { GetSessionByInquiryResponse } from './sessionApi/sessionApi';
 export type {
   // Common Types
   SessionStatus,

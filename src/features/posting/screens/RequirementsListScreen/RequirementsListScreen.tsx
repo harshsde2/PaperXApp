@@ -6,15 +6,21 @@ import {
   TouchableOpacity,
   ListRenderItem,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import { useGetRequirementsInfinite, RequirementListItem } from '@services/api';
+import {
+  useGetRequirementsInfinite,
+  useFetchSessionByInquiry,
+  RequirementListItem,
+} from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createStyles } from './styles';
+import { SCREENS } from '@navigation/constants';
 
 const END_REACHED_THRESHOLD = 0.2;
 
@@ -23,6 +29,7 @@ interface RequirementItemProps {
   onPress: () => void;
   styles: ReturnType<typeof createStyles>;
   theme: ReturnType<typeof useTheme>;
+  isFetchingSession?: boolean;
 }
 
 const RequirementItem: React.FC<RequirementItemProps> = ({
@@ -30,6 +37,7 @@ const RequirementItem: React.FC<RequirementItemProps> = ({
   onPress,
   styles,
   theme,
+  isFetchingSession,
 }) => {
   const urgencyColor =
     requirement.urgency === 'urgent'
@@ -48,11 +56,13 @@ const RequirementItem: React.FC<RequirementItemProps> = ({
     .join(', ')
     .slice(0, 60) + (requirement.materials.length > 0 && requirement.materials[0].name.length > 60 ? '...' : '');
 
+
   return (
     <TouchableOpacity
       style={styles.requirementCard}
       onPress={onPress}
       activeOpacity={0.8}
+      disabled={isFetchingSession}
     >
       {/* Header Section */}
       <View style={styles.cardHeader}>
@@ -177,7 +187,7 @@ const RequirementItem: React.FC<RequirementItemProps> = ({
 };
 
 const RequirementsListScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
@@ -192,6 +202,9 @@ const RequirementsListScreen = () => {
     refetch,
     isRefetching,
   } = useGetRequirementsInfinite();
+
+  const { mutate: fetchSessionByInquiry, isPending: isFetchingSession } =
+    useFetchSessionByInquiry();
 
   const allRequirements = useMemo(() => {
     if (!data?.pages) return [];
@@ -208,19 +221,43 @@ const RequirementsListScreen = () => {
     // Handle scroll if needed
   }, []);
 
+  const handleRequirementPress = useCallback(
+    (item: RequirementListItem) => {
+      if (item.session_id != null) {
+        navigation.navigate(SCREENS.SESSIONS.DETAILS, {
+          sessionId: String(item.session_id),
+        });
+        return;
+      }
+      fetchSessionByInquiry(item.id, {
+        onSuccess: (session) => {
+          navigation.navigate(SCREENS.SESSIONS.DETAILS, {
+            sessionId: String(session.id),
+          });
+        },
+        onError: () => {
+          Alert.alert(
+            'No session',
+            'No session found for this requirement. It may not have been created yet.',
+            [{ text: 'OK' }]
+          );
+        },
+      });
+    },
+    [navigation, fetchSessionByInquiry]
+  );
+
   const renderItem: ListRenderItem<RequirementListItem> = useCallback(
     ({ item }) => (
       <RequirementItem
         requirement={item}
-        onPress={() => {
-          // Navigate to detail screen if needed
-          // navigation.navigate(SCREENS.MAIN.REQUIREMENT_DETAIL, { id: item.id });
-        }}
+        onPress={() => handleRequirementPress(item)}
         styles={styles}
         theme={theme}
+        isFetchingSession={isFetchingSession}
       />
     ),
-    [styles, theme]
+    [styles, theme, handleRequirementPress, isFetchingSession]
   );
 
   const keyExtractor = useCallback((item: RequirementListItem) => `requirement-${item.id}`, []);

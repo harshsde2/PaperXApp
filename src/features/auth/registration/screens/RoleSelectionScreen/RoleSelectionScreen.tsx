@@ -62,7 +62,7 @@ const RoleSelectionScreen = () => {
       id: ROLES.CONVERTER as PrimaryRole,
       label: 'Converter / Manufacturer',
       icon: AppIcon.Converter,
-      isComplete: false,
+      isComplete: true,
     },
     {
       id: ROLES.BRAND as PrimaryRole,
@@ -74,7 +74,7 @@ const RoleSelectionScreen = () => {
       id: ROLES.MACHINE_DEALER as PrimaryRole,
       label: 'Machine Dealer',
       icon: AppIcon.MachineDealer,
-      isComplete: false,
+      isComplete: true,
     },
   ];
 

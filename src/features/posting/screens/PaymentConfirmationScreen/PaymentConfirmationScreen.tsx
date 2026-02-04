@@ -19,10 +19,12 @@ import { useTheme } from '@theme/index';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
-import { useGetWalletBalance, useDeductCredits, usePostDealerRequirement } from '@services/api';
+import { useGetWalletBalance, useDeductCredits, usePostDealerRequirement, usePostBrandRequirement, usePostConverterRequirement } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
+import { queryKeys } from '@services/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { createStyles } from './styles';
 import {
   PaymentConfirmationScreenRouteProp,
@@ -32,6 +34,9 @@ import {
 
 const CARD_HEIGHT = 200;
 
+// Requirement type definitions
+type RequirementType = 'dealer' | 'brand' | 'converter';
+
 const PaymentConfirmationScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<PaymentConfirmationScreenRouteProp>();
@@ -39,8 +44,10 @@ const PaymentConfirmationScreen = () => {
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
-  const { listingDetails, formData } = route.params || {};
+  const { listingDetails, formData, requirementType = 'dealer' } = route.params || {};
+  const typedRequirementType = requirementType as RequirementType;
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -51,7 +58,47 @@ const PaymentConfirmationScreen = () => {
   } = useGetWalletBalance();
 
   const { mutate: deductCredits } = useDeductCredits();
-  const { mutate: postRequirement } = usePostDealerRequirement();
+  const { mutate: postDealerRequirement } = usePostDealerRequirement();
+  const { mutate: postBrandRequirement } = usePostBrandRequirement();
+  const { mutate: postConverterRequirement } = usePostConverterRequirement();
+  
+  // Get the appropriate mutation based on requirement type using a mapping object
+  const postRequirement = useMemo(() => {
+    const mutationMap: Record<RequirementType, typeof postDealerRequirement> = {
+      dealer: postDealerRequirement,
+      brand: postBrandRequirement,
+      converter: postConverterRequirement,
+    };
+
+    return mutationMap[typedRequirementType] || postDealerRequirement; // Default to dealer
+  }, [typedRequirementType, postDealerRequirement, postBrandRequirement, postConverterRequirement]);
+
+  // Helper function to invalidate queries based on requirement type
+  const invalidateQueriesByRequirementType = useCallback(
+    (type: RequirementType) => {
+      const invalidationMap: Record<RequirementType, () => void> = {
+        dealer: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.dealer.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.dealer.dashboard() });
+        },
+        brand: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.brand.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.brand.dashboard() });
+        },
+        converter: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+        },
+      };
+
+      const invalidate = invalidationMap[type] || invalidationMap.dealer;
+      invalidate();
+      
+      // Always invalidate wallet balance
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.balance() });
+    },
+    [queryClient]
+  );
 
   // Calculate costs
   const costBreakdown = useMemo(() => {
@@ -121,13 +168,20 @@ const PaymentConfirmationScreen = () => {
       onSuccess: (response: any) => {
 
         console.log('response', JSON.stringify(response, null, 2));
+        
+        // Handle both dealer (inquiry_id) and brand (id) response formats
+        const inquiryId = response.data?.inquiry_id || response.data?.id || `INQ-${Date.now()}`;
+        
+        // Invalidate queries based on requirement type
+        invalidateQueriesByRequirementType(typedRequirementType);
+        
         // Then deduct credits
         deductCredits(
           {
             credits: costBreakdown.total,
             description: 'Requirement Posted',
             transaction_type: 'REQUIREMENT_POSTED',
-            reference_id: response.data?.inquiry_id || `INQ-${Date.now()}`,
+            reference_id: inquiryId,
             reference_type: 'inquiry',
             metadata: {
               material: listingDetails?.materialName,
@@ -140,9 +194,9 @@ const PaymentConfirmationScreen = () => {
               // Navigate to success screen
               navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
                 requirementDetails: {
-                  id: response.data?.inquiry_id || `#${Math.floor(Math.random() * 9000) + 1000}`,
-                  materialName: listingDetails?.materialName || 'Material',
-                  quantity: `${listingDetails?.quantity}${listingDetails?.quantityUnit || 'kg'}`,
+                  id: inquiryId,
+                  materialName: listingDetails?.materialName || 'Requirement',
+                  quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
                   deadline: getDeadlineDate(listingDetails?.urgency),
                 },
                 creditsDeducted: costBreakdown.total,
@@ -154,9 +208,9 @@ const PaymentConfirmationScreen = () => {
               // Still navigate to success since requirement was posted
               navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
                 requirementDetails: {
-                  id: response.data?.inquiry_id || `#${Math.floor(Math.random() * 9000) + 1000}`,
-                  materialName: listingDetails?.materialName || 'Material',
-                  quantity: `${listingDetails?.quantity}${listingDetails?.quantityUnit || 'kg'}`,
+                  id: inquiryId,
+                  materialName: listingDetails?.materialName || 'Requirement',
+                  quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
                   deadline: getDeadlineDate(listingDetails?.urgency),
                 },
                 creditsDeducted: costBreakdown.total,
@@ -166,7 +220,7 @@ const PaymentConfirmationScreen = () => {
         );
       },
       onError: (error: any) => {
-        console.log('error', JSON.stringify(error, null, 2));
+        console.log('error', JSON.stringify(error.response, null, 2));
         setIsProcessing(false);
         const errorMessage = error?.response?.data?.message || error?.message || 'Failed to post requirement. Please try again.';
         Alert.alert('Error', errorMessage);
@@ -181,6 +235,8 @@ const PaymentConfirmationScreen = () => {
     postRequirement,
     deductCredits,
     handleBuyCredits,
+    invalidateQueriesByRequirementType,
+    typedRequirementType,
   ]);
 
   const getDeadlineDate = (urgency?: string) => {
@@ -276,7 +332,7 @@ const PaymentConfirmationScreen = () => {
           <View style={styles.walletCard}>
             {/* Gradient Background using Skia */}
             <Canvas style={{ position: 'absolute', width: '100%', height: CARD_HEIGHT }}>
-              <RoundedRect x={0} y={0} width={400} height={CARD_HEIGHT} r={20}>
+              <RoundedRect x={0} y={0} width={550} height={CARD_HEIGHT} r={20}>
                 <LinearGradient
                   start={vec(0, 0)}
                   end={vec(400, CARD_HEIGHT)}
@@ -346,7 +402,7 @@ const PaymentConfirmationScreen = () => {
 
             <View style={[styles.costRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total Deduction</Text>
-              <Text style={styles.totalValue}>{costBreakdown.total} Credits</Text>
+              <Text style={styles.totalValue}>{20} Credits</Text>
             </View>
           </View>
         </View>

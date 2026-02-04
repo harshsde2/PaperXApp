@@ -1,7 +1,4 @@
-/**
- * Dashboard API Types
- * Unified dashboard types for all roles
- */
+import { ActiveSessionListItem } from '../sessionApi/@types';
 
 // Role types
 export type DashboardRole = 'dealer' | 'machine-dealer' | 'converter' | 'brand';
@@ -106,7 +103,7 @@ export interface ConverterDashboardData {
   avgResponseChange: string;
   winRate: number;
   newInquiriesList: NewInquiry[];
-  activeSessions: ActiveSession[];
+  activeSessions: ActiveSessionListItem[]; // Top 5 active sessions from API
   productionCapacity: {
     current: number;
     max: number;

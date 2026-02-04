@@ -63,9 +63,14 @@ export const MatchResponseCard: React.FC<MatchResponseCardProps> = ({
   };
 
   const matchStyles = getMatchBadgeStyles();
+  const hasResponded = response.hasResponded ?? true; // Default to true for backward compatibility
 
   return (
-    <View style={[styles.card, response.isShortlisted && styles.cardShortlisted]}>
+    <View style={[
+      styles.card, 
+      response.isShortlisted && styles.cardShortlisted,
+      !hasResponded && { opacity: 0.85 },
+    ]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.supplierInfo}>
@@ -73,6 +78,7 @@ export const MatchResponseCard: React.FC<MatchResponseCardProps> = ({
             style={[
               styles.supplierLogo,
               response.matchType === 'slight_variation' && styles.supplierLogoSlightVariation,
+              !hasResponded && { backgroundColor: theme.colors.background.tertiary },
             ]}
           >
             <AppIcon.Organization
@@ -97,6 +103,22 @@ export const MatchResponseCard: React.FC<MatchResponseCardProps> = ({
                   color={theme.colors.primary.DEFAULT}
                 />
               )}
+              {/* Response Status Badge */}
+              {!hasResponded && (
+                <View style={{
+                  backgroundColor: theme.colors.warning.background,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  marginLeft: 6,
+                }}>
+                  <Text style={{
+                    fontSize: 10,
+                    color: theme.colors.warning.DEFAULT,
+                    fontWeight: '600',
+                  }}>PENDING</Text>
+                </View>
+              )}
             </View>
             <View style={styles.locationRow}>
               <AppIcon.Location width={12} height={12} color={theme.colors.text.tertiary} />
@@ -113,9 +135,9 @@ export const MatchResponseCard: React.FC<MatchResponseCardProps> = ({
         </View>
       </View>
 
-      {/* Message */}
-      <Text style={styles.message} numberOfLines={3}>
-        "{response.message}"
+      {/* Message / Match Score */}
+      <Text style={[styles.message, !hasResponded && { fontStyle: 'italic' }]} numberOfLines={3}>
+        {hasResponded ? `"${response.message}"` : response.message}
       </Text>
 
       {/* Actions */}
@@ -124,9 +146,10 @@ export const MatchResponseCard: React.FC<MatchResponseCardProps> = ({
           style={[styles.actionButton, styles.chatButton]}
           onPress={handleChat}
           activeOpacity={0.7}
+          disabled={!hasResponded}
         >
-          <AppIcon.Messages width={18} height={18} color={theme.colors.text.primary} />
-          <Text style={[styles.actionButtonText, styles.chatButtonText]}>Chat</Text>
+          <AppIcon.Messages width={18} height={18} color={hasResponded ? theme.colors.text.primary : theme.colors.text.disabled} />
+          <Text style={[styles.actionButtonText, styles.chatButtonText, !hasResponded && { color: theme.colors.text.disabled }]}>Chat</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

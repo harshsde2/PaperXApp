@@ -549,6 +549,8 @@ export interface RequirementListItem {
   materials: RequirementMaterial[];
   machines: any[];
   responses_count: number;
+  /** Session id for this requirement; use for GET /sessions/{id}. Do not use requirement id (inquiry id) as session id. */
+  session_id?: number | null;
   created_at: string;
   updated_at: string;
 }

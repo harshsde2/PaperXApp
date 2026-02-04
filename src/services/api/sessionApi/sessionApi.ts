@@ -41,7 +41,10 @@ const extractData = <T>(response: any): T => {
 // GET ACTIVE SESSIONS (Sourcing Hub)
 // ============================================
 
-export const useGetActiveSessions = (params?: GetActiveSessionsParams) => {
+export const useGetActiveSessions = (
+  params?: GetActiveSessionsParams,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: queryKeys.sessions.active(params),
     queryFn: async (): Promise<GetActiveSessionsResponse> => {
@@ -54,6 +57,7 @@ export const useGetActiveSessions = (params?: GetActiveSessionsParams) => {
     },
     staleTime: 1000 * 30, // 30 seconds - sessions change frequently
     gcTime: 0, // Don't cache - always fresh
+    enabled: options?.enabled ?? true,
   });
 };
 
@@ -123,16 +127,57 @@ export const useGetSessionHistoryInfinite = (
 // GET SESSION DETAIL
 // ============================================
 
-export const useGetSessionDetail = (id: number | string) => {
+export const useGetSessionDetail = (
+  id: number | string,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: queryKeys.sessions.detail(id),
     queryFn: async (): Promise<SessionDetail> => {
       const response = await api.get<GetSessionDetailResponse>(SESSION_ENDPOINTS.DETAIL(id));
       return extractData<SessionDetail>(response);
     },
-    enabled: !!id,
+    enabled: options?.enabled ?? !!id,
     staleTime: 1000 * 30, // 30 seconds
     gcTime: 0, // Don't cache - always fresh
+  });
+};
+
+// ============================================
+// GET SESSION BY INQUIRY ID
+// ============================================
+// Use when you have inquiry id (e.g. from requirements list) but need session.
+// Returns session with `id` (session id); use that for session detail, not inquiry id.
+
+export interface GetSessionByInquiryResponse {
+  id: number;
+  inquiry_id: number;
+  project_id: string;
+  status: string;
+  inquiry: { id: number; title: string; items: any[] };
+  selected_partners_count: number;
+  selected_partners: any[];
+  chat_enabled: boolean;
+  chat_thread_id: number | null;
+  locked_at: string | null;
+}
+
+export const useFetchSessionByInquiry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (inquiryId: number | string): Promise<GetSessionByInquiryResponse> => {
+      const response = await api.get<GetSessionByInquiryResponse>(
+        SESSION_ENDPOINTS.BY_INQUIRY(inquiryId)
+      );
+      return extractData<GetSessionByInquiryResponse>(response);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.active() });
+    },
+    onError: (e: Error) => {
+      console.error('[useFetchSessionByInquiry] Error:', e);
+    },
   });
 };
 
@@ -229,7 +274,8 @@ export const useMarkDealFailed = () => {
 
 export const useGetMatchmakingResponses = (
   inquiryId: number | string,
-  params?: GetMatchmakingResponsesParams
+  params?: GetMatchmakingResponsesParams,
+  options?: { enabled?: boolean }
 ) => {
   return useQuery({
     queryKey: queryKeys.inquiries.matchmakingResponses(inquiryId, params),
@@ -242,7 +288,7 @@ export const useGetMatchmakingResponses = (
       );
       return extractData<GetMatchmakingResponsesResponse>(response);
     },
-    enabled: !!inquiryId,
+    enabled: options?.enabled ?? !!inquiryId,
     staleTime: 1000 * 30, // 30 seconds
     gcTime: 0, // Don't cache - always fresh
   });

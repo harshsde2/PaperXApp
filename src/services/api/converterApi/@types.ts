@@ -4,6 +4,7 @@
  */
 
 import { PaginationMeta } from '../types';
+import { ActiveSessionListItem } from '../sessionApi/@types';
 
 // ============================================
 // COMPLETE PROFILE
@@ -58,6 +59,7 @@ export interface ConverterDashboardResponse {
   stats: ConverterDashboardStats;
   recent_orders?: ConverterOrderItem[];
   material_requests?: MaterialRequestItem[];
+  active_sessions?: ActiveSessionListItem[]; // Top 5 active sessions
 }
 
 // ============================================
@@ -117,5 +119,19 @@ export interface ScrapType {
   id: number;
   name: string;
   description?: string;
+}
+
+// ============================================
+// CONVERTER REFERENCE DATA (Combined)
+// ============================================
+
+export interface ConverterReferenceDataResponse {
+  converter_types: ConverterType[];
+  finished_products: FinishedProduct[];
+  scrap_types: ScrapType[];
+  machines: Array<{
+    id: number;
+    name: string;
+  }>;
 }
 

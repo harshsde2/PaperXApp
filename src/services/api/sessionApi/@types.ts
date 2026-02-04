@@ -258,6 +258,10 @@ export interface MatchmakingResponseItem {
   additional_details: string | null;
   responded_at: string;
   is_shortlisted: boolean;
+  /** Whether the dealer has actually submitted a response */
+  has_responded?: boolean;
+  /** Match score from matchmaking algorithm (0-100) */
+  match_score?: number;
 }
 
 export interface MatchmakingResponsesCountdown {

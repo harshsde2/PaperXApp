@@ -56,6 +56,9 @@ export interface MatchResponse {
   isShortlisted: boolean;
   isRejected: boolean;
   respondedAt: string;
+  // Matchmaking data
+  hasResponded?: boolean; // Whether dealer has submitted actual response
+  matchScore?: number; // Match score from algorithm (0-100)
 }
 
 // Shortlisted Partner (for locked session)

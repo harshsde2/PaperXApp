@@ -95,8 +95,8 @@ const ProfileScreen = () => {
   // Helper function to normalize role from API format to UserRole type
   const normalizeRole = (role: string): UserRole => {
     const normalized = role.toLowerCase().replace(/\s+/g, '-');
-    // Convert "machine-dealer" to "machineDealer" to match UserRole type
-    if (normalized === 'machine-dealer') {
+    // Convert "machine-dealer" or "machinedealer" to "machineDealer" to match UserRole type
+    if (normalized === 'machine-dealer' || normalized === 'machinedealer') {
       return 'machineDealer';
     }
     // Map other roles

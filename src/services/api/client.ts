@@ -133,16 +133,16 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle other error status codes
+    // Handle other error status codes (Laravel returns { message }, some APIs use { error: { message } })
     const errorMessage =
-      data?.error?.message || error.message || `Request failed with status ${status}`;
+      data?.message || data?.error?.message || error.message || `Request failed with status ${status}`;
 
-    // Log error details
+    // Log error details (include full data for 4xx to debug validation/backend messages)
     if (__DEV__) {
       console.error(`[API Error] ${originalRequest.method?.toUpperCase()} ${originalRequest.url}`, {
         status,
-        error: data?.error,
         message: errorMessage,
+        data,
       });
     }
 

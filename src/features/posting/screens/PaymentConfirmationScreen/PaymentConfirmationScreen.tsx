@@ -19,8 +19,8 @@ import { useTheme } from '@theme/index';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
-import { useGetWalletBalance, useDeductCredits, usePostDealerRequirement, usePostBrandRequirement, usePostConverterRequirement } from '@services/api';
-import { useAppDispatch } from '@store/hooks';
+import { useGetWalletBalance, useDeductCredits, usePostDealerRequirement, usePostBrandRequirement, usePostConverterRequirement, usePostConverterMachine, usePostMachine } from '@services/api';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
 import { queryKeys } from '@services/api';
@@ -35,7 +35,7 @@ import {
 const CARD_HEIGHT = 200;
 
 // Requirement type definitions
-type RequirementType = 'dealer' | 'brand' | 'converter';
+type RequirementType = 'dealer' | 'brand' | 'converter' | 'machineDealer';
 
 const PaymentConfirmationScreen = () => {
   const navigation = useNavigation<any>();
@@ -45,6 +45,7 @@ const PaymentConfirmationScreen = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const user = useAppSelector((state) => state.auth.user);
 
   const { listingDetails, formData, requirementType = 'dealer' } = route.params || {};
   const typedRequirementType = requirementType as RequirementType;
@@ -61,17 +62,22 @@ const PaymentConfirmationScreen = () => {
   const { mutate: postDealerRequirement } = usePostDealerRequirement();
   const { mutate: postBrandRequirement } = usePostBrandRequirement();
   const { mutate: postConverterRequirement } = usePostConverterRequirement();
-  
-  // Get the appropriate mutation based on requirement type using a mapping object
+  const { mutate: postMachine } = usePostMachine();
+  const { mutate: postConverterMachine } = usePostConverterMachine();
+
+  // Get the appropriate mutation: for machine post, converter uses converter API, machine dealer uses machine-dealer API
   const postRequirement = useMemo(() => {
-    const mutationMap: Record<RequirementType, typeof postDealerRequirement> = {
+    if (typedRequirementType === 'machineDealer' && user?.primary_role === 'converter') {
+      return postConverterMachine;
+    }
+    const mutationMap = {
       dealer: postDealerRequirement,
       brand: postBrandRequirement,
       converter: postConverterRequirement,
-    };
-
-    return mutationMap[typedRequirementType] || postDealerRequirement; // Default to dealer
-  }, [typedRequirementType, postDealerRequirement, postBrandRequirement, postConverterRequirement]);
+      machineDealer: postMachine,
+    } as const;
+    return mutationMap[typedRequirementType] ?? postDealerRequirement;
+  }, [typedRequirementType, user?.primary_role, postDealerRequirement, postBrandRequirement, postConverterRequirement, postMachine, postConverterMachine]);
 
   // Helper function to invalidate queries based on requirement type
   const invalidateQueriesByRequirementType = useCallback(
@@ -89,11 +95,16 @@ const PaymentConfirmationScreen = () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
           queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
         },
+        machineDealer: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.machineDealer.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.machineDealer.dashboard() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.machineDealer.listings() });
+        },
       };
 
       const invalidate = invalidationMap[type] || invalidationMap.dealer;
       invalidate();
-      
+
       // Always invalidate wallet balance
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.balance() });
     },
@@ -163,25 +174,29 @@ const PaymentConfirmationScreen = () => {
 
     setIsProcessing(true);
 
-    // First post the requirement
-    postRequirement(formData, {
+    // First post the requirement (formData shape depends on requirementType: dealer/brand/converter/machineDealer)
+    (postRequirement as (data: any, opts?: { onSuccess?: (r: any) => void; onError?: (e: any) => void }) => void)(formData, {
       onSuccess: (response: any) => {
-
         console.log('response', JSON.stringify(response, null, 2));
-        
-        // Handle both dealer (inquiry_id) and brand (id) response formats
-        const inquiryId = response.data?.inquiry_id || response.data?.id || `INQ-${Date.now()}`;
-        
-        // Invalidate queries based on requirement type
-        invalidateQueriesByRequirementType(typedRequirementType);
-        
-        // Then deduct credits
+        // Handle dealer (inquiry_id), brand (id), machine dealer (inquiry_id/id) response formats
+        const inquiryId = response?.inquiry_id ?? response?.id ?? response?.data?.inquiry_id ?? response?.data?.id ?? `INQ-${Date.now()}`;
+        const referenceId = typeof inquiryId === 'string' ? inquiryId : String(inquiryId);
+
+        // Invalidate queries: converter machine post invalidates converter; machine dealer invalidates machine dealer
+        if (typedRequirementType === 'machineDealer' && user?.primary_role === 'converter') {
+          queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+        } else {
+          invalidateQueriesByRequirementType(typedRequirementType);
+        }
+
+        // Then deduct credits (backend requires reference_id to be a string)
         deductCredits(
           {
             credits: costBreakdown.total,
             description: 'Requirement Posted',
             transaction_type: 'REQUIREMENT_POSTED',
-            reference_id: inquiryId,
+            reference_id: referenceId,
             reference_type: 'inquiry',
             metadata: {
               material: listingDetails?.materialName,
@@ -194,7 +209,7 @@ const PaymentConfirmationScreen = () => {
               // Navigate to success screen
               navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
                 requirementDetails: {
-                  id: inquiryId,
+                  id: referenceId,
                   materialName: listingDetails?.materialName || 'Requirement',
                   quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
                   deadline: getDeadlineDate(listingDetails?.urgency),
@@ -208,7 +223,7 @@ const PaymentConfirmationScreen = () => {
               // Still navigate to success since requirement was posted
               navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
                 requirementDetails: {
-                  id: inquiryId,
+                  id: referenceId,
                   materialName: listingDetails?.materialName || 'Requirement',
                   quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
                   deadline: getDeadlineDate(listingDetails?.urgency),
@@ -237,6 +252,8 @@ const PaymentConfirmationScreen = () => {
     handleBuyCredits,
     invalidateQueriesByRequirementType,
     typedRequirementType,
+    user?.primary_role,
+    queryClient,
   ]);
 
   const getDeadlineDate = (urgency?: string) => {

@@ -4,6 +4,7 @@
  */
 
 import { PaginationMeta } from '../types';
+import type { MachineCategoryType } from '../../../features/posting/constants/machineConstants';
 
 // ============================================
 // COMMON TYPES
@@ -26,14 +27,17 @@ export type ListingStatus = 'active' | 'pending' | 'sold' | 'expired' | 'cancell
 
 export interface CompleteMachineDealerProfileRequest {
   company_name: string;
-  gst?: string;
+  gst?: string | null;
   contact_person_name: string;
-  mobile: string;
-  email?: string;
+  mobile?: string | null;
+  email?: string | null;
   city: string;
   location: string;
   latitude: number;
   longitude: number;
+  primary_machine_category?: MachineCategoryType | null;
+  primary_machine_id?: number | null;
+  preferred_brand_names?: string[] | null;
 }
 
 export interface CompleteMachineDealerProfileResponse {

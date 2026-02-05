@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
@@ -9,10 +9,8 @@ import { useTheme } from '@theme/index';
 import { useAppDispatch } from '@store/hooks';
 import { updateUser } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
-import { SCREENS } from '@navigation/constants';
 import { VerificationStatusScreenNavigationProp, VerificationStatusScreenRouteProp } from './@types';
 import { createStyles } from './styles';
-import type { UpdateProfileResponse } from '@services/api';
 
 const VerificationStatusScreen = () => {
   const navigation = useNavigation<VerificationStatusScreenNavigationProp>();
@@ -20,52 +18,41 @@ const VerificationStatusScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const dispatch = useAppDispatch();
+  const hasProceededRef = useRef(false);
 
   // Get profile data from route params
   const { profileData } = route.params || {};
 
-  console.log('profileData', JSON.stringify(profileData, null, 2));
-
-  // console.log('[VerificationStatus] Profile data:', JSON.stringify(profileData, null, 2));
-  // NOTE: Do NOT update Redux state or storage on screen load
-  // State will be updated only when user clicks "Proceed to Dashboard" button
-  // This prevents automatic navigation to dashboard
-
-  // Check if UDYAM is verified and redirect to dashboard
-  useEffect(() => {
-    if (profileData?.udyam_verified_at) {
-      // UDYAM is verified, AppNavigator will handle navigation to MainNavigator
-      // We can navigate away after a short delay to show the success message
-      const timer = setTimeout(() => {
-        // Navigation will be handled by AppNavigator based on udyam_verified_at
-        // The AppNavigator will check this and show MainNavigator
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [profileData?.udyam_verified_at]);
+  // NOTE: Do NOT update Redux state or storage on screen load.
+  // State is updated only when user clicks "Proceed to Dashboard".
 
   const handleProceedToDashboard = () => {
-    // Update Redux state and storage ONLY when user clicks "Proceed to Dashboard"
-    // This ensures user sees verification status before navigating to dashboard
-    if (profileData) {
-      // Update storage to persist the data
-      storageService.setUserData(profileData);
-      console.log('[VerificationStatus] User data saved to storage');
+    if (!profileData || hasProceededRef.current) return;
+    hasProceededRef.current = true;
 
-      // Update Redux state to trigger AppNavigator to show MainNavigator
-      dispatch(
-        updateUser({
-          companyName: profileData.company_name || null,
-          udyamVerifiedAt: profileData.udyam_verified_at || null,
-          ...profileData,
-        })
-      );
-      console.log('[VerificationStatus] Redux state updated, navigating to dashboard');
-    }
-    
-    // AppNavigator will automatically switch to MainNavigator
-    // since user has company_name (hasCompletedRegistration = true)
-    // The navigation happens automatically when Redux state updates
+    // User has just completed the full registration flow (this is the last screen).
+    // Force completion flags so AppNavigator switches to MainNavigator.
+    // (profileData may still have has_completed_registration: false from an earlier API response.)
+    const completedProfile = {
+      ...profileData,
+      has_completed_registration: true,
+      profile_complete: true,
+    };
+
+    storageService.setUserData(completedProfile);
+
+    dispatch(
+      updateUser({
+        companyName: profileData.company_name || null,
+        udyamVerifiedAt: profileData.udyam_verified_at || null,
+        has_completed_registration: true,
+        profile_complete: true,
+        ...completedProfile,
+      })
+    );
+
+    // AppNavigator will re-render and show MainNavigator (dashboard)
+    // because has_completed_registration is now true.
   };
 
   const handleContactSupport = () => {

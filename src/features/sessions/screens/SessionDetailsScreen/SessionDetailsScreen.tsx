@@ -23,10 +23,8 @@ import {
   useGetSessionDetail,
   useGetMatchmakingResponses,
 } from '@services/api';
-import { USE_DUMMY_DATA } from '@shared/constants/config';
 import { MatchResponse, MatchType, Session } from '../../@types';
 import { MatchResponseCard } from '../../components/MatchResponseCard';
-import { getDummyMatchResponses, getDummySessionById, getDummyCountdown } from '../../dummyData';
 import { SessionDetailsScreenRouteProp, FilterChip } from './@types';
 import { createStyles } from './styles';
 
@@ -47,38 +45,25 @@ const SessionDetailsScreen = () => {
   const { sessionId, session: routeSession } = route.params || {};
   const [activeFilter, setActiveFilter] = useState<MatchType>('all');
 
-  // Get dummy session data for demo mode
-  const dummySession = useMemo(() => {
-    if (USE_DUMMY_DATA && sessionId) {
-      return getDummySessionById(sessionId);
-    }
-    return undefined;
-  }, [sessionId]);
-
-  // Get session detail from API (disabled in dummy mode)
   const {
     data: sessionDetail,
     isLoading: isLoadingSession,
     refetch: refetchSession,
   } = useGetSessionDetail(sessionId ? Number(sessionId) : 0, {
-    enabled: !USE_DUMMY_DATA && !!sessionId,
+    enabled: !!sessionId,
   });
 
-  // Get inquiry ID from session detail or route session
   const inquiryId = useMemo(() => {
-    if (USE_DUMMY_DATA) {
-      return null; // Not needed in dummy mode
-    }
     if (sessionDetail?.inquiry?.id) {
       return sessionDetail.inquiry.id;
     }
     if (routeSession?.inquiryId) {
-      return Number(routeSession.inquiryId);
+      const parsed = Number(routeSession.inquiryId);
+      return Number.isNaN(parsed) ? null : parsed;
     }
     return null;
   }, [sessionDetail, routeSession]);
 
-  // Get matchmaking responses from API (disabled in dummy mode)
   const filterParam = useMemo(() => {
     return activeFilter === 'all' ? undefined : activeFilter;
   }, [activeFilter]);
@@ -90,16 +75,11 @@ const SessionDetailsScreen = () => {
   } = useGetMatchmakingResponses(inquiryId || 0, {
     filter: filterParam,
   }, {
-    enabled: !USE_DUMMY_DATA && !!inquiryId,
+    enabled: !!inquiryId,
   });
 
-  // Map API responses to MatchResponse type OR use dummy data
+  // Map API responses to MatchResponse type
   const responses = useMemo<MatchResponse[]>(() => {
-    // Use dummy data in demo mode
-    if (USE_DUMMY_DATA) {
-      return getDummyMatchResponses(sessionId || '1', activeFilter);
-    }
-
     if (!matchmakingData?.responses) {
       return [];
     }
@@ -158,20 +138,16 @@ const SessionDetailsScreen = () => {
         matchScore: response.match_score,
       };
     });
-  }, [matchmakingData, sessionId, activeFilter]);
+  }, [matchmakingData, sessionId]);
 
-  const refreshing = USE_DUMMY_DATA ? false : (isLoadingSession || isLoadingResponses);
+  const refreshing = isLoadingSession || isLoadingResponses;
 
-  // Responses are already filtered (by API or dummy data helper)
+  // Responses are already filtered by API
   const filteredResponses = useMemo(() => {
     return responses;
   }, [responses]);
 
   const responseCount = useMemo(() => {
-    if (USE_DUMMY_DATA) {
-      // Get total count from unfiltered dummy data
-      return getDummyMatchResponses(sessionId || '1', 'all').length;
-    }
     return matchmakingData?.responses_count || responses.length;
   }, [matchmakingData, responses.length, sessionId]);
 
@@ -218,16 +194,8 @@ const SessionDetailsScreen = () => {
     [refetchResponses]
   );
 
-  // Timer calculation from API countdown OR dummy data
+  // Timer calculation from API countdown
   const timeLeft = useMemo(() => {
-    if (USE_DUMMY_DATA) {
-      const countdown = getDummyCountdown(sessionId || '1');
-      return {
-        hours: countdown.hours,
-        mins: countdown.minutes,
-        secs: countdown.seconds,
-      };
-    }
     if (matchmakingData?.countdown) {
       const { hours, minutes, seconds } = matchmakingData.countdown;
       return {
@@ -237,7 +205,7 @@ const SessionDetailsScreen = () => {
       };
     }
     return { hours: 0, mins: 0, secs: 0 };
-  }, [matchmakingData?.countdown, sessionId]);
+  }, [matchmakingData?.countdown]);
 
   // Update timer every second
   const [currentTimeLeft, setCurrentTimeLeft] = useState(timeLeft);
@@ -308,38 +276,32 @@ const SessionDetailsScreen = () => {
                 <View style={styles.summaryDetails}>
                   <Text style={styles.summaryLabel}>Requirement Summary</Text>
                   <Text style={styles.summaryTitle} numberOfLines={2}>
-                    {USE_DUMMY_DATA
-                      ? (dummySession?.title || routeSession?.title || 'Material Requirement')
-                      : (sessionDetail?.inquiry?.title ||
-                          matchmakingData?.inquiry?.title ||
-                          routeSession?.title ||
-                          'Material Requirement')}
+                    {sessionDetail?.inquiry?.title ||
+                      matchmakingData?.inquiry?.title ||
+                      routeSession?.title ||
+                      'Material Requirement'}
                   </Text>
                   <Text style={styles.summarySubtitle}>
-                    {USE_DUMMY_DATA
-                      ? (dummySession
-                          ? `${dummySession.quantity} ${dummySession.quantityUnit} ${dummySession.materialName}`
-                          : routeSession?.specifications || 'No details available')
-                      : (matchmakingData?.inquiry?.items
-                          ?.map(
-                            (item) =>
-                              `${item.quantity} ${item.quantity_unit} ${item.material_category}`
-                          )
-                          .join(', ') ||
-                          sessionDetail?.inquiry?.items
-                            ?.map(
-                              (item) =>
-                                `${item.quantity} ${item.quantity_unit} ${item.material_category}`
-                            )
-                            .join(', ') ||
-                          routeSession?.specifications ||
-                          'No details available')}
+                    {matchmakingData?.inquiry?.items
+                      ?.map(
+                        (item) =>
+                          `${item.quantity} ${item.quantity_unit} ${item.material_category}`
+                      )
+                      .join(', ') ||
+                      sessionDetail?.inquiry?.items
+                        ?.map(
+                          (item) =>
+                            `${item.quantity} ${item.quantity_unit} ${item.material_category}`
+                        )
+                        .join(', ') ||
+                      routeSession?.specifications ||
+                      'No details available'}
                   </Text>
                 </View>
               </View>
 
               {/* Timer */}
-              {(USE_DUMMY_DATA || matchmakingData?.countdown) && (
+              {matchmakingData?.countdown && (
                 <View style={styles.summaryTimer}>
                   <Text style={styles.timerLabel}>Bidding ends in:</Text>
                   <View style={styles.timerRow}>

@@ -4,7 +4,7 @@ import { useNavigation, useRoute, CommonActions } from '@react-navigation/native
 import { Controller } from 'react-hook-form';
 import { Text } from '@shared/components/Text';
 import OTPInput from '@features/auth/components/OTPInput';
-import { useSendOTP, useVerifyOTP } from '@services/api';
+import { useSendOTP, useVerifyOTP, type VerifyOTPResult } from '@services/api';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useForm } from '@shared/forms';
@@ -17,6 +17,8 @@ import { SCREENS } from '@navigation/constants';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { baseColors } from '@theme/tokens/base';
 import { Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
+import type { UserRole } from '@shared/types';
 
 type OTPFormData = {
   otp: string;
@@ -87,6 +89,29 @@ const OTPVerificationScreen = () => {
   const {mutate: verifyOTP, isPending: isVerifyingOTP} = useVerifyOTP();
   const {mutate: sendOTP, isPending: isSendingOTP} = useSendOTP();
 
+  /**
+   * Normalize backend primary_role string to shared UserRole type.
+   * Handles formats like "machine-dealer", "machine_dealer", "machineDealer", etc.
+   */
+  const normalizeRole = (role: string | null | undefined): UserRole | null => {
+    if (!role) return null;
+    const normalized = role.toLowerCase().replace(/[\s_]+/g, '-');
+
+    if (normalized === 'machine-dealer' || normalized === 'machinedealer') {
+      return 'machineDealer';
+    }
+
+    const roleMap: Record<string, UserRole> = {
+      dealer: 'dealer',
+      converter: 'converter',
+      brand: 'brand',
+      mill: 'mill',
+      'scrap-dealer': 'scrapDealer',
+    };
+
+    return roleMap[normalized] ?? null;
+  };
+
   useEffect(() => {
     if (timeLeft > 0) {
       const timer = setInterval(() => {
@@ -122,15 +147,71 @@ const OTPVerificationScreen = () => {
     if (isVerifyingOTP) {
       return;
     }
-    verifyOTP({ mobile: mobile, otp: data.otp }, {
-      onSuccess: () => {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: SCREENS.AUTH.COMPANY_DETAILS }],
-          })
-        );
-      },
+    verifyOTP(
+      { mobile: mobile, otp: data.otp },
+      {
+        onSuccess: (result: VerifyOTPResult) => {
+          const profile = result.profile as any;
+          const hasCompletedRegistration = result.hasCompletedRegistration;
+          const hasCompanyDetails = !!profile?.company_name;
+
+          // Case 3: User has fully completed registration for their role -> go to dashboard
+          // AppNavigator will pick this up via auth state (no manual navigation needed here).
+          if (hasCompletedRegistration) {
+            return;
+          }
+
+          // Case 1: First-time user, no company details yet -> go to Company Details screen
+          if (!hasCompanyDetails) {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: SCREENS.AUTH.COMPANY_DETAILS }],
+              })
+            );
+            return;
+          }
+
+          // Case 2: Company details exist but role-specific registration not completed.
+          // Redirect to the first registration screen for the user's primary role.
+          const rawPrimaryRole: string | undefined =
+            profile?.primary_role ?? profile?.primaryRole ?? undefined;
+          const normalizedRole = normalizeRole(rawPrimaryRole);
+
+          if (normalizedRole) {
+            const firstScreen = getFirstRegistrationScreen(normalizedRole);
+
+            if (firstScreen && firstScreen !== SCREENS.AUTH.VERIFICATION_STATUS) {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      // firstScreen is an auth-stack screen name
+                      name: firstScreen as never,
+                      // Pass profile data so registration flow screens can use it
+                      params: { profileData: profile } as never,
+                    },
+                  ],
+                })
+              );
+              return;
+            }
+          }
+
+          // Fallback: if we can't determine a specific flow, go to verification status.
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: SCREENS.AUTH.VERIFICATION_STATUS as never,
+                  params: { profileData: profile } as never,
+                },
+              ],
+            })
+          );
+        },
       onError: (error: Error) => {
         console.error('[OTPVerificationScreen] Verify OTP Error:', error);
         Alert.alert('Error', error.message);

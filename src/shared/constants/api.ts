@@ -110,6 +110,8 @@ export const CONVERTER_ENDPOINTS = {
 
   // Requirements
   POST_REQUIREMENT: `${API_VERSION}/converter/requirement/post`,
+  // Machine buy/sell (converter)
+  POST_MACHINE: `${API_VERSION}/converter/machine/post`,
 } as const;
 
 // Brand Endpoints

@@ -85,14 +85,21 @@ export type MachineType =
   | 'printing'
   | 'die_cutting'
   | 'folding_gluing'
+  | 'rigid_box'
   | 'lamination'
   | 'corrugation'
+  | 'converting'
+  | 'binding'
+  | 'finishing'
+  | 'paper_bag_cup'
+  | 'auxiliary'
+  | 'specialty'
   | 'other';
 
 export interface Machine {
   id: number;
   name: string;
-  type: MachineType;
+  type?: string;
   brand?: string;
   model?: string;
   description?: string;
@@ -103,7 +110,9 @@ export interface Machine {
 }
 
 export interface GetMachinesParams {
-  type?: MachineType;
+  /** Backend machines.type filter: printing, die_cutting, folding_gluing, rigid_box, corrugation, lamination, converting, binding, finishing, paper_bag_cup, auxiliary, specialty */
+  type?: string;
+  category?: string;
 }
 
 export interface GetMachinesResponse {

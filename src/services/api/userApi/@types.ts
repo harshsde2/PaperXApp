@@ -39,6 +39,11 @@ export interface UpdateProfileResponse {
   city: string | null;
   udyam_certificate: string | null;
   udyam_verified_at: string | null;
+   /**
+   * Optional backend-driven flag indicating whether the user has fully
+   * completed registration (may include checks beyond company_name).
+   */
+  has_completed_registration?: boolean;
   avatar: string | null;
   created_at: string;
   updated_at: string;

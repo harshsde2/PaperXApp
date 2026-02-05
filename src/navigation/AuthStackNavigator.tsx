@@ -51,7 +51,10 @@ export type AuthStackParamList = {
     udyamCertificateName?: string;
     udyamCertificateType?: string;
   };
-  VerificationStatus: DealerRegistrationScreenParams & RegistrationScreenParams;
+  VerificationStatus: DealerRegistrationScreenParams &
+    RegistrationScreenParams & {
+      machineDealerRegistrationData?: any;
+    };
   // Dealer screens
   Materials: DealerRegistrationScreenParams & RegistrationScreenParams;
   MillBrandDetails: DealerRegistrationScreenParams & {

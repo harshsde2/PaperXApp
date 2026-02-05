@@ -206,8 +206,13 @@ export const useGetMaterialDetails = (materialId: number | string) => {
 
 /**
  * Get all machines with optional type filter
+ * @param params - optional type/category filter (backend machines.type)
+ * @param options - optional { enabled } to skip query when e.g. category not selected
  */
-export const useGetMachines = (params?: GetMachinesParams) => {
+export const useGetMachines = (
+  params?: GetMachinesParams,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: queryKeys.reference.machines(params),
     queryFn: async (): Promise<Machine[]> => {
@@ -235,6 +240,7 @@ export const useGetMachines = (params?: GetMachinesParams) => {
       return [];
     },
     staleTime: 1000 * 60 * 30,
+    enabled: options?.enabled !== false,
   });
 };
 

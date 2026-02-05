@@ -25,6 +25,11 @@ export interface VerifyOTPResponse {
   refresh_token: string;
   expires_in: number;
   token_type: string;
+  /**
+   * Backend-driven flag indicating whether the user has fully completed
+   * registration. This may be more strict than just checking company_name.
+   */
+  has_completed_registration?: boolean;
   user: {
     user_id: string;
     email?: string;

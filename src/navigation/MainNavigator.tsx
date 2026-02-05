@@ -4,6 +4,8 @@ import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '@features/main/screens/ProfileScreen/ProfileScreen';
 import PostRequirementOptionsScreen from '@features/posting/screens/PostRequirementOptionsScreen';
 import PostToBuyScreen from '@features/posting/screens/PostToBuyScreen/PostToBuyScreen';
+import PostToSellMachineScreen from '@features/posting/screens/PostToSellMachineScreen/PostToSellMachineScreen';
+import PostToBuyMachineScreen from '@features/posting/screens/PostToBuyMachineScreen/PostToBuyMachineScreen';
 import PostBrandRequirementScreen from '@features/posting/screens/PostBrandRequirementScreen/PostBrandRequirementScreen';
 import RequirementsListScreen from '@features/posting/screens/RequirementsListScreen/RequirementsListScreen';
 import PaymentConfirmationScreen from '@features/posting/screens/PaymentConfirmationScreen/PaymentConfirmationScreen';
@@ -43,7 +45,10 @@ export type MainStackParamList = {
       tags: string[];
     };
     formData: any;
+    requirementType?: 'dealer' | 'brand' | 'converter' | 'machineDealer';
   };
+  PostToSellMachine: undefined;
+  PostToBuyMachine: undefined;
   MatchmakingSuccess: {
     requirementDetails: {
       id: string;
@@ -117,6 +122,24 @@ const MainNavigator = () => {
         component={PostToBuyScreen}
         options={{
           headerShown: true,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.MAIN.POST_TO_SELL_MACHINE} 
+        component={PostToSellMachineScreen}
+        options={{
+          headerShown: true,
+          title: 'Post to Sell Machine',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.MAIN.POST_TO_BUY_MACHINE} 
+        component={PostToBuyMachineScreen}
+        options={{
+          headerShown: true,
+          title: 'Post to Buy Machine',
           animation: 'slide_from_right',
         }}
       />

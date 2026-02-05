@@ -3,7 +3,7 @@
  * Chat interface for communication with partners
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -19,65 +19,11 @@ import { useTheme } from '@theme/index';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
-import { ChatMessage } from '../../@types';
+import { useGetChatMessages, useSendChatMessage, ChatMessage as DealerChatMessage } from '@services/api';
+import { useAppSelector } from '@store/hooks';
+import { ChatMessage as SessionChatMessage } from '../../@types';
 import { SessionChatScreenRouteProp } from './@types';
 import { createStyles } from './styles';
-
-// Mock messages
-const MOCK_MESSAGES: ChatMessage[] = [
-  {
-    id: '1',
-    sessionId: '1',
-    partnerId: 'sup-001',
-    senderId: 'sup-001',
-    senderType: 'partner',
-    senderName: 'EcoPack Solutions',
-    messageType: 'text',
-    content: 'Hello, I have attached the material specifications for the polymer request. Let me know if you need any adjustments.',
-    isRead: true,
-    sentAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-  },
-  // {
-  //   id: '2',
-  //   sessionId: '1',
-  //   partnerId: 'sup-001',
-  //   senderId: 'sup-001',
-  //   senderType: 'partner',
-  //   senderName: 'EcoPack Solutions',
-  //   messageType: 'file',
-  //   content: '',
-  //   fileName: 'Material_Specs.pdf',
-  //   fileSize: '2.4 MB',
-  //   fileType: 'PDF',
-  //   isRead: true,
-  //   sentAt: new Date(Date.now() - 3 * 60 * 60 * 1000 + 30000).toISOString(),
-  // },
-  {
-    id: '3',
-    sessionId: '1',
-    partnerId: 'sup-001',
-    senderId: 'user-001',
-    senderType: 'user',
-    senderName: 'Global Logistics Co.',
-    messageType: 'text',
-    content: 'Received, thank you. Checking the tensile strength requirements now. Could you also share the bulk pricing for Q3?',
-    isRead: true,
-    sentAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  // {
-  //   id: '4',
-  //   sessionId: '1',
-  //   partnerId: 'sup-001',
-  //   senderId: 'sup-001',
-  //   senderType: 'partner',
-  //   senderName: 'EcoPack Solutions',
-  //   messageType: 'image',
-  //   content: '',
-  //   fileName: 'Bulk_Pricing_Q3.jpg',
-  //   isRead: true,
-  //   sentAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-  // },
-];
 
 const SessionChatScreen = () => {
   const navigation = useNavigation<any>();
@@ -89,7 +35,46 @@ const SessionChatScreen = () => {
 
   const { sessionId, partnerId, partnerName, inquiryRef } = route.params || {};
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
+  const [messages, setMessages] = useState<SessionChatMessage[]>([]);
+
+  const user = useAppSelector((state) => state.auth.user);
+
+  const { data: chatData } = useGetChatMessages(sessionId || '');
+  const { mutateAsync: sendChatMessage } = useSendChatMessage();
+
+  useEffect(() => {
+    if (!chatData?.messages) {
+      return;
+    }
+
+    const mappedMessages: SessionChatMessage[] = chatData.messages.map(
+      (msg: DealerChatMessage) => {
+        const isUser = user ? msg.sender_id === user.user_id : false;
+
+        const messageType: SessionChatMessage['messageType'] =
+          msg.type === 'image'
+            ? 'image'
+            : msg.type === 'document'
+            ? 'file'
+            : 'text';
+
+        return {
+          id: String(msg.id),
+          sessionId: String(msg.session_id),
+          partnerId: isUser ? String(partnerId || '') : String(msg.sender_id),
+          senderId: String(msg.sender_id),
+          senderType: isUser ? 'user' : 'partner',
+          senderName: isUser ? 'You' : msg.sender_name || partnerName || 'Partner',
+          messageType,
+          content: msg.message,
+          isRead: msg.is_read,
+          sentAt: msg.created_at,
+        };
+      }
+    );
+
+    setMessages(mappedMessages);
+  }, [chatData, user, partnerId, partnerName]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -103,30 +88,51 @@ const SessionChatScreen = () => {
     // TODO: Open attachment picker
   }, []);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!message.trim()) return;
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      sessionId: sessionId || '',
-      partnerId: partnerId || '',
-      senderId: 'user-001',
-      senderType: 'user',
-      senderName: 'You',
-      messageType: 'text',
-      content: message.trim(),
-      isRead: false,
-      sentAt: new Date().toISOString(),
-    };
+    const text = message.trim();
 
-    setMessages((prev) => [...prev, newMessage]);
-    setMessage('');
+    try {
+      setMessage('');
 
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [message, sessionId, partnerId]);
+      if (sessionId) {
+        const response = await sendChatMessage({
+          sessionId,
+          data: {
+            message: text,
+            type: 'text',
+          },
+        });
+
+        const sent = response.message as DealerChatMessage;
+        const isUser = user ? sent.sender_id === user.user_id : true;
+
+        const newMessage: SessionChatMessage = {
+          id: String(sent.id),
+          sessionId: String(sent.session_id),
+          partnerId: isUser ? String(partnerId || '') : String(sent.sender_id),
+          senderId: String(sent.sender_id),
+          senderType: isUser ? 'user' : 'partner',
+          senderName: isUser ? 'You' : sent.sender_name || partnerName || 'Partner',
+          messageType: 'text',
+          content: sent.message,
+          isRead: sent.is_read,
+          sentAt: sent.created_at,
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+
+        // Scroll to bottom
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Failed to send message', error);
+      setMessage(text);
+    }
+  }, [message, sessionId, partnerId, partnerName, sendChatMessage, user]);
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -137,7 +143,7 @@ const SessionChatScreen = () => {
     });
   };
 
-  const renderMessage = (msg: ChatMessage, index: number) => {
+  const renderMessage = (msg: SessionChatMessage, index: number) => {
     const isUser = msg.senderType === 'user';
     const showAvatar = !isUser && (index === 0 || messages[index - 1]?.senderId !== msg.senderId);
 

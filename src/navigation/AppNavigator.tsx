@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useAppSelector } from '@store/hooks';
 import { useAppDispatch } from '@store/hooks';
 import { setCredentials } from '@store/slices/authSlice';
+import { setRoles } from '@store/slices/roleSlice';
 import { storageService } from '@services/storage/storageService';
 import AuthStackNavigator from './AuthStackNavigator';
 import MainNavigator from './MainNavigator';
@@ -13,9 +14,22 @@ const AppNavigator = () => {
   const user = useAppSelector((state) => state.auth.user);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user has completed registration (has company_name)
-  const hasCompletedRegistration = user?.companyName !== null && user?.companyName !== undefined;
-  
+  // Prefer backend-driven "registration complete" flags when available.
+  // 1. has_completed_registration (backend explicit flag)
+  // 2. profile_complete (backend aggregate flag)
+  // 3. Fallback: presence of companyName
+  const backendHasCompletedRegistration =
+    typeof (user as any)?.has_completed_registration === 'boolean'
+      ? (user as any).has_completed_registration
+      : typeof (user as any)?.profile_complete === 'boolean'
+        ? (user as any).profile_complete
+        : undefined;
+
+  const hasCompletedRegistration =
+    typeof backendHasCompletedRegistration === 'boolean'
+      ? backendHasCompletedRegistration
+      : user?.companyName !== null && user?.companyName !== undefined;
+
   // Check if UDYAM is verified (if verified, go to dashboard)
   const isUdyamVerified = user?.udyamVerifiedAt !== null && user?.udyamVerifiedAt !== undefined;
 
@@ -39,14 +53,17 @@ const AppNavigator = () => {
         const userData = storageService.getUserData<any>();
 
         if (token && userData) {
-          // Restore auth state from storage
+          const primaryRole = userData.primary_role || userData.primaryRole;
+          const secondaryRole = userData.secondary_role ?? userData.secondaryRole;
+          const primaryNormalized = primaryRole === 'machine-dealer' ? 'machineDealer' : primaryRole;
+          const secondaryNormalized = secondaryRole === 'machine-dealer' ? 'machineDealer' : secondaryRole;
           dispatch(
             setCredentials({
               user: {
                 id: userData.user_id || userData.id || '',
                 mobile: userData.mobile || '',
-                primaryRole: userData.primary_role || userData.primaryRole || '',
-                secondaryRole: userData.secondary_role || userData.secondaryRole,
+                primaryRole: primaryNormalized || primaryRole || '',
+                secondaryRole: secondaryNormalized ?? secondaryRole,
                 isVerified: userData.verified !== undefined ? userData.verified : true,
                 companyName: userData.company_name || null,
                 udyamVerifiedAt: userData.udyam_verified_at || null,
@@ -55,6 +72,14 @@ const AppNavigator = () => {
               token: token,
             })
           );
+          if (primaryNormalized) {
+            dispatch(
+              setRoles({
+                primaryRole: primaryNormalized as 'dealer' | 'converter' | 'brand' | 'machineDealer',
+                secondaryRole: secondaryNormalized as 'dealer' | 'converter' | 'brand' | 'machineDealer' | undefined,
+              })
+            );
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);

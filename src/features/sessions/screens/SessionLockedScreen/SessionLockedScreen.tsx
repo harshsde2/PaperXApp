@@ -18,9 +18,8 @@ import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
-import { USE_DUMMY_DATA } from '@shared/constants/config';
+import { useGetSessionDetail } from '@services/api';
 import { ShortlistedPartner } from '../../@types';
-import { getDummyShortlistedPartners } from '../../dummyData';
 import { SessionLockedScreenRouteProp } from './@types';
 import { createStyles } from './styles';
 
@@ -35,10 +34,40 @@ const SessionLockedScreen = () => {
 
   const { sessionId, session } = route.params || {};
 
-  // Get shortlisted partners for this session
-  const partners = useMemo(() => {
-    return getDummyShortlistedPartners(sessionId || '3');
-  }, [sessionId]);
+  const { data: sessionDetail } = useGetSessionDetail(
+    sessionId ? Number(sessionId) : 0,
+    { enabled: !!sessionId }
+  );
+
+  // Get shortlisted partners for this session from API
+  const partners = useMemo<ShortlistedPartner[]>(() => {
+    if (!sessionDetail?.selected_partners) {
+      return [];
+    }
+
+    return sessionDetail.selected_partners.map((partner) => {
+      const [city = 'Unknown', country = ''] = (partner.location || '')
+        .split(',')
+        .map((part) => part.trim());
+
+      return {
+        id: String(partner.id),
+        sessionId: sessionId || '',
+        supplierId: String(partner.id),
+        supplierName: partner.company_name || 'Partner',
+        supplierLogo: undefined,
+        isVerified: false,
+        specialty: 'Selected Partner',
+        location: {
+          city,
+          country: country || 'India',
+        },
+        matchType: 'exact_match',
+        hasUnreadMessages: false,
+        lastMessageAt: undefined,
+      };
+    });
+  }, [sessionDetail, sessionId]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();

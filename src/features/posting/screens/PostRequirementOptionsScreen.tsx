@@ -101,6 +101,7 @@ const PostRequirementOptionsScreen: React.FC = () => {
   
   // Use activeRole from Redux (supports role switching)
   const activeRole = useActiveRole();
+  console.log('activeRole', activeRole);
   const options = getOptionsForRole(activeRole);
 
   console.log('options', options);
@@ -113,8 +114,11 @@ const PostRequirementOptionsScreen: React.FC = () => {
       navigation.navigate(SCREENS.MAIN.POST_TO_BUY as any, { intent: 'sell' });
     } else if (option.id === 'post-to-post-requirement') {
       navigation.navigate(SCREENS.MAIN.POST_BRAND_REQUIREMENT as any);
+    } else if (option.id === 'post-to-sell-machine') {
+      navigation.navigate(SCREENS.MAIN.POST_TO_SELL_MACHINE as any);
+    } else if (option.id === 'post-to-buy-machine') {
+      navigation.navigate(SCREENS.MAIN.POST_TO_BUY_MACHINE as any);
     } else {
-      // TODO: Add other posting screens as needed
       console.log('Selected option:', option.id);
     }
   };

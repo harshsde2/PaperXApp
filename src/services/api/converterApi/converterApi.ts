@@ -20,6 +20,7 @@ import type {
   PostRequirementRequest,
   PostRequirementResponse,
 } from '../dealerApi/@types';
+import type { PostMachineRequest } from '../machineDealerApi/@types';
 
 // ============================================
 // HELPER FUNCTION
@@ -222,6 +223,36 @@ export const usePostConverterRequirement = () => {
     },
     onError: (error: Error) => {
       console.error('Post converter requirement error:', error);
+    },
+  });
+};
+
+// ============================================
+// POST MACHINE (buy/sell as converter)
+// ============================================
+
+export interface PostConverterMachineResponse {
+  inquiry_id: number;
+  status: string;
+}
+
+export const usePostConverterMachine = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: PostMachineRequest): Promise<PostConverterMachineResponse> => {
+      const response = await api.post<{ success: boolean; data: PostConverterMachineResponse }>(
+        CONVERTER_ENDPOINTS.POST_MACHINE,
+        data
+      );
+      return extractData<PostConverterMachineResponse>(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+    },
+    onError: (error: Error) => {
+      console.error('Post converter machine error:', error);
     },
   });
 };

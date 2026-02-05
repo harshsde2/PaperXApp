@@ -37,6 +37,8 @@ export const SCREENS = {
     PROFILE: 'Profile',
     POST: 'Post',
     POST_TO_BUY: 'PostToBuy',
+    POST_TO_SELL_MACHINE: 'PostToSellMachine',
+    POST_TO_BUY_MACHINE: 'PostToBuyMachine',
     POST_BRAND_REQUIREMENT: 'PostBrandRequirement',
     REQUIREMENTS: 'Requirements',
     PAYMENT_CONFIRMATION: 'PaymentConfirmation',
@@ -69,7 +71,6 @@ export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: 
   ],
   'machine-dealer': [
     { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
-    { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
     { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
   ],
   converter: [

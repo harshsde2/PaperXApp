@@ -8,9 +8,15 @@ import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
-import type { CompleteMachineDealerProfileRequest } from '@services/api';
+import type {
+  CompleteMachineDealerProfileRequest,
+  UpdateProfileResponse,
+} from '@services/api';
+import { useCompleteMachineDealerProfile } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
+import { ROLES } from '@utils/constants';
 import { DropdownButton } from '@shared/components/DropdownButton';
 import { useBottomSheet } from '@shared/components/BottomSheet';
 import { useGetMachines } from '@services/api';
@@ -38,6 +44,9 @@ const MachineDealerRegistrationScreen = () => {
   const bottomSheet = useBottomSheet();
 
   const { profileData } = route.params || {};
+
+  const { mutate: completeMachineDealerProfile, isPending: isSubmitting } =
+    useCompleteMachineDealerProfile();
 
   const { control, handleSubmit, setValue, watch } = useForm<MachineDealerRegistrationFormData>({
     defaultValues: {
@@ -279,9 +288,62 @@ const MachineDealerRegistrationScreen = () => {
       preferred_brand_names: selectedPreferredBrandNames,
     };
 
-    navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-      profileData,
-      machineDealerRegistrationData,
+    completeMachineDealerProfile(machineDealerRegistrationData, {
+      onSuccess: (response) => {
+        dispatch(
+          showToast({
+            message: response.message || 'Registration completed successfully!',
+            type: 'success',
+          }),
+        );
+
+        const updatedProfileData: UpdateProfileResponse = {
+          ...(profileData || {}),
+          ...(response.machine_dealer && {
+            profile_complete: response.machine_dealer.profile_complete,
+          }),
+        };
+
+        const isSecondaryRoleCompletion =
+          profileData?.secondary_role === ROLES.MACHINE_DEALER;
+
+        if (isSecondaryRoleCompletion) {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: updatedProfileData,
+          });
+        } else if (
+          updatedProfileData.has_secondary_role === 1 &&
+          updatedProfileData.secondary_role
+        ) {
+          const secondaryRole =
+            updatedProfileData.secondary_role as (typeof ROLES)[keyof typeof ROLES];
+          const firstSecondaryScreen =
+            getFirstRegistrationScreen(secondaryRole);
+
+          if (
+            firstSecondaryScreen &&
+            firstSecondaryScreen !== SCREENS.AUTH.VERIFICATION_STATUS
+          ) {
+            (navigation.navigate as any)(firstSecondaryScreen, {
+              profileData: updatedProfileData,
+            });
+          } else {
+            navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+              profileData: updatedProfileData,
+            });
+          }
+        } else {
+          navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+            profileData: updatedProfileData,
+          });
+        }
+      },
+      onError: (error: any) => {
+        Alert.alert(
+          'Error',
+          error?.message || 'Failed to complete registration. Please try again.',
+        );
+      },
     });
   };
 
@@ -632,11 +694,18 @@ const MachineDealerRegistrationScreen = () => {
             style={styles.button}
             onPress={handleSubmit(onSubmit)}
             activeOpacity={0.8}
+            disabled={isSubmitting}
           >
-            <Text variant="buttonMedium" style={styles.buttonText}>
-              Continue
-            </Text>
-            <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color={theme.colors.text.inverse} />
+            ) : (
+              <>
+                <Text variant="buttonMedium" style={styles.buttonText}>
+                  Continue
+                </Text>
+                <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.securityFooter}>

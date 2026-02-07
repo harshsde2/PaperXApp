@@ -67,7 +67,33 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     }
   };
 
+  const isOwner = session.isOwner !== false;
+
   const renderContent = () => {
+    // Receiver view: show "Respond" as primary action, no Responses Received
+    if (!isOwner) {
+      return (
+        <>
+          {session.biddingEndsAt && (
+            <CountdownTimer
+              targetDate={session.biddingEndsAt}
+              label="Bidding Ends In"
+            />
+          )}
+          <View style={styles.actionSection}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handlePress}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.actionButtonText}>Respond</Text>
+              <AppIcon.ChevronRight width={18} height={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </>
+      );
+    }
+
     switch (session.status) {
       case 'active':
         return (
@@ -192,6 +218,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <View style={styles.headerContent}>
+            {!isOwner && (session.intent === 'sell' || session.intent === 'buy') && (
+              <View style={[styles.urgentBadge, session.intent === 'sell' ? styles.postSellBadge : styles.postBuyBadge]}>
+                <Text style={[styles.urgentText, { color: session.intent === 'sell' ? '#1D4ED8' : '#059669' }]}>
+                  {session.intent === 'sell' ? 'Post to sell' : 'Post to buy'}
+                </Text>
+              </View>
+            )}
             {session.isUrgent && (
               <View style={styles.urgentBadge}>
                 <Text style={styles.urgentText}>Urgent</Text>
@@ -201,7 +234,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               {session.title}
             </Text>
             <Text style={styles.subtitle}>
-              Created {formattedDate} • {session.category}
+              {isOwner
+                ? `Created ${formattedDate} • ${session.category}`
+                : `Match for you • Posted by ${session.posterLabel ?? 'a supplier'}`}
             </Text>
           </View>
           {renderStatusBadge()}

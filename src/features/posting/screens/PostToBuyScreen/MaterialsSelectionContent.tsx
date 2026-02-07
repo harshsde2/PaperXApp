@@ -9,59 +9,136 @@ import { createStyles } from './materialsSelectionStyles';
 
 const END_REACHED_THRESHOLD = 0.2;
 
-interface MaterialsSelectionContentProps {
+export interface GradeListItem {
+  type: 'grade';
+  id: string;
+  data: {
+    materialId: number;
+    materialName: string;
+    gradeId: number;
+    gradeName: string;
+    category: string;
+  };
+}
+
+interface GradeItemProps {
+  materialId: number;
+  gradeId: number;
+  gradeName: string;
+  materialName: string;
+  onToggle: (materialId: number, gradeId: number, materialName?: string, gradeName?: string) => void;
+  styles: ReturnType<typeof createStyles>;
+  theme: Theme;
+}
+
+const GradeItem = memo(
+  ({ materialId, gradeId, gradeName, materialName, onToggle, styles, theme }: GradeItemProps) => {
+    const handlePress = useCallback(() => {
+      onToggle(materialId, gradeId, materialName, gradeName);
+    }, [materialId, gradeId, materialName, gradeName, onToggle]);
+
+    return (
+      <TouchableOpacity
+        style={[styles.materialItem, { paddingLeft: theme.spacing[4] }]}
+        onPress={handlePress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.materialItemContent}>
+          <Text variant="bodyMedium" style={styles.materialItemName}>
+            {gradeName}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  },
+);
+GradeItem.displayName = 'GradeItem';
+
+// Props when mode is 'material' (legacy, unused now from PostToBuy)
+interface MaterialModeProps {
+  mode: 'material';
   searchQuery: string;
   onSearchChange: (text: string) => void;
   selectedMaterialIds: Set<number> | number[];
   materials: Material[];
   filteredMaterials: Material[];
+  onToggle: (materialId: number) => void;
+}
+
+// Props when mode is 'grade' (one row per grade)
+interface GradeModeProps {
+  mode: 'grade';
+  searchQuery: string;
+  onSearchChange: (text: string) => void;
+  gradeList: GradeListItem[];
+  selectedMaterialId: number | null;
+  selectedGradeId: number | null;
+  onToggleGrade: (materialId: number, gradeId: number, materialName?: string, gradeName?: string) => void;
+}
+
+interface MaterialsSelectionContentCommonProps {
   isLoading: boolean;
   isFetchingNextPage: boolean;
-  onToggle: (materialId: number) => void;
   onClear?: () => void;
   onLoadMore: () => void;
   onScroll: (event: any) => void;
   theme: Theme;
 }
 
-export const MaterialsSelectionContent = memo(({
-  searchQuery,
-  onSearchChange,
-  selectedMaterialIds,
-  materials,
-  filteredMaterials,
-  isLoading,
-  isFetchingNextPage,
-  onToggle,
-  onClear,
-  onLoadMore,
-  onScroll,
-  theme,
-}: MaterialsSelectionContentProps) => {
+type MaterialsSelectionContentProps = MaterialsSelectionContentCommonProps & (MaterialModeProps | GradeModeProps);
+
+export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentProps) => {
+  const {
+    searchQuery,
+    onSearchChange,
+    isLoading,
+    isFetchingNextPage,
+    onClear,
+    onLoadMore,
+    onScroll,
+    theme,
+  } = props;
+
   const styles = createStyles(theme);
   const scrollViewRef = useRef<FlatList>(null);
 
-  // Convert Set to array if needed, and create a Set for lookups (optimized)
+  const isGradeMode = props.mode === 'grade';
+
+  const selectedCount = isGradeMode
+    ? (props.selectedMaterialId != null && props.selectedGradeId != null ? 1 : 0)
+    : (Array.isArray(props.selectedMaterialIds)
+        ? props.selectedMaterialIds.length
+        : props.selectedMaterialIds.size);
+
+  const renderGradeItem: ListRenderItem<GradeListItem> = useCallback(
+    ({ item }) => {
+      const { materialId, gradeId, gradeName, materialName } = item.data;
+      return (
+        <GradeItem
+          materialId={materialId}
+          gradeId={gradeId}
+          gradeName={gradeName}
+          materialName={materialName}
+          onToggle={props.mode === 'grade' ? props.onToggleGrade : () => {}}
+          styles={styles}
+          theme={theme}
+        />
+      );
+    },
+    [props.mode === 'grade' ? props.onToggleGrade : null, styles, theme],
+  );
+
   const selectedIdsSet = useMemo(() => {
-    if (Array.isArray(selectedMaterialIds)) {
-      return new Set(selectedMaterialIds);
-    }
-    return selectedMaterialIds;
-  }, [selectedMaterialIds]);
+    if (isGradeMode || props.mode !== 'material') return new Set<number>();
+    const ids = props.selectedMaterialIds;
+    return Array.isArray(ids) ? new Set(ids) : ids;
+  }, [isGradeMode, props.mode === 'material' ? props.selectedMaterialIds : null]);
 
-  const selectedCount = useMemo(() => {
-    return Array.isArray(selectedMaterialIds) 
-      ? selectedMaterialIds.length 
-      : selectedMaterialIds.size;
-  }, [selectedMaterialIds]);
-
-  // Memoize the selection check function
   const isMaterialSelected = useCallback(
     (materialId: number) => selectedIdsSet.has(materialId),
     [selectedIdsSet],
   );
 
-  // Optimized render function - only re-renders when selection changes for that specific item
   const renderMaterialItem: ListRenderItem<Material> = useCallback(
     ({ item }) => {
       const isSelected = isMaterialSelected(item.id);
@@ -69,16 +146,24 @@ export const MaterialsSelectionContent = memo(({
         <MaterialItem
           material={item}
           isSelected={isSelected}
-          onToggle={onToggle}
+          onToggle={props.mode === 'material' ? props.onToggle : () => {}}
           styles={styles}
           theme={theme}
         />
       );
     },
-    [isMaterialSelected, onToggle, styles, theme],
+    [isMaterialSelected, props.mode === 'material' ? props.onToggle : null, styles, theme],
   );
 
-  const keyExtractor = useCallback((item: Material) => `material-${item.id}`, []);
+  const listData = isGradeMode
+    ? props.gradeList
+    : (props.mode === 'material' ? props.filteredMaterials : []);
+  const keyExtractor = useCallback(
+    (item: GradeListItem | Material) =>
+      isGradeMode ? (item as GradeListItem).id : `material-${(item as Material).id}`,
+    [isGradeMode],
+  );
+  const renderItem = isGradeMode ? renderGradeItem : renderMaterialItem;
 
   const ListFooterComponent = useCallback(() => {
     if (isFetchingNextPage) {
@@ -100,9 +185,9 @@ export const MaterialsSelectionContent = memo(({
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text variant="h4" fontWeight="semibold" style={styles.title}>
-          Select Material
+          {isGradeMode ? 'Select Grade' : 'Select Material'}
         </Text>
-        {selectedCount > 0 && onClear && (
+        {!isGradeMode && selectedCount > 0 && onClear && (
           <TouchableOpacity
             onPress={onClear}
             style={styles.clearButton}
@@ -114,7 +199,7 @@ export const MaterialsSelectionContent = memo(({
           </TouchableOpacity>
         )}
       </View>
-      {selectedCount > 0 && (
+      {!isGradeMode && selectedCount > 0 && (
         <View style={styles.selectedCountContainer}>
           <Text variant="bodySmall" style={styles.selectedCountText}>
             1 material selected
@@ -131,7 +216,7 @@ export const MaterialsSelectionContent = memo(({
         </View>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search materials"
+          placeholder={isGradeMode ? 'Search grades' : 'Search materials'}
           placeholderTextColor={theme.colors.text.tertiary}
           value={searchQuery}
           onChangeText={onSearchChange}
@@ -144,9 +229,9 @@ export const MaterialsSelectionContent = memo(({
       ) : (
         <FlatList
           ref={scrollViewRef}
-          data={filteredMaterials}
-          renderItem={renderMaterialItem}
-          keyExtractor={keyExtractor}
+          data={listData}
+          renderItem={renderItem as ListRenderItem<GradeListItem | Material>}
+          keyExtractor={keyExtractor as (item: GradeListItem | Material) => string}
           ListFooterComponent={ListFooterComponent}
           contentContainerStyle={styles.listContent}
           onEndReached={onLoadMore}
@@ -161,15 +246,21 @@ export const MaterialsSelectionContent = memo(({
           keyboardShouldPersistTaps="always"
           nestedScrollEnabled={true}
           updateCellsBatchingPeriod={50}
-          getItemLayout={(data, index) => ({
-            length: 60, // Approximate item height
-            offset: 60 * index,
-            index,
-          })}
+          getItemLayout={
+            listData.length
+              ? (_: any, index: number) => ({
+                  length: 60,
+                  offset: 60 * index,
+                  index,
+                })
+              : undefined
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text variant="bodyMedium" style={styles.emptyText}>
-                {searchQuery ? 'No materials found' : 'No materials available'}
+                {searchQuery
+                  ? (isGradeMode ? 'No grades found' : 'No materials found')
+                  : (isGradeMode ? 'No grades available' : 'No materials available')}
               </Text>
             </View>
           }

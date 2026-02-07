@@ -232,4 +232,7 @@ export const INQUIRY_ENDPOINTS = {
   MATCHMAKING_RESPONSES: (id: number | string) => `${API_VERSION}/inquiries/${id}/matchmaking-responses`,
   // Shortlist/Reject response
   SHORTLIST_RESPONSE: (id: number | string) => `${API_VERSION}/inquiries/responses/${id}/shortlist`,
+  // Responder: express interest or decline
+  EXPRESS_INTEREST: (inquiryId: number | string) => `${API_VERSION}/inquiries/${inquiryId}/express-interest`,
+  DECLINE: (inquiryId: number | string) => `${API_VERSION}/inquiries/${inquiryId}/decline`,
 } as const;

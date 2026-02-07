@@ -53,6 +53,7 @@ export const SCREENS = {
   SESSIONS: {
     DASHBOARD: 'SessionDashboard',
     DETAILS: 'SessionDetails',
+    RESPONDER_DETAILS: 'ResponderDetails',
     LOCKED: 'SessionLocked',
     CHAT: 'SessionChat',
   },
@@ -66,7 +67,7 @@ export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: 
   dealer: [
     { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
     { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
-    { name: SCREENS.MAIN.MARKET, label: 'Market', icon: 'Market' },
+    { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
     { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
   ],
   'machine-dealer': [

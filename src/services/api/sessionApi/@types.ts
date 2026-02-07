@@ -75,6 +75,12 @@ export interface ActiveSessionListItem {
   responses_received: number;
   matched_dealers_count: number;
   matching_progress: MatchingProgress | null;
+  /** True when the current user posted this inquiry (poster view). */
+  is_owner?: boolean;
+  /** For receivers: label like "A dealer" / "A converter". */
+  poster_label?: string;
+  /** Post intent: 'buy' | 'sell' for card badge. */
+  intent?: 'buy' | 'sell';
 }
 
 // ============================================
@@ -163,6 +169,12 @@ export interface SelectedPartner {
 // SESSION DETAIL
 // ============================================
 
+export interface MyResponderStatus {
+  expressed_interest: boolean;
+  shortlisted: boolean;
+  declined: boolean;
+}
+
 export interface SessionDetail {
   id: number;
   project_id: string;
@@ -171,12 +183,18 @@ export interface SessionDetail {
     id: number;
     title: string;
     items: SessionItem[];
+    intent?: string;
   };
   selected_partners_count: number;
   selected_partners: SelectedPartner[];
   chat_enabled: boolean;
   chat_thread_id: number | null;
+  expires_at: string | null;
   locked_at: string | null;
+  is_owner?: boolean;
+  poster_label?: string;
+  intent?: string;
+  my_responder_status?: MyResponderStatus | null;
 }
 
 // ============================================
@@ -191,12 +209,18 @@ export interface GetSessionDetailResponse {
     id: number;
     title: string;
     items: SessionItem[];
+    intent?: string;
   };
   selected_partners_count: number;
   selected_partners: SelectedPartner[];
   chat_enabled: boolean;
   chat_thread_id: number | null;
+  expires_at: string | null;
   locked_at: string | null;
+  is_owner?: boolean;
+  poster_label?: string;
+  intent?: string;
+  my_responder_status?: MyResponderStatus | null;
 }
 
 // ============================================
@@ -279,9 +303,9 @@ export interface GetMatchmakingResponsesResponse {
   countdown: MatchmakingResponsesCountdown | null;
   responses_count: number;
   responses: MatchmakingResponseItem[];
-  filter: 'all' | 'exact_match' | 'slight_variation' | 'nearest';
+  filter: 'all' | 'responded' | 'exact_match' | 'slight_variation' | 'nearest';
 }
 
 export interface GetMatchmakingResponsesParams {
-  filter?: 'all' | 'exact_match' | 'slight_variation' | 'nearest';
+  filter?: 'all' | 'responded' | 'exact_match' | 'slight_variation' | 'nearest';
 }

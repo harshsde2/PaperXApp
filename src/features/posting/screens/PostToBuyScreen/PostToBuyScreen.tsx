@@ -28,7 +28,7 @@ import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
 import { createStyles } from './styles';
 import { PostToBuyFormData, SizeUnit, SavedLocation, VisibilityType } from './@types';
-import { MaterialsSelectionContent } from './MaterialsSelectionContent';
+import { MaterialsSelectionContent, type GradeListItem } from './MaterialsSelectionContent';
 
 const ITEMS_PER_PAGE = 20;
 const END_REACHED_THRESHOLD = 0.2;
@@ -225,6 +225,8 @@ const PostToBuyScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [finishSearchQuery, setFinishSearchQuery] = useState('');
   const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(null);
+  const [selectedGradeId, setSelectedGradeId] = useState<number | null>(null);
+  const [selectedMaterialDisplayName, setSelectedMaterialDisplayName] = useState<string>('');
   const [selectedFinishIds, setSelectedFinishIds] = useState<Set<number>>(new Set());
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isMaterialsSheetOpen, setIsMaterialsSheetOpen] = useState(false);
@@ -238,6 +240,7 @@ const PostToBuyScreen = () => {
 
   const isLoadingMoreRef = useRef(false);
   const scrollViewRef = useRef<FlatList>(null);
+  const selectGradeRef = useRef<(materialId: number, gradeId: number, materialName?: string, gradeName?: string) => void>(() => {});
 
   const locationValue = watch('location');
   const latitudeValue = watch('latitude');
@@ -261,35 +264,54 @@ const PostToBuyScreen = () => {
     return Array.from(materialsMap.values());
   }, [materialsData?.pages]);
 
-  // Single material selection
-  const selectMaterial = useCallback((materialId: number) => {
-    // If same material is selected, deselect it
-    if (selectedMaterialId === materialId) {
-      setSelectedMaterialId(null);
-      setValue('material_id', undefined, { shouldValidate: true });
-    } else {
-      // Select the new material
-      setSelectedMaterialId(materialId);
-      setValue('material_id', materialId, { shouldValidate: true });
-    }
-  }, [selectedMaterialId, setValue]);
+  // Single grade selection (one row per grade; form still uses material_id). Closes sheet on select.
+  const selectGrade = useCallback(
+    (materialId: number, gradeId: number, materialName?: string, gradeName?: string) => {
+      const isSame = selectedMaterialId === materialId && selectedGradeId === gradeId;
+      if (isSame) {
+        setSelectedMaterialId(null);
+        setSelectedGradeId(null);
+        setSelectedMaterialDisplayName('');
+        setValue('material_id', undefined, { shouldValidate: true });
+      } else {
+        setSelectedMaterialId(materialId);
+        setSelectedGradeId(gradeId);
+        const display = materialName && gradeName ? `${materialName} – ${gradeName}` : '';
+        setSelectedMaterialDisplayName(display);
+        setValue('material_id', materialId, { shouldValidate: true });
+        // Close after React commits state so dropdown shows selected value
+        setTimeout(() => bottomSheet.close(), 0);
+      }
+    },
+    [selectedMaterialId, selectedGradeId, setValue, bottomSheet],
+  );
+  selectGradeRef.current = selectGrade;
+  const onSelectGradeStable = useCallback((materialId: number, gradeId: number, materialName?: string, gradeName?: string) => {
+    selectGradeRef.current(materialId, gradeId, materialName, gradeName);
+  }, []);
 
   const clearMaterial = useCallback(() => {
     setSelectedMaterialId(null);
+    setSelectedGradeId(null);
+    setSelectedMaterialDisplayName('');
     setValue('material_id', undefined, { shouldValidate: true });
   }, [setValue]);
 
-  const isMaterialSelected = useCallback(
-    (materialId: number) => selectedMaterialId === materialId,
-    [selectedMaterialId],
+  const isGradeSelected = useCallback(
+    (materialId: number, gradeId: number) =>
+      selectedMaterialId === materialId && selectedGradeId === gradeId,
+    [selectedMaterialId, selectedGradeId],
   );
 
-  // Get selected material name for display
+  // Get selected display name (Material - Grade); use stored name so dropdown updates immediately
   const selectedMaterialName = useMemo(() => {
-    if (!selectedMaterialId) return '';
+    if (selectedMaterialDisplayName) return selectedMaterialDisplayName;
+    if (!selectedMaterialId || !selectedGradeId) return '';
     const material = allMaterials.find(m => m.id === selectedMaterialId);
-    return material?.name || '';
-  }, [selectedMaterialId, allMaterials]);
+    const grade = material?.grades?.find(g => g.id === selectedGradeId);
+    if (!material || !grade) return material?.name || '';
+    return `${material.name} – ${grade.name}`;
+  }, [selectedMaterialDisplayName, selectedMaterialId, selectedGradeId, allMaterials]);
 
   const filteredMaterials = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -299,6 +321,40 @@ const PostToBuyScreen = () => {
       material.name.toLowerCase().includes(query) ||
       material.category?.toLowerCase().includes(query)
     );
+  }, [allMaterials, searchQuery]);
+
+  // Grade list: one row per grade (same structure as MaterialsScreen)
+  const gradeList = useMemo((): GradeListItem[] => {
+    const query = searchQuery.toLowerCase().trim();
+    const items: GradeListItem[] = [];
+    const seenGrades = new Set<string>();
+
+    allMaterials.forEach(material => {
+      const grades = material.grades || [];
+      const category = material.category || 'Other';
+      grades.forEach(grade => {
+        const gradeKey = (grade.name || '').toLowerCase().trim();
+        if (seenGrades.has(gradeKey)) return;
+        const matchesGrade = !query || grade.name.toLowerCase().includes(query);
+        const matchesMaterial = !query || material.name.toLowerCase().includes(query);
+        const matchesCategory = !query || category.toLowerCase().includes(query);
+        if (matchesGrade || matchesMaterial || matchesCategory) {
+          seenGrades.add(gradeKey);
+          items.push({
+            type: 'grade',
+            id: `grade-${material.id}-${grade.id}`,
+            data: {
+              materialId: material.id,
+              materialName: material.name,
+              gradeId: grade.id,
+              gradeName: grade.name,
+              category,
+            },
+          });
+        }
+      });
+    });
+    return items;
   }, [allMaterials, searchQuery]);
 
   // Flatten all finishes pages into a single array
@@ -467,10 +523,13 @@ const PostToBuyScreen = () => {
     [hasNextPage, isFetchingNextPage, handleLoadMore],
   );
 
-  // Memoize selected ID as array for compatibility with MaterialsSelectionContent
-  const selectedIdsArray = useMemo(() => {
-    return selectedMaterialId ? [selectedMaterialId] : [];
-  }, [selectedMaterialId]);
+  // Selection key for grade mode (materialId-gradeId)
+  const selectedGradeKey = useMemo(() => {
+    if (selectedMaterialId != null && selectedGradeId != null) {
+      return `${selectedMaterialId}-${selectedGradeId}`;
+    }
+    return null;
+  }, [selectedMaterialId, selectedGradeId]);
 
   const selectedFinishIdsArray = useMemo(() => {
     return Array.from(selectedFinishIds).sort((a, b) => a - b);
@@ -489,18 +548,19 @@ const PostToBuyScreen = () => {
     return names.join(', ');
   }, [selectedFinishIds, allFinishes]);
 
-  // Create bottom sheet content component
+  // Create bottom sheet content component (grade list: one row per grade)
   const createMaterialsSheetContent = useCallback(() => {
     return (
       <MaterialsSelectionContent
+        mode="grade"
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        selectedMaterialIds={selectedIdsArray}
-        materials={allMaterials}
-        filteredMaterials={filteredMaterials}
+        gradeList={gradeList}
+        selectedMaterialId={selectedMaterialId}
+        selectedGradeId={selectedGradeId}
         isLoading={isLoadingMaterials}
         isFetchingNextPage={isFetchingNextPage}
-        onToggle={selectMaterial}
+        onToggleGrade={onSelectGradeStable}
         onClear={clearMaterial}
         onLoadMore={handleLoadMore}
         onScroll={handleScroll}
@@ -509,12 +569,12 @@ const PostToBuyScreen = () => {
     );
   }, [
     searchQuery,
-    selectedIdsArray,
-    allMaterials,
-    filteredMaterials,
+    gradeList,
+    selectedMaterialId,
+    selectedGradeId,
     isLoadingMaterials,
     isFetchingNextPage,
-    selectMaterial,
+    onSelectGradeStable,
     clearMaterial,
     handleLoadMore,
     handleScroll,
@@ -522,15 +582,12 @@ const PostToBuyScreen = () => {
   ]);
 
   // Update bottom sheet content when selection changes (only if sheet is open)
-  // Use a ref to prevent unnecessary updates
   const lastSelectedIdRef = useRef<string>('');
   React.useEffect(() => {
     if (isMaterialsSheetOpen && bottomSheet.isOpen) {
-      const currentIdKey = selectedMaterialId?.toString() || '';
-      // Only update if selection actually changed
+      const currentIdKey = selectedGradeKey ?? '';
       if (currentIdKey !== lastSelectedIdRef.current) {
         lastSelectedIdRef.current = currentIdKey;
-        // Use a small debounce to batch rapid changes
         const timeoutId = setTimeout(() => {
           bottomSheet.updateContent(createMaterialsSheetContent());
         }, 50);
@@ -539,7 +596,7 @@ const PostToBuyScreen = () => {
     } else {
       lastSelectedIdRef.current = '';
     }
-  }, [selectedMaterialId, isMaterialsSheetOpen, bottomSheet, createMaterialsSheetContent]);
+  }, [selectedGradeKey, isMaterialsSheetOpen, bottomSheet, createMaterialsSheetContent]);
 
   const onSubmit = useCallback(
     (data: PostToBuyFormData) => {

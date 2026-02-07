@@ -5,8 +5,8 @@
 // Session Status Types
 export type SessionStatus = 'finding_matches' | 'active' | 'locked' | 'completed' | 'expired';
 
-// Match Type for filtering
-export type MatchType = 'all' | 'exact_match' | 'slight_variation' | 'nearest';
+// Match Type for filtering (poster view: all potential matches, only interested, or by match quality)
+export type MatchType = 'all' | 'responded' | 'exact_match' | 'slight_variation' | 'nearest';
 
 // Tab Types for Session Dashboard
 export type SessionTabType = 'all' | 'finding_matches' | 'active' | 'locked';
@@ -31,6 +31,12 @@ export interface Session {
   quantityUnit: string;
   specifications?: string;
   imageUrl?: string;
+  /** True when the current user posted this inquiry (poster view). */
+  isOwner?: boolean;
+  /** For receivers: label like "A dealer" / "A converter". */
+  posterLabel?: string;
+  /** Post intent: 'buy' | 'sell' for card badge. */
+  intent?: 'buy' | 'sell';
 }
 
 // Match Response from Supplier

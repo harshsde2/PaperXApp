@@ -226,4 +226,53 @@ export const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
+
+    // Receiver view
+    posterLine: {
+      paddingHorizontal: theme.spacing[4],
+      paddingTop: theme.spacing[2],
+      paddingBottom: theme.spacing[1],
+    },
+    posterLineText: {
+      fontSize: 13,
+      color: theme.colors.text.tertiary,
+    },
+    receiverActionSection: {
+      padding: theme.spacing[4],
+      paddingTop: theme.spacing[2],
+    },
+    receiverActionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing[2],
+      backgroundColor: theme.colors.primary.DEFAULT,
+      paddingVertical: theme.spacing[4],
+      borderRadius: theme.borderRadius.lg,
+    },
+    receiverActionButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
+    receiverStatus: {
+      paddingHorizontal: theme.spacing[4],
+      paddingVertical: theme.spacing[3],
+      backgroundColor: theme.colors.primary.light,
+      borderRadius: theme.borderRadius.lg,
+      marginHorizontal: theme.spacing[4],
+      marginTop: theme.spacing[2],
+    },
+    receiverStatusText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+    },
+    receiverLockedText: {
+      paddingHorizontal: theme.spacing[4],
+      paddingVertical: theme.spacing[4],
+      textAlign: 'center',
+      fontSize: 14,
+      color: theme.colors.text.tertiary,
+    },
   });

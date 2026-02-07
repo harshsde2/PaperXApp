@@ -17,7 +17,7 @@ import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
 import SettingsScreen from '@features/main/screens/SettingsScreen/SettingsScreen';
 import InquiriesScreen from '@features/main/screens/InquiriesScreen/InquiriesScreen';
 import CapacityScreen from '@features/main/screens/CapacityScreen/CapacityScreen';
-import SessionsScreen from '@features/main/screens/SessionsScreen/SessionsScreen';
+import SessionDashboardScreen from '@features/sessions/screens/SessionDashboardScreen/SessionDashboardScreen';
 
 export type BottomTabParamList = {
   Home: undefined;
@@ -59,7 +59,7 @@ const getScreenComponent = (screenName: string) => {
     [SCREENS.MAIN.SETTINGS]: SettingsScreen,
     [SCREENS.MAIN.INQUIRIES]: InquiriesScreen,
     [SCREENS.MAIN.CAPACITY]: CapacityScreen,
-    [SCREENS.MAIN.SESSIONS]: SessionsScreen,
+    [SCREENS.MAIN.SESSIONS]: SessionDashboardScreen,
     [SCREENS.MAIN.PROFILE]: ProfileScreen,
   };
   return screens[screenName] || DashboardScreen;

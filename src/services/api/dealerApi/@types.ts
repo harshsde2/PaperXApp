@@ -279,10 +279,10 @@ export interface SessionListItem {
 }
 
 export interface SessionDetail extends SessionListItem {
-  opportunity: OpportunityDetail;
-  quotes: Quote[];
-  messages_count: number;
-  counterparty: {
+  opportunity?: OpportunityDetail;
+  quotes?: Quote[];
+  messages_count?: number;
+  counterparty?: {
     id: number;
     name: string;
     company_name?: string;
@@ -291,6 +291,13 @@ export interface SessionDetail extends SessionListItem {
     rating?: number;
     verified: boolean;
   };
+  inquiry?: {
+    id: number;
+    title: string;
+    items: Array<{ material_category?: string; quantity?: number; quantity_unit?: string }>;
+  };
+  is_owner?: boolean;
+  poster_label?: string;
 }
 
 export interface GetSessionDetailResponse {

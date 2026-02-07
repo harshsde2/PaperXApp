@@ -18,6 +18,7 @@ import {
 import {
   SessionDashboardScreen,
   SessionDetailsScreen,
+  ResponderDetailsScreen,
   SessionLockedScreen,
   SessionChatScreen,
 } from '@features/sessions';
@@ -69,6 +70,10 @@ export type MainStackParamList = {
     initialTab?: 'all' | 'finding_matches' | 'active' | 'locked';
   };
   SessionDetails: {
+    sessionId: string;
+    session?: any;
+  };
+  ResponderDetails: {
     sessionId: string;
     session?: any;
   };
@@ -218,6 +223,14 @@ const MainNavigator = () => {
       <Stack.Screen 
         name={SCREENS.SESSIONS.DETAILS} 
         component={SessionDetailsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name={SCREENS.SESSIONS.RESPONDER_DETAILS} 
+        component={ResponderDetailsScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',

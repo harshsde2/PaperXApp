@@ -5,6 +5,7 @@
 // Screens
 export { default as SessionDashboardScreen } from './screens/SessionDashboardScreen/SessionDashboardScreen';
 export { default as SessionDetailsScreen } from './screens/SessionDetailsScreen/SessionDetailsScreen';
+export { default as ResponderDetailsScreen } from './screens/ResponderDetailsScreen/ResponderDetailsScreen';
 export { default as SessionLockedScreen } from './screens/SessionLockedScreen/SessionLockedScreen';
 export { default as SessionChatScreen } from './screens/SessionChatScreen/SessionChatScreen';
 

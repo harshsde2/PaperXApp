@@ -178,7 +178,7 @@ const ProfileScreen = () => {
     isUdyamVerified,
   ].filter(Boolean).length;
   
-  const profileCompletionPercentage = Math.round((completedFields / totalFields) * 100);
+  const profileCompletionPercentage = Math.round(100);
   
   const profileIncomplete = !isUdyamVerified || !hasEmail || !hasGstIn || !hasState || !hasCity || !hasPrimaryRole || !hasCompanyName;
   
@@ -284,7 +284,7 @@ const ProfileScreen = () => {
       </Card>
 
       {/* Profile Completion Alert */}
-      {profileIncomplete && (
+      {/* {profileIncomplete && (
         <Card style={styles.completionCard}>
           <View style={styles.completionHeader}>
             <View style={styles.completionIconContainer}>
@@ -314,12 +314,12 @@ const ProfileScreen = () => {
             <Text style={styles.completeProfileArrow}>→</Text>
           </TouchableOpacity>
         </Card>
-      )}
+      )} */}
 
       {/* Roles Section with Role Switcher */}
       {roles.length > 0 && (
         <Section
-          title="Roles"
+          title="Role"
           style={styles.section}
         >
           <View style={styles.rolesContainer}>
@@ -505,7 +505,7 @@ const ProfileScreen = () => {
       </Section>
 
       {/* Settings */}
-      <Section
+      {/* <Section
         title="Settings"
         style={styles.section}
       >
@@ -538,7 +538,7 @@ const ProfileScreen = () => {
           </View>
           <Text style={styles.settingsArrow}>›</Text>
         </TouchableOpacity>
-      </Section>
+      </Section> */}
 
       {/* Logout Button */}
       <TouchableOpacity

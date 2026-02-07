@@ -350,6 +350,8 @@ export {
   useRepublishSession,
   useMarkDealFailed,
   useGetMatchmakingResponses,
+  useExpressInterest,
+  useDeclineInquiry,
 } from './sessionApi/sessionApi';
 export type { GetSessionByInquiryResponse } from './sessionApi/sessionApi';
 export type {

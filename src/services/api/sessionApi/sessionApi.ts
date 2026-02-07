@@ -293,3 +293,37 @@ export const useGetMatchmakingResponses = (
     gcTime: 0, // Don't cache - always fresh
   });
 };
+
+// ============================================
+// EXPRESS INTEREST / DECLINE (Responder)
+// ============================================
+
+export const useExpressInterest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (inquiryId: number | string) => {
+      const response = await api.post(INQUIRY_ENDPOINTS.EXPRESS_INTEREST(inquiryId), {});
+      return extractData<{ expressed_interest: boolean }>(response);
+    },
+    onSuccess: (_, inquiryId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.active() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inquiries.matchmakingResponses(inquiryId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+    },
+  });
+};
+
+export const useDeclineInquiry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (inquiryId: number | string) => {
+      const response = await api.post(INQUIRY_ENDPOINTS.DECLINE(inquiryId), {});
+      return extractData<{ declined: boolean }>(response);
+    },
+    onSuccess: (_, inquiryId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.active() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inquiries.matchmakingResponses(inquiryId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+    },
+  });
+};

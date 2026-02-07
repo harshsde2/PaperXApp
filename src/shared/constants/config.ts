@@ -52,8 +52,8 @@ const getDevelopmentApiUrl = (): string => {
 
 // API Base URLs
 export const API_BASE_URLS = {
-  [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
-  // [ENV.DEVELOPMENT]: 'https://paperx.safewayrssi.com', // Uncomment to use staging server
+  // [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
+  [ENV.DEVELOPMENT]: 'https://paperx.safewayrssi.com', // Uncomment to use staging server
   [ENV.STAGING]: 'https://paperx.safewayrssi.com',
   [ENV.PRODUCTION]: 'https://paperx.safewayrssi.com',
 } as const;

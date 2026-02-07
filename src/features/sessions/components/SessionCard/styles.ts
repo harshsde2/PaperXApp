@@ -46,6 +46,12 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[2],
       alignSelf: 'flex-start',
     },
+    postBuyBadge: {
+      backgroundColor: '#D1FAE5',
+    },
+    postSellBadge: {
+      backgroundColor: '#DBEAFE',
+    },
     urgentText: {
       fontSize: 10,
       fontWeight: '700',

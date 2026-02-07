@@ -492,21 +492,25 @@ export const useSubmitQuote = () => {
 
   return useMutation({
     mutationFn: async ({
+      inquiryId,
       sessionId,
       data,
     }: {
-      sessionId: number | string;
+      inquiryId: number;
+      sessionId?: number | string;
       data: SubmitQuoteRequest;
     }): Promise<SubmitQuoteResponse> => {
       const response = await api.post<SubmitQuoteResponse>(
-        DEALER_ENDPOINTS.SUBMIT_QUOTE(sessionId),
+        DEALER_ENDPOINTS.SUBMIT_QUOTE(inquiryId),
         data
       );
       return extractData<SubmitQuoteResponse>(response);
     },
     onSuccess: (_, { sessionId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.dealer.sessionDetail(sessionId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dealer.chatMessages(sessionId) });
+      if (sessionId != null) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.dealer.sessionDetail(sessionId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.dealer.chatMessages(sessionId) });
+      }
     },
     onError: (error: Error) => {
       console.error('Submit quote error:', error);

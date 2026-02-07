@@ -55,8 +55,6 @@ const SessionDashboardScreen = () => {
     per_page: 50,
   });
 
-  console.log('sessionsResponse ->', JSON.stringify(sessionsResponse, null, 2));
-
   const sessions = sessionsResponse?.data || [];
   const isLoading = isApiLoading;
   const refreshing = isRefetching;
@@ -98,6 +96,9 @@ const SessionDashboardScreen = () => {
         materialName: firstItem?.material_category || 'Material',
         quantity: String(totalQuantity),
         quantityUnit: firstItem?.quantity_unit || 'units',
+        isOwner: session.is_owner ?? true,
+        posterLabel: session.poster_label,
+        intent: session.intent === 'sell' ? 'sell' : 'buy',
       };
     });
   }, [sessions, activeTab]);
@@ -117,13 +118,21 @@ const SessionDashboardScreen = () => {
 
   const handleSessionPress = useCallback(
     (session: Session) => {
-      if (session.status === 'locked') {
-        navigation.navigate(SCREENS.SESSIONS.LOCKED, {
-          sessionId: session.id,
-          session,
-        });
+      const isOwner = session.isOwner !== false;
+      if (isOwner) {
+        if (session.status === 'locked') {
+          navigation.navigate(SCREENS.SESSIONS.LOCKED, {
+            sessionId: session.id,
+            session,
+          });
+        } else {
+          navigation.navigate(SCREENS.SESSIONS.DETAILS, {
+            sessionId: session.id,
+            session,
+          });
+        }
       } else {
-        navigation.navigate(SCREENS.SESSIONS.DETAILS, {
+        navigation.navigate(SCREENS.SESSIONS.RESPONDER_DETAILS, {
           sessionId: session.id,
           session,
         });

@@ -3,13 +3,8 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 /**
- * Load keystore properties from a separate file (for security)
+ * Release signing uses MYAPP_* from android/gradle.properties
  */
-def keystorePropertiesFile = rootProject.file("keystore.properties")
-def keystoreProperties = new Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -102,10 +97,10 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file(keystoreProperties['PAPERX_UPLOAD_STORE_FILE'] ?: 'paperx-release-key.keystore')
-            storePassword keystoreProperties['PAPERX_UPLOAD_STORE_PASSWORD'] ?: ''
-            keyAlias keystoreProperties['PAPERX_UPLOAD_KEY_ALIAS'] ?: ''
-            keyPassword keystoreProperties['PAPERX_UPLOAD_KEY_PASSWORD'] ?: ''
+            storeFile file(rootProject.findProperty('MYAPP_UPLOAD_STORE_FILE') ?: 'my-release-key.keystore')
+            storePassword rootProject.findProperty('MYAPP_UPLOAD_STORE_PASSWORD') ?: ''
+            keyAlias rootProject.findProperty('MYAPP_UPLOAD_KEY_ALIAS') ?: ''
+            keyPassword rootProject.findProperty('MYAPP_UPLOAD_KEY_PASSWORD') ?: ''
         }
     }
     buildTypes {
@@ -131,4 +126,11 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+}
+
+// Workaround: android-maps-utils (react-native-maps) and some other AARs don't include
+// aar-metadata.properties, causing checkDebugAarMetadata to fail. Disable when task exists.
+afterEvaluate {
+    tasks.findByName("checkDebugAarMetadata")?.enabled = false
+    tasks.findByName("checkReleaseAarMetadata")?.enabled = false
 }

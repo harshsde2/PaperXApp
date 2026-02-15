@@ -655,8 +655,10 @@ const PostToBuyScreen = () => {
         return;
       }
 
-      // Prepare API request
+      // Prepare API request (backend expects "title")
+      const title = selectedMaterialName || 'Material Requirement';
       const apiData = {
+        title,
         inquiry_type: data.inquiry_type,
         intent: data.intent,
         material_id: data.material_id,
@@ -688,7 +690,7 @@ const PostToBuyScreen = () => {
 
       // Prepare listing details for payment confirmation
       const listingDetails = {
-        title: selectedMaterialName || 'Material Requirement',
+        title,
         referenceNumber: refNumber,
         grade: selectedFinishesDisplay || 'Standard',
         materialName: selectedMaterialName || 'Material',

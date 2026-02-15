@@ -66,14 +66,37 @@ interface NominatimResponse {
   boundingbox?: string[];
 }
 
+/** Nominatim allows 1 request per second; track last request time for rate limiting */
+let lastNominatimRequestTime = 0;
+const NOMINATIM_MIN_INTERVAL_MS = 1100;
+
+const waitForNominatimRateLimit = (): Promise<void> => {
+  const now = Date.now();
+  const elapsed = now - lastNominatimRequestTime;
+  if (elapsed >= NOMINATIM_MIN_INTERVAL_MS) {
+    lastNominatimRequestTime = now;
+    return Promise.resolve();
+  }
+  const waitMs = NOMINATIM_MIN_INTERVAL_MS - elapsed;
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      lastNominatimRequestTime = Date.now();
+      resolve();
+    }, waitMs)
+  );
+};
+
 /**
  * Convert coordinates to address using Nominatim (Reverse Geocoding)
  * Using OpenStreetMap Nominatim API (free alternative to Google)
+ * Rate-limited to 1 request per second per Nominatim usage policy.
  */
 export const reverseGeocodeNominatim = async (coords: Coordinates): Promise<LocationAddress> => {
   try {
+    await waitForNominatimRateLimit();
+
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}`;
-    
+
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'PaperXApp/1.0 (contact: dev@paperx.app)',
@@ -138,33 +161,34 @@ const parseNominatimAddress = (data: NominatimResponse): LocationAddress => {
 };
 
 /**
+ * Convert coordinates to address using Google Geocoding API (reverse)
+ */
+const reverseGeocodeGoogle = async (coords: Coordinates): Promise<LocationAddress> => {
+  const url = `${GOOGLE_PLACES_API.GEOCODE}?latlng=${coords.latitude},${coords.longitude}&key=${getServerApiKey()}&language=en`;
+  const response = await fetch(url);
+  const data: GeocodingResponse = await response.json();
+  if (data.status !== 'OK' || !data.results.length) {
+    throw new Error(data.error_message || 'No results found');
+  }
+  const result = data.results[0];
+  return parseAddressComponents(result);
+};
+
+/**
  * Convert coordinates to address (Reverse Geocoding)
- * Currently using Nominatim (free), can be switched to Google later
+ * Uses Nominatim first (free); falls back to Google on 509/429 or other errors.
  */
 export const reverseGeocode = async (coords: Coordinates): Promise<LocationAddress> => {
   try {
-    // Use Nominatim for now (free alternative)
     return await reverseGeocodeNominatim(coords);
   } catch (error) {
-    console.error('[Geocoding] Reverse geocode error:', error);
-    // Fallback to Google if Nominatim fails (when Google APIs are ready)
-    // Uncomment below when Google APIs are working:
-    /*
+    console.warn('[Geocoding] Nominatim failed, trying Google fallback:', error);
     try {
-      const url = `${GOOGLE_PLACES_API.GEOCODE}?latlng=${coords.latitude},${coords.longitude}&key=${getServerApiKey()}&language=en`;
-      const response = await fetch(url);
-      const data: GeocodingResponse = await response.json();
-      if (data.status !== 'OK' || !data.results.length) {
-        throw new Error(data.error_message || 'No results found');
-      }
-      const result = data.results[0];
-      return parseAddressComponents(result);
+      return await reverseGeocodeGoogle(coords);
     } catch (googleError) {
-      console.error('[Geocoding] Google fallback error:', googleError);
-      throw error; // Throw original Nominatim error
+      console.error('[Geocoding] Reverse geocode error (Nominatim + Google failed):', googleError);
+      throw error;
     }
-    */
-    throw error;
   }
 };
 
@@ -243,14 +267,26 @@ const parseAddressComponents = (result: GeocodingResult): LocationAddress => {
 };
 
 /**
- * Get full location data from coordinates
+ * Get full location data from coordinates.
+ * On geocoding failure, returns coords with a minimal address so the pin can still be saved.
  */
 export const getLocationFromCoords = async (coords: Coordinates): Promise<Location> => {
-  const address = await reverseGeocode(coords);
-  return {
-    ...coords,
-    address,
-  };
+  try {
+    const address = await reverseGeocode(coords);
+    return { ...coords, address };
+  } catch {
+    return {
+      ...coords,
+      address: {
+        formattedAddress: `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`,
+        city: undefined,
+        state: undefined,
+        country: undefined,
+        pincode: undefined,
+        placeId: undefined,
+      },
+    };
+  }
 };
 
 /**

@@ -238,6 +238,9 @@ const CreditPacksScreen = () => {
       >
         {/* Header Section */}
         <View style={styles.headerSection}>
+          <View style={styles.headerTitleContainer}>
+            <Text variant="h4" color='white' fontWeight="semibold">How would you like to pay to post your requirement?</Text>
+          </View>
           <View style={styles.headerTitleRow}>
             <View style={styles.headerIcon}>
               <AppIcon.Wallet width={22} height={22} color={DARK_THEME.tiers.growth.secondary} />

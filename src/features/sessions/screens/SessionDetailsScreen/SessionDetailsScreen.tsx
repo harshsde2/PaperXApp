@@ -3,7 +3,7 @@
  * One screen, two views: Poster (match responses + filters) vs Receiver (requirement summary + submit quote).
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,12 +14,13 @@ import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import {
   useGetSessionDetail,
+  useGetPosterDetail,
   useGetMatchmakingResponses,
   type GetMatchmakingResponsesParams,
 } from '@services/api';
 import { MatchResponse, MatchType, Session } from '../../@types';
 import { SessionDetailsScreenRouteProp } from './@types';
-import { SessionDetailPosterView } from './views/SessionDetailPosterView';
+import { PosterDetailView } from './views/PosterDetailView';
 import { SessionDetailReceiverView } from './views/SessionDetailReceiverView';
 import { createStyles } from './styles';
 
@@ -52,6 +53,8 @@ const SessionDetailsScreen = () => {
     return null;
   }, [sessionDetail, routeSession]);
 
+  const isOwner = routeSession?.isOwner ?? sessionDetail?.is_owner ?? true;
+
   const filterParam = useMemo((): GetMatchmakingResponsesParams => {
     return activeFilter === 'all' ? {} : { filter: activeFilter };
   }, [activeFilter]);
@@ -61,10 +64,18 @@ const SessionDetailsScreen = () => {
     isLoading: isLoadingResponses,
     refetch: refetchResponses,
   } = useGetMatchmakingResponses(inquiryId || 0, filterParam, {
-    enabled: !!inquiryId,
+    enabled: !!inquiryId && !isOwner,
   });
 
-  const isOwner = routeSession?.isOwner ?? sessionDetail?.is_owner ?? true;
+  const {
+    data: posterDetailData,
+    isLoading: isLoadingPosterDetail,
+    refetch: refetchPosterDetail,
+    isRefetching: isRefetchingPosterDetail,
+  } = useGetPosterDetail(sessionId ? Number(sessionId) : 0, {
+    enabled: !!sessionId && isOwner,
+  });
+
   const posterLabel = sessionDetail?.poster_label ?? routeSession?.posterLabel ?? 'a supplier';
 
   const summaryTitle = useMemo(() => {
@@ -130,44 +141,23 @@ const SessionDetailsScreen = () => {
     });
   }, [matchmakingData, sessionId]);
 
-  const refreshing = isLoadingSession || isLoadingResponses;
+  const refreshing =
+    isLoadingSession || (isOwner ? isLoadingPosterDetail : isLoadingResponses) || isRefetchingPosterDetail;
 
-  const timeLeft = useMemo(() => {
-    if (matchmakingData?.countdown) {
-      const { hours, minutes, seconds } = matchmakingData.countdown;
-      return { hours, mins: minutes, secs: seconds };
-    }
-    return { hours: 0, mins: 0, secs: 0 };
-  }, [matchmakingData?.countdown]);
-
-  const [currentTimeLeft, setCurrentTimeLeft] = useState(timeLeft);
-  useEffect(() => {
-    setCurrentTimeLeft(timeLeft);
-    const timer = setInterval(() => {
-      setCurrentTimeLeft((prev) => {
-        let { hours, mins, secs } = prev;
-        if (secs > 0) secs--;
-        else if (mins > 0) {
-          mins--;
-          secs = 59;
-        } else if (hours > 0) {
-          hours--;
-          mins = 59;
-          secs = 59;
-        }
-        return { hours, mins, secs };
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+  const receiverStartDate = sessionDetail?.created_at ?? undefined;
+  const receiverEndDate = sessionDetail?.expires_at ?? undefined;
 
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refetchSession(), refetchResponses()]);
-  }, [refetchSession, refetchResponses]);
+    if (isOwner) {
+      await Promise.all([refetchSession(), refetchPosterDetail()]);
+    } else {
+      await Promise.all([refetchSession(), refetchResponses()]);
+    }
+  }, [isOwner, refetchSession, refetchPosterDetail, refetchResponses]);
 
   const handleFilterChange = useCallback((filter: MatchType) => {
     setActiveFilter(filter);
@@ -213,25 +203,22 @@ const SessionDetailsScreen = () => {
             <AppIcon.ArrowLeft width={20} height={20} color={theme.colors.text.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {isOwner ? 'Matchmaking Responses' : 'Match for you'}
+            {isOwner ? 'Your requirement' : 'Match for you'}
           </Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <AppIcon.Process width={20} height={20} color={theme.colors.primary.DEFAULT} />
-          </TouchableOpacity>
+          {!isOwner ? (
+            <TouchableOpacity style={styles.filterButton}>
+              <AppIcon.Process width={20} height={20} color={theme.colors.primary.DEFAULT} />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.filterButton} />
+          )}
         </View>
       </View>
 
       {isOwner ? (
-        <SessionDetailPosterView
-          summaryTitle={summaryTitle}
-          summarySubtitle={summarySubtitle}
-          countdown={currentTimeLeft}
-          responses={responses}
-          activeFilter={activeFilter}
-          onFilterChange={handleFilterChange}
-          onChat={handleChat}
-          onShortlist={handleShortlist}
-          onReject={handleReject}
+        <PosterDetailView
+          data={posterDetailData}
+          isLoading={isLoadingPosterDetail}
           onRefresh={handleRefresh}
           refreshing={refreshing}
         />
@@ -240,7 +227,8 @@ const SessionDetailsScreen = () => {
           summaryTitle={summaryTitle}
           summarySubtitle={summarySubtitle}
           posterLabel={posterLabel}
-          countdown={currentTimeLeft}
+          startDate={receiverStartDate}
+          endDate={receiverEndDate}
           inquiryId={inquiryId ?? 0}
           sessionId={sessionId ?? ''}
           onQuoteSubmitted={handleRefresh}

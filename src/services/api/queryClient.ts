@@ -199,6 +199,9 @@ export const queryKeys = {
     historyInfinite: (params?: Record<string, any>) =>
       [...queryKeys.sessions.all, 'history', 'infinite', params] as const,
     detail: (id: number | string) => [...queryKeys.sessions.all, 'detail', id] as const,
+    posterDetail: (id: number | string) => [...queryKeys.sessions.all, 'poster-detail', id] as const,
+    responderDetail: (id: number | string) => [...queryKeys.sessions.all, 'responder-detail', id] as const,
+    chatList: () => [...queryKeys.sessions.all, 'chat-list'] as const,
   },
 
   // Inquiries

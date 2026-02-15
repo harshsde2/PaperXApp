@@ -23,6 +23,7 @@ const initialState: UIState = {
     isOpen: false,
     content: null,
   },
+  messagesUnreadCount: 0,
 };
 
 const uiSlice = createSlice({
@@ -80,6 +81,9 @@ const uiSlice = createSlice({
         content: null,
       };
     },
+    setMessagesUnreadCount: (state, action: PayloadAction<number>) => {
+      state.messagesUnreadCount = Math.max(0, action.payload);
+    },
   },
 });
 
@@ -91,6 +95,7 @@ export const {
   hideToast,
   openBottomSheet,
   closeBottomSheet,
+  setMessagesUnreadCount,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

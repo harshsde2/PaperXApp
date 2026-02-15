@@ -61,6 +61,8 @@ export interface UIState {
     isOpen: boolean;
     content: ReactNode | null;
   };
+  /** Total unread messages count for Messages tab badge */
+  messagesUnreadCount: number;
 }
 
 export interface SetLoadingPayload {

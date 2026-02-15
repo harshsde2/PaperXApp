@@ -214,12 +214,18 @@ export const SESSION_ENDPOINTS = {
   BY_INQUIRY: (inquiryId: number | string) => `${API_VERSION}/sessions/by-inquiry/${inquiryId}`,
   // Get session details (use session id, not inquiry id)
   DETAIL: (id: number | string) => `${API_VERSION}/sessions/${id}`,
+  // Get poster detail (owner only: counts + requirement summary, no response list)
+  POSTER_DETAIL: (id: number | string) => `${API_VERSION}/sessions/${id}/poster-detail`,
+  // Get responder detail (non-owner only: someone wants to buy/sell + requirement summary)
+  RESPONDER_DETAIL: (id: number | string) => `${API_VERSION}/sessions/${id}/responder-detail`,
   // Lock session (select dealers)
   LOCK: (id: number | string) => `${API_VERSION}/sessions/${id}/lock`,
   // Republish session
   REPUBLISH: (id: number | string) => `${API_VERSION}/sessions/${id}/republish`,
   // Mark deal as failed
   DEAL_FAILED: (id: number | string) => `${API_VERSION}/sessions/${id}/deal-failed`,
+  // Chat list (conversations for Messages tab)
+  CHAT_LIST: `${API_VERSION}/sessions/chat-list`,
 } as const;
 
 // Inquiry Endpoints

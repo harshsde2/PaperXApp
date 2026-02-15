@@ -15,7 +15,7 @@ import { DashboardHeader } from './components/DashboardHeader';
 import { styles } from './styles';
 
 const DashboardScreen = () => {
-  const { user } = useAppSelector((state) => state.auth);
+  const { user ,token} = useAppSelector((state) => state.auth);
   const {
     data: profileData,
     isLoading: isProfileLoading,
@@ -26,6 +26,8 @@ const DashboardScreen = () => {
 
   // Get active role from Redux (supports role switching)
   const activeRole = useActiveRole() as DashboardRole;
+
+  console.log('activeRole', JSON.stringify({ user, token }, null, 2));
 
   // Fetch dashboard data based on active role
   const {

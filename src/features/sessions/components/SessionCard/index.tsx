@@ -9,7 +9,7 @@ import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { Session } from '../../@types';
-import { CountdownTimer } from '../CountdownTimer';
+import { ElapsedTimer } from '../ElapsedTimer';
 import { SessionCardProps } from './@types';
 import { createStyles } from './styles';
 
@@ -74,12 +74,11 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     if (!isOwner) {
       return (
         <>
-          {session.biddingEndsAt && (
-            <CountdownTimer
-              targetDate={session.biddingEndsAt}
-              label="Bidding Ends In"
-            />
-          )}
+          <ElapsedTimer
+            startDate={session.createdAt}
+            endDate={session.biddingEndsAt}
+            label="Time since post"
+          />
           <View style={styles.actionSection}>
             <TouchableOpacity
               style={styles.actionButton}
@@ -98,13 +97,12 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       case 'active':
         return (
           <>
-            {/* Timer */}
-            {session.biddingEndsAt && (
-              <CountdownTimer
-                targetDate={session.biddingEndsAt}
-                label="Bidding Ends In"
-              />
-            )}
+            {/* Timer: elapsed from post toward 24h / backend end */}
+            <ElapsedTimer
+              startDate={session.createdAt}
+              endDate={session.biddingEndsAt}
+              label="Time since post"
+            />
             
             {/* Progress */}
             <View style={styles.progressSection}>
@@ -183,7 +181,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             <View style={styles.lockedSection}>
               <AppIcon.Warning width={18} height={18} color={theme.colors.text.tertiary} />
               <Text style={styles.lockedText}>
-                Bidding period has ended. Evaluating {session.responsesReceived} responses.
+                Session period has ended. Evaluating {session.responsesReceived} responses.
               </Text>
             </View>
 

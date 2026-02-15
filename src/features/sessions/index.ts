@@ -14,6 +14,7 @@ export { SessionCard } from './components/SessionCard';
 export { MatchResponseCard } from './components/MatchResponseCard';
 export { SessionTabBar } from './components/SessionTabBar';
 export { CountdownTimer } from './components/CountdownTimer';
+export { ElapsedTimer } from './components/ElapsedTimer';
 
 // Types
 export * from './@types';

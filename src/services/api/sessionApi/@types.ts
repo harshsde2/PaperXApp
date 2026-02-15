@@ -189,6 +189,7 @@ export interface SessionDetail {
   selected_partners: SelectedPartner[];
   chat_enabled: boolean;
   chat_thread_id: number | null;
+  created_at?: string | null;
   expires_at: string | null;
   locked_at: string | null;
   is_owner?: boolean;
@@ -196,6 +197,72 @@ export interface SessionDetail {
   intent?: string;
   my_responder_status?: MyResponderStatus | null;
 }
+
+// ============================================
+// POSTER DETAIL (owner only)
+// ============================================
+
+export interface PosterDetailRequirementSummary {
+  title: string;
+  material: string | null;
+  quantity: number | string | null;
+  quantity_unit: string | null;
+  urgency: string;
+  items: Array<{
+    material_category: string | null;
+    quantity: number | string | null;
+    quantity_unit: string | null;
+  }>;
+}
+
+export interface PosterDetailResponse {
+  poster_type: string;
+  intent: 'buy' | 'sell';
+  title: string;
+  requirement_summary: PosterDetailRequirementSummary;
+  created_at: string | null;
+  reached_count: number;
+  matches_count: number;
+  responses_count: number;
+}
+
+// ============================================
+// RESPONDER DETAIL (non-owner only)
+// ============================================
+
+export interface ResponderDetailMyStatus {
+  expressed_interest: boolean;
+  shortlisted: boolean;
+  declined: boolean;
+}
+
+export interface ResponderDetailResponse {
+  inquiry_id: number;
+  intent: 'buy' | 'sell';
+  poster_label: string;
+  title: string;
+  requirement_summary: PosterDetailRequirementSummary;
+  created_at: string | null;
+  expires_at: string | null;
+  my_responder_status: ResponderDetailMyStatus;
+}
+
+// ============================================
+// CHAT LIST (Messages tab)
+// ============================================
+
+export interface ChatListItem {
+  session_id: number;
+  inquiry_id: number;
+  partner_id?: number | null;
+  partner_name: string;
+  partner_company: string;
+  last_message: string;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+export type GetChatListResponse = ChatListItem[];
 
 // ============================================
 // GET SESSION DETAIL
@@ -215,6 +282,7 @@ export interface GetSessionDetailResponse {
   selected_partners: SelectedPartner[];
   chat_enabled: boolean;
   chat_thread_id: number | null;
+  created_at?: string | null;
   expires_at: string | null;
   locked_at: string | null;
   is_owner?: boolean;

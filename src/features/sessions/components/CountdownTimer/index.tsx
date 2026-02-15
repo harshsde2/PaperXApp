@@ -37,7 +37,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   onExpire,
   compact = false,
   showLabel = true,
-  label = 'Bidding Ends In',
+  label = 'Session Ends In',
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);

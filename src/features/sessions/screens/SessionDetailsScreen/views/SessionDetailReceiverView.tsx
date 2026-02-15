@@ -17,7 +17,8 @@ export interface SessionDetailReceiverViewProps {
   summaryTitle: string;
   summarySubtitle: string;
   posterLabel: string;
-  countdown: { hours: number; mins: number; secs: number } | null;
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
   inquiryId: number;
   sessionId: string | number;
   onQuoteSubmitted?: () => void;
@@ -28,7 +29,8 @@ export const SessionDetailReceiverView: React.FC<SessionDetailReceiverViewProps>
   summaryTitle,
   summarySubtitle,
   posterLabel,
-  countdown,
+  startDate,
+  endDate,
   inquiryId,
   sessionId,
   onQuoteSubmitted,
@@ -87,11 +89,12 @@ export const SessionDetailReceiverView: React.FC<SessionDetailReceiverViewProps>
         <RequirementSummaryCard
           title={summaryTitle}
           subtitle={summarySubtitle}
-          countdown={countdown ?? undefined}
+          startDate={startDate ?? undefined}
+          endDate={endDate ?? undefined}
         />
         {isLocked ? (
           <Text style={styles.receiverLockedText}>
-            Bidding has ended for this requirement.
+            Session has ended for this requirement.
           </Text>
         ) : (
           <View style={styles.receiverActionSection}>

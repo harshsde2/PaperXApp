@@ -442,6 +442,7 @@ export type LocationSource = 'saved' | 'manual';
 export type VisibilityType = 'dealers' | 'converters' | 'manufacturers' | 'all';
 
 export interface PostRequirementRequest {
+  title?: string; // Required by backend for dealer requirement post
   inquiry_type: InquiryType;
   intent: IntentType;
   material_id: number; // Single material selection (required)

@@ -14,6 +14,10 @@ import type {
   GetSessionHistoryParams,
   GetSessionHistoryResponse,
   GetSessionDetailResponse,
+  PosterDetailResponse,
+  ResponderDetailResponse,
+  ChatListItem,
+  GetChatListResponse,
   LockSessionRequest,
   LockSessionResponse,
   RepublishSessionResponse,
@@ -57,6 +61,7 @@ export const useGetActiveSessions = (
     },
     staleTime: 1000 * 30, // 30 seconds - sessions change frequently
     gcTime: 0, // Don't cache - always fresh
+    refetchOnMount: 'always', // Refetch when opening Sourcing Hub so new matched posts appear
     enabled: options?.enabled ?? true,
   });
 };
@@ -140,6 +145,74 @@ export const useGetSessionDetail = (
     enabled: options?.enabled ?? !!id,
     staleTime: 1000 * 30, // 30 seconds
     gcTime: 0, // Don't cache - always fresh
+  });
+};
+
+// ============================================
+// GET POSTER DETAIL (owner only: counts + requirement summary)
+// ============================================
+
+export const useGetPosterDetail = (
+  sessionId: number | string,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: queryKeys.sessions.posterDetail(sessionId),
+    queryFn: async (): Promise<PosterDetailResponse> => {
+      const response = await api.get<{ data: PosterDetailResponse }>(
+        SESSION_ENDPOINTS.POSTER_DETAIL(sessionId)
+      );
+      return extractData<PosterDetailResponse>(response);
+    },
+    enabled: (options?.enabled ?? true) && !!sessionId,
+    staleTime: 1000 * 30,
+    gcTime: 0,
+  });
+};
+
+// ============================================
+// GET RESPONDER DETAIL (non-owner only)
+// ============================================
+
+export const useGetResponderDetail = (
+  sessionId: number | string,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: queryKeys.sessions.responderDetail(sessionId),
+    queryFn: async (): Promise<ResponderDetailResponse> => {
+      const response = await api.get<{ data: ResponderDetailResponse }>(
+        SESSION_ENDPOINTS.RESPONDER_DETAIL(sessionId)
+      );
+      return extractData<ResponderDetailResponse>(response);
+    },
+    enabled: (options?.enabled ?? true) && !!sessionId,
+    staleTime: 1000 * 30,
+    gcTime: 0,
+  });
+};
+
+// ============================================
+// GET CHAT LIST (Messages tab – conversations)
+// ============================================
+
+export const useGetChatList = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: queryKeys.sessions.chatList(),
+    queryFn: async (): Promise<GetChatListResponse> => {
+      const response = await api.get<{ data?: GetChatListResponse; success?: boolean }>(
+        SESSION_ENDPOINTS.CHAT_LIST
+      );
+      const raw = response?.data;
+      const data = extractData<GetChatListResponse>(response);
+      if (Array.isArray(data)) return data;
+      if (raw && typeof raw === 'object' && Array.isArray((raw as any).data)) return (raw as any).data;
+      if (Array.isArray(raw)) return raw;
+      return [];
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 1000 * 30,
+    gcTime: 0,
   });
 };
 
@@ -298,14 +371,27 @@ export const useGetMatchmakingResponses = (
 // EXPRESS INTEREST / DECLINE (Responder)
 // ============================================
 
+export interface ExpressInterestPayload {
+  inquiryId: number | string;
+  approx_price?: number;
+  description?: string;
+}
+
 export const useExpressInterest = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (inquiryId: number | string) => {
-      const response = await api.post(INQUIRY_ENDPOINTS.EXPRESS_INTEREST(inquiryId), {});
+    mutationFn: async (payload: ExpressInterestPayload | number | string) => {
+      const inquiryId = typeof payload === 'object' ? payload.inquiryId : payload;
+      const body: { approx_price?: number; description?: string } = {};
+      if (typeof payload === 'object') {
+        if (payload.approx_price != null) body.approx_price = payload.approx_price;
+        if (payload.description != null && payload.description !== '') body.description = payload.description;
+      }
+      const response = await api.post(INQUIRY_ENDPOINTS.EXPRESS_INTEREST(inquiryId), body);
       return extractData<{ expressed_interest: boolean }>(response);
     },
-    onSuccess: (_, inquiryId) => {
+    onSuccess: (_, payload) => {
+      const inquiryId = typeof payload === 'object' ? payload.inquiryId : payload;
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.active() });
       queryClient.invalidateQueries({ queryKey: queryKeys.inquiries.matchmakingResponses(inquiryId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });

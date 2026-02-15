@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useAppSelector } from '@store/hooks';
+import { useAppSelector, useAppDispatch } from '@store/hooks';
+import type { RootState } from '@store/index';
+import { setMessagesUnreadCount } from '@store/slices/uiSlice';
 import { useActiveRole } from '@shared/hooks/useActiveRole';
 import { AppIcon } from '@assets/svgs';
 import { Text } from '@shared/components/Text';
+import { useGetChatList } from '@services/api';
+import type { ChatListItem } from '@services/api';
 import { SCREENS, TAB_CONFIGS, UserRole } from './constants';
 
 // Import Screens
@@ -65,11 +69,18 @@ const getScreenComponent = (screenName: string) => {
   return screens[screenName] || DashboardScreen;
 };
 
+/** Format badge label: show number, cap at 99+ */
+const getBadgeLabel = (count: number): string | null => {
+  if (count <= 0) return null;
+  return count > 99 ? '99+' : String(count);
+};
+
 // Custom Tab Bar Component
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const insets = useSafeAreaInsets();
   const stackNavigation = useNavigation<any>();
-  
+  const messagesUnreadCount = useAppSelector((s: RootState) => s.ui.messagesUnreadCount);
+
   // Use activeRole from Redux (supports role switching)
   const activeRole = useActiveRole();
   const tabConfig = TAB_CONFIGS[activeRole] || TAB_CONFIGS.dealer;
@@ -116,6 +127,8 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
           });
         };
 
+        const badgeLabel = route.name === 'Messages' ? getBadgeLabel(messagesUnreadCount) : null;
+
         return (
           <TouchableOpacity
             key={route.key}
@@ -132,6 +145,13 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                 height={24}
                 color={isFocused ? '#2563EB' : '#9CA3AF'}
               />
+              {badgeLabel !== null && (
+                <View style={styles.tabBadge}>
+                  <Text style={styles.tabBadgeText} numberOfLines={1}>
+                    {badgeLabel}
+                  </Text>
+                </View>
+              )}
             </View>
             <Text
               style={[
@@ -189,6 +209,8 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
           });
         };
 
+        const badgeLabel = route.name === 'Messages' ? getBadgeLabel(messagesUnreadCount) : null;
+
         return (
           <TouchableOpacity
             key={route.key}
@@ -205,6 +227,13 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                 height={24}
                 color={isFocused ? '#2563EB' : '#9CA3AF'}
               />
+              {badgeLabel !== null && (
+                <View style={styles.tabBadge}>
+                  <Text style={styles.tabBadgeText} numberOfLines={1}>
+                    {badgeLabel}
+                  </Text>
+                </View>
+              )}
             </View>
             <Text
               style={[
@@ -223,6 +252,21 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
 };
 
 const BottomTabNavigator: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { data: chatList = [] } = useGetChatList();
+  const list = chatList as ChatListItem[];
+  const totalUnread = useMemo(
+    () => list.reduce((sum, item) => sum + (item.unread_count ?? 0), 0),
+    [list]
+  );
+  const badgeCount = useMemo(
+    () => (totalUnread > 0 ? totalUnread : list.length),
+    [totalUnread, list.length]
+  );
+  useEffect(() => {
+    dispatch(setMessagesUnreadCount(badgeCount));
+  }, [dispatch, badgeCount]);
+
   // Use activeRole from Redux (supports role switching)
   const activeRole = useActiveRole();
   const tabConfig = TAB_CONFIGS[activeRole] || TAB_CONFIGS.dealer;
@@ -271,6 +315,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   iconContainer: {
+    position: 'relative',
     width: 44,
     height: 32,
     alignItems: 'center',
@@ -280,6 +325,25 @@ const styles = StyleSheet.create({
   },
   iconContainerActive: {
     backgroundColor: '#EEF2FF',
+  },
+  tabBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 5,
+    borderRadius: 9,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  tabBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   tabLabel: {
     fontSize: 11,

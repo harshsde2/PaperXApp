@@ -345,6 +345,9 @@ export {
   useGetSessionHistory,
   useGetSessionHistoryInfinite,
   useGetSessionDetail,
+  useGetPosterDetail,
+  useGetResponderDetail,
+  useGetChatList,
   useFetchSessionByInquiry,
   useLockSession,
   useRepublishSession,
@@ -379,6 +382,15 @@ export type {
   SelectedPartner,
   SessionDetail,
   GetSessionDetailResponse,
+  // Poster Detail (owner only)
+  PosterDetailResponse,
+  PosterDetailRequirementSummary,
+  // Responder Detail (non-owner only)
+  ResponderDetailResponse,
+  ResponderDetailMyStatus,
+  // Chat List (Messages tab)
+  ChatListItem,
+  GetChatListResponse,
   // Lock Session
   LockSessionRequest,
   LockSessionResponse,
@@ -393,3 +405,4 @@ export type {
   GetMatchmakingResponsesResponse,
   GetMatchmakingResponsesParams,
 } from './sessionApi/@types';
+export type { ExpressInterestPayload } from './sessionApi/sessionApi';

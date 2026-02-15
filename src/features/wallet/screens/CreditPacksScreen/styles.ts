@@ -58,7 +58,7 @@ export const createStyles = (theme: Theme) =>
     // ==========================================
     headerSection: {
       paddingHorizontal: theme.spacing[5],
-      paddingTop: theme.spacing[6],
+      paddingTop: theme.spacing[1],
       paddingBottom: theme.spacing[2],
     },
     headerTitleRow: {
@@ -87,7 +87,9 @@ export const createStyles = (theme: Theme) =>
       lineHeight: 22,
       marginTop: theme.spacing[1],
     },
-
+    headerTitleContainer: {
+      marginBottom: theme.spacing[2],
+    },
     // ==========================================
     // CURRENT BALANCE - Gradient Card
     // ==========================================

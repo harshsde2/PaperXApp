@@ -65,7 +65,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
       </View>
 
       {/* Profile Completion Progress */}
-      {dashboardData.profileCompletionPercentage < 100 && (
+      {/* {dashboardData.profileCompletionPercentage < 100 && (
         <TouchableOpacity style={styles.profileProgressCard} activeOpacity={0.8}>
           <View style={styles.profileProgressHeader}>
             <View style={styles.profileProgressIconContainer}>
@@ -80,15 +80,15 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
             <AppIcon.ChevronRight width={20} height={20} color="#9CA3AF" />
           </View>
           <View style={styles.progressBarContainer}>
-            <View 
+            <View
               style={[
-                styles.progressBarFill, 
+                styles.progressBarFill,
                 { width: `${dashboardData.profileCompletionPercentage}%` }
-              ]} 
+              ]}
             />
           </View>
         </TouchableOpacity>
-      )}
+      )} */}
 
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
@@ -110,7 +110,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
       </View>
 
       {/* Secondary Stats Row */}
-      <View style={styles.secondaryStatsContainer}>
+      {/* <View style={styles.secondaryStatsContainer}>
         <View style={styles.secondaryStatCard}>
           <View style={[styles.secondaryStatIcon, { backgroundColor: '#FEF3C7' }]}>
             <AppIcon.Sessions width={18} height={18} color="#F59E0B" />
@@ -130,7 +130,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
             <Text style={styles.secondaryStatLabel}>Unread Notifications</Text>
           </View>
         </View>
-      </View>
+      </View> */}
 
       {/* Quick Actions */}
       <View style={styles.section}>
@@ -144,9 +144,9 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
             <Text style={styles.actionSubtitlePrimary}>Find Materials</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY, { intent: 'sell' })} 
-            style={styles.actionCardSecondary} 
+          <TouchableOpacity
+            onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY, { intent: 'sell' })}
+            style={styles.actionCardSecondary}
             activeOpacity={0.85}
           >
             <View style={styles.actionIconSecondary}>
@@ -168,8 +168,8 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
           <Text style={styles.additionalCardSubtitle}>View all opportunities</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.additionalCard} 
+        <TouchableOpacity
+          style={styles.additionalCard}
           activeOpacity={0.7}
           onPress={() => navigation.navigate(SCREENS.SESSIONS.DASHBOARD)}
         >
@@ -184,7 +184,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
       </View>
 
       {/* Market Insight */}
-      <TouchableOpacity style={styles.insightCard} activeOpacity={0.8}>
+      <TouchableOpacity onPress={() => navigation.navigate(SCREENS.MAIN.MARKET_INSIGHT)} style={styles.insightCard} activeOpacity={0.8}>
         <Text style={styles.insightCategory}>MARKET INSIGHT</Text>
         <Text style={styles.insightTitle}>Explore market trends and opportunities</Text>
         <View style={styles.insightLink}>

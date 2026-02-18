@@ -45,15 +45,15 @@ const getDevelopmentApiUrl = (): string => {
     // iOS Simulator can use localhost directly
     return 'http://localhost:8000';
   }
-  
+
   // Fallback
   return `http://${PHYSICAL_DEVICE_IP}:8000`;
 };
 
 // API Base URLs
 export const API_BASE_URLS = {
-  [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
-  // [ENV.DEVELOPMENT]: 'https://paperx.safewayrssi.com', // Uncomment to use staging server
+  // [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
+  [ENV.DEVELOPMENT]: 'https://paperx.safewayrssi.com', // Uncomment to use staging server
   [ENV.STAGING]: 'https://paperx.safewayrssi.com',
   [ENV.PRODUCTION]: 'https://paperx.safewayrssi.com',
 } as const;

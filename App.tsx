@@ -7,6 +7,7 @@ import { store } from './src/store';
 import { queryClient } from './src/services/api/queryClient';
 import AppNavigator from './src/navigation/AppNavigator';
 import { BottomSheetProvider } from '@shared/components/BottomSheet';
+import ToastManager from 'toastify-react-native'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetProvider>
             <SafeAreaProvider>
+              <ToastManager />
               <AppNavigator />
             </SafeAreaProvider>
           </BottomSheetProvider>

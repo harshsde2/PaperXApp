@@ -18,7 +18,7 @@ import { storageService } from '@services/storage/storageService';
 import { queryKeys } from '../queryClient';
 import { useAppDispatch } from '@store/hooks';
 import { setCredentials, setOTPSent, setOTPVerified, logout as logoutAction } from '@store/slices/authSlice';
-import { setRoles, clearRoles } from '@store/slices/roleSlice';
+import { setRoles, clearRoles, setActiveRole } from '@store/slices/roleSlice';
 import type { User } from '@shared/types';
 
 /** Map API profile (snake_case) to auth User shape for Redux/storage */
@@ -205,6 +205,7 @@ export const useVerifyOTP = () => {
             secondaryRole: user.secondaryRole as any,
           })
         );
+        dispatch(setActiveRole(user.primaryRole as any));
       }
       dispatch(setOTPVerified(true));
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all });

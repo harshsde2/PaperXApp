@@ -36,6 +36,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
   const dashboardData = {
     profileCompletionPercentage: apiData?.profile_completion_percentage ?? 0,
     activeOpportunities: apiData?.active_opportunities_count ?? 0,
+    activeInquiries: apiData?.active_inquiries_count ?? 0,
     lockedSessions: apiData?.locked_sessions_count ?? 0,
     expiredSessions: apiData?.expired_sessions_count ?? 0,
     unreadNotifications: apiData?.unread_notifications_count ?? 0,
@@ -94,10 +95,11 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <View style={styles.statIconContainer}>
-            <AppIcon.Market width={22} height={22} color="#2563EB" />
+            <AppIcon.Inquiries width={22} height={22} color="#2563EB" />
           </View>
-          <Text style={styles.statValue}>{dashboardData.activeOpportunities}</Text>
-          <Text style={styles.statLabel}>Active{'\n'}Opportunities</Text>
+          <Text style={styles.statValue}>{dashboardData.activeInquiries}</Text>
+          <Text style={styles.statLabel}>Inquiries</Text>
+          <Text style={styles.statSublabel}>Open – until 10 people respond</Text>
         </View>
 
         <View style={[styles.statCard, styles.statCardDark]}>
@@ -353,6 +355,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     lineHeight: 18,
+  },
+  statSublabel: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 2,
   },
   statLabelDark: {
     color: 'rgba(255,255,255,0.7)',

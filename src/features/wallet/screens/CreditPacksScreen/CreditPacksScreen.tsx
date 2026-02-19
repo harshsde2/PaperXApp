@@ -367,13 +367,13 @@ const CreditPacksScreen = () => {
                     {/* Price Row */}
                     <View style={styles.packPriceRow}>
                       <View style={styles.packPriceContainer}>
+                        <Text style={styles.packGst}>
+                          ₹{formatPrice(pack.price)} + ₹{formatPrice(pack.gst_amount)} GST
+                        </Text>
                         <View style={styles.packPriceMain}>
                           <Text style={styles.packPriceCurrency}>₹</Text>
                           <Text style={styles.packPrice}>{formatPrice(pack.total_price)}</Text>
                         </View>
-                        <Text style={styles.packGst}>
-                          incl. {pack.gst_percentage}% GST
-                        </Text>
                       </View>
 
                       {/* Validity & Select */}

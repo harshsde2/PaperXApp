@@ -1,6 +1,6 @@
 /**
  * InterestedModal
- * Popup for responder to enter approx price (INR) and description before expressing interest.
+ * Popup for responder to enter optional approx price (INR) and details before expressing interest.
  */
 
 import React, { useState, useCallback } from 'react';
@@ -20,7 +20,7 @@ import { createStyles } from './styles';
 export interface InterestedModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: { approx_price: number; description: string }) => void;
+  onSubmit: (data: { approx_price?: number; description: string }) => void;
   isSubmitting?: boolean;
 }
 
@@ -36,15 +36,19 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
   const [description, setDescription] = useState('');
 
   const handleSubmit = useCallback(() => {
-    const priceNum = parseFloat(approxPrice.replace(/,/g, '.'));
-    if (Number.isNaN(priceNum) || priceNum < 0) return;
     const desc = description.trim();
     if (!desc) return;
-    onSubmit({ approx_price: priceNum, description: desc });
+    const priceNum = parseFloat(approxPrice.replace(/,/g, '.'));
+    const hasValidPrice = !Number.isNaN(priceNum) && priceNum >= 0;
+    onSubmit({
+      ...(hasValidPrice ? { approx_price: priceNum } : {}),
+      description: desc,
+    });
   }, [approxPrice, description, onSubmit]);
 
   const priceNum = parseFloat(approxPrice.replace(/,/g, '.'));
-  const isValid = !Number.isNaN(priceNum) && priceNum >= 0 && description.trim().length > 0;
+  const hasInvalidPrice = approxPrice.trim() !== '' && (Number.isNaN(priceNum) || priceNum < 0);
+  const isValid = description.trim().length > 0 && !hasInvalidPrice;
 
   return (
     <Modal
@@ -67,7 +71,7 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
               Express interest
             </Text>
             <Text style={[styles.modalLabel, { color: theme.colors.text.secondary }]}>
-              Approx price (₹ INR)
+              Approx price (₹ INR) (optional)
             </Text>
             <TextInput
               style={[
@@ -81,7 +85,7 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
               keyboardType="decimal-pad"
             />
             <Text style={[styles.modalLabel, { color: theme.colors.text.secondary, marginTop: 12 }]}>
-              Description
+              Any other details you want to add
             </Text>
             <TextInput
               style={[

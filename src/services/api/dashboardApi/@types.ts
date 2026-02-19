@@ -65,6 +65,8 @@ export interface NewInquiry {
 export interface DealerDashboardData {
   profile_completion_percentage: number;
   active_opportunities_count: number;
+  /** Posts with < 10 responses (open until 10 people respond) */
+  active_inquiries_count: number;
   locked_sessions_count: number;
   expired_sessions_count: number;
   unread_notifications_count: number;

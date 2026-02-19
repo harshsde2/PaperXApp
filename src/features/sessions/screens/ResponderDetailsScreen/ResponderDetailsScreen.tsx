@@ -115,10 +115,10 @@ export default function ResponderDetailsScreen() {
   }, []);
 
   const handleSubmitInterested = useCallback(
-    (data: { approx_price: number; description: string }) => {
+    (data: { approx_price?: number; description: string }) => {
       if (!inquiryId) return;
       expressInterest.mutate(
-        { inquiryId, approx_price: data.approx_price, description: data.description },
+        { inquiryId, ...(data.approx_price != null ? { approx_price: data.approx_price } : {}), description: data.description },
         {
           onSuccess: () => {
             setInterestedModalVisible(false);

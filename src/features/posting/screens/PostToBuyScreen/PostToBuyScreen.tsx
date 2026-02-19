@@ -847,7 +847,7 @@ const PostToBuyScreen = () => {
                   placeholder="e.g., 28x40"
                   rules={validationRules.required('Please enter size') as any}
                   containerStyle={{ marginBottom: 0 }}
-                  helperText="Format: Width x Height"
+                  helperText="Format: Length x Width"
                 />
               </View>
               <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>

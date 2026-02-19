@@ -11,6 +11,7 @@ import { updateUser } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
 import { VerificationStatusScreenNavigationProp, VerificationStatusScreenRouteProp } from './@types';
 import { createStyles } from './styles';
+import { setActiveRole } from '@store/slices/roleSlice';
 
 const VerificationStatusScreen = () => {
   const navigation = useNavigation<VerificationStatusScreenNavigationProp>();
@@ -23,6 +24,7 @@ const VerificationStatusScreen = () => {
   // Get profile data from route params
   const { profileData } = route.params || {};
 
+  // console.log('profileData', JSON.stringify(profileData, null, 2));
   // NOTE: Do NOT update Redux state or storage on screen load.
   // State is updated only when user clicks "Proceed to Dashboard".
 
@@ -39,7 +41,12 @@ const VerificationStatusScreen = () => {
       profile_complete: true,
     };
 
+
+    console.log('completedProfile', completedProfile);
+
     storageService.setUserData(completedProfile);
+
+    dispatch(setActiveRole(profileData.primary_role as any));
 
     dispatch(
       updateUser({
@@ -50,6 +57,8 @@ const VerificationStatusScreen = () => {
         ...completedProfile,
       })
     );
+
+
 
     // AppNavigator will re-render and show MainNavigator (dashboard)
     // because has_completed_registration is now true.

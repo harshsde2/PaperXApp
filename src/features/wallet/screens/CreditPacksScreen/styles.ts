@@ -375,9 +375,9 @@ export const createStyles = (theme: Theme) =>
       letterSpacing: -0.5,
     },
     packGst: {
-      fontSize: 11,
-      color: DARK_THEME.text.muted,
-      marginTop: 2,
+      fontSize: 12,
+      color: DARK_THEME.text.secondary,
+      marginBottom: 2,
     },
     packActions: {
       alignItems: 'flex-end',

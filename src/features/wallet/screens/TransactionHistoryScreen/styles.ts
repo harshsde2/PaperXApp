@@ -4,6 +4,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BALANCE_CARD_HEIGHT = 90;
@@ -77,7 +78,7 @@ export const createStyles = (theme: Theme) =>
     },
     balanceLabel: {
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.7)',
       marginBottom: 2,
       textTransform: 'uppercase',
@@ -85,7 +86,7 @@ export const createStyles = (theme: Theme) =>
     },
     balanceValue: {
       fontSize: 32,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: '#FFFFFF',
       letterSpacing: -0.5,
     },
@@ -94,7 +95,7 @@ export const createStyles = (theme: Theme) =>
     },
     creditsUnit: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.8)',
       marginBottom: theme.spacing[2],
     },
@@ -110,7 +111,7 @@ export const createStyles = (theme: Theme) =>
     },
     statusText: {
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.6)',
       letterSpacing: 0.5,
     },
@@ -145,7 +146,7 @@ export const createStyles = (theme: Theme) =>
     },
     filterTabText: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.secondary,
     },
     filterTabTextActive: {
@@ -187,7 +188,7 @@ export const createStyles = (theme: Theme) =>
     },
     sectionHeaderText: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -220,7 +221,7 @@ export const createStyles = (theme: Theme) =>
     },
     emptyTitle: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
     },
@@ -285,6 +286,6 @@ export const createStyles = (theme: Theme) =>
     retryButtonText: {
       color: theme.colors.white,
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
   });

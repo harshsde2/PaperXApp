@@ -4,6 +4,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -62,7 +63,7 @@ export const createStyles = (theme: Theme) =>
     },
     balanceLabel: {
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: 'rgba(255, 255, 255, 0.7)',
       letterSpacing: 0.5,
       textTransform: 'uppercase',
@@ -70,13 +71,13 @@ export const createStyles = (theme: Theme) =>
     },
     balanceValue: {
       fontSize: 44,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.white,
       letterSpacing: -1,
     },
     balanceUnit: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.8)',
       marginLeft: theme.spacing[2],
     },
@@ -101,7 +102,7 @@ export const createStyles = (theme: Theme) =>
     },
     statusText: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.8)',
       letterSpacing: 0.5,
     },
@@ -150,7 +151,7 @@ export const createStyles = (theme: Theme) =>
     },
     quickActionTitle: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -199,11 +200,11 @@ export const createStyles = (theme: Theme) =>
     statLabel: {
       fontSize: 12,
       color: theme.colors.text.tertiary,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
     },
     statValue: {
       fontSize: 20,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     statValueCredit: {
@@ -241,7 +242,7 @@ export const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     viewAllButton: {
@@ -252,7 +253,7 @@ export const createStyles = (theme: Theme) =>
     },
     viewAllText: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
       marginRight: theme.spacing[1],
     },
@@ -289,7 +290,7 @@ export const createStyles = (theme: Theme) =>
     },
     emptyTitle: {
       fontSize: 17,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
     },
@@ -310,7 +311,7 @@ export const createStyles = (theme: Theme) =>
     emptyButtonText: {
       color: theme.colors.white,
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
 
     // ==========================================
@@ -336,7 +337,7 @@ export const createStyles = (theme: Theme) =>
     loadingText: {
       marginTop: theme.spacing[4],
       fontSize: 15,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.secondary,
     },
     errorContainer: {
@@ -365,7 +366,7 @@ export const createStyles = (theme: Theme) =>
     },
     errorTitle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
       textAlign: 'center',
@@ -386,6 +387,6 @@ export const createStyles = (theme: Theme) =>
     retryButtonText: {
       color: theme.colors.white,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
   });

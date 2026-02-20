@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   filterButton: {
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     color: '#6B7280',
   },
   tabTextActive: {
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
   },
   urgentText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#DC2626',
     letterSpacing: 0.5,
   },
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     letterSpacing: 0.3,
   },
   timeText: {
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   },
   inquiryTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 12,
   },
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   specText: {
     fontSize: 12,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
   },
   matchButton: {
     flexDirection: 'row',
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
   },
   miniAvatarText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#4F46E5',
   },
   miniAvatarMore: {
@@ -329,13 +330,13 @@ const styles = StyleSheet.create({
   },
   miniAvatarMoreText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#6B7280',
   },
   matchText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   closedInfo: {

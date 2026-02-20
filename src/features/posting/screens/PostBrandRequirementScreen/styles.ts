@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -68,7 +69,7 @@ export const createStyles = (theme: Theme) =>
     },
     mapButtonText: {
       color: theme.colors.text.inverse,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
     button: {
       backgroundColor: theme.colors.primary.DEFAULT,
@@ -141,7 +142,7 @@ export const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
     },
     // Info Card

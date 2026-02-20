@@ -1,12 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, TouchableOpacity, InteractionManager } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { DropdownButton } from '@shared/components/DropdownButton';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
-import { useBottomSheet } from '@shared/components/BottomSheet';
 import {
   BrandSelectionContent,
   SelectedBrand,
@@ -30,7 +34,7 @@ const MillBrandDetailsScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-  const bottomSheet = useBottomSheet();
+  const brandSheetRef = useRef<BottomSheetModal>(null);
 
   // Get params from route
   const {  onBrandDetailsSelected, materialKey } = route.params || {};
@@ -48,49 +52,20 @@ const MillBrandDetailsScreen = () => {
 
   const handleBrandSelect = useCallback(
     (brand: SelectedBrand) => {
-      bottomSheet.close();
+      brandSheetRef.current?.dismiss();
       InteractionManager.runAfterInteractions(() => {
         setSelectedBrand(brand);
         setBrandSearchQuery('');
       });
     },
-    [bottomSheet],
+    [],
   );
 
   const openBrandSelector = useCallback(() => {
     if (preferNotToDisclose) return;
-
     setBrandSearchQuery('');
-    bottomSheet.open(
-      <BrandSelectionContent
-        searchQuery={brandSearchQuery}
-        onSearchChange={setBrandSearchQuery}
-        selectedBrand={selectedBrand}
-        brands={brands}
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={refetch}
-        onSelect={handleBrandSelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setBrandSearchQuery(''),
-      },
-    );
-  }, [
-    bottomSheet,
-    brandSearchQuery,
-    selectedBrand,
-    brands,
-    isLoading,
-    isError,
-    refetch,
-    handleBrandSelect,
-    theme,
-    preferNotToDisclose,
-  ]);
+    brandSheetRef.current?.present();
+  }, [preferNotToDisclose]);
 
   const handlePreferNotToDisclose = (value: boolean) => {
     setPreferNotToDisclose(value);
@@ -147,7 +122,8 @@ const MillBrandDetailsScreen = () => {
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
 
   return (
-    <>
+    <BottomSheetModalProvider>
+      <View style={{ flex: 1 }}>
       <ScreenWrapper
         scrollable
         backgroundColor={theme.colors.background.secondary}
@@ -306,7 +282,28 @@ const MillBrandDetailsScreen = () => {
           />
         </TouchableOpacity>
       </FloatingBottomContainer>
-    </>
+
+      <BottomSheetModal
+        ref={brandSheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+        onDismiss={() => setBrandSearchQuery('')}
+      >
+        <BrandSelectionContent
+          searchQuery={brandSearchQuery}
+          onSearchChange={setBrandSearchQuery}
+          selectedBrand={selectedBrand}
+          brands={brands}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={refetch}
+          onSelect={handleBrandSelect}
+          theme={theme}
+          ListComponent={BottomSheetFlatList}
+        />
+      </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 

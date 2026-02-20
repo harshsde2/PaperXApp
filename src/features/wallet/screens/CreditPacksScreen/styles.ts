@@ -4,6 +4,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -77,7 +78,7 @@ export const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: DARK_THEME.text.primary,
       letterSpacing: -0.5,
     },
@@ -140,7 +141,7 @@ export const createStyles = (theme: Theme) =>
     },
     currentBalanceLabel: {
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: DARK_THEME.text.muted,
       letterSpacing: 1,
       textTransform: 'uppercase',
@@ -148,13 +149,13 @@ export const createStyles = (theme: Theme) =>
     },
     currentBalanceValue: {
       fontSize: 34,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: DARK_THEME.accent.gold,
       letterSpacing: -0.5,
     },
     currentBalanceUnit: {
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: DARK_THEME.text.secondary,
       marginTop: 2,
     },
@@ -168,7 +169,7 @@ export const createStyles = (theme: Theme) =>
     },
     sectionLabel: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: DARK_THEME.text.muted,
       letterSpacing: 2,
       textTransform: 'uppercase',
@@ -234,7 +235,7 @@ export const createStyles = (theme: Theme) =>
     },
     bestValueText: {
       fontSize: 11,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: '#000000',
       letterSpacing: 1.5,
     },
@@ -267,7 +268,7 @@ export const createStyles = (theme: Theme) =>
     },
     packTierText: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       letterSpacing: 1.5,
       marginBottom: theme.spacing[2],
     },
@@ -285,7 +286,7 @@ export const createStyles = (theme: Theme) =>
     },
     packName: {
       fontSize: 26,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: DARK_THEME.text.primary,
       marginBottom: theme.spacing[1],
       letterSpacing: -0.3,
@@ -326,7 +327,7 @@ export const createStyles = (theme: Theme) =>
     },
     packCreditsValue: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       letterSpacing: -0.5,
     },
     packCreditsValueStarter: {
@@ -343,7 +344,7 @@ export const createStyles = (theme: Theme) =>
     },
     packCreditsLabel: {
       fontSize: 9,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: DARK_THEME.text.muted,
       letterSpacing: 1,
       marginTop: 2,
@@ -364,13 +365,13 @@ export const createStyles = (theme: Theme) =>
     },
     packPriceCurrency: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: DARK_THEME.text.primary,
       marginRight: 2,
     },
     packPrice: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: DARK_THEME.text.primary,
       letterSpacing: -0.5,
     },
@@ -426,7 +427,7 @@ export const createStyles = (theme: Theme) =>
     },
     packSelectButtonText: {
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
     },
     packSelectButtonTextStarter: {
       color: DARK_THEME.tiers.starter.secondary,
@@ -509,7 +510,7 @@ export const createStyles = (theme: Theme) =>
     },
     paymentMethodName: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: DARK_THEME.text.secondary,
       textAlign: 'center',
     },
@@ -573,7 +574,7 @@ export const createStyles = (theme: Theme) =>
     },
     summaryValue: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: DARK_THEME.text.primary,
     },
     summaryTotalRow: {
@@ -584,12 +585,12 @@ export const createStyles = (theme: Theme) =>
     },
     summaryTotalLabel: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: DARK_THEME.text.primary,
     },
     summaryTotalValue: {
       fontSize: 26,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: DARK_THEME.accent.gold,
     },
     creditsYouGet: {
@@ -608,7 +609,7 @@ export const createStyles = (theme: Theme) =>
     },
     creditsYouGetValue: {
       fontSize: 20,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: DARK_THEME.accent.success,
       marginLeft: theme.spacing[2],
     },
@@ -642,7 +643,7 @@ export const createStyles = (theme: Theme) =>
     purchaseButtonText: {
       color: '#000000',
       fontSize: 18,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       letterSpacing: 0.3,
     },
     secureNote: {

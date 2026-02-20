@@ -1,3 +1,5 @@
+import { FlatListProps } from 'react-native';
+import { IState } from 'country-state-city';
 import { Theme } from '@theme/types';
 
 export type StateSelectionContentProps = {
@@ -6,4 +8,5 @@ export type StateSelectionContentProps = {
   selectedState: string;
   onSelect: (name: string) => void;
   theme: Theme;
+  ListComponent?: React.ComponentType<FlatListProps<IState>>;
 };

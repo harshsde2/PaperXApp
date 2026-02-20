@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
@@ -131,7 +132,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   unitTextSelected: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   button: {
     backgroundColor: theme.colors.primary.DEFAULT,

@@ -19,6 +19,7 @@ export const BrandSelectionContent = memo(({
   onRetry,
   onSelect,
   theme,
+  ListComponent = FlatList,
 }: BrandSelectionContentProps) => {
   const styles = createStyles(theme);
 
@@ -94,8 +95,8 @@ export const BrandSelectionContent = memo(({
     );
   }, [isLoading, isError, searchQuery, onRetry, styles, theme]);
 
-  return (
-    <View style={styles.container}>
+  const listHeader = (
+    <View style={styles.listHeader}>
       <Text variant="h4" fontWeight="semibold" style={styles.title}>
         Select Mill / Brand
       </Text>
@@ -116,23 +117,27 @@ export const BrandSelectionContent = memo(({
           autoCorrect={false}
         />
       </View>
-      <FlatList
-        data={filteredBrands}
-        keyExtractor={keyExtractor}
-        style={styles.container}
-        contentContainerStyle={styles.listContent}
-        nestedScrollEnabled
-        bounces={false}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator
-        removeClippedSubviews
-        maxToRenderPerBatch={15}
-        windowSize={10}
-        initialNumToRender={15}
-        getItemLayout={getItemLayout}
-        ListEmptyComponent={ListEmptyComponent}
-      />
     </View>
+  );
+
+  return (
+    <ListComponent
+      data={filteredBrands}
+      keyExtractor={keyExtractor}
+      style={styles.container}
+      contentContainerStyle={styles.listContent}
+      ListHeaderComponent={listHeader}
+      nestedScrollEnabled
+      bounces={false}
+      renderItem={renderItem}
+      showsVerticalScrollIndicator
+      removeClippedSubviews
+      maxToRenderPerBatch={15}
+      windowSize={10}
+      initialNumToRender={15}
+      getItemLayout={getItemLayout}
+      ListEmptyComponent={ListEmptyComponent}
+    />
   );
 });
 

@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 // Badge dimensions
 export const BADGE_WIDTH = 110;
@@ -61,13 +62,13 @@ export const createStyles = (theme: Theme) =>
     label: {
       color: 'rgba(255, 255, 255, 0.7)',
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       letterSpacing: 0.3,
     },
     balance: {
       color: '#FFFFFF',
       fontSize: 17,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       letterSpacing: -0.3,
     },
     loadingContainer: {

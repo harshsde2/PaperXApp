@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
@@ -19,7 +20,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     textAlign: 'center',
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: theme.colors.text.primary,
     backgroundColor: theme.colors.surface.primary,
     fontFamily: theme.fontFamily.semibold,

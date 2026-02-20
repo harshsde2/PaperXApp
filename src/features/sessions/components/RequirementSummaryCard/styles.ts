@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -36,7 +37,7 @@ export const createStyles = (theme: Theme) =>
     },
     label: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -44,7 +45,7 @@ export const createStyles = (theme: Theme) =>
     },
     title: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -60,7 +61,7 @@ export const createStyles = (theme: Theme) =>
     },
     timerLabel: {
       fontSize: 11,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.tertiary,
       textAlign: 'center',
       marginBottom: theme.spacing[2],
@@ -84,12 +85,12 @@ export const createStyles = (theme: Theme) =>
     },
     timerValueText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
     timerUnit: {
       fontSize: 9,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
     },

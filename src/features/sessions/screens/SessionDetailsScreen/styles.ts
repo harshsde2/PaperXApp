@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -32,7 +33,7 @@ export const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       flex: 1,
       textAlign: 'center',
@@ -84,7 +85,7 @@ export const createStyles = (theme: Theme) =>
     },
     summaryLabel: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -92,7 +93,7 @@ export const createStyles = (theme: Theme) =>
     },
     summaryTitle: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -110,7 +111,7 @@ export const createStyles = (theme: Theme) =>
     },
     timerLabel: {
       fontSize: 11,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.tertiary,
       textAlign: 'center',
       marginBottom: theme.spacing[2],
@@ -134,12 +135,12 @@ export const createStyles = (theme: Theme) =>
     },
     timerValueText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
     timerUnit: {
       fontSize: 9,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
     },
@@ -154,12 +155,12 @@ export const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     sectionCount: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
       backgroundColor: theme.colors.primary.light,
       paddingHorizontal: theme.spacing[2],
@@ -192,12 +193,12 @@ export const createStyles = (theme: Theme) =>
     },
     filterChipText: {
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.primary,
     },
     filterChipTextActive: {
       color: '#FFFFFF',
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
 
     // Response List
@@ -252,7 +253,7 @@ export const createStyles = (theme: Theme) =>
     },
     receiverActionButtonText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
     receiverStatus: {
@@ -323,7 +324,7 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailBadgeText: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
     },
     posterDetailBadgeBuy: {
@@ -334,7 +335,7 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailIntentText: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
     },
     posterDetailCard: {
@@ -352,7 +353,7 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailCardLabel: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -360,7 +361,7 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailCardTitle: {
       fontSize: 20,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
       lineHeight: 26,
@@ -381,7 +382,7 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailUrgencyText: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.warning?.DEFAULT ?? theme.colors.primary.DEFAULT,
     },
     posterDetailMeta: {
@@ -395,7 +396,7 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailCountsTitle: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[3],
     },
@@ -423,13 +424,13 @@ export const createStyles = (theme: Theme) =>
     },
     posterDetailCountValue: {
       fontSize: 22,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
     posterDetailCountLabel: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
   });

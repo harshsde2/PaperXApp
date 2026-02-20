@@ -7,6 +7,7 @@
 
 import React, { useRef } from 'react';
 import { View, Button, Text, StyleSheet } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { BottomSheet, IBottomSheetRef } from './index';
 import { useTheme } from '@theme/index';
 
@@ -49,7 +50,7 @@ const ExampleStandalone = () => {
     },
     title: {
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: fontWeightForPlatform('bold'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
     },

@@ -11,11 +11,15 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { useBottomSheet } from '@shared/components/BottomSheet';
 import { LocationPicker } from '@shared/location';
 import type { Location } from '@shared/location/types';
 import { AppIcon } from '@assets/svgs';
@@ -140,13 +144,13 @@ const PostToBuyScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-  const bottomSheet = useBottomSheet();
+  const materialsSheetRef = useRef<BottomSheetModal>(null);
   const dispatch = useAppDispatch();
 
   const user = useAppSelector((state) => state.auth.user);
   const token = useAppSelector((state) => state.auth.token);
 
-  
+
 
   // Get intent from route params, default to 'buy' for backward compatibility
   const intent = (route.params?.intent as 'buy' | 'sell') || 'buy';
@@ -176,12 +180,12 @@ const PostToBuyScreen = () => {
   const userLocations: SavedLocation[] = useMemo(() => {
     // console.log('[PostToBuy] User object:', user);
     // console.log('[PostToBuy] User locations:', user?.locations);
-    
+
     if (!user?.locations || !Array.isArray(user.locations)) {
       console.log('[PostToBuy] No locations found or not an array');
       return [];
     }
-    
+
     const mappedLocations = user.locations.map((loc: any) => ({
       id: loc.id,
       type: loc.type || 'warehouse',
@@ -191,7 +195,7 @@ const PostToBuyScreen = () => {
       city: loc.city || '',
       state: loc.state || null,
     }));
-    
+
     // console.log('[PostToBuy] Mapped locations:', mappedLocations);
     return mappedLocations;
   }, [user]);
@@ -240,7 +244,7 @@ const PostToBuyScreen = () => {
 
   const isLoadingMoreRef = useRef(false);
   const scrollViewRef = useRef<FlatList>(null);
-  const selectGradeRef = useRef<(materialId: number, gradeId: number, materialName?: string, gradeName?: string) => void>(() => {});
+  const selectGradeRef = useRef<(materialId: number, gradeId: number, materialName?: string, gradeName?: string) => void>(() => { });
 
   const locationValue = watch('location');
   const latitudeValue = watch('latitude');
@@ -251,7 +255,7 @@ const PostToBuyScreen = () => {
   const allMaterials = useMemo(() => {
     if (!materialsData?.pages) return [];
     const allMaterialsList = materialsData.pages.flatMap(page => page.materials);
-    
+
     // Deduplicate materials by name and category
     const materialsMap = new Map<string, Material>();
     allMaterialsList.forEach(material => {
@@ -260,7 +264,7 @@ const PostToBuyScreen = () => {
         materialsMap.set(key, material);
       }
     });
-    
+
     return Array.from(materialsMap.values());
   }, [materialsData?.pages]);
 
@@ -279,11 +283,10 @@ const PostToBuyScreen = () => {
         const display = materialName && gradeName ? `${materialName} – ${gradeName}` : '';
         setSelectedMaterialDisplayName(display);
         setValue('material_id', materialId, { shouldValidate: true });
-        // Close after React commits state so dropdown shows selected value
-        setTimeout(() => bottomSheet.close(), 0);
+        materialsSheetRef.current?.dismiss();
       }
     },
-    [selectedMaterialId, selectedGradeId, setValue, bottomSheet],
+    [selectedMaterialId, selectedGradeId, setValue],
   );
   selectGradeRef.current = selectGrade;
   const onSelectGradeStable = useCallback((materialId: number, gradeId: number, materialName?: string, gradeName?: string) => {
@@ -316,7 +319,7 @@ const PostToBuyScreen = () => {
   const filteredMaterials = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return allMaterials;
-    
+
     return allMaterials.filter(material =>
       material.name.toLowerCase().includes(query) ||
       material.category?.toLowerCase().includes(query)
@@ -361,7 +364,7 @@ const PostToBuyScreen = () => {
   const allFinishes = useMemo(() => {
     if (!finishesData?.pages) return [];
     const allFinishesList = finishesData.pages.flatMap(page => page.finishes);
-    
+
     // Deduplicate by name
     const finishesMap = new Map<string, MaterialFinish>();
     allFinishesList.forEach(finish => {
@@ -370,7 +373,7 @@ const PostToBuyScreen = () => {
         finishesMap.set(key, finish);
       }
     });
-    
+
     return Array.from(finishesMap.values());
   }, [finishesData?.pages]);
 
@@ -400,7 +403,7 @@ const PostToBuyScreen = () => {
   const filteredFinishes = useMemo(() => {
     const query = finishSearchQuery.toLowerCase().trim();
     if (!query) return allFinishes;
-    
+
     return allFinishes.filter(finish =>
       finish.name.toLowerCase().includes(query)
     );
@@ -421,7 +424,7 @@ const PostToBuyScreen = () => {
         shouldValidate: true,
       });
       setShowLocationDropdown(false);
-      
+
       dispatch(
         showToast({
           message: 'Location selected!',
@@ -447,7 +450,7 @@ const PostToBuyScreen = () => {
         shouldValidate: true,
       });
       setShowLocationPicker(false);
-      
+
       dispatch(
         showToast({
           message: 'Location selected successfully!',
@@ -548,56 +551,6 @@ const PostToBuyScreen = () => {
     return names.join(', ');
   }, [selectedFinishIds, allFinishes]);
 
-  // Create bottom sheet content component (grade list: one row per grade)
-  const createMaterialsSheetContent = useCallback(() => {
-    return (
-      <MaterialsSelectionContent
-        mode="grade"
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        gradeList={gradeList}
-        selectedMaterialId={selectedMaterialId}
-        selectedGradeId={selectedGradeId}
-        isLoading={isLoadingMaterials}
-        isFetchingNextPage={isFetchingNextPage}
-        onToggleGrade={onSelectGradeStable}
-        onClear={clearMaterial}
-        onLoadMore={handleLoadMore}
-        onScroll={handleScroll}
-        theme={theme}
-      />
-    );
-  }, [
-    searchQuery,
-    gradeList,
-    selectedMaterialId,
-    selectedGradeId,
-    isLoadingMaterials,
-    isFetchingNextPage,
-    onSelectGradeStable,
-    clearMaterial,
-    handleLoadMore,
-    handleScroll,
-    theme,
-  ]);
-
-  // Update bottom sheet content when selection changes (only if sheet is open)
-  const lastSelectedIdRef = useRef<string>('');
-  React.useEffect(() => {
-    if (isMaterialsSheetOpen && bottomSheet.isOpen) {
-      const currentIdKey = selectedGradeKey ?? '';
-      if (currentIdKey !== lastSelectedIdRef.current) {
-        lastSelectedIdRef.current = currentIdKey;
-        const timeoutId = setTimeout(() => {
-          bottomSheet.updateContent(createMaterialsSheetContent());
-        }, 50);
-        return () => clearTimeout(timeoutId);
-      }
-    } else {
-      lastSelectedIdRef.current = '';
-    }
-  }, [selectedGradeKey, isMaterialsSheetOpen, bottomSheet, createMaterialsSheetContent]);
-
   const onSubmit = useCallback(
     (data: PostToBuyFormData) => {
       // Validate material_id
@@ -683,7 +636,7 @@ const PostToBuyScreen = () => {
 
       // Generate reference number
       const refNumber = `#${Math.floor(Math.random() * 9000) + 1000}`;
-      
+
       // Determine urgency label for display
       const isUrgent = data.urgency === 'urgent';
       const urgencyLabel = isUrgent ? 'Urgent 1-2 Days' : 'Normal 3-5 Days';
@@ -697,8 +650,8 @@ const PostToBuyScreen = () => {
         quantity: String(data.quantity),
         quantityUnit: data.quantity_unit,
         urgency: urgencyLabel,
-        tags: isUrgent 
-          ? ['Material', 'Urgent'] 
+        tags: isUrgent
+          ? ['Material', 'Urgent']
           : ['Material'],
       };
 
@@ -716,880 +669,902 @@ const PostToBuyScreen = () => {
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
 
   return (
-    <>
-      <ScreenWrapper
-        backgroundColor={theme.colors.background.secondary}
-        scrollable={true}
-        safeAreaEdges={[]}
-      >
-        <View style={[styles.container, { paddingBottom: bottomPadding }]}>
-          <Text variant="h3" fontWeight="bold" style={styles.title}>
-            {isSellMode ? 'Post to Sell' : 'Post to Buy'}
-          </Text>
-          <Text variant="bodyMedium" style={styles.description}>
-            {isSellMode 
-              ? 'Fill in the details to post your material for sale'
-              : 'Fill in the details to post your requirement'}
-          </Text>
-
-          <View style={styles.formContainer}>
-            {/* Material Selection (Single) */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Material
+    <BottomSheetModalProvider>
+      <View style={{ flex: 1 }}>
+        <>
+          <ScreenWrapper
+            backgroundColor={theme.colors.background.secondary}
+            scrollable={true}
+            safeAreaEdges={[]}
+          >
+            <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+              <Text variant="h3" fontWeight="bold" style={styles.title}>
+                {isSellMode ? 'Post to Sell' : 'Post to Buy'}
               </Text>
-              <Controller
-                control={control}
-                name="material_id"
-                rules={validationRules.required('Please select a material') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
-                  <>
-                    <TouchableOpacity
-                      style={styles.materialsButton}
-                      onPress={() => {
-                        setSearchQuery('');
-                        setIsMaterialsSheetOpen(true);
-                        bottomSheet.open(
-                          createMaterialsSheetContent(),
-                          {
-                            snapPoints: ['70%', '95%'],
-                            initialSnapIndex: 0,
-                            onClose: () => {
-                              setSearchQuery('');
-                              setIsMaterialsSheetOpen(false);
-                            },
-                          }
-                        );
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Text
-                        variant="bodyMedium"
-                        style={[
-                          selectedMaterialId
-                            ? { color: theme.colors.text.primary, flex: 1 }
-                            : { color: theme.colors.text.tertiary, flex: 1 },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {selectedMaterialId
-                          ? selectedMaterialName
-                          : 'Select material'}
-                      </Text>
-                      <AppIcon.ChevronDown
-                        width={20}
-                        height={20}
-                        color={theme.colors.text.tertiary}
-                      />
-                    </TouchableOpacity>
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
-            </View>
+              <Text variant="bodyMedium" style={styles.description}>
+                {isSellMode
+                  ? 'Fill in the details to post your material for sale'
+                  : 'Fill in the details to post your requirement'}
+              </Text>
 
-            {/* Thickness */}
-            <View style={styles.row}>
-              <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing[2] }]}>
-                <FormInput
-                  name="thickness"
-                  control={control}
-                  label="Thickness"
-                  placeholder="e.g., 350"
-                  keyboardType="numeric"
-                  rules={validationRules.required('Please enter thickness') as any}
-                  containerStyle={{ marginBottom: 0 }}
-                />
-              </View>
-              <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Unit
-                </Text>
-                <Controller
-                  control={control}
-                  name="thickness_unit"
-                  rules={validationRules.required('Please select unit') as any}
-                  render={({ field: { value }, fieldState: { error } }) => (
-                    <>
-                      <DropdownButton
-                        value={THICKNESS_UNIT_OPTIONS.find(opt => opt.value === value)?.label}
-                        placeholder="Select Unit"
-                        onPress={() => setShowThicknessUnitPicker(true)}
-                      />
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
+              <View style={styles.formContainer}>
+                {/* Material Selection (Single) */}
+                <View style={styles.formGroup}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    Material
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="material_id"
+                    rules={validationRules.required('Please select a material') as any}
+                    render={({ field: { value }, fieldState: { error } }) => (
+                      <>
+                        <TouchableOpacity
+                          style={styles.materialsButton}
+                          onPress={() => {
+                            setSearchQuery('');
+                            setIsMaterialsSheetOpen(true);
+                            materialsSheetRef.current?.present();
+                          }}
+                          activeOpacity={0.7}
                         >
-                          {error.message}
-                        </Text>
-                      )}
-                    </>
-                  )}
-                />
-              </View>
-            </View>
-
-            {/* Size */}
-            <View style={styles.row}>
-              <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing[2] }]}>
-                <FormInput
-                  name="size"
-                  control={control}
-                  label="Size"
-                  placeholder="e.g., 28x40"
-                  rules={validationRules.required('Please enter size') as any}
-                  containerStyle={{ marginBottom: 0 }}
-                  helperText="Format: Length x Width"
-                />
-              </View>
-              <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Unit
-                </Text>
-                <Controller
-                  control={control}
-                  name="size_unit"
-                  rules={validationRules.required('Please select unit') as any}
-                  render={({ field: { value }, fieldState: { error } }) => (
-                    <>
-                      <DropdownButton
-                        value={SIZE_UNIT_OPTIONS.find(opt => opt.value === value)?.label}
-                        placeholder="Select Unit"
-                        onPress={() => setShowSizeUnitPicker(true)}
-                      />
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
-                    </>
-                  )}
-                />
-              </View>
-            </View>
-
-            {/* Grade / Finishes / Variant (Optional) */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Grade / Finish / Variant (Optional)
-              </Text>
-              <Controller
-                control={control}
-                name="finish_ids"
-                render={({ field: { value } }) => (
-                  <TouchableOpacity
-                    style={styles.materialsButton}
-                    onPress={() => setIsFinishesSheetOpen(true)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      variant="bodyMedium"
-                      style={[
-                        selectedFinishIds.size > 0
-                          ? { color: theme.colors.text.primary, flex: 1 }
-                          : { color: theme.colors.text.tertiary, flex: 1 },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {selectedFinishIds.size > 0
-                        ? selectedFinishesDisplay
-                        : 'Select grade, finish, variant...'}
-                    </Text>
-                    <AppIcon.ChevronDown
-                      width={20}
-                      height={20}
-                      color={theme.colors.text.tertiary}
-                    />
-                  </TouchableOpacity>
-                )}
-              />
-              {selectedFinishIds.size > 0 && (
-                <Text
-                  variant="captionSmall"
-                  style={{ color: theme.colors.text.tertiary, marginTop: 4 }}
-                >
-                  {selectedFinishIds.size} item(s) selected
-                </Text>
-              )}
-            </View>
-
-            {/* Quantity */}
-            <View style={styles.row}>
-              <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing[2] }]}>
-                <FormInput
-                  name="quantity"
-                  control={control}
-                  label="Quantity"
-                  placeholder="e.g., 2000"
-                  keyboardType="numeric"
-                  rules={validationRules.required('Please enter quantity') as any}
-                  containerStyle={{ marginBottom: 0 }}
-                />
-              </View>
-              <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Unit
-                </Text>
-                <Controller
-                  control={control}
-                  name="quantity_unit"
-                  rules={validationRules.required('Please select quantity unit') as any}
-                  render={({ field: { value }, fieldState: { error } }) => (
-                    <>
-                      <DropdownButton
-                        value={QUANTITY_UNIT_OPTIONS.find(opt => opt.value === value)?.label}
-                        placeholder="Select Unit"
-                        onPress={() => setShowQuantityUnitPicker(true)}
-                      />
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
-                    </>
-                  )}
-                />
-              </View>
-            </View>
-
-            {/* Urgency */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Timeline 
-              </Text>
-              <Controller
-                control={control}
-                name="urgency"
-                rules={validationRules.required('Please select priority') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
-                  <>
-                    <DropdownButton
-                      value={URGENCY_OPTIONS.find(opt => opt.value === value)?.label}
-                      placeholder="Select Timeline"
-                      onPress={() => setShowUrgencyPicker(true)}
-                    />
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
-            </View>
-
-            {/* Visibility */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Visibility
-              </Text>
-              <Controller
-                control={control}
-                name="visibility"
-                rules={validationRules.required('Please select visibility') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
-                  <>
-                    <DropdownButton
-                      value={VISIBILITY_OPTIONS.find(opt => opt.value === value)?.label}
-                      placeholder="Select who can see this"
-                      onPress={() => setShowVisibilityPicker(true)}
-                    />
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
-            </View>
-
-            {/* Location */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                {isSellMode ? 'Pickup Location' : 'Delivery Location'}
-              </Text>
-              <Controller
-                control={control}
-                name="location"
-                rules={validationRules.required('Please select a location') as any}
-                render={({ field: { value }, fieldState: { error } }) => {
-                  const displayValue = getSelectedLocationDisplay();
-                  return (
-                    <>
-                      <TouchableOpacity
-                        style={styles.locationButton}
-                        onPress={() => setShowLocationDropdown(true)}
-                        activeOpacity={0.7}
-                      >
-                        <View style={{ flex: 1 }}>
                           <Text
                             variant="bodyMedium"
                             style={[
-                              !displayValue
-                                ? { color: theme.colors.text.tertiary }
-                                : { color: theme.colors.text.primary },
+                              selectedMaterialId
+                                ? { color: theme.colors.text.primary, flex: 1 }
+                                : { color: theme.colors.text.tertiary, flex: 1 },
                             ]}
                             numberOfLines={1}
                           >
-                            {displayValue || (isSellMode ? 'Select pickup location' : 'Select delivery location')}
+                            {selectedMaterialId
+                              ? selectedMaterialName
+                              : 'Select material'}
                           </Text>
-                          {locationSourceValue === 'saved' && locationIdValue && (
+                          <AppIcon.ChevronDown
+                            width={20}
+                            height={20}
+                            color={theme.colors.text.tertiary}
+                          />
+                        </TouchableOpacity>
+                        {error && (
+                          <Text
+                            variant="captionSmall"
+                            style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
+                          >
+                            {error.message}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                  />
+                </View>
+
+                {/* Thickness */}
+                <View style={styles.row}>
+                  <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing[2] }]}>
+                    <FormInput
+                      name="thickness"
+                      control={control}
+                      label="Thickness"
+                      placeholder="e.g., 350"
+                      keyboardType="numeric"
+                      rules={validationRules.required('Please enter thickness') as any}
+                      containerStyle={{ marginBottom: 0 }}
+                    />
+                  </View>
+                  <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Unit
+                    </Text>
+                    <Controller
+                      control={control}
+                      name="thickness_unit"
+                      rules={validationRules.required('Please select unit') as any}
+                      render={({ field: { value }, fieldState: { error } }) => (
+                        <>
+                          <DropdownButton
+                            value={THICKNESS_UNIT_OPTIONS.find(opt => opt.value === value)?.label}
+                            placeholder="Select Unit"
+                            onPress={() => setShowThicknessUnitPicker(true)}
+                          />
+                          {error && (
                             <Text
                               variant="captionSmall"
-                              style={{ color: theme.colors.text.tertiary, marginTop: 2 }}
+                              style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
                             >
-                              From saved locations
+                              {error.message}
                             </Text>
                           )}
-                          {locationSourceValue === 'manual' && displayValue && (
+                        </>
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Size */}
+                <View style={styles.row}>
+                  <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing[2] }]}>
+                    <FormInput
+                      name="size"
+                      control={control}
+                      label="Size"
+                      placeholder="e.g., 28x40"
+                      rules={validationRules.required('Please enter size') as any}
+                      containerStyle={{ marginBottom: 0 }}
+                      helperText="Format: Length x Width"
+                    />
+                  </View>
+                  <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Unit
+                    </Text>
+                    <Controller
+                      control={control}
+                      name="size_unit"
+                      rules={validationRules.required('Please select unit') as any}
+                      render={({ field: { value }, fieldState: { error } }) => (
+                        <>
+                          <DropdownButton
+                            value={SIZE_UNIT_OPTIONS.find(opt => opt.value === value)?.label}
+                            placeholder="Select Unit"
+                            onPress={() => setShowSizeUnitPicker(true)}
+                          />
+                          {error && (
                             <Text
                               variant="captionSmall"
-                              style={{ color: theme.colors.text.tertiary, marginTop: 2 }}
+                              style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
                             >
-                              Custom location
+                              {error.message}
                             </Text>
                           )}
-                        </View>
+                        </>
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Grade / Finishes / Variant (Optional) */}
+                <View style={styles.formGroup}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    Grade / Finish / Variant (Optional)
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="finish_ids"
+                    render={({ field: { value } }) => (
+                      <TouchableOpacity
+                        style={styles.materialsButton}
+                        onPress={() => setIsFinishesSheetOpen(true)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          variant="bodyMedium"
+                          style={[
+                            selectedFinishIds.size > 0
+                              ? { color: theme.colors.text.primary, flex: 1 }
+                              : { color: theme.colors.text.tertiary, flex: 1 },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {selectedFinishIds.size > 0
+                            ? selectedFinishesDisplay
+                            : 'Select grade, finish, variant...'}
+                        </Text>
                         <AppIcon.ChevronDown
                           width={20}
                           height={20}
                           color={theme.colors.text.tertiary}
                         />
                       </TouchableOpacity>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
-                      {userLocations.length === 0 && (
-                        <Text
-                          variant="captionSmall"
-                          style={{ color: theme.colors.text.tertiary, marginTop: 4 }}
-                        >
-                          No saved locations found. You can select a location on the map.
-                        </Text>
-                      )}
-                    </>
-                  );
-                }}
-              />
-            </View>
-
-          </View>
-        </View>
-      </ScreenWrapper>
-
-      {/* Location Picker Modal */}
-      <Modal
-        visible={showLocationPicker}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setShowLocationPicker(false)}
-      >
-        <LocationPicker
-          initialLocation={
-            latitudeValue && longitudeValue
-              ? {
-                  latitude: latitudeValue,
-                  longitude: longitudeValue,
-                }
-              : undefined
-          }
-          onLocationSelect={handleLocationSelect}
-          onCancel={() => setShowLocationPicker(false)}
-          allowMapTap={true}
-          confirmButtonText="Confirm Location"
-          title="Select Location"
-        />
-      </Modal>
-
-      {/* Thickness Unit Picker */}
-      {showThicknessUnitPicker && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                Select Thickness Unit
-              </Text>
-              <TouchableOpacity onPress={() => setShowThicknessUnitPicker(false)}>
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-            {THICKNESS_UNIT_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  setValue('thickness_unit', option.value as any, { shouldValidate: true });
-                  setShowThicknessUnitPicker(false);
-                }}
-              >
-                <Text variant="bodyMedium">{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Size Unit Picker */}
-      {showSizeUnitPicker && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                Select Size Unit
-              </Text>
-              <TouchableOpacity onPress={() => setShowSizeUnitPicker(false)}>
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-            {SIZE_UNIT_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  setValue('size_unit', option.value, { shouldValidate: true });
-                  setShowSizeUnitPicker(false);
-                }}
-              >
-                <Text variant="bodyMedium">{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Quantity Unit Picker */}
-      {showQuantityUnitPicker && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                Select Quantity Unit
-              </Text>
-              <TouchableOpacity onPress={() => setShowQuantityUnitPicker(false)}>
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-            {QUANTITY_UNIT_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  setValue('quantity_unit', option.value as any, { shouldValidate: true });
-                  setShowQuantityUnitPicker(false);
-                }}
-              >
-                <Text variant="bodyMedium">{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Urgency Picker */}
-      {showUrgencyPicker && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                Select Priority
-              </Text>
-              <TouchableOpacity onPress={() => setShowUrgencyPicker(false)}>
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-            {URGENCY_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  setValue('urgency', option.value as any, { shouldValidate: true });
-                  setShowUrgencyPicker(false);
-                }}
-              >
-                <Text variant="bodyMedium">{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Visibility Picker */}
-      {showVisibilityPicker && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                Select Visibility
-              </Text>
-              <TouchableOpacity onPress={() => setShowVisibilityPicker(false)}>
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-            {VISIBILITY_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  setValue('visibility', option.value, { shouldValidate: true });
-                  setShowVisibilityPicker(false);
-                }}
-              >
-                <Text variant="bodyMedium">{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Location Dropdown */}
-      {showLocationDropdown && (
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity 
-            style={StyleSheet.absoluteFill} 
-            onPress={() => setShowLocationDropdown(false)}
-            activeOpacity={1}
-          />
-          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                {isSellMode ? 'Select Pickup Location' : 'Select Delivery Location'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowLocationDropdown(false)}>
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <FlatList
-              data={userLocations}
-              keyExtractor={(item) => `location-${item.id}`}
-              ListHeaderComponent={
-                userLocations.length > 0 ? (
-                  <Text 
-                    variant="captionSmall" 
-                    style={{ 
-                      color: theme.colors.text.tertiary, 
-                      marginBottom: theme.spacing[2],
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    Your Saved Locations ({userLocations.length})
-                  </Text>
-                ) : null
-              }
-              ListEmptyComponent={
-                <View style={{ paddingVertical: theme.spacing[3], alignItems: 'center' }}>
-                  <Text 
-                    variant="bodyMedium" 
-                    style={{ color: theme.colors.text.tertiary, textAlign: 'center' }}
-                  >
-                    No saved locations found.{'\n'}Please select a location on the map.
-                  </Text>
-                </View>
-              }
-              renderItem={({ item: location }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.modalOption,
-                    locationIdValue === location.id && {
-                      backgroundColor: theme.colors.primary.light || theme.colors.primary.DEFAULT + '10',
-                    },
-                  ]}
-                  onPress={() => handleSavedLocationSelect(location)}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text variant="bodyMedium" style={{ marginBottom: 2 }}>
-                      {location.address || location.city}
-                    </Text>
-                    <Text 
-                      variant="captionSmall" 
-                      style={{ color: theme.colors.text.tertiary }}
+                    )}
+                  />
+                  {selectedFinishIds.size > 0 && (
+                    <Text
+                      variant="captionSmall"
+                      style={{ color: theme.colors.text.tertiary, marginTop: 4 }}
                     >
-                      {location.type === 'warehouse' ? 'Warehouse' : location.type}
-                      {location.city && ` • ${location.city}`}
-                      {location.state && `, ${location.state}`}
+                      {selectedFinishIds.size} item(s) selected
                     </Text>
-                  </View>
-                  {locationIdValue === location.id && (
-                    <AppIcon.TickCheckedBox
-                      width={20}
-                      height={20}
-                      color={theme.colors.primary.DEFAULT}
-                    />
                   )}
-                </TouchableOpacity>
-              )}
-              ListFooterComponent={
-                <View style={{ 
-                  borderTopWidth: userLocations.length > 0 ? 1 : 0, 
-                  borderTopColor: theme.colors.border.secondary,
-                  paddingTop: theme.spacing[3],
-                  marginTop: userLocations.length > 0 ? theme.spacing[2] : 0,
-                }}>
-                  <TouchableOpacity
-                    style={[
-                      styles.modalOption,
-                      { 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: theme.colors.surface.secondary,
-                        borderRadius: theme.borderRadius.md,
-                        paddingVertical: theme.spacing[3],
-                        paddingHorizontal: theme.spacing[3],
-                        borderBottomWidth: 0,
-                      },
-                    ]}
-                    onPress={() => {
-                      setShowLocationDropdown(false);
-                      setShowLocationPicker(true);
+                </View>
+
+                {/* Quantity */}
+                <View style={styles.row}>
+                  <View style={[styles.formGroup, { flex: 1, marginRight: theme.spacing[2] }]}>
+                    <FormInput
+                      name="quantity"
+                      control={control}
+                      label="Quantity"
+                      placeholder="e.g., 2000"
+                      keyboardType="numeric"
+                      rules={validationRules.required('Please enter quantity') as any}
+                      containerStyle={{ marginBottom: 0 }}
+                    />
+                  </View>
+                  <View style={[styles.formGroup, { flex: 1, marginLeft: theme.spacing[2] }]}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Unit
+                    </Text>
+                    <Controller
+                      control={control}
+                      name="quantity_unit"
+                      rules={validationRules.required('Please select quantity unit') as any}
+                      render={({ field: { value }, fieldState: { error } }) => (
+                        <>
+                          <DropdownButton
+                            value={QUANTITY_UNIT_OPTIONS.find(opt => opt.value === value)?.label}
+                            placeholder="Select Unit"
+                            onPress={() => setShowQuantityUnitPicker(true)}
+                          />
+                          {error && (
+                            <Text
+                              variant="captionSmall"
+                              style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
+                            >
+                              {error.message}
+                            </Text>
+                          )}
+                        </>
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Urgency */}
+                <View style={styles.formGroup}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    Timeline
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="urgency"
+                    rules={validationRules.required('Please select priority') as any}
+                    render={({ field: { value }, fieldState: { error } }) => (
+                      <>
+                        <DropdownButton
+                          value={URGENCY_OPTIONS.find(opt => opt.value === value)?.label}
+                          placeholder="Select Timeline"
+                          onPress={() => setShowUrgencyPicker(true)}
+                        />
+                        {error && (
+                          <Text
+                            variant="captionSmall"
+                            style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
+                          >
+                            {error.message}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                  />
+                </View>
+
+                {/* Visibility */}
+                <View style={styles.formGroup}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    Visibility
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="visibility"
+                    rules={validationRules.required('Please select visibility') as any}
+                    render={({ field: { value }, fieldState: { error } }) => (
+                      <>
+                        <DropdownButton
+                          value={VISIBILITY_OPTIONS.find(opt => opt.value === value)?.label}
+                          placeholder="Select who can see this"
+                          onPress={() => setShowVisibilityPicker(true)}
+                        />
+                        {error && (
+                          <Text
+                            variant="captionSmall"
+                            style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
+                          >
+                            {error.message}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                  />
+                </View>
+
+                {/* Location */}
+                <View style={styles.formGroup}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    {isSellMode ? 'Pickup Location' : 'Delivery Location'}
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="location"
+                    rules={validationRules.required('Please select a location') as any}
+                    render={({ field: { value }, fieldState: { error } }) => {
+                      const displayValue = getSelectedLocationDisplay();
+                      return (
+                        <>
+                          <TouchableOpacity
+                            style={styles.locationButton}
+                            onPress={() => setShowLocationDropdown(true)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={{ flex: 1 }}>
+                              <Text
+                                variant="bodyMedium"
+                                style={[
+                                  !displayValue
+                                    ? { color: theme.colors.text.tertiary }
+                                    : { color: theme.colors.text.primary },
+                                ]}
+                                numberOfLines={1}
+                              >
+                                {displayValue || (isSellMode ? 'Select pickup location' : 'Select delivery location')}
+                              </Text>
+                              {locationSourceValue === 'saved' && locationIdValue && (
+                                <Text
+                                  variant="captionSmall"
+                                  style={{ color: theme.colors.text.tertiary, marginTop: 2 }}
+                                >
+                                  From saved locations
+                                </Text>
+                              )}
+                              {locationSourceValue === 'manual' && displayValue && (
+                                <Text
+                                  variant="captionSmall"
+                                  style={{ color: theme.colors.text.tertiary, marginTop: 2 }}
+                                >
+                                  Custom location
+                                </Text>
+                              )}
+                            </View>
+                            <AppIcon.ChevronDown
+                              width={20}
+                              height={20}
+                              color={theme.colors.text.tertiary}
+                            />
+                          </TouchableOpacity>
+                          {error && (
+                            <Text
+                              variant="captionSmall"
+                              style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
+                            >
+                              {error.message}
+                            </Text>
+                          )}
+                          {userLocations.length === 0 && (
+                            <Text
+                              variant="captionSmall"
+                              style={{ color: theme.colors.text.tertiary, marginTop: 4 }}
+                            >
+                              No saved locations found. You can select a location on the map.
+                            </Text>
+                          )}
+                        </>
+                      );
                     }}
-                  >
-                    <AppIcon.Location
-                      width={20}
-                      height={20}
-                      color={theme.colors.primary.DEFAULT}
-                    />
-                    <View style={{ flex: 1, marginLeft: theme.spacing[2] }}>
-                      <Text 
-                        variant="bodyMedium" 
-                        fontWeight="medium"
-                        style={{ color: theme.colors.primary.DEFAULT }}
-                      >
-                        Select on Map
-                      </Text>
-                      <Text 
-                        variant="captionSmall" 
-                        style={{ color: theme.colors.text.tertiary }}
-                      >
-                        {isSellMode 
-                          ? 'Choose a custom pickup location'
-                          : 'Choose a custom delivery location'}
-                      </Text>
-                    </View>
-                    <AppIcon.ChevronRight
-                      width={16}
-                      height={16}
-                      color={theme.colors.primary.DEFAULT}
-                    />
+                  />
+                </View>
+
+              </View>
+            </View>
+          </ScreenWrapper>
+
+          {/* Location Picker Modal */}
+          <Modal
+            visible={showLocationPicker}
+            animationType="slide"
+            presentationStyle="fullScreen"
+            onRequestClose={() => setShowLocationPicker(false)}
+          >
+            <LocationPicker
+              initialLocation={
+                latitudeValue && longitudeValue
+                  ? {
+                    latitude: latitudeValue,
+                    longitude: longitudeValue,
+                  }
+                  : undefined
+              }
+              onLocationSelect={handleLocationSelect}
+              onCancel={() => setShowLocationPicker(false)}
+              allowMapTap={true}
+              confirmButtonText="Confirm Location"
+              title="Select Location"
+            />
+          </Modal>
+
+          {/* Thickness Unit Picker */}
+          {showThicknessUnitPicker && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    Select Thickness Unit
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowThicknessUnitPicker(false)}>
+                    <Text style={{ fontSize: 24 }}>×</Text>
                   </TouchableOpacity>
                 </View>
-              }
-              contentContainerStyle={{ paddingBottom: theme.spacing[2] }}
-              showsVerticalScrollIndicator={true}
-            />
-          </View>
-        </View>
-      )}
+                {THICKNESS_UNIT_OPTIONS.map(option => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setValue('thickness_unit', option.value as any, { shouldValidate: true });
+                      setShowThicknessUnitPicker(false);
+                    }}
+                  >
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
 
-      {/* Finishes Selection Modal */}
-      {isFinishesSheetOpen && (
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity 
-            style={StyleSheet.absoluteFill} 
-            onPress={() => {
-              setIsFinishesSheetOpen(false);
-              setFinishSearchQuery('');
-            }}
-            activeOpacity={1}
-          />
-          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-            <View style={styles.modalHeader}>
-              <Text variant="h4" fontWeight="semibold">
-                Select Grade / Finish / Variant
-              </Text>
-              <TouchableOpacity 
+          {/* Size Unit Picker */}
+          {showSizeUnitPicker && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    Select Size Unit
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowSizeUnitPicker(false)}>
+                    <Text style={{ fontSize: 24 }}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                {SIZE_UNIT_OPTIONS.map(option => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setValue('size_unit', option.value, { shouldValidate: true });
+                      setShowSizeUnitPicker(false);
+                    }}
+                  >
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Quantity Unit Picker */}
+          {showQuantityUnitPicker && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    Select Quantity Unit
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowQuantityUnitPicker(false)}>
+                    <Text style={{ fontSize: 24 }}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                {QUANTITY_UNIT_OPTIONS.map(option => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setValue('quantity_unit', option.value as any, { shouldValidate: true });
+                      setShowQuantityUnitPicker(false);
+                    }}
+                  >
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Urgency Picker */}
+          {showUrgencyPicker && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    Select Priority
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowUrgencyPicker(false)}>
+                    <Text style={{ fontSize: 24 }}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                {URGENCY_OPTIONS.map(option => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setValue('urgency', option.value as any, { shouldValidate: true });
+                      setShowUrgencyPicker(false);
+                    }}
+                  >
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Visibility Picker */}
+          {showVisibilityPicker && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    Select Visibility
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowVisibilityPicker(false)}>
+                    <Text style={{ fontSize: 24 }}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                {VISIBILITY_OPTIONS.map(option => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setValue('visibility', option.value, { shouldValidate: true });
+                      setShowVisibilityPicker(false);
+                    }}
+                  >
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Location Dropdown */}
+          {showLocationDropdown && (
+            <View style={styles.modalOverlay}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFill}
+                onPress={() => setShowLocationDropdown(false)}
+                activeOpacity={1}
+              />
+              <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    {isSellMode ? 'Select Pickup Location' : 'Select Delivery Location'}
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowLocationDropdown(false)}>
+                    <Text style={{ fontSize: 24 }}>×</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <FlatList
+                  data={userLocations}
+                  keyExtractor={(item) => `location-${item.id}`}
+                  ListHeaderComponent={
+                    userLocations.length > 0 ? (
+                      <Text
+                        variant="captionSmall"
+                        style={{
+                          color: theme.colors.text.tertiary,
+                          marginBottom: theme.spacing[2],
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Your Saved Locations ({userLocations.length})
+                      </Text>
+                    ) : null
+                  }
+                  ListEmptyComponent={
+                    <View style={{ paddingVertical: theme.spacing[3], alignItems: 'center' }}>
+                      <Text
+                        variant="bodyMedium"
+                        style={{ color: theme.colors.text.tertiary, textAlign: 'center' }}
+                      >
+                        No saved locations found.{'\n'}Please select a location on the map.
+                      </Text>
+                    </View>
+                  }
+                  renderItem={({ item: location }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.modalOption,
+                        locationIdValue === location.id && {
+                          backgroundColor: theme.colors.primary.light || theme.colors.primary.DEFAULT + '10',
+                        },
+                      ]}
+                      onPress={() => handleSavedLocationSelect(location)}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text variant="bodyMedium" style={{ marginBottom: 2 }}>
+                          {location.address || location.city}
+                        </Text>
+                        <Text
+                          variant="captionSmall"
+                          style={{ color: theme.colors.text.tertiary }}
+                        >
+                          {location.type === 'warehouse' ? 'Warehouse' : location.type}
+                          {location.city && ` • ${location.city}`}
+                          {location.state && `, ${location.state}`}
+                        </Text>
+                      </View>
+                      {locationIdValue === location.id && (
+                        <AppIcon.TickCheckedBox
+                          width={20}
+                          height={20}
+                          color={theme.colors.primary.DEFAULT}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  ListFooterComponent={
+                    <View style={{
+                      borderTopWidth: userLocations.length > 0 ? 1 : 0,
+                      borderTopColor: theme.colors.border.secondary,
+                      paddingTop: theme.spacing[3],
+                      marginTop: userLocations.length > 0 ? theme.spacing[2] : 0,
+                    }}>
+                      <TouchableOpacity
+                        style={[
+                          styles.modalOption,
+                          {
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: theme.colors.surface.secondary,
+                            borderRadius: theme.borderRadius.md,
+                            paddingVertical: theme.spacing[3],
+                            paddingHorizontal: theme.spacing[3],
+                            borderBottomWidth: 0,
+                          },
+                        ]}
+                        onPress={() => {
+                          setShowLocationDropdown(false);
+                          setShowLocationPicker(true);
+                        }}
+                      >
+                        <AppIcon.Location
+                          width={20}
+                          height={20}
+                          color={theme.colors.primary.DEFAULT}
+                        />
+                        <View style={{ flex: 1, marginLeft: theme.spacing[2] }}>
+                          <Text
+                            variant="bodyMedium"
+                            fontWeight="medium"
+                            style={{ color: theme.colors.primary.DEFAULT }}
+                          >
+                            Select on Map
+                          </Text>
+                          <Text
+                            variant="captionSmall"
+                            style={{ color: theme.colors.text.tertiary }}
+                          >
+                            {isSellMode
+                              ? 'Choose a custom pickup location'
+                              : 'Choose a custom delivery location'}
+                          </Text>
+                        </View>
+                        <AppIcon.ChevronRight
+                          width={16}
+                          height={16}
+                          color={theme.colors.primary.DEFAULT}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  }
+                  contentContainerStyle={{ paddingBottom: theme.spacing[2] }}
+                  showsVerticalScrollIndicator={true}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Finishes Selection Modal */}
+          {isFinishesSheetOpen && (
+            <View style={styles.modalOverlay}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFill}
                 onPress={() => {
                   setIsFinishesSheetOpen(false);
                   setFinishSearchQuery('');
                 }}
-              >
-                <Text style={{ fontSize: 24 }}>×</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Search */}
-            <View style={[styles.searchContainer, { marginBottom: theme.spacing[3] }]}>
-              <View style={styles.searchIcon}>
-                <AppIcon.Search
-                  width={18}
-                  height={18}
-                  color={theme.colors.text.tertiary}
-                />
-              </View>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search finishes, coatings, grades..."
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={finishSearchQuery}
-                onChangeText={setFinishSearchQuery}
+                activeOpacity={1}
               />
-            </View>
+              <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+                <View style={styles.modalHeader}>
+                  <Text variant="h4" fontWeight="semibold">
+                    Select Grade / Finish / Variant
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsFinishesSheetOpen(false);
+                      setFinishSearchQuery('');
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>×</Text>
+                  </TouchableOpacity>
+                </View>
 
-            {/* Selected count and clear button */}
-            {selectedFinishIds.size > 0 && (
-              <View style={{ 
-                flexDirection: 'row', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginBottom: theme.spacing[2],
-                paddingHorizontal: theme.spacing[1],
-              }}>
-                <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
-                  {selectedFinishIds.size} selected
-                </Text>
-                <TouchableOpacity onPress={clearFinishes}>
-                  <Text variant="bodySmall" style={{ color: theme.colors.primary.DEFAULT }}>
-                    Clear all
+                {/* Search */}
+                <View style={[styles.searchContainer, { marginBottom: theme.spacing[3] }]}>
+                  <View style={styles.searchIcon}>
+                    <AppIcon.Search
+                      width={18}
+                      height={18}
+                      color={theme.colors.text.tertiary}
+                    />
+                  </View>
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search finishes, coatings, grades..."
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    value={finishSearchQuery}
+                    onChangeText={setFinishSearchQuery}
+                  />
+                </View>
+
+                {/* Selected count and clear button */}
+                {selectedFinishIds.size > 0 && (
+                  <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: theme.spacing[2],
+                    paddingHorizontal: theme.spacing[1],
+                  }}>
+                    <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                      {selectedFinishIds.size} selected
+                    </Text>
+                    <TouchableOpacity onPress={clearFinishes}>
+                      <Text variant="bodySmall" style={{ color: theme.colors.primary.DEFAULT }}>
+                        Clear all
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {isLoadingFinishes ? (
+                  <View style={{ paddingVertical: theme.spacing[8], alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                    <Text
+                      variant="bodyMedium"
+                      style={{ color: theme.colors.text.tertiary, marginTop: theme.spacing[2] }}
+                    >
+                      Loading options...
+                    </Text>
+                  </View>
+                ) : (
+                  <FlatList
+                    data={filteredFinishes}
+                    keyExtractor={(item) => `finish-${item.id}`}
+                    ListEmptyComponent={
+                      <View style={{ paddingVertical: theme.spacing[4], alignItems: 'center', }}>
+                        <Text
+                          variant="bodyMedium"
+                          style={{ color: theme.colors.text.tertiary, textAlign: 'center' }}
+                        >
+                          {finishSearchQuery
+                            ? 'No options found matching your search'
+                            : 'No options available'}
+                        </Text>
+                      </View>
+                    }
+                    renderItem={({ item: finish }) => (
+                      <TouchableOpacity
+                        style={[
+                          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: theme.spacing[3], paddingHorizontal: theme.spacing[3] },
+                          // styles.modalOption,
+                          isFinishSelected(finish.id) && {
+                            backgroundColor: theme.colors.primary.light || theme.colors.primary.DEFAULT + '10',
+                          },
+                        ]}
+                        onPress={() => toggleFinish(finish.id)}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text variant="bodyMedium">
+                            {finish.name}
+                          </Text>
+                          {finish.type && (
+                            <Text
+                              variant="captionSmall"
+                              style={{ color: theme.colors.text.tertiary, textTransform: 'capitalize' }}
+                            >
+                              {finish.type}
+                            </Text>
+                          )}
+                        </View>
+                        {isFinishSelected(finish.id) ? (
+                          <AppIcon.TickCheckedBox
+                            width={22}
+                            height={22}
+                            color={theme.colors.primary.DEFAULT}
+                          />
+                        ) : (
+                          <AppIcon.UntickCheckedBox
+                            width={22}
+                            height={22}
+                            color={theme.colors.text.tertiary}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    ListFooterComponent={
+                      isFetchingNextFinishesPage ? (
+                        <View style={{ paddingVertical: theme.spacing[3], alignItems: 'center' }}>
+                          <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                        </View>
+                      ) : null
+                    }
+                    onEndReached={() => {
+                      if (hasNextFinishesPage && !isFetchingNextFinishesPage) {
+                        fetchNextFinishesPage();
+                      }
+                    }}
+                    onEndReachedThreshold={0.3}
+                    contentContainerStyle={{ paddingBottom: theme.spacing[2] }}
+                    showsVerticalScrollIndicator={true}
+                  />
+                )}
+
+                {/* Done Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    { marginTop: theme.spacing[3] },
+                  ]}
+                  onPress={() => {
+                    setIsFinishesSheetOpen(false);
+                    setFinishSearchQuery('');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text variant="buttonMedium" style={styles.buttonText}>
+                    Done
                   </Text>
                 </TouchableOpacity>
               </View>
-            )}
+            </View>
+          )}
 
-            {isLoadingFinishes ? (
-              <View style={{ paddingVertical: theme.spacing[8], alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
-                <Text 
-                  variant="bodyMedium" 
-                  style={{ color: theme.colors.text.tertiary, marginTop: theme.spacing[2] }}
-                >
-                  Loading options...
-                </Text>
-              </View>
-            ) : (
-              <FlatList
-                data={filteredFinishes}
-                keyExtractor={(item) => `finish-${item.id}`}
-                ListEmptyComponent={
-                  <View style={{ paddingVertical: theme.spacing[4], alignItems: 'center' }}>
-                    <Text 
-                      variant="bodyMedium" 
-                      style={{ color: theme.colors.text.tertiary, textAlign: 'center' }}
-                    >
-                      {finishSearchQuery 
-                        ? 'No options found matching your search' 
-                        : 'No options available'}
-                    </Text>
-                  </View>
-                }
-                renderItem={({ item: finish }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.modalOption,
-                      isFinishSelected(finish.id) && {
-                        backgroundColor: theme.colors.primary.light || theme.colors.primary.DEFAULT + '10',
-                      },
-                    ]}
-                    onPress={() => toggleFinish(finish.id)}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text variant="bodyMedium">
-                        {finish.name}
-                      </Text>
-                      {finish.type && (
-                        <Text 
-                          variant="captionSmall" 
-                          style={{ color: theme.colors.text.tertiary, textTransform: 'capitalize' }}
-                        >
-                          {finish.type}
-                        </Text>
-                      )}
-                    </View>
-                    {isFinishSelected(finish.id) ? (
-                      <AppIcon.TickCheckedBox
-                        width={22}
-                        height={22}
-                        color={theme.colors.primary.DEFAULT}
-                      />
-                    ) : (
-                      <AppIcon.UntickCheckedBox
-                        width={22}
-                        height={22}
-                        color={theme.colors.text.tertiary}
-                      />
-                    )}
-                  </TouchableOpacity>
-                )}
-                ListFooterComponent={
-                  isFetchingNextFinishesPage ? (
-                    <View style={{ paddingVertical: theme.spacing[3], alignItems: 'center' }}>
-                      <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
-                    </View>
-                  ) : null
-                }
-                onEndReached={() => {
-                  if (hasNextFinishesPage && !isFetchingNextFinishesPage) {
-                    fetchNextFinishesPage();
-                  }
-                }}
-                onEndReachedThreshold={0.3}
-                contentContainerStyle={{ paddingBottom: theme.spacing[2] }}
-                showsVerticalScrollIndicator={true}
-              />
-            )}
-
-            {/* Done Button */}
+          <FloatingBottomContainer>
             <TouchableOpacity
-              style={[
-                styles.button,
-                { marginTop: theme.spacing[3] },
-              ]}
-              onPress={() => {
-                setIsFinishesSheetOpen(false);
-                setFinishSearchQuery('');
-              }}
+              style={styles.button}
+              onPress={handleSubmit(onSubmit)}
               activeOpacity={0.8}
             >
               <Text variant="buttonMedium" style={styles.buttonText}>
-                Done
+                Continue to Payment
               </Text>
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
+                color={theme.colors.text.inverse}
+              />
             </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          </FloatingBottomContainer>
 
-      <FloatingBottomContainer>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit(onSubmit)}
-          activeOpacity={0.8}
-        >
-          <Text variant="buttonMedium" style={styles.buttonText}>
-            Continue to Payment
-          </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
-        </TouchableOpacity>
-      </FloatingBottomContainer>
-    </>
+          <BottomSheetModal
+            ref={materialsSheetRef}
+            snapPoints={['70%', '95%']}
+            enablePanDownToClose
+            onDismiss={() => {
+              setSearchQuery('');
+              setIsMaterialsSheetOpen(false);
+            }}
+          >
+            <MaterialsSelectionContent
+              mode="grade"
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              gradeList={gradeList}
+              selectedMaterialId={selectedMaterialId}
+              selectedGradeId={selectedGradeId}
+              isLoading={isLoadingMaterials}
+              isFetchingNextPage={isFetchingNextPage}
+              onToggleGrade={onSelectGradeStable}
+              onClear={clearMaterial}
+              onLoadMore={handleLoadMore}
+              onScroll={handleScroll}
+              theme={theme}
+              ListComponent={BottomSheetFlatList}
+            />
+          </BottomSheetModal>
+        </>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 

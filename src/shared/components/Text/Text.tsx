@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { StyleProp, Text as RNText, TextStyle } from 'react-native';
+import { Platform, StyleProp, Text as RNText, TextStyle } from 'react-native';
 import { useTheme } from '../../../theme';
 import { textStyles } from './styles';
 import { TextProps, FontWeight } from './types';
@@ -185,12 +185,13 @@ const Text: FC<TextProps> = ({
   // Override variant fontSize with size prop if provided
   const finalFontSize = size ? size : (variantStyle?.fontSize as number | undefined);
   
-  // Always apply fontWeight style when we have an effective fontWeight.
-  // On Android, even with custom fonts like Montserrat-Bold, the fontWeight style
-  // is sometimes needed alongside the fontFamily for proper rendering.
-  const fontWeightStyle = effectiveFontWeight 
-    ? { fontWeight: effectiveFontWeight } 
-    : null;
+  // On iOS: do NOT pass fontWeight when using custom fontFamily. iOS can ignore
+  // fontFamily and use the system font at that weight, causing wrong fonts.
+  // On Android: fontWeight alongside fontFamily is safe and sometimes needed.
+  const fontWeightStyle =
+    effectiveFontWeight && Platform.OS !== 'ios'
+      ? { fontWeight: effectiveFontWeight }
+      : null;
   
   const fontSizeStyle = finalFontSize ? { fontSize: finalFontSize } : null;
   const alignStyle = align ? { textAlign: align } : null;

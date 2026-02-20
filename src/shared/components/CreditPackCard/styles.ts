@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -35,7 +36,7 @@ export const createStyles = (theme: Theme) =>
     bestValueText: {
       color: theme.colors.white,
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       letterSpacing: 0.5,
     },
     header: {
@@ -49,7 +50,7 @@ export const createStyles = (theme: Theme) =>
     },
     name: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -63,13 +64,13 @@ export const createStyles = (theme: Theme) =>
     },
     creditsValue: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.primary.DEFAULT,
     },
     creditsLabel: {
       fontSize: 12,
       color: theme.colors.text.tertiary,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
     },
     divider: {
       height: 1,
@@ -107,12 +108,12 @@ export const createStyles = (theme: Theme) =>
     },
     totalLabel: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
     },
     totalValue: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
     validityBadge: {
@@ -126,7 +127,7 @@ export const createStyles = (theme: Theme) =>
     validityText: {
       fontSize: 10,
       color: theme.colors.text.tertiary,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
     },
     selectedIndicator: {
       position: 'absolute',
@@ -142,6 +143,6 @@ export const createStyles = (theme: Theme) =>
     checkmark: {
       color: theme.colors.white,
       fontSize: 14,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
     },
   });

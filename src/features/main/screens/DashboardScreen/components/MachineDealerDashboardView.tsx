@@ -8,6 +8,7 @@ import {
   ImageBackground,
   RefreshControl,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -225,13 +226,13 @@ const styles = StyleSheet.create({
   },
   newListingBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#2563EB',
     letterSpacing: 0.5,
   },
   newListingTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginBottom: 8,
   },
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
   },
   postButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   overviewSection: {
@@ -264,12 +265,12 @@ const styles = StyleSheet.create({
   },
   overviewTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   viewAllText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   overviewGrid: {
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   },
   cardBadgeText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   activeBadge: {
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
   },
   activeBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   cardContent: {
@@ -338,14 +339,14 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   supportSection: {
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
   },
   supportLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   filterButton: {
@@ -238,14 +239,14 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
   },
   tabContainer: {
     flexDirection: 'row',
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     color: '#6B7280',
   },
   tabTextActive: {
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
   },
   machineName: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -315,7 +316,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#16A34A',
   },
   divider: {
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
   },
   buyerAvatarText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#4F46E5',
   },
   buyerInfo: {
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   },
   buyerName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#111827',
     marginBottom: 2,
   },
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     letterSpacing: 0.3,
   },
   stageText: {

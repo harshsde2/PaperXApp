@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -28,11 +29,11 @@ export const createStyles = (theme: Theme) =>
     },
     tabText: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
     tabTextActive: {
       color: theme.colors.primary.DEFAULT,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
     },
   });

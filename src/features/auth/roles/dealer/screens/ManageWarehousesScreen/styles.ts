@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
@@ -195,7 +196,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   addLocationIconText: {
     fontSize: 32,
     color: theme.colors.text.inverse,
-    fontWeight: '300',
+    fontWeight: fontWeightForPlatform('300'),
   },
   addLocationTitle: {
     color: theme.colors.text.primary,

@@ -4,6 +4,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -108,7 +109,7 @@ export const createStyles = (theme: Theme) =>
     // ==========================================
     successTitle: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.text.primary,
       textAlign: 'center',
       marginBottom: theme.spacing[3],
@@ -169,7 +170,7 @@ export const createStyles = (theme: Theme) =>
     },
     requirementTitle: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     requirementTime: {
@@ -206,7 +207,7 @@ export const createStyles = (theme: Theme) =>
     },
     statusText: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
     },
     statusIcon: {
@@ -235,7 +236,7 @@ export const createStyles = (theme: Theme) =>
     },
     viewSessionButtonText: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
       marginRight: theme.spacing[2],
     },
@@ -246,7 +247,7 @@ export const createStyles = (theme: Theme) =>
     },
     returnButtonText: {
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
 

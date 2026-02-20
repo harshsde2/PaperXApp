@@ -4,6 +4,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_HEIGHT = 160;
@@ -37,7 +38,7 @@ export const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       flex: 1,
     },
@@ -51,7 +52,7 @@ export const createStyles = (theme: Theme) =>
     },
     sectionLabel: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -95,7 +96,7 @@ export const createStyles = (theme: Theme) =>
     },
     listingTitle: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -120,7 +121,7 @@ export const createStyles = (theme: Theme) =>
     },
     tagText: {
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
     },
     tagTextUrgent: {
@@ -158,7 +159,7 @@ export const createStyles = (theme: Theme) =>
     },
     walletLabel: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.9)',
     },
     balanceRow: {
@@ -172,13 +173,13 @@ export const createStyles = (theme: Theme) =>
     },
     balanceValue: {
       fontSize: 36,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: '#FFFFFF',
       letterSpacing: -1,
     },
     balanceUnit: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: 'rgba(255, 255, 255, 0.8)',
       marginLeft: theme.spacing[2],
     },
@@ -192,7 +193,7 @@ export const createStyles = (theme: Theme) =>
     },
     buyCreditsText: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: '#FFFFFF',
     },
     walletInfoRow: {
@@ -249,7 +250,7 @@ export const createStyles = (theme: Theme) =>
     },
     costValue: {
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.primary,
     },
     totalRow: {
@@ -260,12 +261,12 @@ export const createStyles = (theme: Theme) =>
     },
     totalLabel: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     totalValue: {
       fontSize: 20,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.primary.DEFAULT,
     },
 
@@ -298,7 +299,7 @@ export const createStyles = (theme: Theme) =>
     },
     payButtonText: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
     payButtonBadge: {
@@ -309,7 +310,7 @@ export const createStyles = (theme: Theme) =>
     },
     payButtonBadgeText: {
       fontSize: 14,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
     cancelButton: {
@@ -319,7 +320,7 @@ export const createStyles = (theme: Theme) =>
     },
     cancelButtonText: {
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
 
@@ -344,7 +345,7 @@ export const createStyles = (theme: Theme) =>
     loadingText: {
       marginTop: theme.spacing[4],
       fontSize: 15,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.secondary,
     },
   });

@@ -1,5 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -128,7 +129,7 @@ export const createStyles = (theme: Theme) =>
     },
     sliderHandleLabelText: {
       color: theme.colors.text.primary,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       fontSize: 12,
     },
     sliderHint: {
@@ -163,7 +164,7 @@ export const createStyles = (theme: Theme) =>
     },
     inputValue: {
       color: theme.colors.text.primary,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       fontSize: 16,
       flex: 1,
     },
@@ -192,7 +193,7 @@ export const createStyles = (theme: Theme) =>
     infoIconText: {
       color: theme.colors.text.inverse,
       fontSize: 12,
-      fontWeight: 'bold',
+      fontWeight: fontWeightForPlatform('bold'),
     },
     infoText: {
       flex: 1,
@@ -251,7 +252,7 @@ export const createStyles = (theme: Theme) =>
     },
     addButtonText: {
       color: theme.colors.primary.DEFAULT,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
     addButtonTextDisabled: {
       color: theme.colors.text.tertiary,

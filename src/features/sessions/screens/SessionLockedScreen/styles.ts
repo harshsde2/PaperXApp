@@ -4,6 +4,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_HEIGHT = 200;
@@ -35,12 +36,12 @@ export const createStyles = (theme: Theme) =>
     },
     backText: {
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.primary,
     },
     headerTitle: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     headerSpacer: {
@@ -71,7 +72,7 @@ export const createStyles = (theme: Theme) =>
     },
     heroProjectId: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: 'rgba(255, 255, 255, 0.8)',
       textTransform: 'uppercase',
       letterSpacing: 1,
@@ -79,7 +80,7 @@ export const createStyles = (theme: Theme) =>
     },
     heroTitle: {
       fontSize: 22,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
       lineHeight: 28,
     },
@@ -100,7 +101,7 @@ export const createStyles = (theme: Theme) =>
     infoBannerText: {
       flex: 1,
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.primary,
       lineHeight: 19,
     },
@@ -116,12 +117,12 @@ export const createStyles = (theme: Theme) =>
     },
     sectionTitle: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     sectionCount: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       backgroundColor: theme.colors.background.primary,
       paddingHorizontal: theme.spacing[2],
@@ -161,7 +162,7 @@ export const createStyles = (theme: Theme) =>
     },
     partnerName: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     partnerSpecialty: {
@@ -191,7 +192,7 @@ export const createStyles = (theme: Theme) =>
     },
     viewProfileText: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
     },
     partnerImage: {
@@ -213,7 +214,7 @@ export const createStyles = (theme: Theme) =>
     endText: {
       textAlign: 'center',
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -243,7 +244,7 @@ export const createStyles = (theme: Theme) =>
     },
     chatButtonText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
   });

@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -44,7 +45,7 @@ export const createStyles = (theme: Theme) =>
     description: {
       flex: 1,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
       marginRight: theme.spacing[3],
       lineHeight: 20,
@@ -56,7 +57,7 @@ export const createStyles = (theme: Theme) =>
     },
     amount: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
     },
     amountAdded: {
       color: '#16A34A',
@@ -84,7 +85,7 @@ export const createStyles = (theme: Theme) =>
     },
     transactionType: {
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.3,

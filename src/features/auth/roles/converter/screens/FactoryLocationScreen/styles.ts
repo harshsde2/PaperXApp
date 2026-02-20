@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
@@ -178,7 +179,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   infoIconText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: theme.colors.text.inverse,
     fontFamily: theme.fontFamily.bold,
   },

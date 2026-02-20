@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -40,7 +41,7 @@ export const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 20,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       letterSpacing: -0.3,
     },
@@ -86,7 +87,7 @@ export const createStyles = (theme: Theme) =>
     },
     emptyTitle: {
       fontSize: 17,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
       textAlign: 'center',
@@ -107,7 +108,7 @@ export const createStyles = (theme: Theme) =>
     emptyButtonText: {
       color: '#FFFFFF',
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
 
     // Loading

@@ -61,7 +61,7 @@ const BottomSheet = forwardRef<IBottomSheetRef, IBottomSheetProps>(
     const isOpenShared = useSharedValue(false);
     const [isOpen, setIsOpen] = useState(false);
     const currentSnapIndex = useSharedValue(-1);
-    
+
     const snapPointsShared = useSharedValue<number[]>(parsedSnapPoints);
     const maxSnapPointShared = useSharedValue(maxSnapPoint);
     const minSnapPointShared = useSharedValue(minSnapPoint);
@@ -96,11 +96,11 @@ const BottomSheet = forwardRef<IBottomSheetRef, IBottomSheetProps>(
     const snapToIndex = useCallback(
       (index: number) => {
         if (index < 0 || index >= parsedSnapPoints.length) return;
-        
+
         const destination = SCREEN_HEIGHT - parsedSnapPoints[index];
         translateY.value = withSpring(destination, ANIMATION_CONFIG);
         currentSnapIndex.value = index;
-        
+
         if (onChange) {
           onChange(index);
         }
@@ -167,8 +167,8 @@ const BottomSheet = forwardRef<IBottomSheetRef, IBottomSheetProps>(
         const currentHeight = SCREEN_HEIGHT - translateY.value;
         const snapPointsArr = snapPointsShared.value;
         const minSnap = minSnapPointShared.value;
-        
-        const shouldClose = 
+
+        const shouldClose =
           translateY.value > SCREEN_HEIGHT - minSnap * 0.5 ||
           (event.velocityY > VELOCITY_THRESHOLD && translateY.value > SCREEN_HEIGHT - minSnap);
 

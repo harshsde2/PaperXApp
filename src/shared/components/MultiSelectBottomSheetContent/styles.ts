@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
@@ -18,7 +19,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   selectedCountText: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   searchContainer: {
     flexDirection: 'row',
@@ -40,6 +41,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: 16,
     color: theme.colors.text.primary,
     fontFamily: theme.fontFamily.regular,
+  },
+  listHeader: {
+    paddingBottom: theme.spacing[3],
   },
   list: {
     flex: 1,
@@ -66,7 +70,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   itemTextSelected: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   emptyContainer: {
     padding: theme.spacing[6],

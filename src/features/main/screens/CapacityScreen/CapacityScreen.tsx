@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   settingsButton: {
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   statusBadge: {
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     marginRight: 6,
   },
   statusDropdown: {
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   },
   gaugeValue: {
     fontSize: 48,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
   },
   gaugeUnit: {
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   capacityHighlight: {
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   adjustButton: {
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
   },
   adjustButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
   },
   sectionHeader: {
@@ -339,12 +340,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   viewAllText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   machineCard: {
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
   },
   machineName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#111827',
     marginBottom: 2,
   },
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
   },
   machineStatusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   machineProgressContainer: {
     flexDirection: 'row',
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
   },
   machineCapacityText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#374151',
     width: 40,
     textAlign: 'right',

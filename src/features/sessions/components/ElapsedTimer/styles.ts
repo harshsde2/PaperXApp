@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -19,7 +20,7 @@ export const createStyles = (theme: Theme) =>
     },
     label: {
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -36,13 +37,13 @@ export const createStyles = (theme: Theme) =>
     },
     timeValue: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.primary.DEFAULT,
       letterSpacing: 0.5,
     },
     timeSeparator: {
       fontSize: 28,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       marginHorizontal: 4,
       opacity: 0.7,
@@ -62,12 +63,12 @@ export const createStyles = (theme: Theme) =>
     },
     timerValue: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     timerUnit: {
       fontSize: 9,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       marginTop: 2,
@@ -78,7 +79,7 @@ export const createStyles = (theme: Theme) =>
     },
     compactText: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
   });

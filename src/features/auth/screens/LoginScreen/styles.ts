@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
@@ -11,7 +12,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   logo: {
     fontSize: 48,
-    fontWeight: '900',
+    fontWeight: fontWeightForPlatform('900'),
     color: theme.colors.text.primary,
     textAlign: 'center',
     marginBottom: theme.spacing[6],
@@ -19,11 +20,12 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: theme.colors.text.primary,
     marginBottom: theme.spacing[2],
     textAlign: 'center',
     fontFamily: theme.fontFamily.bold,
+    
   },
   subtitle: {
     fontSize: 14,
@@ -41,7 +43,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: theme.colors.text.primary,
     marginBottom: theme.spacing[2],
     fontFamily: theme.fontFamily.medium,
@@ -73,7 +75,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   buttonText: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     fontFamily: theme.fontFamily.medium,
   },
   footer: {
@@ -92,7 +94,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   link: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     fontFamily: theme.fontFamily.medium,
   },
   securityBadges: {
@@ -123,7 +125,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   helpLink: {
     fontSize: 14,
     color: theme.colors.text.secondary,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     fontFamily: theme.fontFamily.regular,
   },
 });

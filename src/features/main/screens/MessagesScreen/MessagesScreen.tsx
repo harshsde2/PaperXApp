@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch } from '@store/hooks';
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   searchButton: {
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#4F46E5',
   },
   unreadBadge: {
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
   },
   unreadText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   messageContent: {
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
   },
   senderName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#111827',
     flex: 1,
     marginRight: 8,
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
   },
   lastMessageUnread: {
     color: '#374151',
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
   },
   separator: {
     height: 1,
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#111827',
     marginBottom: 8,
     textAlign: 'center',

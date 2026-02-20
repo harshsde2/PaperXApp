@@ -1,4 +1,5 @@
 import React, { memo, useMemo, useCallback, useRef } from 'react';
+import type { ComponentType } from 'react';
 import { View, TextInput, FlatList, ActivityIndicator, ListRenderItem, TouchableOpacity } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -83,6 +84,7 @@ interface MaterialsSelectionContentCommonProps {
   onLoadMore: () => void;
   onScroll: (event: any) => void;
   theme: Theme;
+  ListComponent?: ComponentType<any>;
 }
 
 type MaterialsSelectionContentProps = MaterialsSelectionContentCommonProps & (MaterialModeProps | GradeModeProps);
@@ -97,6 +99,7 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
     onLoadMore,
     onScroll,
     theme,
+    ListComponent = FlatList,
   } = props;
 
   const styles = createStyles(theme);
@@ -181,8 +184,8 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
     return null;
   }, [isFetchingNextPage, theme]);
 
-  return (
-    <View style={styles.container}>
+  const listHeader = (
+    <View style={styles.listHeader}>
       <View style={styles.headerRow}>
         <Text variant="h4" fontWeight="semibold" style={styles.title}>
           {isGradeMode ? 'Select Grade' : 'Select Material'}
@@ -222,51 +225,61 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
           onChangeText={onSearchChange}
         />
       </View>
-      {isLoading ? (
+    </View>
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        {listHeader}
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
         </View>
-      ) : (
-        <FlatList
-          ref={scrollViewRef}
-          data={listData}
-          renderItem={renderItem as ListRenderItem<GradeListItem | Material>}
-          keyExtractor={keyExtractor as (item: GradeListItem | Material) => string}
-          ListFooterComponent={ListFooterComponent}
-          contentContainerStyle={styles.listContent}
-          onEndReached={onLoadMore}
-          onEndReachedThreshold={END_REACHED_THRESHOLD}
-          onScroll={onScroll}
-          scrollEnabled={true}
-          initialNumToRender={15}
-          maxToRenderPerBatch={15}
-          windowSize={10}
-          removeClippedSubviews={true}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="always"
-          nestedScrollEnabled={true}
-          updateCellsBatchingPeriod={50}
-          getItemLayout={
-            listData.length
-              ? (_: any, index: number) => ({
-                  length: 60,
-                  offset: 60 * index,
-                  index,
-                })
-              : undefined
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text variant="bodyMedium" style={styles.emptyText}>
-                {searchQuery
-                  ? (isGradeMode ? 'No grades found' : 'No materials found')
-                  : (isGradeMode ? 'No grades available' : 'No materials available')}
-              </Text>
-            </View>
-          }
-        />
-      )}
-    </View>
+      </View>
+    );
+  }
+
+  return (
+    <ListComponent
+      ref={scrollViewRef}
+      style={[styles.container, { flex: 1 }]}
+      data={listData}
+      renderItem={renderItem as ListRenderItem<GradeListItem | Material>}
+      keyExtractor={keyExtractor as (item: GradeListItem | Material) => string}
+      ListHeaderComponent={listHeader}
+      ListFooterComponent={ListFooterComponent}
+      contentContainerStyle={styles.listContent}
+      onEndReached={onLoadMore}
+      onEndReachedThreshold={END_REACHED_THRESHOLD}
+      onScroll={onScroll}
+      scrollEnabled={true}
+      initialNumToRender={15}
+      maxToRenderPerBatch={15}
+      windowSize={10}
+      removeClippedSubviews={true}
+      showsVerticalScrollIndicator={true}
+      keyboardShouldPersistTaps="always"
+      nestedScrollEnabled={true}
+      updateCellsBatchingPeriod={50}
+      getItemLayout={
+        listData.length
+          ? (_: any, index: number) => ({
+              length: 60,
+              offset: 60 * index,
+              index,
+            })
+          : undefined
+      }
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text variant="bodyMedium" style={styles.emptyText}>
+            {searchQuery
+              ? (isGradeMode ? 'No grades found' : 'No materials found')
+              : (isGradeMode ? 'No grades available' : 'No materials available')}
+          </Text>
+        </View>
+      }
+    />
   );
 });
 

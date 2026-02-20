@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -407,7 +408,7 @@ const PaymentConfirmationScreen = () => {
 
               <View style={styles.walletInfoRow}>
                 <View style={styles.walletInfoIcon}>
-                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>i</Text>
+                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: fontWeightForPlatform('700') }}>i</Text>
                 </View>
                 <Text style={styles.walletInfoText}>
                   Posting will deduct credits immediately

@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback, useState } from 'react';
 import { View, TextInput, FlatList } from 'react-native';
 import { ICity } from 'country-state-city';
 import { Text } from '@shared/components/Text';
@@ -8,14 +8,14 @@ import { CitySelectionContentProps } from './@types';
 import { createStyles } from './styles';
 
 export const CitySelectionContent = memo(({
-  searchQuery,
-  onSearchChange,
   selectedCity,
   selectedStateName,
   cities,
   onSelect,
   theme,
+  ListComponent = FlatList,
 }: CitySelectionContentProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
   const styles = createStyles(theme);
 
   const filteredCities = useMemo(() => {
@@ -41,8 +41,8 @@ export const CitySelectionContent = memo(({
     []
   );
 
-  return (
-    <View style={styles.container}>
+  const listHeader = (
+    <View style={styles.listHeader}>
       <Text variant="h4" fontWeight="semibold" style={styles.title}>
         Select City
       </Text>
@@ -63,31 +63,35 @@ export const CitySelectionContent = memo(({
           placeholder="Search City"
           placeholderTextColor={theme.colors.text.tertiary}
           value={searchQuery}
-          onChangeText={onSearchChange}
+          onChangeText={setSearchQuery}
         />
       </View>
-      <FlatList
-        data={filteredCities}
-        keyExtractor={keyExtractor}
-        style={styles.container}
-        contentContainerStyle={styles.listContent}
-        nestedScrollEnabled
-        bounces={false}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator
-        removeClippedSubviews
-        maxToRenderPerBatch={15}
-        windowSize={10}
-        initialNumToRender={15}
-        getItemLayout={(_, index) => ({ length: 52, offset: 52 * index, index })}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text variant="bodyMedium" style={styles.emptyText}>
-              {searchQuery ? 'No cities found' : 'No cities available for this state'}
-            </Text>
-          </View>
-        }
-      />
     </View>
+  );
+
+  return (
+    <ListComponent
+      data={filteredCities}
+      keyExtractor={keyExtractor}
+      style={styles.container}
+      contentContainerStyle={styles.listContent}
+      ListHeaderComponent={listHeader}
+      nestedScrollEnabled
+      bounces={false}
+      renderItem={renderItem}
+      showsVerticalScrollIndicator
+      removeClippedSubviews
+      maxToRenderPerBatch={15}
+      windowSize={10}
+      initialNumToRender={15}
+      getItemLayout={(_, index) => ({ length: 52, offset: 52 * index, index })}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text variant="bodyMedium" style={styles.emptyText}>
+            {searchQuery ? 'No cities found' : 'No cities available for this state'}
+          </Text>
+        </View>
+      }
+    />
   );
 });

@@ -17,6 +17,7 @@ export const MultiSelectBottomSheetContent = memo(({
   onDeselect,
   theme,
   placeholder = 'Search...',
+  ListComponent = FlatList,
 }: MultiSelectBottomSheetContentProps) => {
   const styles = createStyles(theme);
   
@@ -109,8 +110,8 @@ export const MultiSelectBottomSheetContent = memo(({
     []
   );
 
-  return (
-    <View style={styles.container}>
+  const listHeader = (
+    <View style={styles.listHeader}>
       <Text variant="h4" fontWeight="semibold" style={styles.title}>
         {title}
       </Text>
@@ -135,36 +136,39 @@ export const MultiSelectBottomSheetContent = memo(({
           value={localSearchQuery}
           onChangeText={(text) => {
             setLocalSearchQuery(text);
-            // Also notify parent for external state management
             onSearchChange(text);
           }}
           autoCapitalize="none"
           autoCorrect={false}
         />
       </View>
-      <FlatList
-        data={filteredItems}
-        keyExtractor={keyExtractor}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        nestedScrollEnabled
-        bounces={false}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator
-        removeClippedSubviews
-        maxToRenderPerBatch={15}
-        windowSize={10}
-        initialNumToRender={15}
-        getItemLayout={getItemLayout}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text variant="bodyMedium" style={styles.emptyText}>
-              {localSearchQuery ? 'No items found' : 'Start typing to search'}
-            </Text>
-          </View>
-        }
-      />
     </View>
+  );
+
+  return (
+    <ListComponent
+      data={filteredItems}
+      keyExtractor={keyExtractor}
+      style={styles.list}
+      contentContainerStyle={styles.listContent}
+      ListHeaderComponent={listHeader}
+      nestedScrollEnabled
+      bounces={false}
+      renderItem={renderItem}
+      showsVerticalScrollIndicator
+      removeClippedSubviews
+      maxToRenderPerBatch={15}
+      windowSize={10}
+      initialNumToRender={15}
+      getItemLayout={getItemLayout}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text variant="bodyMedium" style={styles.emptyText}>
+            {localSearchQuery ? 'No items found' : 'Start typing to search'}
+          </Text>
+        </View>
+      }
+    />
   );
 });
 

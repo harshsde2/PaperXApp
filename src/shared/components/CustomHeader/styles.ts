@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const styles = StyleSheet.create({
   container: {
@@ -31,7 +32,7 @@ export const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#000000',
   },
   rightButton: {

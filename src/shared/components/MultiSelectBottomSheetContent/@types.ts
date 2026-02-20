@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import type { Theme } from '@theme/types';
 
 export interface MultiSelectBottomSheetContentProps {
@@ -10,4 +11,5 @@ export interface MultiSelectBottomSheetContentProps {
   onDeselect: (id: number) => void;
   theme: Theme;
   placeholder?: string;
+  ListComponent?: ComponentType<any>;
 }

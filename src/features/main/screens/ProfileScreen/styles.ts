@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
@@ -17,7 +18,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: theme.colors.text.primary,
   },
   editButton: {
@@ -25,7 +26,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   editButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: theme.colors.primary.DEFAULT,
   },
   scrollContent: {
@@ -70,7 +71,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   profileImageText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: theme.colors.primary.dark,
   },
   verifiedBadge: {
@@ -89,18 +90,18 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   verifiedCheckmark: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
   companyName: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: theme.colors.text.primary,
     marginBottom: theme.spacing[1],
     textAlign: 'center',
   },
   supplierType: {
     fontSize: 14,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing[3],
   },
@@ -113,7 +114,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   activeButtonText: {
     color: theme.colors.text.inverse,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   section: {
     marginTop: theme.spacing[6],
@@ -142,13 +143,13 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   contactLabel: {
     fontSize: 12,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     color: theme.colors.text.tertiary,
     marginBottom: theme.spacing[1],
   },
   contactValue: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     color: theme.colors.text.primary,
   },
   settingsItem: {
@@ -187,7 +188,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   settingsLabel: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     color: theme.colors.text.primary,
   },
   settingsArrow: {
@@ -215,7 +216,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   logoutButtonText: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     marginLeft: theme.spacing[2],
   },
   logoutIcon: {
@@ -227,7 +228,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     marginTop: theme.spacing[6],
     marginBottom: theme.spacing[5],
     fontSize: 12,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     color: theme.colors.text.tertiary,
   },
   // Profile Completion Styles
@@ -262,13 +263,13 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   completionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: theme.colors.text.primary,
     marginBottom: 2,
   },
   completionSubtitle: {
     fontSize: 12,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     color: theme.colors.text.secondary,
   },
   incompleteFieldsList: {
@@ -284,11 +285,11 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: 12,
     color: theme.colors.warning.dark,
     marginRight: theme.spacing[2],
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
   incompleteFieldText: {
     fontSize: 14,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     color: theme.colors.text.primary,
   },
   completeProfileButton: {
@@ -303,13 +304,13 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   completeProfileButtonText: {
     color: theme.colors.text.inverse,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     marginRight: theme.spacing[2],
   },
   completeProfileArrow: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
   // Loading and Error States
   loadingContainer: {
@@ -348,7 +349,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   retryButtonText: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   // Status Container
   statusContainer: {
@@ -366,7 +367,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   verifiedTagText: {
     color: theme.colors.success.dark,
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   // Roles Section
   rolesContainer: {
@@ -417,13 +418,13 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   activeRoleText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: theme.colors.text.inverse,
     textTransform: 'uppercase',
   },
   switchRoleText: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     color: theme.colors.primary.DEFAULT,
     marginLeft: theme.spacing[2],
   },
@@ -449,7 +450,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   verifiedIndicatorText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: theme.colors.success.dark,
   },
   // Info Icon Container
@@ -477,7 +478,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   verificationLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     color: theme.colors.text.primary,
     flex: 1,
   },
@@ -494,7 +495,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   verificationStatusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: theme.colors.text.primary,
   },
   verificationDate: {

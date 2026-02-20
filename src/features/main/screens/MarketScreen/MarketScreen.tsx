@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   notificationButton: {
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#6B7280',
   },
   tabTextActive: {
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   content: {
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
   },
   refreshText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   priceCard: {
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
   },
   materialText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#4F46E5',
   },
   gradeText: {
@@ -265,13 +266,13 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 4,
   },
   unitText: {
     fontSize: 12,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     color: '#9CA3AF',
   },
   changeBadge: {
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   },
   changeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   changeTextUp: {
     color: '#16A34A',
@@ -316,14 +317,14 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#D97706',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   insightTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 8,
     lineHeight: 24,

@@ -7,6 +7,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   },
   postTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#FFFFFF',
     marginBottom: 20,
   },
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   statsContainer: {
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -312,12 +313,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   viewAllText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   tabsContainer: {
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#6B7280',
   },
   tabTextActive: {
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     letterSpacing: 0.3,
   },
   inquiryTime: {
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
   },
   inquiryTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 8,
   },
@@ -421,7 +422,7 @@ const styles = StyleSheet.create({
   },
   miniAvatarText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#4F46E5',
   },
   miniAvatarMore: {
@@ -429,13 +430,13 @@ const styles = StyleSheet.create({
   },
   miniAvatarMoreText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#6B7280',
   },
   matchesText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   matchedInfo: {

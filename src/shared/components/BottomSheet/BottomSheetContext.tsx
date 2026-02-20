@@ -59,7 +59,7 @@ export const BottomSheetProvider: React.FC<IBottomSheetProviderProps> = ({ child
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const contextY = useSharedValue(0);
   const isOpenRef = useRef(false);
-  
+
   const snapPointsShared = useSharedValue<number[]>([SCREEN_HEIGHT * 0.5]);
   const maxSnapPointShared = useSharedValue(SCREEN_HEIGHT * 0.5);
   const minSnapPointShared = useSharedValue(SCREEN_HEIGHT * 0.5);
@@ -185,7 +185,7 @@ export const BottomSheetProvider: React.FC<IBottomSheetProviderProps> = ({ child
       const currentHeight = SCREEN_HEIGHT - translateY.value;
       const snapPoints = snapPointsShared.value;
       const minSnap = minSnapPointShared.value;
-      
+
       const shouldClose =
         translateY.value > SCREEN_HEIGHT - minSnap * 0.5 ||
         (event.velocityY > VELOCITY_THRESHOLD && translateY.value > SCREEN_HEIGHT - minSnap);
@@ -200,7 +200,7 @@ export const BottomSheetProvider: React.FC<IBottomSheetProviderProps> = ({ child
       }
 
       let nearestIndex = 0;
-      
+
       if (event.velocityY > VELOCITY_THRESHOLD) {
         for (let i = snapPoints.length - 1; i >= 0; i--) {
           if (snapPoints[i] < currentHeight) {

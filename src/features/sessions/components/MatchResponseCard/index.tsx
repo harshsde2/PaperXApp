@@ -5,6 +5,7 @@
 
 import React, { useCallback } from 'react';
 import { View, TouchableOpacity } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -115,7 +116,7 @@ export const MatchResponseCard: React.FC<MatchResponseCardProps> = ({
                   <Text style={{
                     fontSize: 10,
                     color: theme.colors.warning.DEFAULT,
-                    fontWeight: '600',
+                    fontWeight: fontWeightForPlatform('600'),
                   }}>PENDING</Text>
                 </View>
               )}

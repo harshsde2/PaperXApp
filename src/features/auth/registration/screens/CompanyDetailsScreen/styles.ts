@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
@@ -20,7 +21,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   orText: {
     color: theme.colors.text.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   container: {
     flex: 1,
@@ -247,7 +248,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   pdfLabel: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   fileInfo: {
     flex: 1,
@@ -270,7 +271,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   deleteIcon: {
     color: theme.colors.error.DEFAULT,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
   // Preview modal styles
   previewModalContainer: {
@@ -302,7 +303,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   closeButtonText: {
     color: theme.colors.text.inverse,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
   previewImage: {
     width: '100%',
@@ -356,7 +357,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   stateItemTextSelected: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
 });
 

@@ -30,6 +30,10 @@ export const createStyles = (theme: Theme) =>
       color: theme.colors.text.primary,
       fontFamily: theme.fontFamily.regular,
     },
+    listHeader: {
+      paddingHorizontal: theme.spacing[4],
+      paddingBottom: theme.spacing[3],
+    },
     listContent: {
       paddingBottom: theme.spacing[4],
       flexGrow: 1,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useNavigation } from '@react-navigation/native';
 import { useActiveRole } from '@shared/hooks/useActiveRole';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#1F2937',
   },
   container: {
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#1F2937',
     marginBottom: 8,
   },
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#1F2937',
     marginBottom: 4,
   },

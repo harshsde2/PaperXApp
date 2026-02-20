@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -24,7 +25,7 @@ export const createStyles = (theme: Theme) =>
     },
     clearButtonText: {
       color: theme.colors.error?.DEFAULT || theme.colors.error?.[500] || '#EF4444',
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
     selectedCountContainer: {
       paddingVertical: theme.spacing[2],
@@ -56,6 +57,9 @@ export const createStyles = (theme: Theme) =>
       fontSize: 16,
       color: theme.colors.text.primary,
       fontFamily: theme.fontFamily.regular,
+    },
+    listHeader: {
+      paddingBottom: theme.spacing[3],
     },
     listContent: {
       paddingBottom: theme.spacing[4],

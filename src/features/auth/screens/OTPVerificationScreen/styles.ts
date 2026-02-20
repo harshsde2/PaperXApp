@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
@@ -29,7 +30,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: theme.colors.text.primary,
     flex: 1,
     textAlign: 'center',
@@ -57,7 +58,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   codeTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: theme.colors.text.primary,
     marginBottom: theme.spacing[2],
     textAlign: 'center',
@@ -73,7 +74,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing[2],
   },
   boldText: {
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: theme.colors.text.primary,
     fontFamily: theme.fontFamily.bold,
   },
@@ -109,7 +110,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   buttonText: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     fontFamily: theme.fontFamily.medium,
   },
   footer: {
@@ -124,7 +125,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   resendLink: {
     color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     fontFamily: theme.fontFamily.medium,
   },
   resendDisabled: {
@@ -134,7 +135,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   helpLink: {
     fontSize: 14,
     color: theme.colors.text.secondary,
-    fontWeight: '400',
+    fontWeight: fontWeightForPlatform('400'),
     fontFamily: theme.fontFamily.regular,
   },
 });

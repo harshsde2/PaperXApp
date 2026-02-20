@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const styles = StyleSheet.create({
   container: {
@@ -20,12 +21,12 @@ export const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 48,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: '#FFFFFF',
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
     color: '#1E3A8A',
     marginBottom: 8,
     textAlign: 'center',
@@ -42,7 +43,7 @@ export const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#333333',
     marginBottom: 8,
   },
@@ -70,7 +71,7 @@ export const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     marginRight: 8,
   },
   footer: {
@@ -85,7 +86,7 @@ export const styles = StyleSheet.create({
   },
   link: {
     color: '#1E3A8A',
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
   },
   securityBadges: {
     flexDirection: 'row',

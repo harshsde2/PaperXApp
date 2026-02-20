@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { Theme } from '@theme/types';
 import { Brand } from '@services/api';
 
@@ -16,4 +17,5 @@ export type BrandSelectionContentProps = {
   onRetry: () => void;
   onSelect: (brand: SelectedBrand) => void;
   theme: Theme;
+  ListComponent?: ComponentType<any>;
 };

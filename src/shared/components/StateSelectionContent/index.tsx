@@ -16,6 +16,7 @@ export const StateSelectionContent = memo(({
   selectedState,
   onSelect,
   theme,
+  ListComponent = FlatList,
 }: StateSelectionContentProps) => {
   const styles = createStyles(theme);
 
@@ -39,8 +40,8 @@ export const StateSelectionContent = memo(({
 
   const keyExtractor = useCallback((item: IState) => item.isoCode, []);
 
-  return (
-    <View style={styles.container}>
+  const listHeader = (
+    <View style={styles.listHeader}>
       <Text variant="h4" fontWeight="semibold" style={styles.title}>
         Select State
       </Text>
@@ -59,28 +60,32 @@ export const StateSelectionContent = memo(({
           onChangeText={onSearchChange}
         />
       </View>
-      <FlatList
-        data={filteredStates}
-        keyExtractor={keyExtractor}
-        style={styles.container}
-        contentContainerStyle={styles.listContent}
-        nestedScrollEnabled
-        bounces={false}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator
-        removeClippedSubviews
-        maxToRenderPerBatch={15}
-        windowSize={10}
-        initialNumToRender={15}
-        getItemLayout={(_, index) => ({ length: 52, offset: 52 * index, index })}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text variant="bodyMedium" style={styles.emptyText}>
-              No states found
-            </Text>
-          </View>
-        }
-      />
     </View>
+  );
+
+  return (
+    <ListComponent
+      data={filteredStates}
+      keyExtractor={keyExtractor}
+      style={styles.container}
+      contentContainerStyle={styles.listContent}
+      ListHeaderComponent={listHeader}
+      nestedScrollEnabled
+      bounces={false}
+      renderItem={renderItem}
+      showsVerticalScrollIndicator
+      removeClippedSubviews
+      maxToRenderPerBatch={15}
+      windowSize={10}
+      initialNumToRender={15}
+      getItemLayout={(_, index) => ({ length: 52, offset: 52 * index, index })}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text variant="bodyMedium" style={styles.emptyText}>
+            No states found
+          </Text>
+        </View>
+      }
+    />
   );
 });

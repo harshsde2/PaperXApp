@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { createStyles } from '../styles';
@@ -156,12 +157,12 @@ const modalStyles = {
   },
   title: {
     fontSize: 18,
-    fontWeight: '700' as const,
+    fontWeight: fontWeightForPlatform('700'),
     marginBottom: 20,
   },
   label: {
     fontSize: 13,
-    fontWeight: '600' as const,
+    fontWeight: fontWeightForPlatform('600'),
     marginBottom: 8,
   },
   input: {
@@ -194,13 +195,13 @@ const modalStyles = {
   },
   buttonSecondaryText: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: fontWeightForPlatform('600'),
     color: '#333',
   },
   buttonPrimary: {},
   buttonPrimaryText: {
     fontSize: 16,
-    fontWeight: '700' as const,
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   buttonDisabled: {

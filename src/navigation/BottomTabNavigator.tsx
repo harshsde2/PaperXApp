@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -342,12 +343,12 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: fontWeightForPlatform('500'),
     letterSpacing: 0.2,
   },
   activeIndicator: {
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
   },
   postButtonText: {
     fontSize: 32,
-    fontWeight: '300',
+    fontWeight: fontWeightForPlatform('300'),
     color: '#FFFFFF',
     lineHeight: 36,
     marginTop: -2,

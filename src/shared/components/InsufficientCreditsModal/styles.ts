@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -42,7 +43,7 @@ export const createStyles = (theme: Theme) =>
     // Content
     title: {
       fontSize: 22,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.text.primary,
       textAlign: 'center',
       marginBottom: theme.spacing[2],
@@ -81,7 +82,7 @@ export const createStyles = (theme: Theme) =>
     },
     balanceValue: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
     },
     neededRow: {
@@ -91,12 +92,12 @@ export const createStyles = (theme: Theme) =>
     },
     neededLabel: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: '#DC2626',
     },
     neededValue: {
       fontSize: 18,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: '#DC2626',
     },
     
@@ -122,7 +123,7 @@ export const createStyles = (theme: Theme) =>
     buyButtonText: {
       color: theme.colors.white,
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
     },
     cancelButton: {
       backgroundColor: 'transparent',
@@ -132,6 +133,6 @@ export const createStyles = (theme: Theme) =>
     cancelButtonText: {
       color: theme.colors.text.tertiary,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
   });

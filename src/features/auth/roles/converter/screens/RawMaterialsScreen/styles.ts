@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
@@ -58,7 +59,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   chipClose: {
     fontSize: 18,
     color: theme.colors.text.inverse,
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
   sectionHeader: {
     color: theme.colors.text.primary,

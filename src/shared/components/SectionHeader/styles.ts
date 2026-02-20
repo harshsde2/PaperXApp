@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const styles = StyleSheet.create({
   container: {
@@ -9,12 +10,12 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#000000',
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#007AFF',
   },
 });

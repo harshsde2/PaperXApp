@@ -7,6 +7,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -366,12 +367,12 @@ const styles = StyleSheet.create({
   },
   statusPillText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#16A34A',
   },
   statusPillTextMuted: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#6B7280',
   },
   statsScrollView: {
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
   },
   statHeaderLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#9CA3AF',
     letterSpacing: 0.5,
   },
@@ -408,7 +409,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginRight: 4,
   },
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
   },
   statBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#16A34A',
   },
   section: {
@@ -441,13 +442,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 16,
   },
   viewAllText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   inquiryCard: {
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
   },
   urgentBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#DC2626',
     letterSpacing: 0.5,
   },
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   },
   inquiryTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
   },
   passButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#374151',
   },
   reviewButton: {
@@ -543,7 +544,7 @@ const styles = StyleSheet.create({
   },
   reviewButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
   },
   sessionCard: {
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
   },
   sessionStatusText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#374151',
     letterSpacing: 0.3,
   },
@@ -587,7 +588,7 @@ const styles = StyleSheet.create({
   },
   sessionTimeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#4F46E5',
   },
   sessionContent: {
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
   },
   sessionAvatarText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#4F46E5',
   },
   sessionInfo: {
@@ -614,7 +615,7 @@ const styles = StyleSheet.create({
   },
   sessionCompany: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 2,
   },
@@ -638,7 +639,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
   },
   sessionProgress: {
@@ -665,7 +666,7 @@ const styles = StyleSheet.create({
   },
   sessionWaiting: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#6B7280',
   },
   capacityCard: {
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
   },
   capacityTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 8,
   },
@@ -699,7 +700,7 @@ const styles = StyleSheet.create({
   },
   adjustLink: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   emptySessionsContainer: {
@@ -719,7 +720,7 @@ const styles = StyleSheet.create({
   },
   viewAllButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
 });

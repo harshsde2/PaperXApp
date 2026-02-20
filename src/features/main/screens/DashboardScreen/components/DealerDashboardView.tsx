@@ -7,6 +7,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
   },
   profileProgressTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#92400E',
     marginBottom: 2,
   },
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
   },
   secondaryStatValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   secondaryStatLabel: {
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: fontWeightForPlatform('800'),
     color: '#2563EB',
     marginBottom: 4,
   },
@@ -378,12 +379,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
   },
   viewAllText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
   },
   actionsContainer: {
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
   },
   actionTitlePrimary: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
     marginBottom: 4,
   },
@@ -435,7 +436,7 @@ const styles = StyleSheet.create({
   },
   actionTitleSecondary: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -467,7 +468,7 @@ const styles = StyleSheet.create({
   },
   sessionTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
   },
   sessionStatusText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   },
   additionalCardTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#111827',
     marginBottom: 4,
   },
@@ -524,7 +525,7 @@ const styles = StyleSheet.create({
   },
   additionalCardHighlight: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#2563EB',
     marginTop: 8,
   },
@@ -538,14 +539,14 @@ const styles = StyleSheet.create({
   },
   insightCategory: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1,
     marginBottom: 10,
   },
   insightTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
     lineHeight: 28,
     marginBottom: 16,
@@ -556,7 +557,7 @@ const styles = StyleSheet.create({
   },
   insightLinkText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
     marginRight: 8,
   },

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -13,11 +13,15 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { State, City, ICity } from 'country-state-city';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { useBottomSheet } from '@shared/components/BottomSheet';
 import { StateSelectionContent } from '@shared/components/StateSelectionContent';
 import { CitySelectionContent } from '@shared/components/CitySelectionContent';
 import { AppIcon } from '@assets/svgs';
@@ -576,7 +580,8 @@ const BrandRegistrationScreen = () => {
   const route = useRoute<RouteProp<AuthStackParamList, 'BrandRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const bottomSheet = useBottomSheet();
+  const stateSheetRef = useRef<BottomSheetModal>(null);
+  const citySheetRef = useRef<BottomSheetModal>(null);
 
   // Get profileData from route params
   const { profileData } = route.params || {};
@@ -641,7 +646,6 @@ const BrandRegistrationScreen = () => {
 
   const selectedStateIso = STATE_NAME_TO_ISO[stateValue] || '';
   const [stateSearchQuery, setStateSearchQuery] = useState('');
-  const [citySearchQuery, setCitySearchQuery] = useState('');
 
   // Local state for brand types selection
   const [selectedBrandTypes, setSelectedBrandTypes] = useState<Set<string>>(
@@ -685,42 +689,34 @@ const BrandRegistrationScreen = () => {
   }, [emailValue]);
 
   // Handle state selection
-  const handleStateSelect = useCallback((stateName: string) => {
-    bottomSheet.close();
-    InteractionManager.runAfterInteractions(() => {
-      setValue('state', stateName);
-      setValue('city', '');
-      setStateSearchQuery('');
-    });
-  }, [bottomSheet, setValue]);
+  const handleStateSelect = useCallback(
+    (stateName: string) => {
+      stateSheetRef.current?.dismiss();
+      InteractionManager.runAfterInteractions(() => {
+        setValue('state', stateName);
+        setValue('city', '');
+        setStateSearchQuery('');
+      });
+    },
+    [setValue]
+  );
 
   // Handle city selection
-  const handleCitySelect = useCallback((cityName: string) => {
-    bottomSheet.close();
-    InteractionManager.runAfterInteractions(() => {
-      setValue('city', cityName);
-      setCitySearchQuery('');
-    });
-  }, [bottomSheet, setValue]);
+  const handleCitySelect = useCallback(
+    (cityName: string) => {
+      citySheetRef.current?.dismiss();
+      InteractionManager.runAfterInteractions(() => {
+        setValue('city', cityName);
+      });
+    },
+    [setValue]
+  );
 
   // Open state selector
   const openStateSelector = useCallback(() => {
     setStateSearchQuery('');
-    bottomSheet.open(
-      <StateSelectionContent
-        searchQuery={stateSearchQuery}
-        onSearchChange={setStateSearchQuery}
-        selectedState={stateValue}
-        onSelect={handleStateSelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setStateSearchQuery(''),
-      }
-    );
-  }, [bottomSheet, stateSearchQuery, stateValue, handleStateSelect, theme]);
+    stateSheetRef.current?.present();
+  }, []);
 
   // Open city selector
   const openCitySelector = useCallback(() => {
@@ -728,25 +724,8 @@ const BrandRegistrationScreen = () => {
       RNAlert.alert('Select State', 'Please select a state first');
       return;
     }
-    setCitySearchQuery('');
-    const citiesForState = getCitiesForState(selectedStateIso);
-    bottomSheet.open(
-      <CitySelectionContent
-        searchQuery={citySearchQuery}
-        onSearchChange={setCitySearchQuery}
-        selectedCity={cityValue}
-        selectedStateName={stateValue}
-        cities={citiesForState}
-        onSelect={handleCitySelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setCitySearchQuery(''),
-      }
-    );
-  }, [bottomSheet, stateValue, selectedStateIso, citySearchQuery, cityValue, handleCitySelect, theme]);
+    citySheetRef.current?.present();
+  }, [stateValue]);
 
   // Handle location selection from LocationPicker
   const handleLocationSelect = useCallback(
@@ -759,9 +738,9 @@ const BrandRegistrationScreen = () => {
         setValue('city', location.address.city, { shouldValidate: true });
       }
       // Set address field with street address or locality details
-      const addressText = location.address?.streetAddress || 
-                         location.address?.formattedAddress?.split(',')[0] || 
-                         '';
+      const addressText = location.address?.streetAddress ||
+        location.address?.formattedAddress?.split(',')[0] ||
+        '';
       if (addressText) {
         setValue('address', addressText, { shouldValidate: true });
       }
@@ -776,7 +755,7 @@ const BrandRegistrationScreen = () => {
         shouldValidate: true,
       });
       setShowLocationPicker(false);
-      
+
       dispatch(
         showToast({
           message: 'Location selected successfully!',
@@ -798,8 +777,8 @@ const BrandRegistrationScreen = () => {
     const cityValid = cityValue?.trim().length > 0;
     const locationValid = locationValue?.trim().length > 0;
     // Coordinates are required if location was selected from map, optional if manually entered
-    const coordinatesValid = showManualLocationEntry 
-      ? true 
+    const coordinatesValid = showManualLocationEntry
+      ? true
       : latitudeValue !== undefined && longitudeValue !== undefined;
 
     const valid =
@@ -1056,8 +1035,12 @@ const BrandRegistrationScreen = () => {
     ],
   );
 
+  const citiesForState = getCitiesForState(selectedStateIso);
+
   return (
-    <>
+    <BottomSheetModalProvider>
+      <View style={{ flex: 1 }}>
+        <>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -1111,7 +1094,7 @@ const BrandRegistrationScreen = () => {
                         style={[
                           styles.inputWrapper,
                           focusedInput === 'companyName' &&
-                            styles.inputWrapperFocused,
+                          styles.inputWrapperFocused,
                         ]}
                       >
                         <TextInput
@@ -1294,7 +1277,7 @@ const BrandRegistrationScreen = () => {
                         style={[
                           styles.inputWrapper,
                           focusedInput === 'contactPerson' &&
-                            styles.inputWrapperFocused,
+                          styles.inputWrapperFocused,
                         ]}
                       >
                         <View style={styles.inputIconLeft}>
@@ -1368,7 +1351,7 @@ const BrandRegistrationScreen = () => {
                         style={[
                           styles.inputWrapper,
                           focusedInput === 'mobile' &&
-                            styles.inputWrapperFocused,
+                          styles.inputWrapperFocused,
                         ]}
                       >
                         <TextInput
@@ -1449,7 +1432,7 @@ const BrandRegistrationScreen = () => {
                         style={[
                           styles.inputWrapper,
                           focusedInput === 'email' &&
-                            styles.inputWrapperFocused,
+                          styles.inputWrapperFocused,
                         ]}
                       >
                         <TextInput
@@ -1526,7 +1509,7 @@ const BrandRegistrationScreen = () => {
                         style={[
                           styles.inputWrapper,
                           focusedInput === 'gstNumber' &&
-                            styles.inputWrapperFocused,
+                          styles.inputWrapperFocused,
                         ]}
                       >
                         <TextInput
@@ -1716,7 +1699,7 @@ const BrandRegistrationScreen = () => {
                         style={[
                           styles.inputWrapper,
                           focusedInput === 'location' &&
-                            styles.inputWrapperFocused,
+                          styles.inputWrapperFocused,
                         ]}
                       >
                         <View style={styles.inputIconLeft}>
@@ -1947,13 +1930,13 @@ const BrandRegistrationScreen = () => {
               initialLocation={
                 latitudeValue && longitudeValue
                   ? {
-                      latitude: latitudeValue,
-                      longitude: longitudeValue,
-                      address: {
-                        formattedAddress: locationValue || '',
-                        streetAddress: locationValue || '',
-                      },
-                    }
+                    latitude: latitudeValue,
+                    longitude: longitudeValue,
+                    address: {
+                      formattedAddress: locationValue || '',
+                      streetAddress: locationValue || '',
+                    },
+                  }
                   : undefined
               }
               onLocationSelect={handleLocationSelect}
@@ -2044,7 +2027,39 @@ const BrandRegistrationScreen = () => {
           </TouchableOpacity>
         </FloatingBottomContainer>
       )}
-    </>
+        </>
+        <BottomSheetModal
+          ref={stateSheetRef}
+          snapPoints={['70%', '95%']}
+          enablePanDownToClose
+          onDismiss={() => setStateSearchQuery('')}
+        >
+          <StateSelectionContent
+            searchQuery={stateSearchQuery}
+            onSearchChange={setStateSearchQuery}
+            selectedState={stateValue}
+            onSelect={handleStateSelect}
+            theme={theme}
+            ListComponent={BottomSheetFlatList}
+          />
+        </BottomSheetModal>
+
+        <BottomSheetModal
+          ref={citySheetRef}
+          snapPoints={['70%', '95%']}
+          enablePanDownToClose
+        >
+          <CitySelectionContent
+            selectedCity={cityValue}
+            selectedStateName={stateValue}
+            cities={citiesForState}
+            onSelect={handleCitySelect}
+            theme={theme}
+            ListComponent={BottomSheetFlatList}
+          />
+        </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 

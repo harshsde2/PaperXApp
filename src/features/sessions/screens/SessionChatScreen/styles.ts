@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -37,12 +38,12 @@ export const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     headerSubtitle: {
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -71,7 +72,7 @@ export const createStyles = (theme: Theme) =>
     },
     dateSeparatorText: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       backgroundColor: theme.colors.background.secondary,
       paddingHorizontal: theme.spacing[3],
@@ -117,7 +118,7 @@ export const createStyles = (theme: Theme) =>
     },
     messageMeta: {
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       marginBottom: 4,
       marginLeft: 4,
@@ -183,7 +184,7 @@ export const createStyles = (theme: Theme) =>
     },
     fileName: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
     },
     fileSize: {
@@ -213,7 +214,7 @@ export const createStyles = (theme: Theme) =>
     },
     imageFileName: {
       fontSize: 11,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.primary,
     },
 

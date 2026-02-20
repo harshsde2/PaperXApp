@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -60,7 +61,7 @@ export const createStyles = (theme: Theme) =>
     },
     supplierName: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     locationRow: {
@@ -91,7 +92,7 @@ export const createStyles = (theme: Theme) =>
     },
     matchBadgeText: {
       fontSize: 9,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       textTransform: 'uppercase',
       letterSpacing: 0.3,
     },
@@ -149,7 +150,7 @@ export const createStyles = (theme: Theme) =>
     },
     actionButtonText: {
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
     },
     chatButtonText: {
       color: theme.colors.text.primary,

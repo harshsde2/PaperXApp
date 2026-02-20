@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const styles = StyleSheet.create({
   // Dashboard Wrapper
@@ -172,7 +173,7 @@ export const styles = StyleSheet.create({
   },
   completeProfileButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
     marginRight: 8,
   },
@@ -236,7 +237,7 @@ export const styles = StyleSheet.create({
   verifiedCheckmark: {
     fontSize: 10,
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: fontWeightForPlatform('bold'),
   },
 
   // Dealer Header Styles
@@ -357,7 +358,7 @@ export const styles = StyleSheet.create({
   },
   companyNameHeader: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#000000',
     marginBottom: 4,
   },
@@ -370,7 +371,7 @@ export const styles = StyleSheet.create({
   },
   roleBadgeTextHeader: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#1976D2',
   },
   notificationButton: {
@@ -392,7 +393,7 @@ export const styles = StyleSheet.create({
   },
   dashboardTitle: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#000000',
     marginBottom: 4,
   },
@@ -430,7 +431,7 @@ export const styles = StyleSheet.create({
   },
   summaryCardNumber: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#007AFF',
     marginBottom: 4,
   },
@@ -483,7 +484,7 @@ export const styles = StyleSheet.create({
   },
   quickActionTitlePrimary: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
     marginBottom: 4,
   },
@@ -494,7 +495,7 @@ export const styles = StyleSheet.create({
   },
   quickActionTitleSecondary: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#000000',
     marginBottom: 4,
   },
@@ -515,12 +516,12 @@ export const styles = StyleSheet.create({
   },
   recentSessionsTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#000000',
   },
   viewAllLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#007AFF',
   },
   recentSessionsContainer: {
@@ -564,7 +565,7 @@ export const styles = StyleSheet.create({
   },
   sessionMaterial: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#000000',
     marginBottom: 4,
   },
@@ -580,7 +581,7 @@ export const styles = StyleSheet.create({
   },
   sessionStatusText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
   },
 
@@ -612,7 +613,7 @@ export const styles = StyleSheet.create({
   },
   additionalCardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#000000',
     marginBottom: 4,
   },
@@ -623,7 +624,7 @@ export const styles = StyleSheet.create({
   },
   additionalCardInfo: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#007AFF',
   },
 
@@ -638,7 +639,7 @@ export const styles = StyleSheet.create({
   },
   marketInsightLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
     opacity: 0.8,
     marginBottom: 8,
@@ -646,7 +647,7 @@ export const styles = StyleSheet.create({
   },
   marketInsightTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: fontWeightForPlatform('700'),
     color: '#FFFFFF',
     marginBottom: 16,
   },
@@ -656,7 +657,7 @@ export const styles = StyleSheet.create({
   },
   marketInsightLinkText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: fontWeightForPlatform('600'),
     color: '#FFFFFF',
     marginRight: 8,
   },

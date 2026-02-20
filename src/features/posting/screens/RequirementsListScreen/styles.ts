@@ -1,5 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 const { width } = Dimensions.get('window');
 
@@ -109,7 +110,7 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
       color: theme.colors.text.primary,
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
     },
     detailsGrid: {
       flexDirection: 'row',

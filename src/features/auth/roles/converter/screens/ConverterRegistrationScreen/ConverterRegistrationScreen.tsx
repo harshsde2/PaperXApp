@@ -3,11 +3,15 @@ import { View, TouchableOpacity, Alert, ActivityIndicator, InteractionManager, S
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { State, City, ICity } from 'country-state-city';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { useBottomSheet } from '@shared/components/BottomSheet';
 import { StateSelectionContent } from '@shared/components/StateSelectionContent';
 import { CitySelectionContent } from '@shared/components/CitySelectionContent';
 import MultiSelectBottomSheetContent from '@shared/components/MultiSelectBottomSheetContent';
@@ -44,12 +48,24 @@ const getCitiesForState = (stateIsoCode: string): ICity[] => {
   return CITIES_CACHE[stateIsoCode];
 };
 
+type MultiSelectConfig = {
+  fieldName: keyof ConverterRegistrationFormData;
+  title: string;
+  items: Array<{ id: number; name: string }>;
+  selectedIds: number[];
+  searchKey: string;
+};
+
 const ConverterRegistrationScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<AuthStackParamList, 'ConverterRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const bottomSheet = useBottomSheet();
+  const stateSheetRef = useRef<BottomSheetModal>(null);
+  const citySheetRef = useRef<BottomSheetModal>(null);
+  const multiSelectSheetRef = useRef<BottomSheetModal>(null);
+  const capacityUnitSheetRef = useRef<BottomSheetModal>(null);
+  const [multiSelectConfig, setMultiSelectConfig] = useState<MultiSelectConfig | null>(null);
   const { data: referenceData, isLoading: isLoadingReference } = useGetConverterReferenceData();
   const { data: materials, isLoading: isLoadingMaterials } = useGetMaterials();
   const { mutate: completeProfile, isPending: isSubmitting } = useCompleteConverterProfile();
@@ -62,7 +78,6 @@ const ConverterRegistrationScreen = () => {
   
   // State/City selection state
   const [stateSearchQuery, setStateSearchQuery] = useState('');
-  const [citySearchQuery, setCitySearchQuery] = useState('');
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showManualLocationEntry, setShowManualLocationEntry] = useState(false);
   
@@ -142,42 +157,34 @@ const ConverterRegistrationScreen = () => {
   const selectedStateIso = STATE_NAME_TO_ISO[factoryStateValue] || '';
 
   // Handle state selection
-  const handleStateSelect = useCallback((stateName: string) => {
-    bottomSheet.close();
-    InteractionManager.runAfterInteractions(() => {
-      setValue('factory_state', stateName);
-      setValue('factory_city', '');
-      setStateSearchQuery('');
-    });
-  }, [bottomSheet, setValue]);
+  const handleStateSelect = useCallback(
+    (stateName: string) => {
+      stateSheetRef.current?.dismiss();
+      InteractionManager.runAfterInteractions(() => {
+        setValue('factory_state', stateName);
+        setValue('factory_city', '');
+        setStateSearchQuery('');
+      });
+    },
+    [setValue]
+  );
 
   // Handle city selection
-  const handleCitySelect = useCallback((cityName: string) => {
-    bottomSheet.close();
-    InteractionManager.runAfterInteractions(() => {
-      setValue('factory_city', cityName);
-      setCitySearchQuery('');
-    });
-  }, [bottomSheet, setValue]);
+  const handleCitySelect = useCallback(
+    (cityName: string) => {
+      citySheetRef.current?.dismiss();
+      InteractionManager.runAfterInteractions(() => {
+        setValue('factory_city', cityName);
+      });
+    },
+    [setValue]
+  );
 
   // Open state selector
   const openStateSelector = useCallback(() => {
     setStateSearchQuery('');
-    bottomSheet.open(
-      <StateSelectionContent
-        searchQuery={stateSearchQuery}
-        onSearchChange={setStateSearchQuery}
-        selectedState={factoryStateValue}
-        onSelect={handleStateSelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setStateSearchQuery(''),
-      }
-    );
-  }, [bottomSheet, stateSearchQuery, factoryStateValue, handleStateSelect, theme]);
+    stateSheetRef.current?.present();
+  }, []);
 
   // Open city selector
   const openCitySelector = useCallback(() => {
@@ -185,25 +192,8 @@ const ConverterRegistrationScreen = () => {
       Alert.alert('Select State', 'Please select a state first');
       return;
     }
-    setCitySearchQuery('');
-    const citiesForState = getCitiesForState(selectedStateIso);
-    bottomSheet.open(
-      <CitySelectionContent
-        searchQuery={citySearchQuery}
-        onSearchChange={setCitySearchQuery}
-        selectedCity={factoryCityValue}
-        selectedStateName={factoryStateValue}
-        cities={citiesForState}
-        onSelect={handleCitySelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setCitySearchQuery(''),
-      }
-    );
-  }, [bottomSheet, factoryStateValue, selectedStateIso, citySearchQuery, factoryCityValue, handleCitySelect, theme]);
+    citySheetRef.current?.present();
+  }, [factoryStateValue]);
 
   // Handle location selection from LocationPicker
   const handleLocationSelect = useCallback(
@@ -246,57 +236,33 @@ const ConverterRegistrationScreen = () => {
     return `${ids.length} selected`;
   }, []);
 
-  const openMultiSelect = useCallback((
-    fieldName: keyof ConverterRegistrationFormData,
-    title: string,
-    items: Array<{ id: number; name: string }>,
-    selectedIds: number[]
-  ) => {
-    if (!items || items.length === 0) {
-      Alert.alert('No Data', 'No items available to select');
-      return;
-    }
-
-    const searchKey = fieldName as string;
-    const currentSearchQuery = searchQueriesRef.current[searchKey] || '';
-    
-    // Use InteractionManager to defer the bottom sheet opening
-    InteractionManager.runAfterInteractions(() => {
-      bottomSheet.open(
-        <MultiSelectBottomSheetContent
-          title={title}
-          searchQuery={currentSearchQuery}
-          onSearchChange={(query: string) => {
-            setSearchQueries((prev) => ({ ...prev, [searchKey]: query }));
-          }}
-          items={items}
-          selectedIds={selectedIds}
-          onSelect={(id: number) => {
-            const currentIds = (getValues(fieldName) as number[]) || [];
-            if (!currentIds.includes(id)) {
-              setValue(fieldName, [...currentIds, id] as any, { shouldValidate: false });
-            }
-          }}
-          onDeselect={(id: number) => {
-            const currentIds = (getValues(fieldName) as number[]) || [];
-            setValue(fieldName, currentIds.filter((i) => i !== id) as any, { shouldValidate: false });
-          }}
-          theme={theme}
-        />,
-        {
-          snapPoints: ['70%', '95%'],
-          initialSnapIndex: 0,
-          onClose: () => {
-            setSearchQueries((prev) => {
-              const updated = { ...prev };
-              delete updated[searchKey];
-              return updated;
-            });
-          },
-        }
-      );
-    });
-  }, [bottomSheet, setValue, getValues, theme]);
+  const openMultiSelect = useCallback(
+    (
+      fieldName: keyof ConverterRegistrationFormData,
+      title: string,
+      items: Array<{ id: number; name: string }>,
+      selectedIds: number[]
+    ) => {
+      if (!items || items.length === 0) {
+        Alert.alert('No Data', 'No items available to select');
+        return;
+      }
+      const searchKey = fieldName as string;
+      const currentSearchQuery = searchQueriesRef.current[searchKey] || '';
+      setMultiSelectConfig({
+        fieldName,
+        title,
+        items,
+        selectedIds,
+        searchKey,
+      });
+      setSearchQueries((prev) => ({ ...prev, [searchKey]: currentSearchQuery }));
+      InteractionManager.runAfterInteractions(() => {
+        multiSelectSheetRef.current?.present();
+      });
+    },
+    [setValue, getValues]
+  );
 
   const onSubmit = (data: ConverterRegistrationFormData) => {
     // Validate required fields
@@ -417,7 +383,12 @@ const ConverterRegistrationScreen = () => {
     );
   }
 
+  const capacityUnitValue = watch('capacity_unit');
+  const citiesForState = getCitiesForState(selectedStateIso);
+
   return (
+    <BottomSheetModalProvider>
+      <View style={{ flex: 1 }}>
     <ScreenWrapper
       scrollable
       backgroundColor={theme.colors.background.secondary}
@@ -656,64 +627,11 @@ const ConverterRegistrationScreen = () => {
             <Controller
               control={control}
               name="capacity_unit"
-              render={({ field: { value, onChange } }) => (
+              render={({ field: { value } }) => (
                 <DropdownButton
                   value={value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Pieces'}
                   placeholder="Select unit"
-                  onPress={() => {
-                    const units = ['pieces', 'kg', 'tonnes'];
-                    bottomSheet.open(
-                      <View>
-                        <Text 
-                          variant="h4" 
-                          fontWeight="semibold" 
-                          style={{ 
-                            color: theme.colors.text.primary, 
-                            marginBottom: theme.spacing[4] 
-                          }}
-                        >
-                          Select Unit
-                        </Text>
-                        {units.map((unit, index) => (
-                          <TouchableOpacity
-                            key={unit}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              paddingVertical: theme.spacing[3],
-                              paddingHorizontal: theme.spacing[4],
-                              borderBottomWidth: index < units.length - 1 ? 1 : 0,
-                              borderBottomColor: theme.colors.border.primary,
-                              backgroundColor: value === unit ? theme.colors.primary[50] : 'transparent',
-                            }}
-                            onPress={() => {
-                              onChange(unit);
-                              bottomSheet.close();
-                            }}
-                            activeOpacity={0.7}
-                          >
-                            <Text
-                              variant="bodyMedium"
-                              style={{
-                                color: value === unit ? theme.colors.primary.DEFAULT : theme.colors.text.primary,
-                                fontWeight: value === unit ? '600' : 'normal',
-                              }}
-                            >
-                              {unit.charAt(0).toUpperCase() + unit.slice(1)}
-                            </Text>
-                            {value === unit && (
-                              <AppIcon.TickCheckedBox width={20} height={20} color={theme.colors.primary.DEFAULT} />
-                            )}
-                          </TouchableOpacity>
-                        ))}
-                      </View>,
-                      {
-                        snapPoints: ['65%', '80%'],
-                        initialSnapIndex: 0,
-                      }
-                    );
-                  }}
+                  onPress={() => capacityUnitSheetRef.current?.present()}
                 />
               )}
             />
@@ -1033,6 +951,130 @@ const ConverterRegistrationScreen = () => {
         </View>
       </View>
     </ScreenWrapper>
+
+        <BottomSheetModal
+          ref={stateSheetRef}
+          snapPoints={['70%', '95%']}
+          enablePanDownToClose
+          onDismiss={() => setStateSearchQuery('')}
+        >
+          <StateSelectionContent
+            searchQuery={stateSearchQuery}
+            onSearchChange={setStateSearchQuery}
+            selectedState={factoryStateValue}
+            onSelect={handleStateSelect}
+            theme={theme}
+            ListComponent={BottomSheetFlatList}
+          />
+        </BottomSheetModal>
+
+        <BottomSheetModal
+          ref={citySheetRef}
+          snapPoints={['70%', '95%']}
+          enablePanDownToClose
+        >
+          <CitySelectionContent
+            selectedCity={factoryCityValue}
+            selectedStateName={factoryStateValue}
+            cities={citiesForState}
+            onSelect={handleCitySelect}
+            theme={theme}
+            ListComponent={BottomSheetFlatList}
+          />
+        </BottomSheetModal>
+
+        {multiSelectConfig && (
+          <BottomSheetModal
+            ref={multiSelectSheetRef}
+            snapPoints={['70%', '95%']}
+            enablePanDownToClose
+            onDismiss={() => {
+              setSearchQueries((prev) => {
+                const updated = { ...prev };
+                if (multiSelectConfig?.searchKey) delete updated[multiSelectConfig.searchKey];
+                return updated;
+              });
+              setMultiSelectConfig(null);
+            }}
+          >
+            <MultiSelectBottomSheetContent
+              title={multiSelectConfig.title}
+              searchQuery={searchQueries[multiSelectConfig.searchKey] ?? ''}
+              onSearchChange={(query: string) => {
+                setSearchQueries((prev) => ({ ...prev, [multiSelectConfig.searchKey]: query }));
+              }}
+              items={multiSelectConfig.items}
+              selectedIds={(getValues(multiSelectConfig.fieldName) as number[]) || []}
+              onSelect={(id: number) => {
+                const currentIds = (getValues(multiSelectConfig.fieldName) as number[]) || [];
+                if (!currentIds.includes(id)) {
+                  setValue(multiSelectConfig.fieldName, [...currentIds, id] as any, { shouldValidate: false });
+                }
+              }}
+              onDeselect={(id: number) => {
+                const currentIds = (getValues(multiSelectConfig.fieldName) as number[]) || [];
+                setValue(multiSelectConfig.fieldName, currentIds.filter((i) => i !== id) as any, { shouldValidate: false });
+              }}
+              theme={theme}
+              ListComponent={BottomSheetFlatList}
+            />
+          </BottomSheetModal>
+        )}
+
+        <BottomSheetModal
+          ref={capacityUnitSheetRef}
+          snapPoints={['65%', '80%']}
+          enablePanDownToClose
+        >
+          <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4], flex: 1 }}>
+            <Text
+              variant="h4"
+              fontWeight="semibold"
+              style={{ color: theme.colors.text.primary, marginBottom: theme.spacing[4] }}
+            >
+              Select Unit
+            </Text>
+            <BottomSheetFlatList
+              data={['pieces', 'kg', 'tonnes']}
+              keyExtractor={(unit: string) => unit}
+              contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
+              renderItem={({ item }: { item: string }) => (
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: theme.spacing[3],
+                    paddingHorizontal: theme.spacing[4],
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.colors.border.primary,
+                    backgroundColor: capacityUnitValue === item ? theme.colors.primary[50] : 'transparent',
+                  }}
+                  onPress={() => {
+                    setValue('capacity_unit', item, { shouldValidate: true });
+                    capacityUnitSheetRef.current?.dismiss();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      color: capacityUnitValue === item ? theme.colors.primary.DEFAULT : theme.colors.text.primary,
+                      fontWeight: capacityUnitValue === item ? '600' : 'normal',
+                    }}
+                  >
+                    {item.charAt(0).toUpperCase() + item.slice(1)}
+                  </Text>
+                  {capacityUnitValue === item && (
+                    <AppIcon.TickCheckedBox width={20} height={20} color={theme.colors.primary.DEFAULT} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 

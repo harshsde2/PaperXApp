@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -54,13 +55,13 @@ export const createStyles = (theme: Theme) =>
     },
     urgentText: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#DC2626',
       textTransform: 'uppercase',
     },
     title: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -89,7 +90,7 @@ export const createStyles = (theme: Theme) =>
     },
     statusText: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       textTransform: 'uppercase',
     },
     statusTextActive: {
@@ -122,12 +123,12 @@ export const createStyles = (theme: Theme) =>
     },
     progressLabel: {
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: fontWeightForPlatform('500'),
       color: theme.colors.text.primary,
     },
     progressValue: {
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
     progressBar: {
@@ -161,14 +162,14 @@ export const createStyles = (theme: Theme) =>
     },
     findingLabel: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
       letterSpacing: 0.3,
     },
     findingText: {
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       fontStyle: 'italic',
     },
@@ -212,7 +213,7 @@ export const createStyles = (theme: Theme) =>
     },
     actionButtonText: {
       fontSize: 14,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
     actionButtonTextOutline: {

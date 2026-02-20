@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -29,7 +30,7 @@ export const createStyles = (theme: Theme) =>
     },
     headerTitle: {
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       flex: 1,
       textAlign: 'center',
@@ -59,7 +60,7 @@ export const createStyles = (theme: Theme) =>
     },
     intentBadgeText: {
       fontSize: 12,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       textTransform: 'uppercase',
     },
     intentBadgeTextBuy: {
@@ -92,7 +93,7 @@ export const createStyles = (theme: Theme) =>
     },
     responderHeroHeadline: {
       fontSize: 18,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       marginBottom: theme.spacing[1],
       letterSpacing: 0.2,
     },
@@ -108,7 +109,7 @@ export const createStyles = (theme: Theme) =>
     },
     responderSectionLabel: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: theme.spacing[2],
@@ -125,7 +126,7 @@ export const createStyles = (theme: Theme) =>
     },
     responderRequirementTitle: {
       fontSize: 20,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[3],
       lineHeight: 26,
@@ -184,7 +185,7 @@ export const createStyles = (theme: Theme) =>
     },
     responderTimeStripLabel: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.secondary,
     },
     responderTimeStripRow: {
@@ -206,12 +207,12 @@ export const createStyles = (theme: Theme) =>
     },
     responderTimeValueText: {
       fontSize: 18,
-      fontWeight: '800',
+      fontWeight: fontWeightForPlatform('800'),
       color: theme.colors.primary.DEFAULT,
     },
     responderTimeUnit: {
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
       textTransform: 'uppercase',
     },
@@ -220,7 +221,7 @@ export const createStyles = (theme: Theme) =>
     },
     responderActionsTitle: {
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[3],
       paddingHorizontal: theme.spacing[1],
@@ -240,7 +241,7 @@ export const createStyles = (theme: Theme) =>
     },
     primaryButtonText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
     secondaryButton: {
@@ -256,7 +257,7 @@ export const createStyles = (theme: Theme) =>
     },
     secondaryButtonText: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.secondary,
     },
     statusBox: {
@@ -299,12 +300,12 @@ export const createStyles = (theme: Theme) =>
     },
     modalTitle: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       marginBottom: theme.spacing[4],
     },
     modalLabel: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
       marginBottom: theme.spacing[1],
     },
     modalInput: {
@@ -332,7 +333,7 @@ export const createStyles = (theme: Theme) =>
     },
     modalButtonPrimaryText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: fontWeightForPlatform('700'),
       color: '#FFFFFF',
     },
     modalButtonSecondary: {
@@ -345,6 +346,6 @@ export const createStyles = (theme: Theme) =>
     },
     modalButtonSecondaryText: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
   });

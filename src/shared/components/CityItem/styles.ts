@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -21,6 +22,6 @@ export const createStyles = (theme: Theme) =>
     },
     textSelected: {
       color: theme.colors.primary.DEFAULT,
-      fontWeight: '600',
+      fontWeight: fontWeightForPlatform('600'),
     },
   });

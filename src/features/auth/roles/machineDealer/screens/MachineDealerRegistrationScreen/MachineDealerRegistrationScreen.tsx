@@ -1,7 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, ScrollView, FlatList } from 'react-native';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
+import { View, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -10,17 +15,20 @@ import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
 import type {
   CompleteMachineDealerProfileRequest,
+  Machine,
   UpdateProfileResponse,
 } from '@services/api';
-import { useCompleteMachineDealerProfile } from '@services/api';
+import { useCompleteMachineDealerProfile, useGetMachines } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
 import { ROLES } from '@utils/constants';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { useBottomSheet } from '@shared/components/BottomSheet';
-import { useGetMachines } from '@services/api';
 import MultiSelectBottomSheetContent from '@shared/components/MultiSelectBottomSheetContent';
+import type {
+  MachineCategoryOption,
+  MachineCategoryType,
+} from '@features/posting/constants/machineConstants';
 import {
   MACHINE_CATEGORY_OPTIONS,
   MACHINE_BRAND_NAMES,
@@ -41,7 +49,9 @@ const MachineDealerRegistrationScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const dispatch = useAppDispatch();
-  const bottomSheet = useBottomSheet();
+  const machineCategorySheetRef = useRef<BottomSheetModal>(null);
+  const machineTypeSheetRef = useRef<BottomSheetModal>(null);
+  const preferredBrandsSheetRef = useRef<BottomSheetModal>(null);
 
   const { profileData } = route.params || {};
 
@@ -129,131 +139,73 @@ const MachineDealerRegistrationScreen = () => {
   );
 
   const openMachineCategorySheet = useCallback(() => {
-    bottomSheet.open(
-      <View style={{ flex: 1, paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4] }}>
-        <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[3] }}>
-          Select Machine Category
-        </Text>
-        <FlatList
-          data={MACHINE_CATEGORY_OPTIONS}
-          keyExtractor={(item) => item.value}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1,  }}
-          showsVerticalScrollIndicator
-          nestedScrollEnabled
-          renderItem={({ item: opt }) => (
-            <TouchableOpacity
-              style={{
-                paddingVertical: theme.spacing[3],
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.border.primary,
-              }}
-              onPress={() => {
-                setValue('machine_category', opt.value, { shouldValidate: true });
-                setValue('machine_id', undefined, { shouldValidate: true });
-                bottomSheet.close();
-              }}
-              activeOpacity={0.7}
-            >
-              <Text variant="bodyMedium">{opt.label}</Text>
-            </TouchableOpacity>
-          )}
-        />
-      </View>,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-      },
-    );
-  }, [bottomSheet, setValue, theme]);
+    machineCategorySheetRef.current?.present();
+  }, []);
 
   const openMachineTypeSheet = useCallback(() => {
     if (!machineCategoryValue) {
       Alert.alert('Select Category', 'Please select machine category first');
       return;
     }
-    bottomSheet.open(
-      <View style={{ flex: 1, paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4] }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing[3] }}>
-          <Text variant="h4" fontWeight="semibold" style={{ flex: 1 }}>
-            Select Machine Type
-          </Text>
-          {isLoadingMachines && (
-            <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
-          )}
-        </View>
-        <ScrollView
-          showsVerticalScrollIndicator
-          nestedScrollEnabled
-          contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
-        >
-          {machines.map((m) => (
-            <TouchableOpacity
-              key={m.id}
-              style={{
-                paddingVertical: theme.spacing[3],
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.border.primary,
-              }}
-              onPress={() => {
-                setValue('machine_id', m.id, { shouldValidate: true });
-                bottomSheet.close();
-              }}
-              activeOpacity={0.7}
-            >
-              <Text variant="bodyMedium">{m.name}</Text>
-            </TouchableOpacity>
-          ))}
-          {machines.length === 0 && !isLoadingMachines && (
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.text.tertiary, marginTop: theme.spacing[2] }}
-            >
-              No machines found for this category.
-            </Text>
-          )}
-        </ScrollView>
-      </View>,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-      },
-    );
-  }, [bottomSheet, machineCategoryValue, machines, isLoadingMachines, setValue, theme]);
+    machineTypeSheetRef.current?.present();
+  }, [machineCategoryValue]);
 
   const openPreferredBrandsSheet = useCallback(() => {
-    const selectedIds: number[] = preferredBrandIdsValue || [];
-    bottomSheet.open(
-      <MultiSelectBottomSheetContent
-        title="Select Preferred Brands"
-        searchQuery={brandSearchQuery}
-        onSearchChange={setBrandSearchQuery}
-        items={brandItems}
-        selectedIds={selectedIds}
-        onSelect={(id: number) => {
-          const current = preferredBrandIdsValue || [];
-          if (!current.includes(id)) {
-            setValue('preferred_brand_ids', [...current, id], { shouldValidate: true });
-          }
+    preferredBrandsSheetRef.current?.present();
+  }, []);
+
+  const handleMachineCategorySelect = useCallback(
+    (value: MachineCategoryType) => {
+      setValue('machine_category', value, { shouldValidate: true });
+      setValue('machine_id', undefined, { shouldValidate: true });
+      machineCategorySheetRef.current?.dismiss();
+    },
+    [setValue]
+  );
+
+  const handleMachineTypeSelect = useCallback(
+    (id: number) => {
+      setValue('machine_id', id, { shouldValidate: true });
+      machineTypeSheetRef.current?.dismiss();
+    },
+    [setValue]
+  );
+
+  const renderMachineCategoryItem = useCallback(
+    ({ item }: { item: MachineCategoryOption }) => (
+      <TouchableOpacity
+        style={{
+          paddingVertical: theme.spacing[3],
+          paddingHorizontal: theme.spacing[4],
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.primary,
         }}
-        onDeselect={(id: number) => {
-          const current = preferredBrandIdsValue || [];
-          setValue(
-            'preferred_brand_ids',
-            current.filter((x) => x !== id),
-            { shouldValidate: true },
-          );
+        onPress={() => handleMachineCategorySelect(item.value)}
+        activeOpacity={0.7}
+      >
+        <Text variant="bodyMedium">{item.label}</Text>
+      </TouchableOpacity>
+    ),
+    [theme, handleMachineCategorySelect]
+  );
+
+  const renderMachineTypeItem = useCallback(
+    ({ item }: { item: Machine }) => (
+      <TouchableOpacity
+        style={{
+          paddingVertical: theme.spacing[3],
+          paddingHorizontal: theme.spacing[4],
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.primary,
         }}
-        theme={theme}
-        placeholder="Search brands"
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setBrandSearchQuery(''),
-      },
-    );
-  }, [bottomSheet, brandItems, brandSearchQuery, preferredBrandIdsValue, setValue, theme]);
+        onPress={() => handleMachineTypeSelect(item.id)}
+        activeOpacity={0.7}
+      >
+        <Text variant="bodyMedium">{item.name}</Text>
+      </TouchableOpacity>
+    ),
+    [theme, handleMachineTypeSelect]
+  );
 
   const onSubmit = (data: MachineDealerRegistrationFormData) => {
     if (!profileData) {
@@ -348,7 +300,8 @@ const MachineDealerRegistrationScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <BottomSheetModalProvider>
+      <View style={{ flex: 1 }}>
       <ScreenWrapper
         scrollable
         backgroundColor={theme.colors.background.secondary}
@@ -744,7 +697,91 @@ const MachineDealerRegistrationScreen = () => {
           title="Select Location"
         />
       </Modal>
-    </View>
+
+      <BottomSheetModal
+        ref={machineCategorySheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+      >
+        <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4], flex: 1 }}>
+          <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[3] }}>
+            Select Machine Category
+          </Text>
+          <BottomSheetFlatList
+            data={MACHINE_CATEGORY_OPTIONS}
+            keyExtractor={(item: MachineCategoryOption) => item.value}
+            renderItem={renderMachineCategoryItem}
+            contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
+          />
+        </View>
+      </BottomSheetModal>
+
+      <BottomSheetModal
+        ref={machineTypeSheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+      >
+        <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4], flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing[3] }}>
+            <Text variant="h4" fontWeight="semibold" style={{ flex: 1 }}>
+              Select Machine Type
+            </Text>
+            {isLoadingMachines && (
+              <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+            )}
+          </View>
+          <BottomSheetFlatList
+            data={machines}
+            keyExtractor={(item: Machine) => item.id.toString()}
+            renderItem={renderMachineTypeItem}
+            contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
+            ListEmptyComponent={
+              !isLoadingMachines ? (
+                <Text
+                  variant="bodyMedium"
+                  style={{ color: theme.colors.text.tertiary, marginTop: theme.spacing[2] }}
+                >
+                  No machines found for this category.
+                </Text>
+              ) : null
+            }
+          />
+        </View>
+      </BottomSheetModal>
+
+      <BottomSheetModal
+        ref={preferredBrandsSheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+        onDismiss={() => setBrandSearchQuery('')}
+      >
+        <MultiSelectBottomSheetContent
+          title="Select Preferred Brands"
+          searchQuery={brandSearchQuery}
+          onSearchChange={setBrandSearchQuery}
+          items={brandItems}
+          selectedIds={preferredBrandIdsValue || []}
+          onSelect={(id: number) => {
+            const current = preferredBrandIdsValue || [];
+            if (!current.includes(id)) {
+              setValue('preferred_brand_ids', [...current, id], { shouldValidate: true });
+            }
+          }}
+          onDeselect={(id: number) => {
+            const current = preferredBrandIdsValue || [];
+            setValue(
+              'preferred_brand_ids',
+              current.filter((x) => x !== id),
+              { shouldValidate: true },
+            );
+          }}
+          theme={theme}
+          placeholder="Search brands"
+          ListComponent={BottomSheetFlatList}
+        />
+      </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 

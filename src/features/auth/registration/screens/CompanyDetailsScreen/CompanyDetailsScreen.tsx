@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -12,11 +12,15 @@ import { useNavigation } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import RNFS from 'react-native-fs';
 import { State, City, ICity } from 'country-state-city';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { useBottomSheet } from '@shared/components/BottomSheet';
 import { StateSelectionContent } from '@shared/components/StateSelectionContent';
 import { CitySelectionContent } from '@shared/components/CitySelectionContent';
 import { AppIcon } from '@assets/svgs';
@@ -54,7 +58,8 @@ const CompanyDetailsScreen = () => {
   const navigation = useNavigation<CompanyDetailsScreenNavigationProp>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const bottomSheet = useBottomSheet();
+  const stateSheetRef = useRef<BottomSheetModal>(null);
+  const citySheetRef = useRef<BottomSheetModal>(null);
 
   const { isPicking, pickDocument } = useDocumentPicker({
     allowedTypes: [types.images, types.pdf],
@@ -78,67 +83,41 @@ const CompanyDetailsScreen = () => {
   const selectedStateIso = STATE_NAME_TO_ISO[selectedStateName] || '';
 
   const [stateSearchQuery, setStateSearchQuery] = useState('');
-  const [citySearchQuery, setCitySearchQuery] = useState('');
 
-  const handleStateSelect = useCallback((stateName: string) => {
-    bottomSheet.close();
-    InteractionManager.runAfterInteractions(() => {
-      setValue('state', stateName);
-      setValue('city', '');
-      setStateSearchQuery('');
-    });
-  }, [bottomSheet, setValue]);
+  const handleStateSelect = useCallback(
+    (stateName: string) => {
+      stateSheetRef.current?.dismiss();
+      InteractionManager.runAfterInteractions(() => {
+        setValue('state', stateName);
+        setValue('city', '');
+        setStateSearchQuery('');
+      });
+    },
+    [setValue]
+  );
 
-  const handleCitySelect = useCallback((cityName: string) => {
-    bottomSheet.close();
-    InteractionManager.runAfterInteractions(() => {
-      setValue('city', cityName);
-      setCitySearchQuery('');
-    });
-  }, [bottomSheet, setValue]);
+  const handleCitySelect = useCallback(
+    (cityName: string) => {
+      citySheetRef.current?.dismiss();
+      InteractionManager.runAfterInteractions(() => {
+        setValue('city', cityName);
+      });
+    },
+    [setValue]
+  );
 
   const openStateSelector = useCallback(() => {
     setStateSearchQuery('');
-    bottomSheet.open(
-      <StateSelectionContent
-        searchQuery={stateSearchQuery}
-        onSearchChange={setStateSearchQuery}
-        selectedState={selectedStateName}
-        onSelect={handleStateSelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setStateSearchQuery(''),
-      }
-    );
-  }, [bottomSheet, stateSearchQuery, selectedStateName, handleStateSelect, theme]);
+    stateSheetRef.current?.present();
+  }, []);
 
   const openCitySelector = useCallback(() => {
     if (!selectedStateName) {
       Alert.alert('Select State', 'Please select a state first');
       return;
     }
-    setCitySearchQuery('');
-    const citiesForState = getCitiesForState(selectedStateIso);
-    bottomSheet.open(
-      <CitySelectionContent
-        searchQuery={citySearchQuery}
-        onSearchChange={setCitySearchQuery}
-        selectedCity={selectedCityName}
-        selectedStateName={selectedStateName}
-        cities={citiesForState}
-        onSelect={handleCitySelect}
-        theme={theme}
-      />,
-      {
-        snapPoints: ['70%', '95%'],
-        initialSnapIndex: 0,
-        onClose: () => setCitySearchQuery(''),
-      }
-    );
-  }, [bottomSheet, selectedStateName, selectedStateIso, citySearchQuery, selectedCityName, handleCitySelect, theme]);
+    citySheetRef.current?.present();
+  }, [selectedStateName]);
 
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -230,15 +209,19 @@ const CompanyDetailsScreen = () => {
   const isImage = selectedFile?.type?.startsWith('image/');
   const isPdf = selectedFile?.type === 'application/pdf' || selectedFile?.name?.toLowerCase().endsWith('.pdf');
 
+  const citiesForState = getCitiesForState(selectedStateIso);
+
   return (
-    <View style={{ flex: 1 }}>
-      <ScreenWrapper
-        scrollable
-        backgroundColor={theme.colors.background.secondary}
-        safeAreaEdges={[]}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.container}>
+    <BottomSheetModalProvider>
+      <View style={{ flex: 1 }}>
+        <ScreenWrapper
+          scrollable
+          backgroundColor={theme.colors.background.secondary}
+          safeAreaEdges={[]}
+          contentContainerStyle={styles.scrollContent}
+          scrollViewProps={{ keyboardShouldPersistTaps: 'handled' }}
+        >
+          <View style={styles.container}>
           <Card style={styles.card}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
@@ -521,7 +504,39 @@ const CompanyDetailsScreen = () => {
           </View>
         </View>
       </ScreenWrapper>
+
+      <BottomSheetModal
+        ref={stateSheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+        onDismiss={() => setStateSearchQuery('')}
+      >
+        <StateSelectionContent
+          searchQuery={stateSearchQuery}
+          onSearchChange={setStateSearchQuery}
+          selectedState={selectedStateName}
+          onSelect={handleStateSelect}
+          theme={theme}
+          ListComponent={BottomSheetFlatList}
+        />
+      </BottomSheetModal>
+
+      <BottomSheetModal
+        ref={citySheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+      >
+        <CitySelectionContent
+          selectedCity={selectedCityName}
+          selectedStateName={selectedStateName}
+          cities={citiesForState}
+          onSelect={handleCitySelect}
+          theme={theme}
+          ListComponent={BottomSheetFlatList}
+        />
+      </BottomSheetModal>
     </View>
+    </BottomSheetModalProvider>
   );
 };
 

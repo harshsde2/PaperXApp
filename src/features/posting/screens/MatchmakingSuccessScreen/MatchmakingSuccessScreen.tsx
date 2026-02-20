@@ -21,6 +21,8 @@ import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { createStyles } from './styles';
 import { MatchmakingSuccessScreenRouteProp, RequirementDetails } from './@types';
+import { useActiveRole } from '@shared/hooks';
+import { DashboardRole } from '@services/api';
 
 // Satellite/Radar Icon Component
 const SatelliteIcon = ({ color }: { color: string }) => (
@@ -35,7 +37,7 @@ const MatchmakingSuccessScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-
+  const activeRole = useActiveRole() as DashboardRole;
   const { requirementDetails, creditsDeducted } = route.params || {};
 
   // Animation values
@@ -95,7 +97,7 @@ const MatchmakingSuccessScreen = () => {
     createPulseAnimation(pulseAnim1, 0).start();
     createPulseAnimation(pulseAnim2, 1000).start();
     dotAnimation.start();
-    
+
     Animated.parallel([fadeInAnimation, slideUpAnimation]).start();
 
     return () => {
@@ -113,10 +115,18 @@ const MatchmakingSuccessScreen = () => {
 
   const handleViewActiveSession = useCallback(() => {
     // Navigate to sessions dashboard
-    navigation.navigate(SCREENS.SESSIONS.DASHBOARD, {
-      initialTab: 'all',
-    });
-  }, [navigation]);
+
+    if (activeRole === 'dealer' || activeRole === 'machine-dealer') {
+      navigation.navigate(SCREENS.MAIN.TABS, {
+        screen: SCREENS.MAIN.SESSIONS,
+      });
+    } else {
+      // Fallback for converter/brand - go to Dashboard or Home
+      navigation.navigate(SCREENS.MAIN.TABS, {
+        screen: activeRole === 'converter' || activeRole === 'brand' ? SCREENS.MAIN.HOME : SCREENS.MAIN.DASHBOARD,
+      });
+    }
+  }, [navigation, activeRole]);
 
   const handleReturnToDashboard = useCallback(() => {
     navigation.navigate(SCREENS.MAIN.TABS, {
@@ -184,8 +194,8 @@ const MatchmakingSuccessScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Close Button */}
-        <TouchableOpacity 
-          style={[styles.closeButton, { top: insets.top + theme.spacing[2] }]} 
+        <TouchableOpacity
+          style={[styles.closeButton, { top: insets.top + theme.spacing[2] }]}
           onPress={handleClose}
         >
           <AppIcon.Close width={20} height={20} color={theme.colors.text.tertiary} />
@@ -197,12 +207,12 @@ const MatchmakingSuccessScreen = () => {
             {/* Pulse Rings */}
             <Animated.View style={[styles.pulseRing, pulseStyle1]} />
             <Animated.View style={[styles.pulseRing, pulseStyle2]} />
-            
+
             {/* Static Rings */}
             <View style={styles.radarOuter} />
             <View style={styles.radarMiddle} />
             <View style={styles.radarInner} />
-            
+
             {/* Center Icon */}
             <Animated.View style={[styles.radarCenter, { transform: [{ rotate: dotRotation }] }]}>
               <SatelliteIcon color={theme.colors.primary.DEFAULT} />
@@ -235,9 +245,9 @@ const MatchmakingSuccessScreen = () => {
           <View style={styles.requirementCard}>
             <View style={styles.requirementHeader}>
               {displayDetails.imageUrl ? (
-                <Image 
-                  source={{ uri: displayDetails.imageUrl }} 
-                  style={styles.requirementImage} 
+                <Image
+                  source={{ uri: displayDetails.imageUrl }}
+                  style={styles.requirementImage}
                 />
               ) : (
                 <View style={styles.requirementImagePlaceholder}>

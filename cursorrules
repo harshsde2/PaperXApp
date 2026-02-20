@@ -1,0 +1,351 @@
+# PaperX App - Cursor IDE Rules
+
+## ⛔ CRITICAL STOP & CHECK - READ BEFORE WRITING ANY CODE
+
+**BEFORE writing ANY code, ASK YOURSELF:**
+
+1. ❓ Am I creating a new component (even a small one like `ListItem`, `Card`, `Row`)?
+   → **YES** = Create a NEW FOLDER in `components/` with `index.tsx`, `@types.ts`, `styles.ts`
+   → **NO inline components allowed - not even 5 lines!**
+
+2. ❓ Am I defining a type, interface, or enum?
+   → **YES** = Put it in `@types.ts`, NEVER in the main file
+
+3. ❓ Am I writing StyleSheet.create() or any styles?
+   → **YES** = Put it in `styles.ts`, NEVER in the main file
+
+4. ❓ Am I writing `const SomeComponent = memo(...)` or `const SomeComponent = () => ...`?
+   → **YES** = This is a COMPONENT! Create a separate folder for it!
+
+**IF YOU VIOLATE THESE RULES, THE CODE WILL BE REJECTED.**
+
+---
+
+## 📁 File and Folder Structure
+
+### Screens
+- Every screen MUST be in its own folder
+- Folder structure: `ScreenName/`
+  - `ScreenName.tsx` - Main screen component (ONLY the screen component, nothing else)
+  - `@types.ts` - All TypeScript types, interfaces, and enums for this screen
+  - `styles.ts` - All StyleSheet styles for this screen
+- **ABSOLUTELY NO** inline types, styles, or sub-components in the main screen file
+- Example structure:
+  ```
+  screens/
+    LoginScreen/
+      LoginScreen.tsx
+      @types.ts
+      styles.ts
+  ```
+
+### Components
+- **EVERY component MUST be in its own folder - NO EXCEPTIONS**
+- **This includes**: List items, cards, rows, buttons, wrappers, content components, EVERYTHING
+- Even if the component is only used in ONE place, it gets its own folder
+- Folder structure: `ComponentName/`
+  - `index.tsx` - Main component file (always named index.tsx)
+  - `@types.ts` - All TypeScript types, interfaces, and enums for this component
+  - `styles.ts` - All StyleSheet styles for this component
+- **ABSOLUTELY NO** inline types or styles in the main component file
+- Example structure:
+  ```
+  components/
+    Button/
+      index.tsx
+      @types.ts
+      styles.ts
+    StateListItem/
+      index.tsx
+      @types.ts
+      styles.ts
+    CitySelector/
+      index.tsx
+      @types.ts
+      styles.ts
+  ```
+
+### ❌ WRONG - Never Do This:
+```tsx
+// ❌ WRONG: Defining component inside another file
+const ListItem = memo(({ item }) => (
+  <TouchableOpacity>...</TouchableOpacity>
+));
+
+const MyScreen = () => {
+  return <ListItem item={data} />;
+};
+```
+
+### ✅ CORRECT - Always Do This:
+```tsx
+// ✅ Create: components/ListItem/index.tsx
+import { ListItemProps } from './@types';
+import { styles } from './styles';
+
+export const ListItem = memo(({ item }: ListItemProps) => (
+  <TouchableOpacity style={styles.container}>...</TouchableOpacity>
+));
+
+// ✅ In your screen, import it:
+import { ListItem } from '@shared/components/ListItem';
+```
+
+### Screen Constants
+- All screen names MUST be defined in constants and used everywhere
+- Create a `constants.ts` or `routes.ts` file in navigation folder
+- Use constants instead of string literals for navigation
+- Example:
+  ```typescript
+  export const SCREENS = {
+    AUTH: {
+      LOGIN: 'Login',
+      SIGNUP: 'Signup',
+      OTP_VERIFICATION: 'OTPVerification',
+    },
+    // ...
+  } as const;
+  ```
+
+## 📂 Project Structure Compliance
+
+- Follow the established directory structure from `docs/PROJECT_DIRECTORY_STRUCTURE.md`
+- Feature-based architecture: Organize code by features (`auth`, `posting`, `chat`, etc.)
+- Shared code goes in `src/shared/`
+- Services go in `src/services/`
+- Use path aliases: `@features`, `@shared`, `@navigation`, `@store`, `@services`, `@theme`, `@assets`
+
+## 🚫 Code Organization Rules - STRICTLY ENFORCED
+
+### Type Definitions
+- **ZERO** type definitions, interfaces, or enums in main component/screen files
+- All types MUST be in separate `@types.ts` file
+- Export types from `@types.ts` and import in main file
+- Shared types go in `src/shared/types/`
+
+### Style Definitions
+- **ZERO** StyleSheet.create() calls in main component/screen files
+- All styles MUST be in separate `styles.ts` file
+- Export styles from `styles.ts` and import in main file
+
+### Component Definitions
+- **ZERO** component definitions inside main screen files
+- A component is ANYTHING that:
+  - Uses `memo()`
+  - Uses `React.FC`
+  - Is a function that returns JSX
+  - Has props
+- **EVERY** such component needs its own folder
+
+### Main File Content - ONLY THESE ARE ALLOWED:
+- Main files (ScreenName.tsx or index.tsx) should ONLY contain:
+  - ✅ Imports
+  - ✅ ONE default export component (the screen/component itself)
+  - ✅ Hooks usage (useState, useEffect, useCallback, etc.)
+  - ✅ Handler functions (handleSubmit, handlePress, etc.)
+  - ✅ JSX return statement
+  
+### Main File Content - THESE ARE FORBIDDEN:
+- ❌ `type` or `interface` definitions
+- ❌ `const SomeComponent = () => ...` (sub-components)
+- ❌ `const SomeComponent = memo(...)` (memoized components)
+- ❌ `StyleSheet.create()`
+- ❌ Inline style objects (except for truly dynamic styles like `{ width: dynamicValue }`)
+- ❌ Helper components (ListItem, Row, Card, etc.)
+
+## 🤖 Agent Mode Guidelines
+
+When in Agent Mode, ALWAYS provide clear descriptions before implementing or changing any file or line:
+
+### Before Making Changes:
+1. **WHAT**: Clearly describe what you're going to do
+   - What file(s) will be created/modified?
+   - What functionality will be added/changed?
+
+2. **WHY**: Explain the reasoning
+   - Why is this change necessary?
+   - What problem does it solve?
+   - What is the business/technical reason?
+
+3. **HOW**: Describe the implementation approach
+   - How will you implement it?
+   - What patterns/approaches will you use?
+   - Are there any dependencies or prerequisites?
+
+### Example Format:
+```
+## Change: Add Login Screen
+
+**WHAT**: Creating LoginScreen folder with LoginScreen.tsx, @types.ts, and styles.ts files
+
+**WHY**: User needs to authenticate via OTP. This screen is the entry point for authenticated users.
+
+**HOW**: 
+- Create LoginScreen/ folder structure following project conventions
+- Extract types to @types.ts (navigation props, state types)
+- Extract styles to styles.ts
+- Implement mobile number input with validation
+- Navigate to OTP screen on submit
+```
+
+## 📝 TypeScript Best Practices
+
+- Use TypeScript for all files (`.ts` or `.tsx`)
+- Use strict type checking
+- Define types in `@types.ts` files, not inline
+- Use `interface` for object shapes, `type` for unions/intersections
+- Use `as const` for immutable constants
+- Prefer `const` assertions for readonly arrays/objects
+- Use utility types (Pick, Omit, Partial, etc.) when appropriate
+
+## 🎨 React Native Best Practices
+
+- Use functional components with hooks
+- Extract custom hooks to `hooks/` folder
+- Use React Query (`@tanstack/react-query`) for API data fetching
+- Use Redux Toolkit for global state management
+- Use MMKV for persistent storage (auth tokens, user data only)
+- Follow React Native naming conventions (PascalCase for components)
+
+## 🔄 State Management
+
+- **Redux Toolkit**: Global app state (auth, roles, UI state)
+- **React Query**: Server state (API data, caching)
+- **MMKV**: Persistent storage (auth tokens, user preferences)
+- **Local State (useState)**: Component-specific state only
+
+## 🚨 Code Quality Standards
+
+### Imports
+- Group imports: external libraries → internal modules → relative imports
+- Use path aliases (`@features`, `@shared`, etc.)
+- Sort imports alphabetically within groups
+
+### Naming Conventions
+- Components/Screens: PascalCase (`LoginScreen`, `Button`)
+- Files: Match component name (`LoginScreen.tsx`, `Button/index.tsx`)
+- Types/Interfaces: PascalCase (`LoginProps`, `UserData`)
+- Functions/Variables: camelCase (`handleSubmit`, `userName`)
+- Constants: UPPER_SNAKE_CASE (`API_BASE_URL`, `MAX_RETRIES`)
+- Screen constants: Use SCREENS object with nested structure
+
+### Error Handling
+- Always handle errors in API calls
+- Use try-catch for async operations
+- Provide user-friendly error messages
+- Log errors for debugging (console.error in development)
+
+### Performance
+- Memoize expensive computations with `useMemo`
+- Memoize callbacks with `useCallback` when passing to child components
+- Use `React.memo` for components that re-render frequently
+- Follow React Query best practices (appropriate staleTime, gcTime)
+
+## 🧪 Testing Considerations
+
+- Write testable code (pure functions where possible)
+- Extract business logic from components
+- Use dependency injection for API services
+- Keep components focused and single-responsibility
+
+## 📚 Documentation
+
+- Add JSDoc comments for complex functions
+- Document props in `@types.ts` files
+- Keep README.md updated
+- Document architectural decisions in code comments when necessary
+
+## 🔐 Security Best Practices
+
+- Never commit sensitive data (tokens, keys, passwords)
+- Use environment variables for API endpoints
+- Validate and sanitize user inputs
+- Use secure storage (MMKV with encryption) for sensitive data
+- Follow authentication best practices (token refresh, secure storage)
+
+## 🎯 Specific Project Rules
+
+### Caching Strategy
+- DO NOT persist React Query cache to storage
+- Use React Query in-memory caching only
+- Use MMKV ONLY for auth tokens and user preferences
+- For time-sensitive data (sessions, matches), set `staleTime: 0` and `gcTime: 0`
+
+### Navigation
+- Use screen constants from navigation constants file
+- Never use string literals for navigation
+- Type navigation props properly in `@types.ts`
+
+### API Integration
+- Use Axios instance from `@services/api/client`
+- Use React Query hooks for API calls
+- Handle errors in mutation/query `onError` callbacks
+- Use typed API responses from `@services/api/types`
+
+### Styling
+- Extract all styles to `styles.ts` files
+- **MUST use theme system - NEVER use hardcoded color values or direct imports from `@theme/tokens/base`**
+- Use `createStyles(theme)` function pattern that accepts theme as parameter
+- Use `useTheme()` hook in components and pass theme to `createStyles()`
+- Import theme from `@theme/index`: `import { useTheme } from '@theme/index';`
+- Export `createStyles` function from `styles.ts`: `export const createStyles = (theme: Theme) => StyleSheet.create({...});`
+- In component: `const theme = useTheme(); const styles = createStyles(theme);`
+- Use theme colors: `theme.colors.primary.DEFAULT`, `theme.colors.text.primary`, `theme.colors.background.secondary`, etc.
+- Use theme spacing: `theme.spacing[4]`, `theme.spacing[6]`, etc.
+- Use theme borderRadius: `theme.borderRadius.lg`, `theme.borderRadius.md`, etc.
+- Use theme fontFamily: `theme.fontFamily.regular`, `theme.fontFamily.medium`, etc.
+- NEVER import from `@theme/tokens/base` - always use theme object from `useTheme()` hook
+- Prefer Flexbox for layout
+- Use responsive dimensions where appropriate
+
+## ✅ Code Review Checklist - MANDATORY BEFORE EVERY CHANGE
+
+Before writing ANY code, verify:
+- [ ] **NO** sub-components defined in main file (check for `const X = memo(` or `const X = () =>`)
+- [ ] **NO** types/interfaces in main file (check for `type X =` or `interface X`)
+- [ ] **NO** StyleSheet in main file (check for `StyleSheet.create`)
+- [ ] All types are in `@types.ts` file
+- [ ] All styles are in `styles.ts` file
+- [ ] All components have their own folder with index.tsx, @types.ts, styles.ts
+- [ ] Screen names use constants, not string literals
+- [ ] Imports use path aliases (@shared, @features, etc.)
+- [ ] No unnecessary comments - clean code only
+
+## 🛑 AGENT MODE - MANDATORY COMPONENT CHECK
+
+When creating ANY new component (even small ones):
+
+### Step 1: STOP and identify
+Ask: "Am I creating something that returns JSX?"
+- If YES → It's a component → Create a folder for it
+
+### Step 2: Create the folder structure
+```
+ComponentName/
+  index.tsx      ← Component logic and JSX
+  @types.ts      ← Props and types
+  styles.ts      ← All styles
+```
+
+### Step 3: Never write this pattern
+```tsx
+// ❌ FORBIDDEN - This is an inline component
+const ItemRow = ({ item }) => <View>...</View>;
+
+// ❌ FORBIDDEN - This is a memoized inline component  
+const ItemRow = memo(({ item }) => <View>...</View>);
+```
+
+### Step 4: Always write this pattern
+```tsx
+// ✅ CORRECT - Import from separate component folder
+import { ItemRow } from '@shared/components/ItemRow';
+```
+
+## 🎓 Remember
+
+- **ZERO TOLERANCE**: No inline components, types, or styles
+- **When in doubt**: Create a separate folder - it's always the right choice
+- **Consistency > Convenience**: A few extra files is better than messy code
+- **Agent mode**: ALWAYS check the rules BEFORE writing code, not after
+

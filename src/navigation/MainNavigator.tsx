@@ -24,6 +24,7 @@ import {
 } from '@features/sessions';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { SCREENS } from './constants';
+import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
@@ -32,6 +33,7 @@ export type MainStackParamList = {
   PostToBuy: { intent?: 'buy' | 'sell' } | undefined;
   PostBrandRequirement: undefined;
   Requirements: undefined;
+  MarketScreen: undefined;
   PaymentConfirmation: {
     listingDetails: {
       id?: string;
@@ -100,38 +102,47 @@ const MainNavigator = () => {
         cardStyle: { backgroundColor: '#FFFFFF' },
       }}
     >
-      <Stack.Screen 
-        name={SCREENS.MAIN.TABS} 
+      <Stack.Screen
+        name={SCREENS.MAIN.TABS}
         component={BottomTabNavigator}
         options={{
           headerShown: false,
+          gestureEnabled: false,
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.PROFILE} 
+      <Stack.Screen
+        name={SCREENS.MAIN.PROFILE}
         component={ProfileScreen}
         options={{
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.POST} 
+      <Stack.Screen
+        name={SCREENS.MAIN.POST}
         component={PostRequirementOptionsScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_bottom',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.POST_TO_BUY} 
+      <Stack.Screen
+        name={SCREENS.MAIN.POST_TO_BUY}
         component={PostToBuyScreen}
         options={{
           headerShown: true,
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.POST_TO_SELL_MACHINE} 
+      <Stack.Screen
+        name={SCREENS.MAIN.MARKET_INSIGHT}
+        component={MarketScreen}
+        options={{
+          headerShown: true,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.POST_TO_SELL_MACHINE}
         component={PostToSellMachineScreen}
         options={{
           headerShown: true,
@@ -139,8 +150,8 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.POST_TO_BUY_MACHINE} 
+      <Stack.Screen
+        name={SCREENS.MAIN.POST_TO_BUY_MACHINE}
         component={PostToBuyMachineScreen}
         options={{
           headerShown: true,
@@ -148,8 +159,8 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.POST_BRAND_REQUIREMENT} 
+      <Stack.Screen
+        name={SCREENS.MAIN.POST_BRAND_REQUIREMENT}
         component={PostBrandRequirementScreen}
         options={{
           headerShown: true,
@@ -157,8 +168,8 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.REQUIREMENTS} 
+      <Stack.Screen
+        name={SCREENS.MAIN.REQUIREMENTS}
         component={RequirementsListScreen}
         options={{
           headerShown: true,
@@ -166,16 +177,17 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.PAYMENT_CONFIRMATION} 
+      <Stack.Screen
+        name={SCREENS.MAIN.PAYMENT_CONFIRMATION}
         component={PaymentConfirmationScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',
+          gestureEnabled: false,
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.MAIN.MATCHMAKING_SUCCESS} 
+      <Stack.Screen
+        name={SCREENS.MAIN.MATCHMAKING_SUCCESS}
         component={MatchmakingSuccessScreen}
         options={{
           headerShown: false,
@@ -184,8 +196,8 @@ const MainNavigator = () => {
         }}
       />
       {/* Wallet Screens */}
-      <Stack.Screen 
-        name={SCREENS.WALLET.MAIN} 
+      <Stack.Screen
+        name={SCREENS.WALLET.MAIN}
         component={WalletScreen}
         options={{
           headerShown: true,
@@ -193,8 +205,8 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.WALLET.CREDIT_PACKS} 
+      <Stack.Screen
+        name={SCREENS.WALLET.CREDIT_PACKS}
         component={CreditPacksScreen}
         options={{
           headerShown: true,
@@ -202,8 +214,8 @@ const MainNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.WALLET.TRANSACTION_HISTORY} 
+      <Stack.Screen
+        name={SCREENS.WALLET.TRANSACTION_HISTORY}
         component={TransactionHistoryScreen}
         options={{
           headerShown: true,
@@ -212,40 +224,40 @@ const MainNavigator = () => {
         }}
       />
       {/* Session Screens */}
-      <Stack.Screen 
-        name={SCREENS.SESSIONS.DASHBOARD} 
+      <Stack.Screen
+        name={SCREENS.SESSIONS.DASHBOARD}
         component={SessionDashboardScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.SESSIONS.DETAILS} 
+      <Stack.Screen
+        name={SCREENS.SESSIONS.DETAILS}
         component={SessionDetailsScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.SESSIONS.RESPONDER_DETAILS} 
+      <Stack.Screen
+        name={SCREENS.SESSIONS.RESPONDER_DETAILS}
         component={ResponderDetailsScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.SESSIONS.LOCKED} 
+      <Stack.Screen
+        name={SCREENS.SESSIONS.LOCKED}
         component={SessionLockedScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen 
-        name={SCREENS.SESSIONS.CHAT} 
+      <Stack.Screen
+        name={SCREENS.SESSIONS.CHAT}
         component={SessionChatScreen}
         options={{
           headerShown: false,

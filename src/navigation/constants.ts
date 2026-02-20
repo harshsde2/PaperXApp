@@ -32,6 +32,7 @@ export const SCREENS = {
     MARKET: 'Market',
     SETTINGS: 'Settings',
     INQUIRIES: 'Inquiries',
+    MARKET_INSIGHT: 'MarketScreen',
     CAPACITY: 'Capacity',
     SESSIONS: 'Sessions',
     PROFILE: 'Profile',
@@ -76,9 +77,11 @@ export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: 
   ],
   converter: [
     { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },
-    { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
+    { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
+    // { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
     { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
-    { name: SCREENS.MAIN.CAPACITY, label: 'Capacity', icon: 'Capacity' },
+    { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
+    // { name: SCREENS.MAIN.CAPACITY, label: 'Capacity', icon: 'Capacity' },
   ],
   brand: [
     { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },

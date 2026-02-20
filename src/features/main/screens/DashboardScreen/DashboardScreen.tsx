@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, ActivityIndicator, BackHandler } from 'react-native';
 import { useAppSelector } from '@store/hooks';
 import { useGetProfile, useGetDashboard } from '@services/api';
 import type { DashboardRole } from '@services/api';
@@ -13,9 +13,10 @@ import { BrandDashboardView } from './components/BrandDashboardView';
 import { MachineDealerDashboardView } from './components/MachineDealerDashboardView';
 import { DashboardHeader } from './components/DashboardHeader';
 import { styles } from './styles';
+import { useFocusEffect } from '@react-navigation/native';
 
 const DashboardScreen = () => {
-  const { user ,token} = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const {
     data: profileData,
     isLoading: isProfileLoading,
@@ -78,6 +79,13 @@ const DashboardScreen = () => {
   if (!hasGstIn) incompleteFields.push('GSTIN');
   if (!hasState || !hasCity) incompleteFields.push('Location');
   if (!hasPrimaryRole) incompleteFields.push('Primary Role');
+
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () => subscription.remove();
+    }, [])
+  );
 
   // Loading state
   if (isLoading) {

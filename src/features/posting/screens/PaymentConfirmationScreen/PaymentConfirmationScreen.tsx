@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
@@ -111,11 +111,32 @@ const PaymentConfirmationScreen = () => {
     [queryClient]
   );
 
+  const navigateToMatchmakingSuccess = useCallback(
+    (reqDetails: any, credits: number) => {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: SCREENS.MAIN.TABS },
+            {
+              name: SCREENS.MAIN.MATCHMAKING_SUCCESS,
+              params: {
+                requirementDetails: reqDetails,
+                creditsDeducted: credits,
+              },
+            },
+          ],
+        })
+      );
+    },
+    [navigation]
+  );
+
   // Calculate costs
   const costBreakdown = useMemo(() => {
     const standardFee = POSTING_COSTS.STANDARD_FEE;
-    const urgencyBoost = listingDetails?.urgency?.toLowerCase().includes('urgent') 
-      ? POSTING_COSTS.URGENCY_BOOST 
+    const urgencyBoost = listingDetails?.urgency?.toLowerCase().includes('urgent')
+      ? POSTING_COSTS.URGENCY_BOOST
       : 0;
     const subtotal = standardFee + urgencyBoost;
     const vat = Math.round((subtotal * POSTING_COSTS.VAT_PERCENTAGE) / 100);
@@ -207,15 +228,15 @@ const PaymentConfirmationScreen = () => {
             onSuccess: () => {
               setIsProcessing(false);
               // Navigate to success screen
-              navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
-                requirementDetails: {
+              navigateToMatchmakingSuccess(
+                {
                   id: referenceId,
                   materialName: listingDetails?.materialName || 'Requirement',
                   quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
                   deadline: getDeadlineDate(listingDetails?.urgency),
                 },
-                creditsDeducted: costBreakdown.total,
-              });
+                costBreakdown.total
+              );
             },
             onError: (error: any) => {
               setIsProcessing(false);
@@ -318,14 +339,14 @@ const PaymentConfirmationScreen = () => {
               </Text>
               <View style={styles.tagsContainer}>
                 {displayDetails.tags.map((tag, index) => (
-                  <View 
-                    key={index} 
+                  <View
+                    key={index}
                     style={[
                       styles.tag,
                       tag.toLowerCase() === 'urgent' && styles.tagUrgent,
                     ]}
                   >
-                    <Text 
+                    <Text
                       style={[
                         styles.tagText,
                         tag.toLowerCase() === 'urgent' && styles.tagTextUrgent,
@@ -344,7 +365,7 @@ const PaymentConfirmationScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Payment Method</Text>
         </View>
-        
+
         <View style={styles.walletCardWrapper}>
           <View style={styles.walletCard}>
             {/* Gradient Background using Skia */}
@@ -404,14 +425,14 @@ const PaymentConfirmationScreen = () => {
               <Text style={styles.costLabel}>Standard Posting Fee</Text>
               <Text style={styles.costValue}>{costBreakdown.standardFee} Credits</Text>
             </View>
-            
+
             {costBreakdown.urgencyBoost > 0 && (
               <View style={[styles.costRow, styles.costRowBorder]}>
                 <Text style={styles.costLabel}>Urgency Boost (7-Day)</Text>
                 <Text style={styles.costValue}>{costBreakdown.urgencyBoost} Credits</Text>
               </View>
             )}
-            
+
             <View style={[styles.costRow, styles.costRowBorder]}>
               <Text style={styles.costLabel}>VAT ({POSTING_COSTS.VAT_PERCENTAGE}%)</Text>
               <Text style={styles.costValue}>{costBreakdown.vat} Credits</Text>

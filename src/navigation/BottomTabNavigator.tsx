@@ -284,6 +284,7 @@ const BottomTabNavigator: React.FC = () => {
       {tabConfig.map((tab) => (
         <Tab.Screen
           key={tab.name}
+        
           name={tab.name as keyof BottomTabParamList}
           component={getScreenComponent(tab.name)}
         />

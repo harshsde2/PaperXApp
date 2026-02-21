@@ -127,6 +127,21 @@ export const queryKeys = {
       [...queryKeys.converter.all, 'material-requests', params] as const,
   },
 
+  // Converter RTD (Ready-to-Dispatch) - converter only
+  converterRtd: {
+    all: ['converter-rtd'] as const,
+    myProducts: (params?: Record<string, any>) =>
+      [...queryKeys.converterRtd.all, 'products', params] as const,
+    productDetail: (id: number | string) =>
+      [...queryKeys.converterRtd.all, 'product', id] as const,
+    orders: (params?: Record<string, any>) =>
+      [...queryKeys.converterRtd.all, 'orders', params] as const,
+    ordersInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.converterRtd.all, 'orders', 'infinite', params] as const,
+    orderDetail: (id: number | string) =>
+      [...queryKeys.converterRtd.all, 'order', id] as const,
+  },
+
   // Brand
   brand: {
     all: ['brand'] as const,
@@ -139,6 +154,21 @@ export const queryKeys = {
       [...queryKeys.brand.all, 'sessions', params] as const,
     sessionDetail: (id: number | string) =>
       [...queryKeys.brand.all, 'sessions', id] as const,
+  },
+
+  // Brand RTD (Ready-to-Dispatch) - brand browsing & ordering
+  brandRtd: {
+    all: ['brand-rtd'] as const,
+    catalog: (params?: Record<string, any>) =>
+      [...queryKeys.brandRtd.all, 'catalog', params] as const,
+    catalogInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.brandRtd.all, 'catalog', 'infinite', params] as const,
+    orders: (params?: Record<string, any>) =>
+      [...queryKeys.brandRtd.all, 'orders', params] as const,
+    ordersInfinite: (params?: Record<string, any>) =>
+      [...queryKeys.brandRtd.all, 'orders', 'infinite', params] as const,
+    orderDetail: (id: number | string) =>
+      [...queryKeys.brandRtd.all, 'order', id] as const,
   },
 
   // Posts

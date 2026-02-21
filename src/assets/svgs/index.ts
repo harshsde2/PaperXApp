@@ -48,6 +48,10 @@ import Profile from './Profile.svg';
 import AppLogo from './AppLogo.svg';
 import Satellite from './Satellite.svg';
 import ZupplyMainLogo from './ZupplyMainLogo.svg';
+import PlusCircle from './PlusCircle.svg';
+import Order from './Order.svg';
+import Pause from './Pause.svg';
+import Play from './Play.svg';
 
 
 
@@ -102,4 +106,8 @@ export const AppIcon = {
   AppLogo,
   Satellite,
   ZupplyMainLogo,
+  PlusCircle,
+  Order,
+  Pause,
+  Play,
 };

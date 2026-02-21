@@ -65,6 +65,14 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
     } else if(intent === 'sell') {
       mainName = 'Post to Sell';
     }
+  } else if(route?.name === SCREENS.CONVERTER_RTD.LISTING) {
+    mainName = 'ReadyToDispatch';
+  } else if(route?.name === SCREENS.CONVERTER_RTD.ADD_PRODUCT) {
+    mainName = 'AddReadyProduct';
+  } else if(route?.name === SCREENS.CONVERTER_RTD.MY_PRODUCTS) {
+    mainName = 'MyProducts';
+  } else if(route?.name === SCREENS.CONVERTER_RTD.ORDER_HISTORY) {
+    mainName = 'OrderHistory';
   }
 
   const displayTitle = title || (mainName ? formatScreenTitle(mainName) : '');

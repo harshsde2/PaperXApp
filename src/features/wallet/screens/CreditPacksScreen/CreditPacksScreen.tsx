@@ -86,7 +86,13 @@ const CreditPacksScreen = () => {
   const dispatch = useAppDispatch();
 
   const { data: wallet } = useGetWalletBalance();
-  const { data: creditPacks, isLoading: packsLoading } = useGetCreditPacks();
+  const {
+    data: creditPacks,
+    isLoading: packsLoading,
+    isError: packsError,
+    error: packsErrorMessage,
+    refetch: refetchPacks,
+  } = useGetCreditPacks();
   const { mutate: purchaseCredits, isPending: purchasing } = usePurchaseCredits();
 
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
@@ -210,6 +216,29 @@ const CreditPacksScreen = () => {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={DARK_THEME.tiers.growth.primary} />
           <Text style={styles.loadingText}>Loading credit packs...</Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  if (packsError) {
+    const err = packsErrorMessage as { response?: { status?: number; data?: { message?: string } }; message?: string };
+    const message =
+      err?.response?.status === 401
+        ? 'Please log in to view credit packs.'
+        : err?.response?.data?.message || err?.message || 'Could not load credit packs. Tap Retry.';
+    return (
+      <ScreenWrapper safeAreaEdges={['top']} backgroundColor={DARK_THEME.background}>
+        <StatusBar barStyle="light-content" backgroundColor={DARK_THEME.background} />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>{message}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => refetchPacks()}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </ScreenWrapper>
     );

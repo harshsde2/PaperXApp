@@ -22,6 +22,20 @@ import {
   SessionLockedScreen,
   SessionChatScreen,
 } from '@features/sessions';
+import {
+  ConverterRTDListingScreen,
+  ConverterRTDAddProductScreen,
+  ConverterRTDMyProductsScreen,
+  RTDOrderHistoryScreen,
+  RTDOrderDetailScreen,
+} from '@features/converter/rtd';
+import {
+  BrandRTDMarketplaceScreen,
+  BrandRTDProductDetailScreen,
+  BrandRTDRequestOrderScreen,
+  BrandRTDOrderDetailScreen,
+  BrandRTDMyOrdersScreen,
+} from '@features/brand/rtd';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { SCREENS } from './constants';
 import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
@@ -89,6 +103,18 @@ export type MainStackParamList = {
     partnerName: string;
     inquiryRef?: string;
   };
+  // Converter RTD
+  ConverterRTDListing: undefined;
+  ConverterRTDAddProduct: { productId?: number } | undefined;
+  ConverterRTDMyProducts: undefined;
+  ConverterRTDOrderHistory: undefined;
+  ConverterRTDOrderDetail: { orderId: number | string };
+  // Brand RTD
+  BrandRTDMarketplace: undefined;
+  BrandRTDProductDetail: { productId: number };
+  BrandRTDRequestOrder: { productId: number; quantity?: number };
+  BrandRTDOrderDetail: { orderId: number | string };
+  BrandRTDMyOrders: undefined;
 };
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -114,6 +140,7 @@ const MainNavigator = () => {
         name={SCREENS.MAIN.PROFILE}
         component={ProfileScreen}
         options={{
+          headerShown: true,
           animation: 'slide_from_right',
         }}
       />
@@ -261,6 +288,97 @@ const MainNavigator = () => {
         component={SessionChatScreen}
         options={{
           headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      {/* Converter RTD (Ready-to-Dispatch) - converter only */}
+      <Stack.Screen
+        name={SCREENS.CONVERTER_RTD.LISTING}
+        component={ConverterRTDListingScreen}
+        options={{
+          headerShown: true,
+          title: 'Ready-to-Dispatch',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.CONVERTER_RTD.ADD_PRODUCT}
+        component={ConverterRTDAddProductScreen}
+        options={{
+          headerShown: true,
+          title: 'Add Ready Product',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.CONVERTER_RTD.MY_PRODUCTS}
+        component={ConverterRTDMyProductsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.CONVERTER_RTD.ORDER_HISTORY}
+        component={RTDOrderHistoryScreen}
+        options={{
+          headerShown: true,
+          title: 'Order History',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.CONVERTER_RTD.ORDER_DETAIL}
+        component={RTDOrderDetailScreen}
+        options={{
+          headerShown: true,
+          title: 'Order Details',
+          animation: 'slide_from_right',
+        }}
+      />
+      {/* Brand RTD (Ready-to-Dispatch) - brand browsing & ordering */}
+      <Stack.Screen
+        name={SCREENS.BRAND_RTD.MARKETPLACE}
+        component={BrandRTDMarketplaceScreen}
+        options={{
+          headerShown: true,
+          title: 'RTD Marketplace',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.BRAND_RTD.PRODUCT_DETAIL}
+        component={BrandRTDProductDetailScreen}
+        options={{
+          headerShown: true,
+          title: 'Product Details',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.BRAND_RTD.REQUEST_ORDER}
+        component={BrandRTDRequestOrderScreen}
+        options={{
+          headerShown: true,
+          title: 'Request Order',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.BRAND_RTD.ORDER_DETAIL}
+        component={BrandRTDOrderDetailScreen}
+        options={{
+          headerShown: true,
+          title: 'Order Status',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.BRAND_RTD.MY_ORDERS}
+        component={BrandRTDMyOrdersScreen}
+        options={{
+          headerShown: true,
+          title: 'My RTD Orders',
           animation: 'slide_from_right',
         }}
       />

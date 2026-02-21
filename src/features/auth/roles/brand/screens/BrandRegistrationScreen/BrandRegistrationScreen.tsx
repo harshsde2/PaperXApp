@@ -888,11 +888,17 @@ const BrandRegistrationScreen = () => {
         return;
       }
 
-      // Prepare API request data
+      // Prepare API request data (backend requires brands.name; send brand_name or fallback to company_name)
+      const companyName =
+        companyNameValue?.trim() || profileData?.company_name || '';
+      const brandName =
+        brandNameValue?.trim() ||
+        profileData?.brand_name ||
+        companyName ||
+        '';
       const apiData = {
-        company_name:
-          companyNameValue?.trim() || profileData?.company_name || '',
-        brand_name: brandNameValue?.trim() || profileData?.brand_name || '',
+        company_name: companyName,
+        brand_name: brandName,
         contact_person_name: contactPersonNameValue?.trim() || '',
         mobile: mobileValue?.replace(/\D/g, '') || profileData?.mobile || '',
         email: emailValue?.trim() || profileData?.email || '',

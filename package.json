@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "ios": "react-native run-ios --simulator=\"iPhone 17 Pro\"",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
@@ -30,6 +30,7 @@
     "react-native-fs": "^2.20.0",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "^2.30.0",
+    "react-native-image-picker": "^8.2.1",
     "react-native-maps": "^1.26.20",
     "react-native-mmkv": "^4.1.0",
     "react-native-nitro-modules": "^0.32.0",

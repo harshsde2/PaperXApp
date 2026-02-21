@@ -228,6 +228,30 @@ export const SESSION_ENDPOINTS = {
   CHAT_LIST: `${API_VERSION}/sessions/chat-list`,
 } as const;
 
+// RTD (Ready-to-Dispatch) Endpoints
+export const RTD_ENDPOINTS = {
+  // Products (Converter)
+  PRODUCTS_MY: `${API_VERSION}/rtd/products/my`,
+  PRODUCTS_CATALOG: `${API_VERSION}/rtd/products/catalog`,
+  PRODUCT_DETAIL: (id: number | string) => `${API_VERSION}/rtd/products/${id}`,
+  PRODUCT_STORE: `${API_VERSION}/rtd/products`,
+  PRODUCT_UPDATE: (id: number | string) => `${API_VERSION}/rtd/products/${id}`,
+  PRODUCT_PAUSE: (id: number | string) => `${API_VERSION}/rtd/products/${id}/pause`,
+  PRODUCT_RESUME: (id: number | string) => `${API_VERSION}/rtd/products/${id}/resume`,
+  // Orders (role auto-detected from token)
+  ORDERS_MY: `${API_VERSION}/rtd/orders/my`,
+  ORDER_STORE: `${API_VERSION}/rtd/orders`,
+  ORDER_DETAIL: (id: number | string) => `${API_VERSION}/rtd/orders/${id}`,
+  ORDER_ACCEPT: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/accept`,
+  ORDER_DECLINE: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/decline`,
+  ORDER_CONFIRM_PAYMENT: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/confirm-payment`,
+  ORDER_IN_PRODUCTION: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/in-production`,
+  ORDER_DISPATCH: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/dispatch`,
+  ORDER_CONFIRM_DELIVERY: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/confirm-delivery`,
+  ORDER_DISPUTE: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/dispute`,
+  ORDER_CANCEL: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/cancel`,
+} as const;
+
 // Inquiry Endpoints
 export const INQUIRY_ENDPOINTS = {
   // Get inquiry details

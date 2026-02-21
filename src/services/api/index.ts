@@ -406,3 +406,65 @@ export type {
   GetMatchmakingResponsesParams,
 } from './sessionApi/@types';
 export type { ExpressInterestPayload } from './sessionApi/sessionApi';
+
+// ============================================
+// BRAND RTD API (Ready-to-Dispatch - Brand browsing & ordering)
+// ============================================
+
+export {
+  useGetRtdCatalog,
+  useGetRtdCatalogInfinite,
+  useGetBrandRtdOrders,
+  useGetBrandRtdOrdersInfinite,
+  useGetBrandRtdOrderDetail,
+  useRequestRtdOrder,
+  useRequestRtdOrderWithLogo,
+  useConfirmRtdPayment,
+  useConfirmRtdDelivery,
+  useRaiseRtdDispute,
+  useCancelRtdOrder,
+} from './brandRtdApi';
+export type {
+  GetRtdCatalogParams,
+  GetRtdCatalogResponse,
+  RequestRtdOrderPayload,
+  ConfirmRtdPaymentPayload,
+} from './rtdApi/@types';
+
+// ============================================
+// RTD API (Ready-to-Dispatch - Converter)
+// ============================================
+
+export {
+  useGetConverterRtdProducts,
+  useGetRtdProductDetail,
+  useCreateRtdProduct,
+  useUpdateRtdProduct,
+  usePauseRtdProduct,
+  useResumeRtdProduct,
+  useGetRtdOrders,
+  useGetRtdOrdersInfinite,
+  useGetRtdOrderDetail,
+  useAcceptRtdOrder,
+  useDeclineRtdOrder,
+  useMarkRtdOrderInProduction,
+  useDispatchRtdOrder,
+} from './rtdApi/rtdApi';
+export type {
+  RtdProduct,
+  RtdPriceSlab,
+  RtdLeadTime,
+  CreateRtdProductRequest,
+  UpdateRtdProductRequest,
+  GetConverterRtdProductsParams,
+  GetConverterRtdProductsResponse,
+  RtdOrderStatus,
+  RtdOrder,
+  RtdOrderPayout,
+  RtdOrderProduct,
+  RtdOrderBrand,
+  RtdDispatchProofType,
+  DispatchRtdOrderRequest,
+  GetRtdOrdersParams,
+  GetRtdOrdersResponse,
+} from './rtdApi/@types';

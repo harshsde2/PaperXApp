@@ -98,6 +98,17 @@ export interface MachineDealerDashboardData {
 // CONVERTER DASHBOARD
 // ============================================
 
+export interface ConverterRtdSnapshot {
+  active_listings: number;
+  active_listings_change?: string;
+  pending_orders: number;
+  pending_orders_label?: string;
+  total_orders: number;
+  orders_label?: string;
+  revenue?: string;
+  revenue_change?: string;
+}
+
 export interface ConverterDashboardData {
   inquiriesCount: number;
   newInquiries: number;
@@ -111,6 +122,8 @@ export interface ConverterDashboardData {
     max: number;
     unit: string;
   };
+  /** RTD snapshot from API (snake_case). Populates dashboard RTD cards. */
+  rtd_snapshot?: ConverterRtdSnapshot;
 }
 
 // ============================================

@@ -684,6 +684,18 @@ export const createStyles = (theme: Theme) =>
       color: DARK_THEME.text.muted,
       textAlign: 'center',
     },
+    retryButton: {
+      marginTop: theme.spacing[4],
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[6],
+      backgroundColor: DARK_THEME.tiers.growth.primary,
+      borderRadius: 12,
+    },
+    retryButtonText: {
+      fontSize: 16,
+      color: '#000000',
+      fontWeight: fontWeightForPlatform('600'),
+    },
   });
 
 // Export dark theme colors for use in component

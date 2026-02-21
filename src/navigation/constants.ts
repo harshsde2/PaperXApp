@@ -58,6 +58,22 @@ export const SCREENS = {
     LOCKED: 'SessionLocked',
     CHAT: 'SessionChat',
   },
+  // Converter RTD (Ready-to-Dispatch) - converter only
+  CONVERTER_RTD: {
+    LISTING: 'ConverterRTDListing',
+    ADD_PRODUCT: 'ConverterRTDAddProduct',
+    MY_PRODUCTS: 'ConverterRTDMyProducts',
+    ORDER_HISTORY: 'ConverterRTDOrderHistory',
+    ORDER_DETAIL: 'ConverterRTDOrderDetail',
+  },
+  // Brand RTD (Ready-to-Dispatch) - brand browsing & ordering
+  BRAND_RTD: {
+    MARKETPLACE: 'BrandRTDMarketplace',
+    PRODUCT_DETAIL: 'BrandRTDProductDetail',
+    REQUEST_ORDER: 'BrandRTDRequestOrder',
+    ORDER_DETAIL: 'BrandRTDOrderDetail',
+    MY_ORDERS: 'BrandRTDMyOrders',
+  },
 } as const;
 
 // Role types

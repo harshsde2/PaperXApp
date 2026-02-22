@@ -10,6 +10,7 @@ import { useTheme } from '@theme/index';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
+import { EmptyState } from '@shared/components/EmptyState';
 import { AppIcon } from '@assets/svgs';
 import { useGetConverterRtdProducts } from '@services/api';
 import type { RtdProduct } from '@services/api';
@@ -137,9 +138,12 @@ export const ConverterRTDListingScreen: React.FC = () => {
         </View>
 
         {recentProducts.length === 0 ? (
-          <View style={styles.emptyList}>
-            <Text style={styles.emptyText}>No RTD products yet. Tap "Add Ready Product" to list one.</Text>
-          </View>
+          <EmptyState
+            icon={<AppIcon.Market width={32} height={32} color={theme.colors.primary.DEFAULT} />}
+            title="No RTD products yet"
+            description="Tap Add Ready Product to list one."
+            action={{ label: 'Add Ready Product', onPress: handleAddReadyProduct }}
+          />
         ) : (
           recentProducts.map((product: RtdProduct) => {
             const statusStyle = getStatusStyle(product.status);

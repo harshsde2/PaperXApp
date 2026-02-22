@@ -9,6 +9,7 @@ import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-
 import { useTheme } from '@theme/index';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
+import { CustomButton } from '@shared/components/CustomButton';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { useGetBrandRtdOrders } from '@services/api/brandRtdApi';
@@ -418,40 +419,133 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
           </TouchableOpacity>
         </View>
 
-        {dashboardData.recentInquiries.map((inquiry) => {
-          const badge = getStatusBadge(inquiry.status, theme);
-          return (
-            <TouchableOpacity
-              key={inquiry.id}
-              style={styles.activityItem}
-              activeOpacity={0.7}
-            >
-              <View style={styles.activityIconWrap}>
+        {activeTab === 'inquiries' ? (
+          dashboardData.recentInquiries.length === 0 ? (
+            <View style={styles.emptyActivityCard}>
+              <View style={styles.emptyActivityIconWrap}>
                 <AppIcon.Inquiries
-                  width={20}
-                  height={20}
-                  color={theme.colors.text.secondary}
+                  width={32}
+                  height={32}
+                  color={theme.colors.primary.DEFAULT}
                 />
               </View>
-              <View style={styles.activityInfo}>
-                <Text fontWeight="bold" style={styles.activityTitle}>
-                  {inquiry.title}
-                </Text>
-                <Text style={styles.activityTime}>Updated {inquiry.time}</Text>
-              </View>
-              <View
-                style={[
-                  styles.activityBadge,
-                  { borderColor: badge.borderColor, backgroundColor: badge.bg },
-                ]}
+              <Text fontWeight="bold" style={styles.emptyActivityTitle}>
+                No recent inquiries
+              </Text>
+              <Text style={styles.emptyActivityDesc}>
+                You don't have any inquiries at the moment. Post a new requirement to get started.
+              </Text>
+              {/* <View style={styles.emptyActivityButtonContainer}> */}
+                <CustomButton
+                  title="Post New Requirement"
+                  onPress={handlePostRequirement}
+                  variant="gradient"
+                  size="sm"
+                  style={{ }}
+                  textStyle={{ fontWeight: '600' }}
+                />
+              {/* </View> */}
+            </View>
+          ) : (
+            dashboardData.recentInquiries.map((inquiry) => {
+              const badge = getStatusBadge(inquiry.status, theme);
+              return (
+                <TouchableOpacity
+                  key={inquiry.id}
+                  style={styles.activityItem}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.activityIconWrap}>
+                    <AppIcon.Inquiries
+                      width={20}
+                      height={20}
+                      color={theme.colors.text.secondary}
+                    />
+                  </View>
+                  <View style={styles.activityInfo}>
+                    <Text fontWeight="bold" style={styles.activityTitle}>
+                      {inquiry.title}
+                    </Text>
+                    <Text style={styles.activityTime}>Updated {inquiry.time}</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.activityBadge,
+                      { borderColor: badge.borderColor, backgroundColor: badge.bg },
+                    ]}
+                  >
+                    <Text style={[styles.activityBadgeText, { color: badge.color }]}>
+                      {badge.label}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )
+        ) : activeRtdOrders.length === 0 ? (
+          <View style={styles.emptyActivityCard}>
+            <View style={styles.emptyActivityIconWrap}>
+              <AppIcon.Market
+                width={32}
+                height={32}
+                color={theme.colors.primary.DEFAULT}
+              />
+            </View>
+            <Text fontWeight="bold" style={styles.emptyActivityTitle}>
+              No active orders
+            </Text>
+            <Text style={styles.emptyActivityDesc}>
+              You don't have any RTD orders at the moment. Browse ready-to-dispatch products to place an order.
+            </Text>
+            {/* <View style={styles.emptyActivityButtonContainer}> */}
+              <CustomButton
+                title="Browse RTD"
+                onPress={handleExploreRTD}
+                variant="gradient"
+                size="sm"
+                textStyle={{ fontWeight: '600' }}
+              />
+            {/* </View> */}
+          </View>
+        ) : (
+          activeRtdOrders.map((order) => {
+            const color = ORDER_STATUS_COLORS[order.status] ?? '#94a3b8';
+            return (
+              <TouchableOpacity
+                key={order.id}
+                style={styles.activityItem}
+                activeOpacity={0.7}
+                onPress={() => handleOrderPress(order.id)}
               >
-                <Text style={[styles.activityBadgeText, { color: badge.color }]}>
-                  {badge.label}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+                <View style={styles.activityIconWrap}>
+                  <AppIcon.Market
+                    width={20}
+                    height={20}
+                    color={theme.colors.text.secondary}
+                  />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text fontWeight="bold" style={styles.activityTitle}>
+                    {order.product?.product_name ?? 'RTD Order'}
+                  </Text>
+                  <Text style={styles.activityTime}>
+                    Qty: {order.quantity} · ₹{order.total_amount}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.activityBadge,
+                    { borderColor: color, backgroundColor: `${color}15` },
+                  ]}
+                >
+                  <Text style={[styles.activityBadgeText, { color }]}>
+                    {order.status}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        )}
       </View>
     </ScrollView>
   );

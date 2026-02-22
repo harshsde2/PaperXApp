@@ -89,4 +89,14 @@ export const createStyles = (theme: Theme) =>
     loadingText: {
       color: theme.colors.text.secondary,
     },
+    locationButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing[3],
+      backgroundColor: theme.colors.surface.primary,
+    },
   });

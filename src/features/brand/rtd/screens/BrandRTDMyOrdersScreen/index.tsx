@@ -13,17 +13,10 @@ import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { useGetBrandRtdOrdersInfinite } from '@services/api/brandRtdApi';
-import type { RtdOrder, RtdOrderStatus } from '@services/api/rtdApi/@types';
+import type { RtdOrder } from '@services/api/rtdApi/@types';
+import { ACTIVE_RTD_STATUSES } from '../../constants';
 import type { BrandRTDMyOrdersScreenProps, OrderTab } from './@types';
 import { createStyles } from './styles';
-
-const ACTIVE_STATUSES: RtdOrderStatus[] = [
-  'REQUESTED',
-  'ACCEPTED',
-  'PAID',
-  'IN_PRODUCTION',
-  'DISPATCHED',
-];
 
 const STATUS_COLORS: Record<string, string> = {
   REQUESTED: '#3b82f6',
@@ -82,9 +75,9 @@ export const BrandRTDMyOrdersScreen: React.FC<BrandRTDMyOrdersScreenProps> = ({
 
   const orders = useMemo(() => {
     if (activeTab === 'active') {
-      return allOrders.filter((o) => ACTIVE_STATUSES.includes(o.status));
+      return allOrders.filter((o) => ACTIVE_RTD_STATUSES.includes(o.status));
     }
-    return allOrders.filter((o) => !ACTIVE_STATUSES.includes(o.status));
+    return allOrders.filter((o) => !ACTIVE_RTD_STATUSES.includes(o.status));
   }, [allOrders, activeTab]);
 
   const hasCountdowns = useMemo(

@@ -187,7 +187,7 @@ export const useGetRtdOrdersInfinite = (
 
 export const useGetRtdOrderDetail = (
   id: number | string,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean; refetchInterval?: number | false }
 ) => {
   return useQuery({
     queryKey: queryKeys.converterRtd.orderDetail(id),
@@ -198,6 +198,7 @@ export const useGetRtdOrderDetail = (
     staleTime: 0,
     gcTime: 0,
     enabled: options?.enabled ?? true,
+    refetchInterval: options?.refetchInterval,
   });
 };
 

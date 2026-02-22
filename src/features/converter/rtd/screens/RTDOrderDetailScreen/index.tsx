@@ -47,10 +47,8 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
 
   const {
     data: order,
-    isLoading,
     isError,
     refetch,
-    isRefetching,
   } = useGetRtdOrderDetail(orderId);
 
   const acceptMutation = useAcceptRtdOrder();
@@ -59,11 +57,8 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
 
   const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
   const [countdown, setCountdown] = useState<CountdownState | null>(null);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
-  const isMutating =
-    acceptMutation.isPending ||
-    declineMutation.isPending ||
-    inProductionMutation.isPending;
 
   // Countdown timer for REQUESTED state
   useEffect(() => {
@@ -241,26 +236,25 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
     );
   }, [status, order, styles, theme]);
 
-  if (isLoading) {
+  if (!order) {
+    if (isError) {
+      return (
+        <View style={styles.errorContainer}>
+          <AppIcon.Warning width={40} height={40} color={theme.colors.text.tertiary} />
+          <Text style={styles.errorText}>Failed to load order details. Pull down to retry.</Text>
+          <CustomButton
+            title="Retry"
+            onPress={() => refetch()}
+            variant="outline"
+            size="sm"
+            style={{ marginTop: theme.spacing[4] }}
+          />
+        </View>
+      );
+    }
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-      </View>
-    );
-  }
-
-  if (isError || !order) {
-    return (
-      <View style={styles.errorContainer}>
-        <AppIcon.Warning width={40} height={40} color={theme.colors.text.tertiary} />
-        <Text style={styles.errorText}>Failed to load order details. Pull down to retry.</Text>
-        <CustomButton
-          title="Retry"
-          onPress={() => refetch()}
-          variant="outline"
-          size="sm"
-          style={{ marginTop: theme.spacing[4] }}
-        />
       </View>
     );
   }
@@ -272,8 +266,11 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching && !isLoading}
-            onRefresh={() => refetch()}
+            refreshing={manualRefreshing}
+            onRefresh={() => {
+              setManualRefreshing(true);
+              refetch().finally(() => setManualRefreshing(false));
+            }}
             tintColor={theme.colors.primary.DEFAULT}
           />
         }
@@ -322,7 +319,9 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
             onDecline={handleDecline}
             onMarkInProduction={handleMarkInProduction}
             onDispatch={handleDispatch}
-            loading={isMutating}
+            loadingAccept={acceptMutation.isPending}
+            loadingDecline={declineMutation.isPending}
+            loadingMarkInProduction={inProductionMutation.isPending}
           />
         </View>
       </ScrollView>

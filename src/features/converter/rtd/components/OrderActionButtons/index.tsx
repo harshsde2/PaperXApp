@@ -12,7 +12,9 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
     onDecline,
     onMarkInProduction,
     onDispatch,
-    loading = false,
+    loadingAccept = false,
+    loadingDecline = false,
+    loadingMarkInProduction = false,
   }) {
     const theme = useTheme();
     const styles = createStyles(theme);
@@ -25,7 +27,7 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
               title="Accept"
               onPress={onAccept}
               variant="gradient"
-              loading={loading}
+              loading={loadingAccept}
               fullWidth
             />
           </View>
@@ -34,7 +36,7 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
               title="Decline"
               onPress={onDecline}
               variant="danger"
-              loading={loading}
+              loading={loadingDecline}
               fullWidth
             />
           </View>
@@ -50,7 +52,7 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
               title="Mark In Production"
               onPress={onMarkInProduction}
               variant="gradient"
-              loading={loading}
+              loading={loadingMarkInProduction}
               fullWidth
             />
           </View>
@@ -66,7 +68,6 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
               title="Dispatch Order"
               onPress={onDispatch}
               variant="gradient"
-              loading={loading}
               fullWidth
             />
           </View>

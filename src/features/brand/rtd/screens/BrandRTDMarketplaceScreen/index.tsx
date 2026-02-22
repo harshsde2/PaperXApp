@@ -8,13 +8,10 @@ import { SCREENS } from '@navigation/constants';
 import { RTDFilterBar } from '../../components/RTDFilterBar';
 import { RTDProductCard } from '../../components/RTDProductCard';
 import type { RTDFilterState, RTDFilterKey } from '../../components/RTDFilterBar/@types';
-import type { RtdProduct, RtdOrderStatus } from '@services/api/rtdApi/@types';
+import type { RtdProduct } from '@services/api/rtdApi/@types';
+import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
 import type { BrandRTDMarketplaceScreenProps, MarketplaceFilterState } from './@types';
 import { createStyles } from './styles';
-
-const ACTIVE_STATUSES: RtdOrderStatus[] = [
-  'REQUESTED', 'ACCEPTED', 'PAID', 'IN_PRODUCTION', 'DISPATCHED',
-];
 
 const INITIAL_FILTERS: RTDFilterState = {
   category: null,
@@ -33,12 +30,13 @@ export const BrandRTDMarketplaceScreen: React.FC<
 
   const { data: rtdOrders, refetch: refetchOrders } = useGetBrandRtdOrders();
 
-  const activeProductIds = useMemo(() => {
-    const ids = new Set<number>();
+  const activeOrdersByProduct = useMemo(() => {
+    const map = new Map<number, number>();
     (rtdOrders ?? []).forEach((o) => {
-      if (ACTIVE_STATUSES.includes(o.status)) ids.add(o.product_id);
+      const pid = getOrderProductId(o);
+      if (pid != null && ACTIVE_RTD_STATUSES.includes(o.status)) map.set(pid, o.id);
     });
-    return ids;
+    return map;
   }, [rtdOrders]);
 
   useFocusEffect(
@@ -89,6 +87,13 @@ export const BrandRTDMarketplaceScreen: React.FC<
     [navigation],
   );
 
+  const handleViewOrder = useCallback(
+    (orderId: number) => {
+      navigation.navigate(SCREENS.BRAND_RTD.ORDER_DETAIL as any, { orderId });
+    },
+    [navigation],
+  );
+
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -104,10 +109,12 @@ export const BrandRTDMarketplaceScreen: React.FC<
       <RTDProductCard
         product={item}
         onBuyNow={handleBuyNow}
-        hasActiveOrder={activeProductIds.has(item.id)}
+        hasActiveOrder={activeOrdersByProduct.has(item.id)}
+        activeOrderId={activeOrdersByProduct.get(item.id)}
+        onViewOrder={handleViewOrder}
       />
     ),
-    [handleBuyNow, activeProductIds],
+    [handleBuyNow, activeOrdersByProduct, handleViewOrder],
   );
 
   const renderEmpty = useCallback(() => {

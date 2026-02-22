@@ -252,4 +252,42 @@ export const createStyles = (theme: Theme) =>
       fontWeight: fontWeightForPlatform('700'),
       letterSpacing: 0.3,
     },
+
+    /* ── Empty state (Recent Activity) ── */
+    emptyActivityCard: {
+      backgroundColor: theme.colors.surface.primary,
+      borderRadius: theme.borderRadius.card.lg,
+      padding: theme.spacing[6],
+      alignItems: 'center',
+      borderWidth: 2,
+      borderStyle: 'dashed',
+      borderColor: theme.colors.border.primary,
+      marginTop: theme.spacing[2],
+    },
+    emptyActivityIconWrap: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.colors.primary[50],
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: theme.spacing[3],
+    },
+    emptyActivityTitle: {
+      fontSize: 16,
+      fontWeight: fontWeightForPlatform('800'),
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing[1],
+    },
+    emptyActivityDesc: {
+      fontSize: 14,
+      fontWeight: fontWeightForPlatform('500'),
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+      marginBottom: theme.spacing[4],
+    },
+    emptyActivityButtonContainer: {
+      marginTop: theme.spacing[2],
+      alignSelf: 'flex-start',
+    },
   });

@@ -7,8 +7,9 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { useTheme } from '@theme/index';
+import { pickImageFromLibrary } from '@shared/utils/imagePicker';
+import type { PickedImage } from '@shared/utils/imagePicker';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
 import { AppIcon } from '@assets/svgs';
@@ -34,11 +35,7 @@ export const DispatchProofModal: React.FC<DispatchProofModalProps> = ({
 
   const [proofType, setProofType] = useState<RtdDispatchProofType>('tracking_number');
   const [trackingNumber, setTrackingNumber] = useState('');
-  const [selectedFile, setSelectedFile] = useState<{
-    uri: string;
-    type: string;
-    name: string;
-  } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<PickedImage | null>(null);
 
   const dispatchMutation = useDispatchRtdOrder();
 
@@ -48,19 +45,8 @@ export const DispatchProofModal: React.FC<DispatchProofModalProps> = ({
       : !selectedFile;
 
   const handlePickFile = useCallback(async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      includeBase64: false,
-    });
-
-    if (result.didCancel || !result.assets?.[0]) return;
-
-    const asset = result.assets[0];
-    const uri = asset.uri ?? '';
-    const type = asset.type ?? 'image/jpeg';
-    const name = asset.fileName ?? `image_${Date.now()}.jpg`;
-
-    setSelectedFile({ uri, type, name });
+    const picked = await pickImageFromLibrary();
+    if (picked) setSelectedFile(picked);
   }, []);
 
   const handleSubmit = useCallback(async () => {

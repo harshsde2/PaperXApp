@@ -169,13 +169,4 @@ export const createStyles = (theme: Theme) =>
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
-    emptyList: {
-      alignItems: 'center',
-      paddingVertical: theme.spacing[8],
-    },
-    emptyText: {
-      fontSize: 14,
-      fontWeight: fontWeightForPlatform('600'),
-      color: theme.colors.text.secondary,
-    },
   });

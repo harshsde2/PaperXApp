@@ -6,5 +6,10 @@ export interface OrderActionButtonsProps {
   onDecline: () => void;
   onMarkInProduction: () => void;
   onDispatch: () => void;
-  loading?: boolean;
+  /** Show loading only on the Accept button */
+  loadingAccept?: boolean;
+  /** Show loading only on the Decline button */
+  loadingDecline?: boolean;
+  /** Show loading only on the Mark In Production button */
+  loadingMarkInProduction?: boolean;
 }

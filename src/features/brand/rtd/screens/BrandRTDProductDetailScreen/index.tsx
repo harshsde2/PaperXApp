@@ -7,11 +7,7 @@ import { AppIcon } from '@assets/svgs';
 import { useGetRtdProductDetail } from '@services/api';
 import { useGetBrandRtdOrders } from '@services/api/brandRtdApi';
 import { SCREENS } from '@navigation/constants';
-import type { RtdOrderStatus } from '@services/api/rtdApi/@types';
-
-const ACTIVE_STATUSES: RtdOrderStatus[] = [
-  'REQUESTED', 'ACCEPTED', 'PAID', 'IN_PRODUCTION', 'DISPATCHED',
-];
+import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
 import { ProductSpecsGrid } from '../../components/ProductSpecsGrid';
 import { QuantityPricingCard } from '../../components/QuantityPricingCard';
 import { EscrowBanner } from '../../components/EscrowBanner';
@@ -46,7 +42,7 @@ export const BrandRTDProductDetailScreen: React.FC<
   const existingOrder = useMemo(
     () =>
       (rtdOrders ?? []).find(
-        (o) => o.product_id === productId && ACTIVE_STATUSES.includes(o.status),
+        (o) => getOrderProductId(o) === productId && ACTIVE_RTD_STATUSES.includes(o.status),
       ),
     [rtdOrders, productId],
   );

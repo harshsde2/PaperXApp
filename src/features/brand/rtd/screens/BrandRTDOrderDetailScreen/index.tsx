@@ -6,6 +6,7 @@ import {
   Alert,
   TouchableOpacity,
   Clipboard,
+  RefreshControl,
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
@@ -27,8 +28,6 @@ import { EscrowBanner } from '../../components/EscrowBanner';
 import { TrackingInfoCard } from '../../components/TrackingInfoCard';
 import type { BrandRTDOrderDetailScreenProps } from './@types';
 import { createStyles } from './styles';
-
-const POLL_STATUSES: RtdOrderStatus[] = ['REQUESTED', 'ACCEPTED'];
 
 const STATUS_META: Record<
   string,
@@ -107,21 +106,12 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   const styles = createStyles(theme);
   const { orderId } = route.params;
 
-  const [pollingInterval, setPollingInterval] = React.useState<number | false>(5000);
+  const [manualRefreshing, setManualRefreshing] = React.useState(false);
 
   const {
     data: activeOrder,
-    isLoading,
     refetch,
-  } = useGetBrandRtdOrderDetail(orderId, {
-    refetchInterval: pollingInterval,
-  });
-
-  React.useEffect(() => {
-    if (activeOrder?.status) {
-      setPollingInterval(POLL_STATUSES.includes(activeOrder.status) ? 5000 : false);
-    }
-  }, [activeOrder?.status]);
+  } = useGetBrandRtdOrderDetail(orderId);
 
   const confirmPayment = useConfirmRtdPayment();
   const confirmDelivery = useConfirmRtdDelivery();
@@ -225,7 +215,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
     }
   }, [activeOrder?.tracking_number]);
 
-  if (isLoading || !activeOrder) {
+  if (!activeOrder) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
@@ -241,6 +231,16 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={manualRefreshing}
+            onRefresh={() => {
+              setManualRefreshing(true);
+              refetch().finally(() => setManualRefreshing(false));
+            }}
+            tintColor={theme.colors.primary.DEFAULT}
+          />
+        }
       >
         {/* Timeline for active flow */}
         {!isTerminal && status !== 'CANCELLED' && (

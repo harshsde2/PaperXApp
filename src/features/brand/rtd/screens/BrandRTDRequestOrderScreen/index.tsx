@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -18,7 +18,9 @@ import { useGetRtdProductDetail } from '@services/api';
 import {
   useRequestRtdOrder,
   useRequestRtdOrderWithLogo,
+  useGetBrandRtdOrders,
 } from '@services/api/brandRtdApi';
+import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
 import type { RtdPriceSlab } from '@services/api/rtdApi/@types';
 import type { BrandRTDRequestOrderScreenProps, OrderFormState } from './@types';
 import { createStyles } from './styles';
@@ -56,8 +58,27 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
   const { productId, quantity: initialQty } = route.params;
 
   const { data: product, isLoading: productLoading } = useGetRtdProductDetail(productId);
+  const { data: rtdOrders } = useGetBrandRtdOrders();
   const requestOrder = useRequestRtdOrder();
   const requestOrderWithLogo = useRequestRtdOrderWithLogo();
+
+  useEffect(() => {
+    if (!rtdOrders) return;
+    const existing = rtdOrders.find(
+      (o) => getOrderProductId(o) === productId && ACTIVE_RTD_STATUSES.includes(o.status),
+    );
+    if (existing) {
+      Alert.alert(
+        'Active Order Exists',
+        'You already have an active order for this product.',
+        [{
+          text: 'View Order',
+          onPress: () => navigation.replace(SCREENS.BRAND_RTD.ORDER_DETAIL as any, { orderId: existing.id }),
+        }],
+        { cancelable: false },
+      );
+    }
+  }, [rtdOrders, productId, navigation]);
 
   const [form, setForm] = useState<OrderFormState>({
     quantity: String(initialQty ?? ''),
@@ -97,7 +118,19 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
     };
 
     const onError = (err: any) => {
-      Alert.alert('Order Failed', err?.message ?? 'Something went wrong. Please try again.');
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message ?? err?.message;
+
+      if (status === 422 && message?.includes('active order')) {
+        Alert.alert(
+          'Order Already Exists',
+          message,
+          [{ text: 'OK', onPress: () => navigation.goBack() }],
+        );
+        return;
+      }
+
+      Alert.alert('Order Failed', message ?? 'Something went wrong. Please try again.');
     };
 
     if (form.logoFile) {

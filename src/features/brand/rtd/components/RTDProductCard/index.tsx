@@ -7,13 +7,17 @@ import type { RTDProductCardProps } from './@types';
 import { createStyles } from './styles';
 
 export const RTDProductCard = memo<RTDProductCardProps>(
-  function RTDProductCard({ product, onBuyNow, hasActiveOrder = false }) {
+  function RTDProductCard({ product, onBuyNow, hasActiveOrder = false, activeOrderId, onViewOrder }) {
     const theme = useTheme();
     const styles = createStyles(theme);
 
-    const handleBuyNow = useCallback(() => {
-      onBuyNow(product);
-    }, [onBuyNow, product]);
+    const handlePress = useCallback(() => {
+      if (hasActiveOrder && activeOrderId && onViewOrder) {
+        onViewOrder(activeOrderId);
+      } else {
+        onBuyNow(product);
+      }
+    }, [hasActiveOrder, activeOrderId, onViewOrder, onBuyNow, product]);
 
     const subtitle = [product.size, product.material]
       .filter(Boolean)
@@ -71,11 +75,11 @@ export const RTDProductCard = memo<RTDProductCardProps>(
           </View>
 
           <CustomButton
-            title={hasActiveOrder ? 'Already Ordered' : 'Buy Now'}
-            onPress={handleBuyNow}
+            title={hasActiveOrder ? 'View Order' : 'Buy Now'}
+            onPress={handlePress}
             variant={hasActiveOrder ? 'secondary' : 'gradient'}
             fullWidth
-            disabled={!product.buy_now_enabled || hasActiveOrder}
+            disabled={!hasActiveOrder && !product.buy_now_enabled}
           />
         </View>
       </View>

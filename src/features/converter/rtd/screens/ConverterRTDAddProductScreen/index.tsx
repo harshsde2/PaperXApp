@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -9,18 +9,36 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
-import { useCreateRtdProduct, useGetRtdProductDetail, useUpdateRtdProduct } from '@services/api';
+import { LocationPicker } from '@shared/location';
+import type { Location } from '@shared/location/types';
+import { AppIcon } from '@assets/svgs';
+import {
+  useCreateRtdProduct,
+  useGetRtdProductDetail,
+  useUpdateRtdProduct,
+  useUploadImage,
+} from '@services/api';
 import type { CreateRtdProductRequest, RtdLeadTime, RtdProduct } from '@services/api';
+import { useAppSelector } from '@store/hooks';
 import { SCREENS } from '@navigation/constants';
 import { PriceSlabInput } from '../../components/PriceSlabInput';
 import type { PriceSlabRow } from '../../components/PriceSlabInput';
 import { ProductListingSuccessModal } from '../../components/ProductListingSuccessModal';
-import type { FormData, FormErrors } from './@types';
+import { DeliveryLocationSheetContent } from '../../components/DeliveryLocationSheetContent';
+import { ImagePicker } from '@shared/components/ImagePicker';
+import type { FormData, FormErrors, SavedLocation } from './@types';
 import { createStyles } from './styles';
 
 const LEAD_TIME_OPTIONS: { value: RtdLeadTime; label: string }[] = [
@@ -33,6 +51,8 @@ const LEAD_TIME_OPTIONS: { value: RtdLeadTime; label: string }[] = [
 const INITIAL_FORM: FormData = {
   category: '',
   product_name: '',
+  image: null,
+  image_path: null,
   size: '',
   material: '',
   gsm: '',
@@ -44,6 +64,10 @@ const INITIAL_FORM: FormData = {
   base_price: '',
   buy_now_enabled: true,
   delivery_geography: '',
+  location_id: undefined,
+  location_source: undefined,
+  latitude: undefined,
+  longitude: undefined,
   price_slabs: [{ min_qty: '', max_qty: '', price_per_unit: '' }],
 };
 
@@ -103,15 +127,33 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<any>();
-  const route = useRoute<{ params?: { productId?: number } }>();
-  const productId = route.params?.productId;
+  const route = useRoute();
+  const productId = (route.params as { productId?: number } | undefined)?.productId;
+  const user = useAppSelector((state) => state.auth.user);
 
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  const deliveryLocationSheetRef = useRef<BottomSheetModal>(null);
+
+  const userLocations: SavedLocation[] = useMemo(() => {
+    if (!user?.locations || !Array.isArray(user.locations)) return [];
+    return user.locations.map((loc: any) => ({
+      id: loc.id,
+      type: loc.type || 'warehouse',
+      address: loc.address || '',
+      latitude: loc.latitude || '0',
+      longitude: loc.longitude || '0',
+      city: loc.city || '',
+      state: loc.state ?? null,
+    }));
+  }, [user]);
 
   const createProduct = useCreateRtdProduct();
   const updateProduct = useUpdateRtdProduct();
+  const uploadImage = useUploadImage();
   const { data: product, isLoading: isLoadingProduct } = useGetRtdProductDetail(
     productId ?? 0,
     { enabled: !!productId && productId > 0 },
@@ -125,6 +167,8 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     setForm({
       category: p.category ?? '',
       product_name: p.product_name ?? '',
+      image: null,
+      image_path: p.image_path ?? null,
       size: p.size ?? '',
       material: p.material ?? '',
       gsm: p.gsm ?? '',
@@ -155,7 +199,60 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     updateField('price_slabs', slabs);
   }, [updateField]);
 
-  const handleSubmit = useCallback(() => {
+  const handleImageChange = useCallback(
+    (image: import('@shared/utils/imagePicker').PickedImage | null) => {
+      setForm((prev) => ({
+        ...prev,
+        image: image ?? null,
+        image_path: image != null ? prev.image_path : null,
+      }));
+    },
+    []
+  );
+
+  const handleSavedLocationSelect = useCallback(
+    (savedLocation: SavedLocation) => {
+      const addressText = savedLocation.address || `${savedLocation.city}${savedLocation.state ? `, ${savedLocation.state}` : ''}`.trim();
+      setForm((prev) => ({
+        ...prev,
+        location_id: savedLocation.id,
+        location_source: 'saved',
+        delivery_geography: addressText || prev.delivery_geography,
+        latitude: parseFloat(savedLocation.latitude),
+        longitude: parseFloat(savedLocation.longitude),
+      }));
+      deliveryLocationSheetRef.current?.dismiss();
+    },
+    [],
+  );
+
+  const handleLocationSelect = useCallback((location: Location) => {
+    const addressText = location.address?.formattedAddress || location.address?.streetAddress || location.name || '';
+    setForm((prev) => ({
+      ...prev,
+      location_id: undefined,
+      location_source: 'manual',
+      delivery_geography: addressText.trim() || prev.delivery_geography,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    }));
+    setShowLocationPicker(false);
+  }, []);
+
+  const getSelectedLocationDisplay = useCallback(() => {
+    if (form.location_id != null && form.location_source === 'saved') {
+      const saved = userLocations.find((loc) => loc.id === form.location_id);
+      if (saved) return saved.address || `${saved.city}${saved.state ? `, ${saved.state}` : ''}`.trim();
+    }
+    return form.delivery_geography || '';
+  }, [form.location_id, form.location_source, form.delivery_geography, userLocations]);
+
+  const handleAddLocationPress = useCallback(() => {
+    deliveryLocationSheetRef.current?.dismiss();
+    setShowLocationPicker(true);
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
     const validationErrors = validateForm(form);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
@@ -167,6 +264,33 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         max_qty: parseFloat(s.max_qty),
         price_per_unit: parseFloat(s.price_per_unit),
       }));
+    // console.log('priceSlabs', priceSlabs);
+
+    let imagePath: string | null = form.image_path;
+
+    // console.log('form.image', form.image);
+    if (form.image) {
+      console.log('form.image', form.image);
+      try {
+        // console.log('uploading image');
+        imagePath = await uploadImage.mutateAsync(form.image);
+        // console.log('imagePath', imagePath);
+      } catch (err: any) {
+        console.log('error', err);
+        const msg =
+          err?.response?.data?.message ?? err?.message ?? 'Image upload failed';
+        Alert.alert('Error', msg);
+        return;
+      }
+    }
+
+    const onError = (err: any, isUpdate: boolean) => {
+      const msg =
+        err?.response?.data?.message ??
+        err?.message ??
+        (isUpdate ? 'Failed to update product' : 'Failed to list product');
+      Alert.alert('Error', msg);
+    };
 
     if (isEdit && productId) {
       updateProduct.mutate(
@@ -174,7 +298,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           id: productId,
           data: {
             product_name: form.product_name.trim(),
-            image_path: null,
+            image_path: imagePath,
             size: form.size.trim() || undefined,
             material: form.material.trim() || undefined,
             gsm: form.gsm.trim() || undefined,
@@ -191,20 +315,14 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         },
         {
           onSuccess: () => setShowSuccessModal(true),
-          onError: (err: any) => {
-            const msg =
-              err?.response?.data?.message ??
-              err?.message ??
-              'Failed to update product';
-            Alert.alert('Error', msg);
-          },
+          onError: (err: any) => onError(err, true),
         },
       );
     } else {
       const payload: CreateRtdProductRequest = {
         category: form.category.trim(),
         product_name: form.product_name.trim(),
-        image_path: null,
+        image_path: imagePath ?? undefined,
         size: form.size.trim() || undefined,
         material: form.material.trim() || undefined,
         gsm: form.gsm.trim() || undefined,
@@ -220,16 +338,10 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       };
       createProduct.mutate(payload, {
         onSuccess: () => setShowSuccessModal(true),
-        onError: (err: any) => {
-          const msg =
-            err?.response?.data?.message ??
-            err?.message ??
-            'Failed to list product';
-          Alert.alert('Error', msg);
-        },
+        onError: (err: any) => onError(err, false),
       });
     }
-  }, [form, isEdit, productId, createProduct, updateProduct]);
+  }, [form, isEdit, productId, createProduct, updateProduct, uploadImage]);
 
   const handleViewListing = useCallback(() => {
     setShowSuccessModal(false);
@@ -243,12 +355,13 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <ScrollView
+    <BottomSheetModalProvider>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -289,6 +402,16 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
                 {errors.product_name}
               </Text>
             )}
+          </View>
+          <View style={styles.fieldContainer}>
+            <Text variant="captionMedium" style={styles.label}>Product Image</Text>
+            <ImagePicker
+              value={form.image}
+              onChange={handleImageChange}
+              previewUri={form.image_path}
+              placeholderText="Add product photo"
+              showCamera
+            />
           </View>
         </View>
 
@@ -461,14 +584,42 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             Delivery
           </Text>
           <View style={styles.fieldContainer}>
-            <Text variant="captionMedium" style={styles.label}>Delivery Geography</Text>
-            <TextInput
-              value={form.delivery_geography}
-              onChangeText={(v) => updateField('delivery_geography', v)}
-              placeholder="e.g. North India"
-              placeholderTextColor={theme.colors.text.placeholder}
-              style={styles.input}
-            />
+            <Text variant="captionMedium" style={styles.label}>Delivery Location</Text>
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={() => deliveryLocationSheetRef.current?.present()}
+              activeOpacity={0.7}
+            >
+              <View style={{ flex: 1 }}>
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    !getSelectedLocationDisplay()
+                      ? { color: theme.colors.text.tertiary }
+                      : { color: theme.colors.text.primary },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {getSelectedLocationDisplay() || 'Select delivery location'}
+                </Text>
+                {form.location_source === 'saved' && form.location_id != null && (
+                  <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary, marginTop: 2 }}>
+                    From saved locations
+                  </Text>
+                )}
+                {form.location_source === 'manual' && getSelectedLocationDisplay() && (
+                  <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary, marginTop: 2 }}>
+                    Custom location
+                  </Text>
+                )}
+              </View>
+              <AppIcon.ChevronDown width={20} height={20} color={theme.colors.text.tertiary} />
+            </TouchableOpacity>
+            {userLocations.length === 0 && (
+              <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary, marginTop: 4 }}>
+                No saved locations. You can add a location on the map.
+              </Text>
+            )}
           </View>
         </View>
 
@@ -483,20 +634,57 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
               title={isEdit ? 'Update Product' : 'List Product'}
               variant="gradient"
               onPress={handleSubmit}
-              loading={createProduct.isPending || updateProduct.isPending}
+              loading={uploadImage.isPending || createProduct.isPending || updateProduct.isPending}
               fullWidth
             />
           )}
         </View>
       </ScrollView>
 
-      <ProductListingSuccessModal
-        visible={showSuccessModal}
-        productName={form.product_name}
-        onViewListing={handleViewListing}
-        onAddAnother={handleAddAnother}
-        isUpdate={isEdit}
-      />
-    </KeyboardAvoidingView>
+        <ProductListingSuccessModal
+          visible={showSuccessModal}
+          productName={form.product_name}
+          onViewListing={handleViewListing}
+          onAddAnother={handleAddAnother}
+          isUpdate={isEdit}
+        />
+      </KeyboardAvoidingView>
+
+      <BottomSheetModal
+        ref={deliveryLocationSheetRef}
+        snapPoints={['50%', '85%']}
+        enablePanDownToClose
+      >
+        <DeliveryLocationSheetContent
+          userLocations={userLocations}
+          selectedLocationId={form.location_id}
+          selectedSource={form.location_source}
+          onSelectSavedLocation={handleSavedLocationSelect}
+          onAddLocation={handleAddLocationPress}
+          theme={theme}
+          ListComponent={BottomSheetFlatList}
+        />
+      </BottomSheetModal>
+
+      <Modal
+        visible={showLocationPicker}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowLocationPicker(false)}
+      >
+        <LocationPicker
+          initialLocation={
+            form.latitude != null && form.longitude != null
+              ? { latitude: form.latitude, longitude: form.longitude }
+              : undefined
+          }
+          onLocationSelect={handleLocationSelect}
+          onCancel={() => setShowLocationPicker(false)}
+          allowMapTap
+          confirmButtonText="Confirm Location"
+          title="Select Delivery Location"
+        />
+      </Modal>
+    </BottomSheetModalProvider>
   );
 };

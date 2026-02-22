@@ -58,6 +58,13 @@ export type {
 } from './userApi/@types';
 
 // ============================================
+// UPLOAD API
+// ============================================
+
+export * from './uploadApi/uploadApi';
+export type { UploadImageResponse } from './uploadApi/@types';
+
+// ============================================
 // REFERENCE DATA API
 // ============================================
 

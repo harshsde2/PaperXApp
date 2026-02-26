@@ -66,7 +66,7 @@ const RoleSelectionScreen = () => {
     },
     {
       id: ROLES.BRAND as PrimaryRole,
-      label: 'Brand / End User',
+      label: 'Brand',
       icon: AppIcon.Brand,
       isComplete: true,
     },

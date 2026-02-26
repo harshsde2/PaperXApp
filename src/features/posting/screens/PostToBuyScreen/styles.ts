@@ -29,6 +29,38 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[2],
       color: theme.colors.text.primary,
     },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+      marginBottom: theme.spacing[1],
+    },
+    optionalLabel: {
+      color: theme.colors.text.tertiary,
+    },
+    customMaterialRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+    },
+    customMaterialInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing[3],
+      fontSize: 16,
+      backgroundColor: theme.colors.surface.primary,
+      color: theme.colors.text.primary,
+      fontFamily: theme.fontFamily.regular,
+    },
+    addMaterialButton: {
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[4],
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor: theme.colors.primary.DEFAULT,
+      justifyContent: 'center',
+    },
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',

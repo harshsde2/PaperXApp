@@ -10,6 +10,7 @@ import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
@@ -22,6 +23,7 @@ export interface PosterDetailViewProps {
   isLoading: boolean;
   onRefresh: () => void;
   refreshing: boolean;
+  onOpenResponsesChat: () => void;
 }
 
 // For poster (owner) we show "You posted this" instead of role label
@@ -48,6 +50,7 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
   isLoading,
   onRefresh,
   refreshing,
+  onOpenResponsesChat,
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -155,6 +158,9 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
           <Text style={styles.posterDetailCountLabel}>Responses</Text>
         </View>
       </View>
+      <TouchableOpacity style={styles.posterDetailChatButton} onPress={onOpenResponsesChat} activeOpacity={0.8}>
+        <Text style={styles.posterDetailChatButtonText}>Open responder chats</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

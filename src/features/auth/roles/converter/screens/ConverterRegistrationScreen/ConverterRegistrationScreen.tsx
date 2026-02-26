@@ -70,6 +70,8 @@ const ConverterRegistrationScreen = () => {
   const { data: materials, isLoading: isLoadingMaterials } = useGetMaterials();
   const { mutate: completeProfile, isPending: isSubmitting } = useCompleteConverterProfile();
 
+  console.log('materials', JSON.stringify(materials, null, 2));
+
   // Get profileData from route params
   const { profileData } = route.params || {};
 
@@ -114,45 +116,18 @@ const ConverterRegistrationScreen = () => {
   const factoryLatitudeValue = watch('factory_latitude');
   const factoryLongitudeValue = watch('factory_longitude');
 
-  // Prefill form with sample data for testing
+  const hasPrefilledCompanyDetails = !!profileData?.company_name;
+
+  // Prefill factory state/city from profileData (from CompanyDetailsScreen)
   useEffect(() => {
-    if (referenceData && materials && !isLoadingReference && !isLoadingMaterials) {
-      // Prefill converter types (select first one if available)
-      if (referenceData.converter_types && referenceData.converter_types.length > 0) {
-        setValue('converter_type_ids', [referenceData.converter_types[0].id], { shouldValidate: false });
-      }
-      
-      // Prefill finished products (select first 2 if available)
-      if (referenceData.finished_products && referenceData.finished_products.length > 0) {
-        const productIds = referenceData.finished_products.slice(0, 2).map(p => p.id);
-        setValue('finished_product_ids', productIds, { shouldValidate: false });
-      }
-      
-      // Prefill machines (select first one if available)
-      if (referenceData.machines && referenceData.machines.length > 0) {
-        setValue('machine_ids', [referenceData.machines[0].id], { shouldValidate: false });
-      }
-      
-      // Prefill raw materials (select first 2 if available)
-      if (materials && materials.length > 0) {
-        const materialIds = materials.slice(0, 2).map(m => m.id);
-        setValue('raw_material_ids', materialIds, { shouldValidate: false });
-      }
-      
-      // Prefill capacity
-      setValue('capacity_daily', 1000, { shouldValidate: false });
-      setValue('capacity_monthly', 30000, { shouldValidate: false });
-      setValue('capacity_unit', 'pieces', { shouldValidate: false });
-      
-      // Prefill factory address
-      setValue('factory_state', 'Maharashtra', { shouldValidate: false });
-      setValue('factory_city', 'Mumbai', { shouldValidate: false });
-      setValue('factory_address', '123 Industrial Area, Andheri East', { shouldValidate: false });
-      setValue('factory_location', '123 Industrial Area, Andheri East, Mumbai, Maharashtra, India', { shouldValidate: false });
-      setValue('factory_latitude', 19.1136, { shouldValidate: false });
-      setValue('factory_longitude', 72.8697, { shouldValidate: false });
+    if (!profileData) return;
+    if (profileData.state) {
+      setValue('factory_state', profileData.state, { shouldValidate: false });
     }
-  }, [referenceData, materials, isLoadingReference, isLoadingMaterials, setValue]);
+    if (profileData.city) {
+      setValue('factory_city', profileData.city, { shouldValidate: false });
+    }
+  }, [profileData, setValue]);
 
   const selectedStateIso = STATE_NAME_TO_ISO[factoryStateValue] || '';
 
@@ -198,7 +173,7 @@ const ConverterRegistrationScreen = () => {
   // Handle location selection from LocationPicker
   const handleLocationSelect = useCallback(
     (location: Location) => {
-      // Auto-fill state and city from location address
+      // Always update state and city from the selected location (map selection overrides prefilled values)
       if (location.address?.state) {
         setValue('factory_state', location.address.state, { shouldValidate: true });
       }
@@ -396,6 +371,75 @@ const ConverterRegistrationScreen = () => {
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.container}>
+        {hasPrefilledCompanyDetails && (profileData?.company_name || profileData?.gst_in || profileData?.state || profileData?.city) && (
+          <Card style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <AppIcon.Organization width={20} height={20} color={theme.colors.primary.DEFAULT} />
+              </View>
+              <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
+                Company Details
+              </Text>
+            </View>
+            {profileData?.company_name && (
+              <View style={styles.formGroup}>
+                <View style={styles.labelRow}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    Company Name
+                  </Text>
+                </View>
+                <View style={[styles.input, { backgroundColor: theme.colors.background.secondary }]}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                    {profileData.company_name}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {profileData?.gst_in && (
+              <View style={styles.formGroup}>
+                <View style={styles.labelRow}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    GSTIN
+                  </Text>
+                </View>
+                <View style={[styles.input, { backgroundColor: theme.colors.background.secondary }]}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                    {profileData.gst_in}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {profileData?.state && (
+              <View style={styles.formGroup}>
+                <View style={styles.labelRow}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    State
+                  </Text>
+                </View>
+                <View style={[styles.input, { backgroundColor: theme.colors.background.secondary }]}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                    {profileData.state}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {profileData?.city && (
+              <View style={styles.formGroup}>
+                <View style={styles.labelRow}>
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                    City
+                  </Text>
+                </View>
+                <View style={[styles.input, { backgroundColor: theme.colors.background.secondary }]}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                    {profileData.city}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </Card>
+        )}
+
         {/* Converter Type Card */}
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
@@ -716,6 +760,7 @@ const ConverterRegistrationScreen = () => {
                     value={value}
                     placeholder="Select State"
                     onPress={openStateSelector}
+                    disabled={hasPrefilledCompanyDetails}
                   />
                   {error && (
                     <Text variant="captionSmall" style={styles.errorText}>
@@ -744,7 +789,7 @@ const ConverterRegistrationScreen = () => {
                     value={value}
                     placeholder={factoryStateValue ? 'Select City' : 'Select State first'}
                     onPress={openCitySelector}
-                    disabled={!factoryStateValue}
+                    disabled={hasPrefilledCompanyDetails || !factoryStateValue}
                   />
                   {error && (
                     <Text variant="captionSmall" style={styles.errorText}>

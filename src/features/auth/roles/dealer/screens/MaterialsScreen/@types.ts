@@ -21,7 +21,9 @@ export interface SelectedMaterial {
   category: string;
   thicknessRanges?: ThicknessRange[];
   finishIds?: number[];
+  finishNames?: string[];
   brandId?: number | null;
+  brandName?: string | null;
   agentType?: string | null;
 }
 

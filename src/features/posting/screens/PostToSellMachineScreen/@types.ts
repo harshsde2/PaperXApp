@@ -1,4 +1,4 @@
-import type { MachineCategoryType } from '../../constants/machineConstants';
+import type { MachineCategoryType, MachineVisibilityType } from '../../constants/machineConstants';
 
 export type LocationSource = 'saved' | 'manual';
 
@@ -23,6 +23,7 @@ export interface PostToSellMachineFormData {
   price: number | undefined;
   price_negotiable: boolean;
   urgency: 'normal' | 'urgent';
+  visibility: MachineVisibilityType;
   location: string;
   latitude: number | undefined;
   longitude: number | undefined;

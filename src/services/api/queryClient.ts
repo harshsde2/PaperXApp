@@ -197,6 +197,15 @@ export const queryKeys = {
     conversations: () => [...queryKeys.chat.all, 'conversations'] as const,
     messages: (conversationId: string) =>
       [...queryKeys.chat.all, 'conversations', conversationId, 'messages'] as const,
+    structured: {
+      all: ['chat', 'structured'] as const,
+      inquiryThreads: (inquiryId: number | string) =>
+        [...queryKeys.chat.structured.all, 'inquiry-threads', inquiryId] as const,
+      threadMessages: (
+        threadId: number | string,
+        params?: { limit?: number; cursor?: number | null }
+      ) => [...queryKeys.chat.structured.all, 'thread', threadId, 'messages', params] as const,
+    },
   },
 
   // Notifications

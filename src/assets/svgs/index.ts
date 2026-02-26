@@ -52,6 +52,7 @@ import PlusCircle from './PlusCircle.svg';
 import Order from './Order.svg';
 import Pause from './Pause.svg';
 import Play from './Play.svg';
+import Filter from './Filter.svg';
 
 
 
@@ -110,4 +111,5 @@ export const AppIcon = {
   Order,
   Pause,
   Play,
+  Filter,
 };

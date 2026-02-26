@@ -6,7 +6,9 @@ import {
   ActivityIndicator,
   FlatList,
   ListRenderItem,
+  Modal,
 } from 'react-native';
+import { SelectedMaterialsModal } from './components/SelectedMaterialsModal';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -21,19 +23,17 @@ import {
 } from './@types';
 import { createStyles } from './styles';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import {
-  useGetMaterialsInfinite,
-  Material,
-  MaterialGrade,
-} from '@services/api';
+import { useGetMaterialsInfinite, Material, useCreateMaterial } from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appContent } from '@utils/appContent';
+import { useAppDispatch } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 50;
 const END_REACHED_THRESHOLD = 0.2;
 
 interface FlatListItem {
-  type: 'grade';
+  type: 'material';
   id: string;
   data: {
     materialId: number;
@@ -44,7 +44,7 @@ interface FlatListItem {
   };
 }
 
-interface GradeItemProps {
+interface MaterialItemProps {
   materialId: number;
   materialName: string;
   gradeId: number;
@@ -62,7 +62,7 @@ interface GradeItemProps {
   theme: Theme;
 }
 
-const GradeItem = memo(
+const MaterialItem = memo(
   ({
     materialId,
     materialName,
@@ -73,7 +73,7 @@ const GradeItem = memo(
     onToggle,
     styles,
     theme,
-  }: GradeItemProps) => {
+  }: MaterialItemProps) => {
     const handlePress = useCallback(() => {
       onToggle(materialId, materialName, gradeId, gradeName, category);
     }, [materialId, materialName, gradeId, gradeName, category, onToggle]);
@@ -86,7 +86,7 @@ const GradeItem = memo(
       >
         <View style={styles.materialItemContent}>
           <Text variant="bodyMedium" style={styles.materialItemName}>
-            {gradeName}
+            {materialName}
           </Text>
         </View>
         {isSelected ? (
@@ -107,49 +107,7 @@ const GradeItem = memo(
   },
 );
 
-GradeItem.displayName = 'GradeItem';
-
-interface SelectionChipProps {
-  selectionKey: string;
-  materialName: string;
-  gradeName: string;
-  thicknessLabel?: string;
-  onRemove: (key: string) => void;
-  styles: ReturnType<typeof createStyles>;
-}
-
-const SelectionChip = memo(
-  ({
-    selectionKey,
-    materialName,
-    gradeName,
-    thicknessLabel,
-    onRemove,
-    styles,
-  }: SelectionChipProps) => {
-    const handlePress = useCallback(() => {
-      onRemove(selectionKey);
-    }, [selectionKey, onRemove]);
-
-    return (
-      <TouchableOpacity
-        style={styles.chip}
-        onPress={handlePress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.chipContent}>
-          <Text variant="bodySmall" fontWeight="medium" style={styles.chipText}>
-            {materialName} - {gradeName}
-            {thicknessLabel ? ` • ${thicknessLabel}` : ''}
-          </Text>
-        </View>
-        <Text style={styles.chipText}>×</Text>
-      </TouchableOpacity>
-    );
-  },
-);
-
-SelectionChip.displayName = 'SelectionChip';
+MaterialItem.displayName = 'MaterialItem';
 
 const MaterialsScreen = () => {
   const navigation = useNavigation<MaterialsScreenNavigationProp>();
@@ -157,6 +115,7 @@ const MaterialsScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
 
   const { profileData } = route.params || {};
 
@@ -173,7 +132,14 @@ const MaterialsScreen = () => {
   } = useGetMaterialsInfinite(ITEMS_PER_PAGE);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [customMaterialName, setCustomMaterialName] = useState('');
+  const [isCustomMaterialModalVisible, setIsCustomMaterialModalVisible] =
+    useState(false);
+  const [isSelectedMaterialsModalVisible, setIsSelectedMaterialsModalVisible] =
+    useState(false);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+
+  const { mutateAsync: createMaterial, isPending: isCreatingMaterial } = useCreateMaterial();
   const [selectedMaterials, setSelectedMaterials] = useState<
     Map<string, SelectedMaterial>
   >(new Map());
@@ -265,13 +231,13 @@ const MaterialsScreen = () => {
         grade_ids: number[];
         variant_ids: number[];
         custom_specs: string[];
+        finish_names?: string[];
       }) => {
-        // Update the material with finish_ids (combining all finish-related IDs)
+        // Update the material with finish_ids and finish_names
         setSelectedMaterials(prev => {
           const newMap = new Map(prev);
           const existing = newMap.get(key);
           if (existing) {
-            // Combine all finish-related IDs into finish_ids array
             const allFinishIds = [
               ...specs.finish_ids,
               ...specs.coating_ids,
@@ -282,6 +248,7 @@ const MaterialsScreen = () => {
             newMap.set(key, {
               ...existing,
               finishIds: allFinishIds.length > 0 ? allFinishIds : undefined,
+              finishNames: specs.finish_names ?? [],
             });
           }
           return newMap;
@@ -291,8 +258,9 @@ const MaterialsScreen = () => {
       const onBrandDetailsSelected = (details: {
         brand_id: number | null;
         agent_type: string | null;
+        brand_name?: string | null;
       }) => {
-        // Update the material with brand_id and agent_type
+        // Update the material with brand_id, brand_name and agent_type
         setSelectedMaterials(prev => {
           const newMap = new Map(prev);
           const existing = newMap.get(key);
@@ -300,6 +268,7 @@ const MaterialsScreen = () => {
             newMap.set(key, {
               ...existing,
               brandId: details.brand_id,
+              brandName: details.brand_name ?? null,
               agentType: details.agent_type,
             });
           }
@@ -318,6 +287,36 @@ const MaterialsScreen = () => {
     [getSelectionKey, navigation, selectedKeys],
   );
 
+  const handleAddCustomMaterial = useCallback(async () => {
+    const name = customMaterialName.trim();
+    if (!name) {
+      dispatch(showToast({ message: 'Please enter a material name', type: 'error' }));
+      return;
+    }
+    try {
+      const material = await createMaterial({ name });
+      const firstGrade = material?.grades?.[0];
+      if (material && firstGrade) {
+        const category = material.category || 'Custom';
+        handleGradeToggle(
+          material.id,
+          material.name,
+          firstGrade.id,
+          firstGrade.name,
+          category,
+        );
+        setCustomMaterialName('');
+        setIsCustomMaterialModalVisible(false);
+        dispatch(showToast({ message: 'Material added successfully', type: 'success' }));
+      } else {
+        dispatch(showToast({ message: 'Failed to add material', type: 'error' }));
+      }
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to add material';
+      dispatch(showToast({ message: msg, type: 'error' }));
+    }
+  }, [customMaterialName, createMaterial, handleGradeToggle, dispatch]);
+
   const handleRemoveChip = useCallback((key: string) => {
     setSelectedKeys(prev => {
       const newSet = new Set(prev);
@@ -335,40 +334,29 @@ const MaterialsScreen = () => {
   const flatListData = useMemo((): FlatListItem[] => {
     const query = searchQuery.toLowerCase().trim();
     const items: FlatListItem[] = [];
-    const seenGrades = new Set<string>(); // Track unique grade names to prevent duplicates
 
-    // Flatten all grades from all materials into a single list
+    // One row per material (using first grade for backend compatibility)
     allMaterials.forEach(material => {
       const grades = material.grades || [];
+      if (grades.length === 0) return;
+
+      const firstGrade = grades[0];
       const category = material.category || 'Other';
+      const matchesMaterial = !query || (material.name || '').toLowerCase().includes(query);
 
-      grades.forEach(grade => {
-        // Create unique key for grade using normalized grade name (case-insensitive)
-        const gradeKey = (grade.name || '').toLowerCase().trim();
-        
-        // Skip if we've already seen this grade name
-        if (seenGrades.has(gradeKey)) {
-          return;
-        }
-        
-        // Filter by grade name only (optimized search)
-        const matchesGrade = !query || grade.name.toLowerCase().includes(query);
-
-        if (matchesGrade) {
-          seenGrades.add(gradeKey);
-          items.push({
-            type: 'grade',
-            id: `grade-${material.id}-${grade.id}`,
-            data: {
-              materialId: material.id,
-              materialName: material.name,
-              gradeId: grade.id,
-              gradeName: grade.name,
-              category,
-            },
-          });
-        }
-      });
+      if (matchesMaterial) {
+        items.push({
+          type: 'material',
+          id: `material-${material.id}`,
+          data: {
+            materialId: material.id,
+            materialName: material.name,
+            gradeId: firstGrade.id,
+            gradeName: firstGrade.name,
+            category,
+          },
+        });
+      }
     });
 
     return items;
@@ -473,7 +461,7 @@ const MaterialsScreen = () => {
   const renderItem: ListRenderItem<FlatListItem> = useCallback(
     ({ item }) => {
       return (
-        <GradeItem
+        <MaterialItem
           materialId={item.data.materialId}
           materialName={item.data.materialName}
           gradeId={item.data.gradeId}
@@ -519,8 +507,8 @@ const MaterialsScreen = () => {
           style={{ color: theme.colors.text.tertiary }}
         >
           {searchQuery
-            ? 'No grades found matching your search'
-            : 'No grades available'}
+            ? 'No materials found matching your search'
+            : 'No materials available'}
         </Text>
       </View>
     );
@@ -626,29 +614,21 @@ const MaterialsScreen = () => {
           </View>
 
           {selectedMaterialsList.length > 0 && (
-            <View style={styles.selectedChipsContainer}>
-              {selectedMaterialsList.map(([key, material]) => {
-                const thicknessRanges = material.thicknessRanges || [];
-                const thicknessLabel =
-                  thicknessRanges.length > 0
-                    ? thicknessRanges.length === 1
-                      ? `${thicknessRanges[0].min}-${thicknessRanges[0].max} ${thicknessRanges[0].unit}`
-                      : `${thicknessRanges.length} ranges`
-                    : undefined;
-
-                return (
-                  <SelectionChip
-                    key={key}
-                    selectionKey={key}
-                    materialName={material.materialName}
-                    gradeName={material.gradeName}
-                    thicknessLabel={thicknessLabel}
-                    onRemove={handleRemoveChip}
-                    styles={styles}
-                  />
-                );
-              })}
-            </View>
+            <TouchableOpacity
+              style={styles.selectedCountPill}
+              onPress={() => setIsSelectedMaterialsModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Text
+                variant="bodyMedium"
+                fontWeight="medium"
+                style={styles.selectedCountPillText}
+              >
+                {selectedMaterialsList.length} material
+                {selectedMaterialsList.length !== 1 ? 's' : ''} selected
+              </Text>
+              {/*  */}
+            </TouchableOpacity>
           )}
 
           <FlatList
@@ -679,22 +659,93 @@ const MaterialsScreen = () => {
         </View>
       </ScreenWrapper>
 
+      <SelectedMaterialsModal
+        visible={isSelectedMaterialsModalVisible}
+        onClose={() => setIsSelectedMaterialsModalVisible(false)}
+        selectedMaterials={selectedMaterialsList}
+        onRemove={handleRemoveChip}
+      />
+
+      <Modal
+        visible={isCustomMaterialModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCustomMaterialModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+              Add Custom Material
+            </Text>
+            <TextInput
+              style={styles.customMaterialInput}
+              placeholder="Enter material name"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={customMaterialName}
+              onChangeText={setCustomMaterialName}
+              editable={!isCreatingMaterial}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setIsCustomMaterialModalVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Text variant="bodyMedium" style={styles.modalCancelText}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addMaterialButton, isCreatingMaterial && { opacity: 0.6 }]}
+                onPress={handleAddCustomMaterial}
+                disabled={isCreatingMaterial || !customMaterialName.trim()}
+                activeOpacity={0.8}
+              >
+                {isCreatingMaterial ? (
+                  <ActivityIndicator size="small" color={theme.colors.text.inverse} />
+                ) : (
+                  <Text variant="bodyMedium" fontWeight="medium" style={styles.buttonText}>
+                    Add
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <FloatingBottomContainer>
-        <TouchableOpacity
-          style={[styles.button, selectedKeys.size === 0 && { opacity: 0.5 }]}
-          onPress={handleSaveAndContinue}
-          activeOpacity={0.8}
-          disabled={selectedKeys.size === 0}
-        >
-          <Text variant="buttonMedium" style={styles.buttonText}>
-            {appContent.MaterialRegistration.ActionButtonText} ({selectedKeys.size} selected)
-          </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
-        </TouchableOpacity>
+        <View style={styles.bottomActionsRow}>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setIsCustomMaterialModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text variant="buttonMedium" style={styles.secondaryButtonText}>
+              Add Custom
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.halfButton,
+              selectedKeys.size === 0 && { opacity: 0.5 },
+            ]}
+            onPress={handleSaveAndContinue}
+            activeOpacity={0.8}
+            disabled={selectedKeys.size === 0}
+          >
+            <Text variant="buttonMedium" style={styles.buttonText}>
+              Continue ({selectedKeys.size})
+            </Text>
+            <AppIcon.ArrowRight
+              width={20}
+              height={20}
+              color={theme.colors.text.inverse}
+            />
+          </TouchableOpacity>
+        </View>
       </FloatingBottomContainer>
     </>
   );

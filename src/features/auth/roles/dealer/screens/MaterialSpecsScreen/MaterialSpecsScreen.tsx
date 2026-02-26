@@ -6,11 +6,12 @@ import {
   ActivityIndicator,
   FlatList,
   ListRenderItem,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
-import { Card } from '@shared/components/Card';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { AppIcon } from '@assets/svgs';
 import { useTheme, Theme } from '@theme/index';
@@ -92,6 +93,8 @@ const MaterialSpecsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOptions, setSelectedOptions] = useState<Set<number>>(new Set());
   const [customInput, setCustomInput] = useState('');
+  const [customSpecs, setCustomSpecs] = useState<string[]>([]);
+  const [isCustomModalVisible, setIsCustomModalVisible] = useState(false);
 
   const isLoadingMoreRef = useRef(false);
   const scrollViewRef = useRef<FlatList>(null);
@@ -140,13 +143,12 @@ const MaterialSpecsScreen = () => {
     );
   }, [allFinishes, searchQuery]);
 
-  const totalSelectedCount = selectedOptions.size;
-
-  // //todo: add custom specs to the material specs data
-  // totalSelectedCount = 1
+  const totalSelectedCount = selectedOptions.size + customSpecs.length;
 
   const handleClearAll = useCallback(() => {
     setSelectedOptions(new Set());
+    setCustomSpecs([]);
+    setCustomInput('');
   }, []);
 
   const handleConfirm = useCallback(() => {
@@ -160,13 +162,19 @@ const MaterialSpecsScreen = () => {
       };
     });
 
+    const finish_names = [
+      ...selectedFinishes.map(f => f.name).filter((n): n is string => Boolean(n)),
+      ...customSpecs,
+    ];
+
     const materialSpecsData = {
       finish_ids: selectedFinishes.filter(f => f.type === 'finish').map(f => f.id).filter((id): id is number => id !== undefined),
       coating_ids: selectedFinishes.filter(f => f.type === 'coating').map(f => f.id).filter((id): id is number => id !== undefined),
       surface_ids: selectedFinishes.filter(f => f.type === 'surface').map(f => f.id).filter((id): id is number => id !== undefined),
       grade_ids: selectedFinishes.filter(f => f.type === 'grade').map(f => f.id).filter((id): id is number => id !== undefined),
       variant_ids: selectedFinishes.filter(f => f.type === 'variant').map(f => f.id).filter((id): id is number => id !== undefined),
-      custom_specs: customInput.trim() ? [customInput.trim()] : [],
+      custom_specs: customSpecs,
+      finish_names,
     };
 
     if (onSpecsSelected) {
@@ -193,15 +201,19 @@ const MaterialSpecsScreen = () => {
 
     // Fallback: existing flow if no callback is provided
     navigation.goBack();
-  }, [selectedOptions, allFinishes, customInput, onSpecsSelected, onBrandDetailsSelected, materialKey, navigation]);
+  }, [selectedOptions, allFinishes, customSpecs, onSpecsSelected, onBrandDetailsSelected, materialKey, navigation]);
 
-  const handleAddCustom = () => {
-    if (customInput.trim()) {
-      // Custom specs are stored separately, not as finish IDs
-      // They'll be included in the material_specs.custom_specs array
+  const handleAddCustom = useCallback(() => {
+    const trimmed = customInput.trim();
+    if (trimmed) {
+      setCustomSpecs(prev => [...prev, trimmed]);
       setCustomInput('');
     }
-  };
+  }, [customInput]);
+
+  const handleRemoveCustomSpec = useCallback((index: number) => {
+    setCustomSpecs(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
   const handleLoadMore = useCallback(() => {
     if (isLoadingMoreRef.current || isFetchingNextPage) {
@@ -306,7 +318,7 @@ const MaterialSpecsScreen = () => {
     );
   }, [isLoading, searchQuery, theme]);
 
-  const buttonHeight = 100;
+  const buttonHeight = 120;
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
 
   if (isLoading) {
@@ -381,7 +393,7 @@ const MaterialSpecsScreen = () => {
       >
         <View style={[styles.container, { paddingBottom: bottomPadding }]}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>
-            Select Finishes / Coating / Grade / Variant
+            Select Finishes / Coating / Grade / Certifications
           </Text>
           <Text variant="bodyMedium" style={styles.description}>
             Specify technical attributes for your request. Multiple selections allowed.
@@ -429,31 +441,79 @@ const MaterialSpecsScreen = () => {
             keyboardShouldPersistTaps="always"
             keyboardDismissMode="none"
           />
-
-          {/* <Card style={styles.card}>
-            <View style={styles.customInputSection}>
-              <View style={styles.customInputLabel}>
-                <Text style={{ fontSize: 16 }}>✏️</Text>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.sectionTitle}>
-                  Can't find what you need?
-                </Text>
-              </View>
-              <View style={styles.customInputContainer}>
-                <TextInput
-                  style={styles.customInput}
-                  placeholder="Type specific grade or finish..."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={customInput}
-                  onChangeText={setCustomInput}
-                />
-                <TouchableOpacity onPress={handleAddCustom} activeOpacity={0.7} style={styles.addButton}>
-                  <Text style={{ fontSize: 20, color: theme.colors.primary.DEFAULT }}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Card> */}
         </View>
       </ScreenWrapper>
+
+      <Modal
+        visible={isCustomModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCustomModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setIsCustomModalVisible(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+            <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+              Add custom spec
+            </Text>
+            <TextInput
+              style={styles.customInput}
+              placeholder="Type specific grade or finish..."
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={customInput}
+              onChangeText={setCustomInput}
+            />
+            {customSpecs.length > 0 && (
+              <View style={[styles.optionsGrid, { marginTop: theme.spacing[3] }]}>
+                {customSpecs.map((spec, index) => (
+                  <TouchableOpacity
+                    key={`custom-${index}-${spec}`}
+                    style={[styles.optionChip, styles.optionChipSelected]}
+                    onPress={() => handleRemoveCustomSpec(index)}
+                    activeOpacity={0.7}
+                  >
+                    <Text variant="bodyMedium" style={styles.optionChipTextSelected}>
+                      {spec}
+                    </Text>
+                    <AppIcon.Close
+                      width={14}
+                      height={14}
+                      color={theme.colors.text.inverse}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setIsCustomModalVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Text variant="bodyMedium" style={styles.modalCancelText}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  { flex: 0, width: 'auto', paddingHorizontal: theme.spacing[5] },
+                  !customInput.trim() && { opacity: 0.5 },
+                ]}
+                onPress={handleAddCustom}
+                activeOpacity={0.8}
+                disabled={!customInput.trim()}
+              >
+                <Text variant="buttonMedium" style={styles.confirmButtonText}>
+                  Add
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <FloatingBottomContainer>
         <View style={styles.footerTop}>
@@ -468,17 +528,50 @@ const MaterialSpecsScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity
-          style={[styles.confirmButton, totalSelectedCount === 0 && { opacity: 0.5 }]}
-          onPress={handleConfirm}
-          activeOpacity={0.8}
-          disabled={totalSelectedCount === 0}
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: theme.spacing[2],
+            width: '100%',
+          }}
         >
-          <Text variant="buttonMedium" style={styles.confirmButtonText}>
-            Confirm Selection
-          </Text>
-          <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: theme.spacing[4],
+              borderRadius: theme.borderRadius.lg,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.colors.surface.primary,
+              borderWidth: 1,
+              borderColor: theme.colors.border.primary,
+            }}
+            onPress={() => setIsCustomModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text
+              variant="buttonMedium"
+              style={{ color: theme.colors.text.primary }}
+            >
+              Add Custom{customSpecs.length > 0 ? ` (${customSpecs.length})` : ''}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.confirmButton,
+              { flex: 1, width: undefined },
+              totalSelectedCount === 0 && { opacity: 0.5 },
+            ]}
+            onPress={handleConfirm}
+            activeOpacity={0.8}
+            disabled={totalSelectedCount === 0}
+          >
+            <Text variant="buttonMedium" style={styles.confirmButtonText}>
+              Confirm
+            </Text>
+            <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
+          </TouchableOpacity>
+        </View>
       </FloatingBottomContainer>
     </>
   );

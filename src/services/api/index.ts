@@ -362,6 +362,11 @@ export {
   useGetMatchmakingResponses,
   useExpressInterest,
   useDeclineInquiry,
+  useGetInquiryChatThreads,
+  useOpenStructuredThread,
+  useGetThreadMessagesInfinite,
+  useSendThreadMessage,
+  useMarkStructuredThreadRead,
 } from './sessionApi/sessionApi';
 export type { GetSessionByInquiryResponse } from './sessionApi/sessionApi';
 export type {
@@ -411,6 +416,15 @@ export type {
   MatchmakingResponsesCountdown,
   GetMatchmakingResponsesResponse,
   GetMatchmakingResponsesParams,
+  // Structured chat
+  ChatThreadParticipant,
+  ChatThreadListItem,
+  GetInquiryChatThreadsResponse,
+  OpenChatThreadResponse,
+  ThreadMessage,
+  ThreadMessagesResponse,
+  GetThreadMessagesParams,
+  SendThreadMessagePayload,
 } from './sessionApi/@types';
 export type { ExpressInterestPayload } from './sessionApi/sessionApi';
 

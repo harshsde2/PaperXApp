@@ -12,4 +12,5 @@ export interface MarketplaceFilterState {
   lead_time?: string;
   sort_by?: string;
   sort_dir?: string;
+  filter?: string;
 }

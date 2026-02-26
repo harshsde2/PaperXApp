@@ -136,3 +136,18 @@ export const URGENCY_OPTIONS = [
   { label: 'Normal', value: 'normal' },
   { label: 'Urgent (want to offload fast / need immediately)', value: 'urgent' },
 ];
+
+/**
+ * API visibility for machine posts.
+ * For machine flows we only care about converters and machine dealers.
+ * - 'converters'        → only converters
+ * - 'machine_dealers'   → only machine dealers
+ * - 'all'               → both converters + machine dealers
+ */
+export type MachineVisibilityType = 'converters' | 'machine_dealers' | 'all';
+
+export const MACHINE_VISIBILITY_OPTIONS: { label: string; value: MachineVisibilityType }[] = [
+  { label: 'Converters only', value: 'converters' },
+  { label: 'Machine dealers only', value: 'machine_dealers' },
+  { label: 'Converters & machine dealers', value: 'all' },
+];

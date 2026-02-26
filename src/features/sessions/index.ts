@@ -8,6 +8,8 @@ export { default as SessionDetailsScreen } from './screens/SessionDetailsScreen/
 export { default as ResponderDetailsScreen } from './screens/ResponderDetailsScreen/ResponderDetailsScreen';
 export { default as SessionLockedScreen } from './screens/SessionLockedScreen/SessionLockedScreen';
 export { default as SessionChatScreen } from './screens/SessionChatScreen/SessionChatScreen';
+export { default as InquiryChatThreadsScreen } from './screens/InquiryChatThreadsScreen/InquiryChatThreadsScreen';
+export { default as StructuredChatScreen } from './screens/StructuredChatScreen/StructuredChatScreen';
 
 // Components
 export { SessionCard } from './components/SessionCard';

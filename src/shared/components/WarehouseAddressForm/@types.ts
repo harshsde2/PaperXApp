@@ -1,0 +1,31 @@
+export interface WarehouseFormData {
+  name: string;
+  flatHouseNo: string;
+  streetLandmark: string;
+  locality: string;
+  state: string;
+  city: string;
+  pincode: string;
+}
+
+export interface WarehouseFormMapData {
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface WarehouseAddressFormProps {
+  mapData: WarehouseFormMapData;
+  existingLocation?: {
+    id: string;
+    isPrimary: boolean;
+    name?: string;
+    address?: string;
+  } | null;
+  onSubmit: (data: WarehouseFormData & { latitude: number; longitude: number }) => void;
+  onCancel: () => void;
+  submitLabel?: string;
+}

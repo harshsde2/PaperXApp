@@ -175,6 +175,14 @@ const SessionDetailsScreen = () => {
     [navigation, sessionId, inquiryId]
   );
 
+  const handleOpenResponsesChat = useCallback(() => {
+    if (!inquiryId) return;
+    navigation.navigate(SCREENS.SESSIONS.INQUIRY_CHAT_THREADS, {
+      inquiryId: String(inquiryId),
+      inquiryTitle: summaryTitle,
+    });
+  }, [navigation, inquiryId, summaryTitle]);
+
   const handleShortlist = useCallback(
     (response: MatchResponse) => {
       refetchResponses();
@@ -221,6 +229,7 @@ const SessionDetailsScreen = () => {
           isLoading={isLoadingPosterDetail}
           onRefresh={handleRefresh}
           refreshing={refreshing}
+          onOpenResponsesChat={handleOpenResponsesChat}
         />
       ) : (
         <SessionDetailReceiverView

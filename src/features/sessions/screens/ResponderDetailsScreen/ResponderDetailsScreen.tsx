@@ -19,6 +19,7 @@ import {
   useGetMatchmakingResponses,
   useExpressInterest,
   useDeclineInquiry,
+  useOpenStructuredThread,
 } from '@services/api';
 import { ElapsedTimer } from '../../components/ElapsedTimer';
 import { InterestedModal } from './InterestedModal';
@@ -66,6 +67,7 @@ export default function ResponderDetailsScreen() {
 
   const expressInterest = useExpressInterest();
   const declineInquiry = useDeclineInquiry();
+  const openStructuredThread = useOpenStructuredThread();
 
   const status = responderDetail?.my_responder_status ?? sessionDetail?.my_responder_status;
   const expressedInterest = status?.expressed_interest ?? false;
@@ -142,13 +144,17 @@ export default function ResponderDetailsScreen() {
   }, [inquiryId, declineInquiry, refetchResponder, refetchSession]);
 
   const handleChat = useCallback(() => {
-    navigation.navigate(SCREENS.SESSIONS.CHAT, {
-      sessionId,
-      partnerId: '',
-      partnerName: posterLabel,
-      inquiryRef: String(inquiryId),
+    if (!inquiryId) return;
+    openStructuredThread.mutate(inquiryId, {
+      onSuccess: (result) => {
+        navigation.navigate(SCREENS.SESSIONS.STRUCTURED_CHAT, {
+          threadId: String(result.thread_id),
+          inquiryId: String(inquiryId),
+          partnerName: posterLabel,
+        });
+      },
     });
-  }, [navigation, sessionId, inquiryId, posterLabel]);
+  }, [navigation, inquiryId, posterLabel, openStructuredThread]);
 
   const isLoading = isLoadingSession || isLoadingResponder;
   if (isLoading && !responderDetail && !sessionDetail) {
@@ -229,23 +235,28 @@ export default function ResponderDetailsScreen() {
           <>
             <Text style={styles.responderActionsTitle}>Your response</Text>
             <View style={styles.responderActionsSection}>
-              {shortlisted && (
+              {(expressedInterest || shortlisted) && !declined && (
                 <View style={styles.actionSection}>
                   <View style={styles.statusBox}>
-                    <Text style={styles.statusText}>You're shortlisted. You can chat with the poster now.</Text>
+                    <Text style={styles.statusText}>
+                      Your response is submitted. Open chat with the poster.
+                    </Text>
                   </View>
-                  <TouchableOpacity style={styles.primaryButton} onPress={handleChat} activeOpacity={0.8}>
-                    <AppIcon.Messages width={20} height={20} color="#FFF" />
-                    <Text style={styles.primaryButtonText}>Chat</Text>
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={handleChat}
+                    disabled={openStructuredThread.isPending}
+                    activeOpacity={0.8}
+                  >
+                    {openStructuredThread.isPending ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <>
+                        <AppIcon.Messages width={20} height={20} color="#FFF" />
+                        <Text style={styles.primaryButtonText}>Chat</Text>
+                      </>
+                    )}
                   </TouchableOpacity>
-                </View>
-              )}
-
-              {expressedInterest && !shortlisted && (
-                <View style={styles.actionSection}>
-                  <View style={styles.statusBox}>
-                    <Text style={styles.statusText}>Waiting for poster to shortlist you. You'll be notified when they do.</Text>
-                  </View>
                 </View>
               )}
 

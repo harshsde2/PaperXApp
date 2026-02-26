@@ -6,6 +6,7 @@ import {
   Modal,
   Alert,
   Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -40,6 +41,8 @@ import {
   MarkerData,
   ZOOM_LEVELS,
 } from '@shared/location';
+import { WarehouseAddressForm } from '@shared/components/WarehouseAddressForm/WarehouseAddressForm';
+import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -56,6 +59,9 @@ const ManageWarehousesScreen = () => {
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showWarehouseForm, setShowWarehouseForm] = useState(false);
+  const [pendingMapLocation, setPendingMapLocation] =
+    useState<WarehouseFormMapData | null>(null);
   const [editingLocation, setEditingLocation] =
     useState<WarehouseLocation | null>(null);
   const [expandedLocationIds, setExpandedLocationIds] = useState<string[]>([]);
@@ -64,11 +70,6 @@ const ManageWarehousesScreen = () => {
 
   const { mutate: completeProfileMutation, isPending } =
     useCompleteDealerProfile();
-
-  console.log(
-    '[ManageWarehouses] dealerRegistrationData data:',
-    JSON.stringify(dealerRegistrationData, null, 2),
-  );
 
   // Generate unique ID for new locations
   const generateId = () =>
@@ -105,7 +106,7 @@ const ManageWarehousesScreen = () => {
             longitude: loc.longitude,
             city: loc.city,
             state: loc.state,
-            pincode: loc.zipCode,
+            pincode: loc.zipCode || undefined,
           }));
 
       const requestData: CompleteDealerProfileRequest = {
@@ -271,47 +272,80 @@ const ManageWarehousesScreen = () => {
     });
   }, [navigation]);
 
-  // Handle location selection from LocationPicker
-  const handleLocationSelect = useCallback(
-    (location: Location) => {
+  // Map-first flow: LocationPicker confirm → store map data → open form for extra details
+  const handleLocationSelect = useCallback((location: Location) => {
+    const address =
+      location.address?.streetAddress ||
+      location.address?.formattedAddress ||
+      '';
+    const mapData: WarehouseFormMapData = {
+      address,
+      city: location.address?.city || '',
+      state: location.address?.state || '',
+      pincode: location.address?.pincode || '',
+      latitude: location.latitude,
+      longitude: location.longitude,
+    };
+    setPendingMapLocation(mapData);
+    setShowLocationPicker(false);
+    setShowWarehouseForm(true);
+  }, []);
+
+  const handleWarehouseFormSubmit = useCallback(
+    (data: {
+      name: string;
+      flatHouseNo: string;
+      streetLandmark: string;
+      locality: string;
+      state: string;
+      city: string;
+      pincode: string;
+      latitude: number;
+      longitude: number;
+    }) => {
+      if (!pendingMapLocation) return;
+
+      const fullAddress = [
+        data.flatHouseNo,
+        data.streetLandmark,
+        data.locality,
+        data.city,
+        data.state,
+        data.pincode,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
       const warehouseLocation: WarehouseLocation = {
         id: editingLocation?.id || generateId(),
-        name: location.name || `Warehouse ${locations.length + 1}`,
-        address:
-          location.address?.streetAddress ||
-          location.address?.formattedAddress ||
-          '',
-        city: location.address?.city || '',
-        state: location.address?.state || '',
-        zipCode: location.address?.pincode || '',
-        isPrimary: editingLocation?.isPrimary || locations.length === 0,
-        latitude: location.latitude,
-        longitude: location.longitude,
+        name: data.name?.trim() || `Warehouse ${locations.length + 1}`,
+        address: fullAddress || pendingMapLocation.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.pincode,
+        isPrimary: editingLocation?.isPrimary ?? locations.length === 0,
+        latitude: data.latitude,
+        longitude: data.longitude,
       };
 
       setLocations(prev => {
         const exists = prev.find(loc => loc.id === warehouseLocation.id);
-
         if (exists) {
-          // Update existing location
           return prev.map(loc =>
             loc.id === warehouseLocation.id ? warehouseLocation : loc,
           );
         }
-
-        // Add new location
         return [...prev, warehouseLocation];
       });
 
-      // Ensure the newly added/updated location is expanded
-      setExpandedLocationIds(prev => {
-        if (prev.includes(warehouseLocation.id)) {
-          return prev;
-        }
-        return [...prev, warehouseLocation.id];
-      });
+      setExpandedLocationIds(prev =>
+        prev.includes(warehouseLocation.id)
+          ? prev
+          : [...prev, warehouseLocation.id],
+      );
 
-      setShowLocationPicker(false);
+      setShowWarehouseForm(false);
+      setPendingMapLocation(null);
       setEditingLocation(null);
 
       dispatch(
@@ -323,8 +357,14 @@ const ManageWarehousesScreen = () => {
         }),
       );
     },
-    [editingLocation, locations.length, dispatch],
+    [pendingMapLocation, editingLocation, locations.length, dispatch],
   );
+
+  const handleWarehouseFormCancel = useCallback(() => {
+    setShowWarehouseForm(false);
+    setPendingMapLocation(null);
+    setEditingLocation(null);
+  }, []);
 
   const handleEdit = useCallback((location: WarehouseLocation) => {
     setEditingLocation(location);
@@ -781,7 +821,7 @@ const ManageWarehousesScreen = () => {
           showExistingMarkers={true}
           allowMapTap={true}
           confirmButtonText={
-            editingLocation ? 'Update Location' : 'Add Location'
+            editingLocation ? 'Update Details' : 'Add Details'
           }
           title={
             editingLocation
@@ -789,6 +829,65 @@ const ManageWarehousesScreen = () => {
               : 'Add Warehouse Location'
           }
         />
+      </Modal>
+
+      {/* Warehouse Address Form Modal - extra details after map selection */}
+      <Modal
+        visible={showWarehouseForm && !!pendingMapLocation}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleWarehouseFormCancel}
+      >
+        <SafeAreaView
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.background.secondary,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: theme.spacing[4],
+              paddingVertical: theme.spacing[3],
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.border.primary,
+            }}
+          >
+            <Text variant="h5" fontWeight="semibold" style={{ color: theme.colors.text.primary }}>
+              {editingLocation ? 'Edit Warehouse Details' : 'Add Warehouse Details'}
+            </Text>
+            <TouchableOpacity
+              onPress={handleWarehouseFormCancel}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <AppIcon.Close
+                width={22}
+                height={22}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+          </View>
+          {pendingMapLocation && (
+          <WarehouseAddressForm
+            mapData={pendingMapLocation}
+            existingLocation={
+              editingLocation
+                ? {
+                    id: editingLocation.id,
+                    isPrimary: editingLocation.isPrimary,
+                    name: editingLocation.name,
+                    address: editingLocation.address,
+                  }
+                : null
+            }
+            onSubmit={handleWarehouseFormSubmit}
+            onCancel={handleWarehouseFormCancel}
+            submitLabel={editingLocation ? 'Update Location' : 'Add Location'}
+          />
+          )}
+        </SafeAreaView>
       </Modal>
     </>
   );

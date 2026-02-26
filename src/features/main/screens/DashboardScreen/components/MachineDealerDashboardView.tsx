@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import type { MachineDealerDashboardData } from '@services/api';
+import { SCREENS } from '@navigation/constants';
 
 const { width } = Dimensions.get('window');
 
@@ -80,6 +81,13 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
           isLarge && styles.overviewCardLarge,
           { backgroundColor: getCardColor(index) }
         ]}
+        onPress={() => {
+          if(item.id === '1') {
+            navigation.navigate(SCREENS.MAIN.MESSAGES);
+          } else if(item.id === '2') {
+            navigation.navigate(SCREENS.SESSIONS.DASHBOARD);
+          }
+        }}
         activeOpacity={0.85}
       >
         <View style={styles.cardOverlay} />

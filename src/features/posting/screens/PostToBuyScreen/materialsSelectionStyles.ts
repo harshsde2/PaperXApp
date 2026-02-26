@@ -6,6 +6,9 @@ export const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
+      paddingHorizontal: theme.spacing[4],
+      paddingTop: theme.spacing[3],
+      paddingBottom: theme.spacing[4],
     },
     headerRow: {
       flexDirection: 'row',
@@ -62,7 +65,7 @@ export const createStyles = (theme: Theme) =>
       paddingBottom: theme.spacing[3],
     },
     listContent: {
-      paddingBottom: theme.spacing[4],
+      paddingBottom: theme.spacing[6],
       flexGrow: 1,
     },
     loadingContainer: {

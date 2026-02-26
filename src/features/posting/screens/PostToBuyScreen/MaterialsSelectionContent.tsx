@@ -46,7 +46,7 @@ const GradeItem = memo(
       >
         <View style={styles.materialItemContent}>
           <Text variant="bodyMedium" style={styles.materialItemName}>
-            {gradeName}
+            {materialName}
           </Text>
         </View>
       </TouchableOpacity>
@@ -188,7 +188,7 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
     <View style={styles.listHeader}>
       <View style={styles.headerRow}>
         <Text variant="h4" fontWeight="semibold" style={styles.title}>
-          {isGradeMode ? 'Select Grade' : 'Select Material'}
+          Select Material
         </Text>
         {!isGradeMode && selectedCount > 0 && onClear && (
           <TouchableOpacity
@@ -219,7 +219,7 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
         </View>
         <TextInput
           style={styles.searchInput}
-          placeholder={isGradeMode ? 'Search grades' : 'Search materials'}
+          placeholder="Search materials"
           placeholderTextColor={theme.colors.text.tertiary}
           value={searchQuery}
           onChangeText={onSearchChange}
@@ -274,8 +274,8 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
         <View style={styles.emptyContainer}>
           <Text variant="bodyMedium" style={styles.emptyText}>
             {searchQuery
-              ? (isGradeMode ? 'No grades found' : 'No materials found')
-              : (isGradeMode ? 'No grades available' : 'No materials available')}
+              ? 'No materials found matching your search'
+              : 'No materials available'}
           </Text>
         </View>
       }

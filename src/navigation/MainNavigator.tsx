@@ -21,6 +21,8 @@ import {
   ResponderDetailsScreen,
   SessionLockedScreen,
   SessionChatScreen,
+  InquiryChatThreadsScreen,
+  StructuredChatScreen,
 } from '@features/sessions';
 import {
   ConverterRTDListingScreen,
@@ -102,6 +104,15 @@ export type MainStackParamList = {
     partnerId: string;
     partnerName: string;
     inquiryRef?: string;
+  };
+  InquiryChatThreads: {
+    inquiryId: string;
+    inquiryTitle?: string;
+  };
+  StructuredChat: {
+    threadId: string;
+    inquiryId?: string;
+    partnerName?: string;
   };
   // Converter RTD
   ConverterRTDListing: undefined;
@@ -290,6 +301,24 @@ const MainNavigator = () => {
           headerShown: false,
           animation: 'slide_from_right',
         }}
+      />
+      <Stack.Screen
+        name={SCREENS.SESSIONS.INQUIRY_CHAT_THREADS}
+        component={InquiryChatThreadsScreen}
+        options={{
+          headerShown: true,
+          title: 'Responder Chats',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.SESSIONS.STRUCTURED_CHAT}
+        component={StructuredChatScreen}
+        options={({ route }) => ({
+          headerShown: true,
+          title: (route.params as { partnerName?: string } | undefined)?.partnerName || 'Chat',
+          animation: 'slide_from_right',
+        })}
       />
       {/* Converter RTD (Ready-to-Dispatch) - converter only */}
       <Stack.Screen

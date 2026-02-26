@@ -13,9 +13,6 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     marginBottom: theme.spacing[4],
   },
-  chipContent: {
-    flex: 1,
-  },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -65,27 +62,36 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.fontFamily.regular,
   },
-  selectedChipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing[2],
-    marginBottom: theme.spacing[4],
+  customMaterialInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing[3],
+    fontSize: 16,
+    backgroundColor: theme.colors.surface.primary,
+    color: theme.colors.text.primary,
+    fontFamily: theme.fontFamily.regular,
   },
-  chip: {
+  addMaterialButton: {
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.primary.DEFAULT,
+    justifyContent: 'center',
+  },
+  selectedCountPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.primary.DEFAULT,
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: theme.spacing[2],
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
     borderRadius: theme.borderRadius.full,
-    gap: theme.spacing[2],
-    width: '100%',
+    marginBottom: theme.spacing[4],
+    alignSelf: 'flex-start',
   },
-  chipText: {
+  selectedCountPillText: {
     color: theme.colors.text.inverse,
-  },
-  chipClose: {
-    marginLeft: theme.spacing[1],
   },
   categorySection: {
     marginBottom: theme.spacing[2],
@@ -121,6 +127,58 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     justifyContent: 'center',
     gap: theme.spacing[2],
     width: '100%',
+  },
+  halfButton: {
+    flex: 1,
+    width: undefined,
+  },
+  secondaryButton: {
+    flex: 1,
+    paddingVertical: theme.spacing[4],
+    borderRadius: theme.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface.primary,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+  },
+  secondaryButtonText: {
+    color: theme.colors.text.primary,
+  },
+  bottomActionsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing[2],
+    width: '100%',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing[4],
+  },
+  modalCard: {
+    backgroundColor: theme.colors.background.primary,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing[4],
+    gap: theme.spacing[3],
+  },
+  modalTitle: {
+    color: theme.colors.text.primary,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: theme.spacing[2],
+  },
+  modalCancelButton: {
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+  },
+  modalCancelText: {
+    color: theme.colors.text.primary,
   },
   buttonText: {
     color: theme.colors.text.inverse,

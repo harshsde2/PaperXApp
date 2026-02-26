@@ -15,6 +15,8 @@ import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGetMaterialThicknessTypes, MaterialThicknessType } from '@services/api';
 
+const ALL_THICKNESS_UNITS: ThicknessUnit[] = ['GSM', 'MM', 'OUNCE', 'BF', 'MICRON'];
+
 const SelectThicknessScreen = () => {
   const navigation = useNavigation<SelectThicknessScreenNavigationProp>();
   const route = useRoute<RouteProp<AuthStackParamList, 'SelectThickness'>>();
@@ -26,28 +28,23 @@ const SelectThicknessScreen = () => {
   // Get params from route
   const { onThicknessSelected, materialId, materialKey, onSpecsSelected, onBrandDetailsSelected } = route.params || {};
 
-  // Fetch available thickness units for this material
+  // All thickness units - show for every material regardless of API
+  const availableUnits = ALL_THICKNESS_UNITS;
+
+  // Fetch thickness types for this material (used for smart default unit only)
   const { data: thicknessTypes = [] } = useGetMaterialThicknessTypes({
     material_id: materialId,
   });
 
-  // Available units list from API (fallback to a default set)
-  const availableUnits: ThicknessUnit[] = useMemo(() => {
-    if (thicknessTypes && (thicknessTypes as MaterialThicknessType[]).length > 0) {
-      return (thicknessTypes as MaterialThicknessType[]).map(
-        (t: MaterialThicknessType) => t.unit as ThicknessUnit
-      );
-    }
-    // Fallback units if API returns nothing
-    return ['GSM', 'MM', 'MICRON'];
-  }, [thicknessTypes]);
-
   const primaryUnitFromApi: ThicknessUnit | undefined = useMemo(() => {
     const typed = thicknessTypes as MaterialThicknessType[];
-    if (!typed || typed.length === 0) return undefined;
-    // Prefer GSM if available, otherwise first unit
+    if (!typed?.length) return undefined;
     const gsm = typed.find(t => t.unit === 'GSM');
-    return (gsm?.unit ?? typed[0].unit) as ThicknessUnit;
+    const preferred = (gsm?.unit ?? typed[0]?.unit) as string;
+    // Only use if it's in our allowed list
+    return ALL_THICKNESS_UNITS.includes(preferred as ThicknessUnit)
+      ? (preferred as ThicknessUnit)
+      : undefined;
   }, [thicknessTypes]);
 
   const [unit, setUnit] = useState<ThicknessUnit>(primaryUnitFromApi || 'GSM');
@@ -292,7 +289,7 @@ const SelectThicknessScreen = () => {
           </View>
 
           {/* Info Box */}
-          <View style={styles.infoBox}>
+          {/* <View style={styles.infoBox}>
           <View style={styles.infoIcon}>
             <Text style={styles.infoIconText}>i</Text>
           </View>
@@ -300,7 +297,7 @@ const SelectThicknessScreen = () => {
               Standard industry tolerance is +/- 5%. Switching units will automatically convert your
               values.
             </Text>
-          </View>
+          </View> */}
         </View>
       </ScreenWrapper>
 

@@ -3,7 +3,7 @@
  * Handles fetching materials, machines, finishes, mills, brands, etc.
  */
 
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
 import { REFERENCE_ENDPOINTS } from '@shared/constants/api';
 import { queryKeys } from '../queryClient';
@@ -132,24 +132,28 @@ export const useGetMaterialsInfinite = (perPage: number = 5) => {
         materials = responseData;
       }
 
-      // Extract pagination info
-      const pagination = responseData?.pagination || responseData?.meta?.pagination || {
-        current_page: pageParam,
-        per_page: perPage,
-        total_pages: 1,
-        total_items: materials.length,
-        has_next: false,
+      // Extract pagination info (backend may use meta or meta.pagination)
+      const rawPagination =
+        responseData?.pagination ||
+        responseData?.meta?.pagination ||
+        (responseData?.meta?.current_page != null ? responseData.meta : null) ||
+        null;
+
+      const pagination = {
+        current_page: rawPagination?.current_page ?? pageParam,
+        per_page: rawPagination?.per_page ?? perPage,
+        total_pages: rawPagination?.total_pages ?? rawPagination?.last_page ?? 1,
+        total_items: rawPagination?.total_items ?? rawPagination?.total ?? materials.length,
+        has_next:
+          rawPagination?.has_next ??
+          (rawPagination?.current_page != null && rawPagination?.last_page != null
+            ? rawPagination.current_page < rawPagination.last_page
+            : materials.length >= perPage),
       };
 
       return {
         materials,
-        pagination: {
-          current_page: pagination.current_page ?? pageParam,
-          per_page: pagination.per_page ?? perPage,
-          total_pages: pagination.total_pages ?? 1,
-          total_items: pagination.total_items ?? materials.length,
-          has_next: pagination.has_next ?? (materials.length === perPage),
-        },
+        pagination,
       };
     },
     initialPageParam: 1,
@@ -168,6 +172,29 @@ export const useGetMaterialsInfinite = (perPage: number = 5) => {
       return undefined;
     },
     staleTime: 1000 * 60 * 30, // 30 minutes
+  });
+};
+
+/**
+ * Create a custom material (when user can't find theirs in the list).
+ * Requires auth.
+ */
+export const useCreateMaterial = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { name: string; category?: string }): Promise<Material> => {
+      const response = await api.post(REFERENCE_ENDPOINTS.MATERIALS, {
+        name: params.name.trim(),
+        category: params.category || 'Custom',
+      });
+      const responseData = response.data as any;
+      const material = responseData?.data ?? responseData;
+      return material;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reference.materials() });
+    },
   });
 };
 

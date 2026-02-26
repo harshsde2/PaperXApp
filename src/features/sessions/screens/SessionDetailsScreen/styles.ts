@@ -433,4 +433,17 @@ export const createStyles = (theme: Theme) =>
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
+    posterDetailChatButton: {
+      marginTop: theme.spacing[4],
+      backgroundColor: theme.colors.primary.DEFAULT,
+      borderRadius: theme.borderRadius.lg,
+      paddingVertical: theme.spacing[3],
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    posterDetailChatButtonText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: fontWeightForPlatform('700'),
+    },
   });

@@ -84,6 +84,7 @@ const MillBrandDetailsScreen = () => {
     const brandDetails = {
       brand_id: preferNotToDisclose ? null : selectedBrand?.id || null,
       agent_type: preferNotToDisclose ? null : agentTypeMap[relationship] || null,
+      brand_name: preferNotToDisclose ? null : selectedBrand?.name ?? null,
     };
 
     if (onBrandDetailsSelected) {

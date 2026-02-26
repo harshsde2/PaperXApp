@@ -26,7 +26,13 @@ import { AppIcon } from '@assets/svgs';
 import { useTheme, Theme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useGetMaterialsInfinite, Material, useGetMaterialFinishesInfinite, MaterialFinish } from '@services/api';
+import {
+  useGetMaterialsInfinite,
+  Material,
+  useGetMaterialFinishesInfinite,
+  MaterialFinish,
+  useCreateMaterial,
+} from '@services/api';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
@@ -241,6 +247,9 @@ const PostToBuyScreen = () => {
   const [showUrgencyPicker, setShowUrgencyPicker] = useState(false);
   const [showVisibilityPicker, setShowVisibilityPicker] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [customMaterialName, setCustomMaterialName] = useState('');
+
+  const { mutateAsync: createMaterial, isPending: isCreatingMaterial } = useCreateMaterial();
 
   const isLoadingMoreRef = useRef(false);
   const scrollViewRef = useRef<FlatList>(null);
@@ -268,9 +277,9 @@ const PostToBuyScreen = () => {
     return Array.from(materialsMap.values());
   }, [materialsData?.pages]);
 
-  // Single grade selection (one row per grade; form still uses material_id). Closes sheet on select.
+  // Single material selection (one row per material; form uses material_id). Closes sheet on select.
   const selectGrade = useCallback(
-    (materialId: number, gradeId: number, materialName?: string, gradeName?: string) => {
+    (materialId: number, gradeId: number, materialName?: string, _gradeName?: string) => {
       const isSame = selectedMaterialId === materialId && selectedGradeId === gradeId;
       if (isSame) {
         setSelectedMaterialId(null);
@@ -280,8 +289,7 @@ const PostToBuyScreen = () => {
       } else {
         setSelectedMaterialId(materialId);
         setSelectedGradeId(gradeId);
-        const display = materialName && gradeName ? `${materialName} – ${gradeName}` : '';
-        setSelectedMaterialDisplayName(display);
+        setSelectedMaterialDisplayName(materialName || '');
         setValue('material_id', materialId, { shouldValidate: true });
         materialsSheetRef.current?.dismiss();
       }
@@ -300,21 +308,41 @@ const PostToBuyScreen = () => {
     setValue('material_id', undefined, { shouldValidate: true });
   }, [setValue]);
 
+  const handleAddCustomMaterial = useCallback(async () => {
+    const name = customMaterialName.trim();
+    if (!name) {
+      dispatch(showToast({ message: 'Please enter a material name', type: 'error' }));
+      return;
+    }
+    try {
+      const material = await createMaterial({ name });
+      const firstGrade = material?.grades?.[0];
+      if (material && firstGrade) {
+        selectGrade(material.id, firstGrade.id, material.name, firstGrade.name);
+        setCustomMaterialName('');
+        dispatch(showToast({ message: 'Material added successfully', type: 'success' }));
+      } else {
+        dispatch(showToast({ message: 'Failed to add material', type: 'error' }));
+      }
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to add material';
+      dispatch(showToast({ message: msg, type: 'error' }));
+    }
+  }, [customMaterialName, createMaterial, selectGrade, dispatch]);
+
   const isGradeSelected = useCallback(
     (materialId: number, gradeId: number) =>
       selectedMaterialId === materialId && selectedGradeId === gradeId,
     [selectedMaterialId, selectedGradeId],
   );
 
-  // Get selected display name (Material - Grade); use stored name so dropdown updates immediately
+  // Get selected display name (material name only); use stored name so dropdown updates immediately
   const selectedMaterialName = useMemo(() => {
     if (selectedMaterialDisplayName) return selectedMaterialDisplayName;
-    if (!selectedMaterialId || !selectedGradeId) return '';
+    if (!selectedMaterialId) return '';
     const material = allMaterials.find(m => m.id === selectedMaterialId);
-    const grade = material?.grades?.find(g => g.id === selectedGradeId);
-    if (!material || !grade) return material?.name || '';
-    return `${material.name} – ${grade.name}`;
-  }, [selectedMaterialDisplayName, selectedMaterialId, selectedGradeId, allMaterials]);
+    return material?.name || '';
+  }, [selectedMaterialDisplayName, selectedMaterialId, allMaterials]);
 
   const filteredMaterials = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -326,36 +354,33 @@ const PostToBuyScreen = () => {
     );
   }, [allMaterials, searchQuery]);
 
-  // Grade list: one row per grade (same structure as MaterialsScreen)
+  // Material list: one row per material (using first grade for backend compatibility)
   const gradeList = useMemo((): GradeListItem[] => {
     const query = searchQuery.toLowerCase().trim();
     const items: GradeListItem[] = [];
-    const seenGrades = new Set<string>();
 
     allMaterials.forEach(material => {
       const grades = material.grades || [];
+      if (grades.length === 0) return;
+
+      const firstGrade = grades[0];
       const category = material.category || 'Other';
-      grades.forEach(grade => {
-        const gradeKey = (grade.name || '').toLowerCase().trim();
-        if (seenGrades.has(gradeKey)) return;
-        const matchesGrade = !query || grade.name.toLowerCase().includes(query);
-        const matchesMaterial = !query || material.name.toLowerCase().includes(query);
-        const matchesCategory = !query || category.toLowerCase().includes(query);
-        if (matchesGrade || matchesMaterial || matchesCategory) {
-          seenGrades.add(gradeKey);
-          items.push({
-            type: 'grade',
-            id: `grade-${material.id}-${grade.id}`,
-            data: {
-              materialId: material.id,
-              materialName: material.name,
-              gradeId: grade.id,
-              gradeName: grade.name,
-              category,
-            },
-          });
-        }
-      });
+      const matchesMaterial = !query || (material.name || '').toLowerCase().includes(query);
+      const matchesCategory = !query || category.toLowerCase().includes(query);
+
+      if (matchesMaterial || matchesCategory) {
+        items.push({
+          type: 'grade',
+          id: `material-${material.id}`,
+          data: {
+            materialId: material.id,
+            materialName: material.name,
+            gradeId: firstGrade.id,
+            gradeName: firstGrade.name,
+            category,
+          },
+        });
+      }
     });
     return items;
   }, [allMaterials, searchQuery]);
@@ -738,6 +763,45 @@ const PostToBuyScreen = () => {
                       </>
                     )}
                   />
+                </View>
+
+                {/* Custom Material (Optional) - Add if not in list */}
+                <View style={styles.formGroup}>
+                  <View style={styles.labelRow}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Custom Material
+                    </Text>
+                    <Text variant="captionSmall" style={styles.optionalLabel}>
+                      (Optional)
+                    </Text>
+                  </View>
+                  <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary, marginBottom: theme.spacing[2] }}>
+                    Add material if not in list above
+                  </Text>
+                  <View style={styles.customMaterialRow}>
+                    <TextInput
+                      style={styles.customMaterialInput}
+                      placeholder="Enter material name if not in list"
+                      placeholderTextColor={theme.colors.text.tertiary}
+                      value={customMaterialName}
+                      onChangeText={setCustomMaterialName}
+                      editable={!isCreatingMaterial}
+                    />
+                    <TouchableOpacity
+                      style={[styles.addMaterialButton, isCreatingMaterial && { opacity: 0.6 }]}
+                      onPress={handleAddCustomMaterial}
+                      disabled={isCreatingMaterial || !customMaterialName.trim()}
+                      activeOpacity={0.8}
+                    >
+                      {isCreatingMaterial ? (
+                        <ActivityIndicator size="small" color={theme.colors.text.inverse} />
+                      ) : (
+                        <Text variant="bodyMedium" fontWeight="medium" style={styles.buttonText}>
+                          Add
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Thickness */}

@@ -356,11 +356,11 @@ const CompanyDetailsScreen = () => {
               <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
                 Verification
               </Text>
-              <View style={styles.trustBadge}>
+              {/* <View style={styles.trustBadge}>
                 <Text variant="captionSmall" fontWeight="semibold" style={styles.trustBadgeText}>
                   High Trust
                 </Text>
-              </View>
+              </View> */}
             </View>
 
             <View style={styles.formGroup}>
@@ -481,12 +481,12 @@ const CompanyDetailsScreen = () => {
               </View>
             </Modal>
 
-            <View style={styles.infoContainer}>
+            {/* <View style={styles.infoContainer}>
               <Text style={styles.infoIcon}>ℹ️</Text>
               <Text variant="captionSmall" style={styles.infoText}>
                 Uploading a valid certificate increases your profile trust score and matchmaking priority.
               </Text>
-            </View>
+            </View> */}
           </Card>
 
           <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)} activeOpacity={0.8}>

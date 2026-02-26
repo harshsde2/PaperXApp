@@ -265,4 +265,14 @@ export const INQUIRY_ENDPOINTS = {
   // Responder: express interest or decline
   EXPRESS_INTEREST: (inquiryId: number | string) => `${API_VERSION}/inquiries/${inquiryId}/express-interest`,
   DECLINE: (inquiryId: number | string) => `${API_VERSION}/inquiries/${inquiryId}/decline`,
+  // Structured chat threads for poster
+  CHAT_THREADS: (inquiryId: number | string) => `${API_VERSION}/inquiries/${inquiryId}/chat-threads`,
+  // Structured chat open/create for responder
+  OPEN_CHAT_THREAD: (inquiryId: number | string) =>
+    `${API_VERSION}/inquiries/${inquiryId}/chat-threads/open`,
+} as const;
+
+export const CHAT_THREAD_ENDPOINTS = {
+  MESSAGES: (threadId: number | string) => `${API_VERSION}/chat-threads/${threadId}/messages`,
+  MARK_READ: (threadId: number | string) => `${API_VERSION}/chat-threads/${threadId}/read`,
 } as const;

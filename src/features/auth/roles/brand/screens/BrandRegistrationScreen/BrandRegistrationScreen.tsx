@@ -666,6 +666,30 @@ const BrandRegistrationScreen = () => {
     });
   }, [selectedBrandTypes, setValue]);
 
+  // Prefill company details and user data from profileData (from CompanyDetailsScreen + auth)
+  const hasPrefilledCompanyDetails = !!profileData?.company_name;
+  useEffect(() => {
+    if (!profileData) return;
+    if (profileData.company_name) {
+      setValue('companyName', profileData.company_name, { shouldValidate: true });
+    }
+    if (profileData.gst_in) {
+      setValue('gstNumber', profileData.gst_in, { shouldValidate: true });
+    }
+    if (profileData.state) {
+      setValue('state', profileData.state, { shouldValidate: true });
+    }
+    if (profileData.city) {
+      setValue('city', profileData.city, { shouldValidate: true });
+    }
+    if (profileData.mobile) {
+      setValue('mobile', profileData.mobile, { shouldValidate: true });
+    }
+    if (profileData.email) {
+      setValue('email', profileData.email, { shouldValidate: true });
+    }
+  }, [profileData, setValue]);
+
   // Validation
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -730,7 +754,7 @@ const BrandRegistrationScreen = () => {
   // Handle location selection from LocationPicker
   const handleLocationSelect = useCallback(
     (location: Location) => {
-      // Auto-fill state and city from location address
+      // Always update state and city from the selected location (map selection overrides prefilled values)
       if (location.address?.state) {
         setValue('state', location.address.state, { shouldValidate: true });
       }
@@ -1114,6 +1138,7 @@ const BrandRegistrationScreen = () => {
                             onBlur();
                             setFocusedInput(null);
                           }}
+                          editable={!hasPrefilledCompanyDetails}
                         />
                       </View>
                       {error && (
@@ -1530,6 +1555,7 @@ const BrandRegistrationScreen = () => {
                             setFocusedInput(null);
                           }}
                           maxLength={15}
+                          editable={!hasPrefilledCompanyDetails}
                         />
                       </View>
                       {error && (
@@ -1568,6 +1594,7 @@ const BrandRegistrationScreen = () => {
                         value={value}
                         placeholder="Select State"
                         onPress={openStateSelector}
+                        disabled={hasPrefilledCompanyDetails}
                       />
                       {error && (
                         <Text
@@ -1605,7 +1632,7 @@ const BrandRegistrationScreen = () => {
                         value={value}
                         placeholder={stateValue ? 'Select City' : 'Select State first'}
                         onPress={openCitySelector}
-                        disabled={!stateValue}
+                        disabled={hasPrefilledCompanyDetails || !stateValue}
                       />
                       {error && (
                         <Text

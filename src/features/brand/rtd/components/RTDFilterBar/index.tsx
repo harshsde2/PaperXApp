@@ -3,14 +3,15 @@ import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import type { RTDFilterBarProps, RTDFilterKey } from './@types';
+import type { RTDFilterBarProps, RTDFilterConfig, RTDFilterKey } from './@types';
 import { createStyles } from './styles';
 
-const FILTER_CONFIG: { key: RTDFilterKey; label: string }[] = [
-  { key: 'category', label: 'Category' },
-  { key: 'leadTime', label: 'Lead Time' },
-  { key: 'moq', label: 'MOQ' },
-  { key: 'price', label: 'Price' },
+const FILTER_CONFIG: RTDFilterConfig[] = [
+  { key: 'category', label: 'Category' ,icon:AppIcon.ChevronDown},
+  { key: 'leadTime', label: 'Lead Time' ,icon:AppIcon.ChevronDown},
+  { key: 'moq', label: 'MOQ' ,icon:AppIcon.ChevronDown},
+  { key: 'price', label: 'Price' ,icon:AppIcon.ChevronDown},
+  { key: 'filter', label: 'Filter' ,icon:AppIcon.Filter},
 ];
 
 export const RTDFilterBar = memo<RTDFilterBarProps>(
@@ -19,8 +20,9 @@ export const RTDFilterBar = memo<RTDFilterBarProps>(
     const styles = createStyles(theme);
 
     const renderChip = useCallback(
-      ({ key, label }: { key: RTDFilterKey; label: string }) => {
+      ({ key, label, icon }: RTDFilterConfig) => {
         const isActive = filters[key] != null;
+        const Icon = icon;  
 
         return (
           <Pressable
@@ -39,15 +41,16 @@ export const RTDFilterBar = memo<RTDFilterBarProps>(
             >
               {label}
             </Text>
-            <AppIcon.ChevronDown
-              width={14}
-              height={14}
-              color={
-                isActive
-                  ? (theme.colors.primary.DEFAULT as string)
-                  : (theme.colors.text.tertiary as string)
-              }
-            />
+            <Icon width={14} height={14} color={isActive ? theme.colors.primary.DEFAULT : theme.colors.text.tertiary} />
+              {/* <AppIcon.ChevronDown
+                width={14}
+                height={14}
+                color={
+                  isActive
+                    ? (theme.colors.primary.DEFAULT as string)
+                    : (theme.colors.text.tertiary as string)
+                }
+              /> */}
           </Pressable>
         );
       },

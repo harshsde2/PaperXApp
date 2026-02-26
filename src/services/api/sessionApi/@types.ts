@@ -265,6 +265,73 @@ export interface ChatListItem {
 export type GetChatListResponse = ChatListItem[];
 
 // ============================================
+// STRUCTURED CHAT (THREAD-NATIVE)
+// ============================================
+
+export interface ChatThreadParticipant {
+  id: number;
+  name: string;
+  company_name?: string | null;
+  primary_role?: string | null;
+}
+
+export interface ChatThreadListItem {
+  id: number;
+  thread_id?: number;
+  inquiry_id: number;
+  poster_user_id: number;
+  responder_user_id: number;
+  responder_role: string | null;
+  last_message_id: number | null;
+  last_message_at: string | null;
+  last_message_preview?: string | null;
+  unread_count?: number;
+  responder_user?: ChatThreadParticipant;
+  poster_user?: ChatThreadParticipant;
+}
+
+export type GetInquiryChatThreadsResponse = ChatThreadListItem[];
+
+export interface OpenChatThreadResponse {
+  thread_id: number;
+  id?: number;
+  thread?: {
+    id?: number;
+    thread_id?: number;
+  };
+}
+
+export interface ThreadMessage {
+  id: number;
+  thread_id: number;
+  sender_user_id: number;
+  sender_role: string | null;
+  body: string;
+  attachment: string | null;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThreadMessagesResponse {
+  data: ThreadMessage[];
+  meta: {
+    next_cursor: number | null;
+    limit: number;
+  };
+}
+
+export interface GetThreadMessagesParams {
+  limit?: number;
+  cursor?: number | null;
+}
+
+export interface SendThreadMessagePayload {
+  body: string;
+  attachment?: string | null;
+}
+
+// ============================================
 // GET SESSION DETAIL
 // ============================================
 

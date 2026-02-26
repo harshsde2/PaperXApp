@@ -18,6 +18,7 @@ const INITIAL_FILTERS: RTDFilterState = {
   leadTime: null,
   moq: null,
   price: null,
+  filter: null,
 };
 
 export const BrandRTDMarketplaceScreen: React.FC<
@@ -153,9 +154,10 @@ export const BrandRTDMarketplaceScreen: React.FC<
       <View style={styles.filterContainer}>
         <View style={styles.filterHeaderRow}>
           <RTDFilterBar filters={chipFilters} onFilterChange={handleFilterChange} />
-          <TouchableOpacity onPress={handleMyOrders} style={styles.myOrdersLink} activeOpacity={0.7}>
+
+          {/* <TouchableOpacity onPress={handleMyOrders} style={styles.myOrdersLink} activeOpacity={0.7}>
             <Text fontWeight="bold" style={styles.myOrdersLinkText}>My Orders</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
 

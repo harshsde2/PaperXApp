@@ -34,6 +34,7 @@ import {
   MACHINE_CONDITION_PREFERENCE_OPTIONS,
   MACHINE_BRAND_NAMES,
   URGENCY_OPTIONS,
+  MACHINE_VISIBILITY_OPTIONS,
 } from '../../constants/machineConstants';
 import { createStyles } from './styles';
 import type { PostToBuyMachineFormData, SavedLocation } from './@types';
@@ -51,6 +52,7 @@ export const PostToBuyMachineScreen = () => {
   const [showBrandPicker, setShowBrandPicker] = useState(false);
   const [showConditionPicker, setShowConditionPicker] = useState(false);
   const [showUrgencyPicker, setShowUrgencyPicker] = useState(false);
+  const [showVisibilityPicker, setShowVisibilityPicker] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
 
@@ -64,6 +66,7 @@ export const PostToBuyMachineScreen = () => {
       budget_min: undefined,
       budget_max: undefined,
       urgency: 'normal',
+      visibility: 'machine_dealers',
       location: '',
       latitude: undefined,
       longitude: undefined,
@@ -189,6 +192,10 @@ export const PostToBuyMachineScreen = () => {
         Alert.alert('Validation Error', 'Please select timeline');
         return;
       }
+      if (!data.visibility) {
+        Alert.alert('Validation Error', 'Please select who can see this requirement');
+        return;
+      }
       if (!data.latitude || !data.longitude) {
         Alert.alert('Validation Error', 'Please select a location');
         return;
@@ -212,6 +219,7 @@ export const PostToBuyMachineScreen = () => {
         condition: conditionForApi,
         intent: 'buy' as const,
         urgency: data.urgency,
+        visibility: data.visibility,
         description,
         currency: 'INR' as const,
         location: data.location.trim(),
@@ -403,6 +411,31 @@ export const PostToBuyMachineScreen = () => {
                       value={URGENCY_OPTIONS.find((o) => o.value === value)?.label}
                       placeholder="Select timeline"
                       onPress={() => setShowUrgencyPicker(true)}
+                    />
+                    {error && (
+                      <Text variant="captionSmall" style={{ color: theme.colors.error?.DEFAULT, marginTop: 4 }}>
+                        {error.message}
+                      </Text>
+                    )}
+                  </>
+                )}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                Visible to <Text style={{ color: theme.colors.error?.DEFAULT }}>*</Text>
+              </Text>
+              <Controller
+                control={control}
+                name="visibility"
+                rules={validationRules.required('Please select who can see this requirement') as any}
+                render={({ field: { value }, fieldState: { error } }) => (
+                  <>
+                    <DropdownButton
+                      value={MACHINE_VISIBILITY_OPTIONS.find((o) => o.value === value)?.label}
+                      placeholder="Select visibility"
+                      onPress={() => setShowVisibilityPicker(true)}
                     />
                     {error && (
                       <Text variant="captionSmall" style={{ color: theme.colors.error?.DEFAULT, marginTop: 4 }}>
@@ -615,6 +648,29 @@ export const PostToBuyMachineScreen = () => {
                 onPress={() => {
                   setValue('urgency', opt.value as 'normal' | 'urgent', { shouldValidate: true });
                   setShowUrgencyPicker(false);
+                }}
+              >
+                <Text variant="bodyMedium">{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {showVisibilityPicker && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text variant="h4" fontWeight="semibold">Who can see this requirement?</Text>
+              <TouchableOpacity onPress={() => setShowVisibilityPicker(false)}><Text style={{ fontSize: 24 }}>×</Text></TouchableOpacity>
+            </View>
+            {MACHINE_VISIBILITY_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={styles.modalOption}
+                onPress={() => {
+                  setValue('visibility', opt.value, { shouldValidate: true });
+                  setShowVisibilityPicker(false);
                 }}
               >
                 <Text variant="bodyMedium">{opt.label}</Text>

@@ -31,7 +31,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     borderColor: theme.colors.border.primary,
     borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing[3],
-    marginBottom: theme.spacing[4],
+    marginBottom: theme.spacing[2],
   },
   searchIcon: {
     marginRight: theme.spacing[2],
@@ -145,14 +145,16 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing[3],
   },
   customInput: {
-    flex: 1,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.surface.primary,
+    paddingHorizontal: theme.spacing[3],
     paddingVertical: theme.spacing[3],
     fontSize: 16,
     color: theme.colors.text.primary,
     fontFamily: theme.fontFamily.regular,
-  },
-  addButton: {
-    padding: theme.spacing[2],
   },
   footerTop: {
     flexDirection: 'row',
@@ -179,8 +181,64 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     gap: theme.spacing[2],
     width: '100%',
   },
+  halfButton: {
+    flex: 1,
+    width: undefined,
+  },
+  secondaryButton: {
+    flex: 1,
+    paddingVertical: theme.spacing[4],
+    borderRadius: theme.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface.primary,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+  },
+  secondaryButtonText: {
+    color: theme.colors.text.primary,
+  },
+  bottomActionsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing[2],
+    width: '100%',
+  },
   confirmButtonText: {
     color: theme.colors.text.inverse,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing[4],
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface.primary,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing[4],
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing[4],
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: theme.spacing[2],
+    marginTop: theme.spacing[4],
+  },
+  modalCancelButton: {
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+  },
+  modalCancelText: {
+    color: theme.colors.text.primary,
   },
 });
 

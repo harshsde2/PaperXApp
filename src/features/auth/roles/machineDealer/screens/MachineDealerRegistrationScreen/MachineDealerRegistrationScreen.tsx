@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
@@ -64,7 +64,7 @@ const MachineDealerRegistrationScreen = () => {
       email: '',
       mobile: profileData?.mobile ?? '',
       gstin: profileData?.gst_in ?? profileData?.gst ?? '',
-      city: '',
+      city: profileData?.city ?? '',
       location: '',
       latitude: undefined,
       longitude: undefined,
@@ -75,6 +75,18 @@ const MachineDealerRegistrationScreen = () => {
     },
     mode: 'onBlur',
   });
+
+  const hasPrefilledCompanyDetails = !!profileData?.company_name;
+
+  useEffect(() => {
+    if (!profileData) return;
+    if (profileData.gst_in || profileData.gst) {
+      setValue('gstin', profileData.gst_in ?? profileData.gst ?? '', { shouldValidate: false });
+    }
+    if (profileData.city) {
+      setValue('city', profileData.city, { shouldValidate: false });
+    }
+  }, [profileData, setValue]);
 
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
@@ -117,9 +129,12 @@ const MachineDealerRegistrationScreen = () => {
       setValue('location', location.address?.streetAddress || location.address?.formattedAddress || location.name || '', {
         shouldValidate: true,
       });
-      setValue('city', location.address?.city || cityValue || '', {
-        shouldValidate: true,
-      });
+      // Always update city from the selected location (map selection overrides prefilled values)
+      if (location.address?.city) {
+        setValue('city', location.address.city, {
+          shouldValidate: true,
+        });
+      }
       setValue('latitude', location.latitude, {
         shouldValidate: true,
       });
@@ -135,7 +150,7 @@ const MachineDealerRegistrationScreen = () => {
         }),
       );
     },
-    [setValue, cityValue, dispatch],
+    [setValue, dispatch],
   );
 
   const openMachineCategorySheet = useCallback(() => {
@@ -309,6 +324,33 @@ const MachineDealerRegistrationScreen = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.container}>
+          {hasPrefilledCompanyDetails && (profileData?.company_name || profileData?.gst_in) && (
+            <Card style={styles.card}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconContainer}>
+                  <AppIcon.Organization width={20} height={20} color={theme.colors.primary.DEFAULT} />
+                </View>
+                <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
+                  Company Details
+                </Text>
+              </View>
+              {profileData?.company_name && (
+                <View style={styles.formGroup}>
+                  <View style={styles.labelRow}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Company Name
+                    </Text>
+                  </View>
+                  <View style={[styles.input, styles.addressPreview]}>
+                    <Text variant="bodyMedium" style={styles.addressPreviewText}>
+                      {profileData.company_name}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </Card>
+          )}
+
           <Card style={styles.card}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
@@ -374,6 +416,7 @@ const MachineDealerRegistrationScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                editable={!hasPrefilledCompanyDetails}
               />
             </View>
 
@@ -520,6 +563,7 @@ const MachineDealerRegistrationScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                editable={!hasPrefilledCompanyDetails}
               />
             </View>
 

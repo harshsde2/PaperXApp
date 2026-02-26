@@ -136,3 +136,14 @@ export interface SessionChatParams {
   partnerName: string;
   inquiryRef?: string;
 }
+
+export interface InquiryChatThreadsParams {
+  inquiryId: string;
+  inquiryTitle?: string;
+}
+
+export interface StructuredChatParams {
+  threadId: string;
+  inquiryId?: string;
+  partnerName?: string;
+}

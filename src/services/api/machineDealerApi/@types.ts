@@ -84,6 +84,7 @@ export interface PostMachineRequest {
   condition: MachineCondition | string;
   intent: MachineIntent;
   urgency: UrgencyType;
+  visibility: 'dealers' | 'converters' | 'machine_dealers' | 'all';
   description?: string;
   price?: number;
   currency?: string;

@@ -57,6 +57,8 @@ export const SCREENS = {
     RESPONDER_DETAILS: 'ResponderDetails',
     LOCKED: 'SessionLocked',
     CHAT: 'SessionChat',
+    INQUIRY_CHAT_THREADS: 'InquiryChatThreads',
+    STRUCTURED_CHAT: 'StructuredChat',
   },
   // Converter RTD (Ready-to-Dispatch) - converter only
   CONVERTER_RTD: {
@@ -89,6 +91,7 @@ export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: 
   ],
   'machine-dealer': [
     { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
+    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
     { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
   ],
   converter: [

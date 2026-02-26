@@ -6,7 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '../client';
-import { SESSION_ENDPOINTS, INQUIRY_ENDPOINTS } from '@shared/constants/api';
+import { SESSION_ENDPOINTS, INQUIRY_ENDPOINTS, CHAT_THREAD_ENDPOINTS } from '@shared/constants/api';
 import { queryKeys } from '../queryClient';
 import type {
   GetActiveSessionsParams,
@@ -25,6 +25,12 @@ import type {
   SessionDetail,
   GetMatchmakingResponsesParams,
   GetMatchmakingResponsesResponse,
+  GetInquiryChatThreadsResponse,
+  OpenChatThreadResponse,
+  ThreadMessagesResponse,
+  GetThreadMessagesParams,
+  SendThreadMessagePayload,
+  ThreadMessage,
 } from './@types';
 
 // ============================================
@@ -39,6 +45,24 @@ const extractData = <T>(response: any): T => {
     return response.data;
   }
   return response;
+};
+
+const extractThreadIdFromAny = (payload: any): number | null => {
+  const candidates = [
+    payload?.thread_id,
+    payload?.id,
+    payload?.thread?.thread_id,
+    payload?.thread?.id,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = Number(candidate);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return null;
 };
 
 // ============================================
@@ -411,5 +435,133 @@ export const useDeclineInquiry = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inquiries.matchmakingResponses(inquiryId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
     },
+  });
+};
+
+// ============================================
+// STRUCTURED CHAT: THREADS + MESSAGES
+// ============================================
+
+export const useGetInquiryChatThreads = (
+  inquiryId: number | string,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: queryKeys.chat.structured.inquiryThreads(inquiryId),
+    queryFn: async (): Promise<GetInquiryChatThreadsResponse> => {
+      const response = await api.get<{ data: GetInquiryChatThreadsResponse }>(
+        INQUIRY_ENDPOINTS.CHAT_THREADS(inquiryId)
+      );
+      return extractData<GetInquiryChatThreadsResponse>(response);
+    },
+    enabled: (options?.enabled ?? true) && !!inquiryId,
+    staleTime: 1000 * 15,
+    gcTime: 0,
+  });
+};
+
+export const useOpenStructuredThread = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (inquiryId: number | string): Promise<OpenChatThreadResponse> => {
+      const response = await api.post<{ data: OpenChatThreadResponse }>(
+        INQUIRY_ENDPOINTS.OPEN_CHAT_THREAD(inquiryId),
+        {}
+      );
+      const payload = extractData<OpenChatThreadResponse>(response);
+      const normalizedThreadId = extractThreadIdFromAny(payload);
+
+      if (!normalizedThreadId) {
+        throw new Error('Invalid thread response from server.');
+      }
+
+      return {
+        ...payload,
+        thread_id: normalizedThreadId,
+      };
+    },
+    onSuccess: (_, inquiryId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.structured.inquiryThreads(inquiryId) });
+    },
+  });
+};
+
+export const useGetThreadMessagesInfinite = (
+  threadId: number | string,
+  params?: Omit<GetThreadMessagesParams, 'cursor'>,
+  options?: { enabled?: boolean; refetchInterval?: number | false }
+) => {
+  return useInfiniteQuery({
+    queryKey: queryKeys.chat.structured.threadMessages(threadId, params),
+    refetchIntervalInBackground: false,
+    queryFn: async ({ pageParam = null }): Promise<ThreadMessagesResponse> => {
+      const response = await api.get(CHAT_THREAD_ENDPOINTS.MESSAGES(threadId), {
+        params: {
+          limit: params?.limit ?? 20,
+          cursor: pageParam,
+        },
+      });
+
+      const data = extractData<ThreadMessage[]>(response);
+      const meta = response?.data?.meta ?? { next_cursor: null, limit: params?.limit ?? 20 };
+
+      return {
+        data: Array.isArray(data) ? data : [],
+        meta,
+      };
+    },
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) => lastPage.meta?.next_cursor ?? undefined,
+    enabled: (options?.enabled ?? true) && !!threadId,
+    refetchInterval: options?.refetchInterval,
+    staleTime: 1000 * 5,
+    gcTime: 0,
+  });
+};
+
+export const useSendThreadMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      threadId,
+      payload,
+    }: {
+      threadId: number | string;
+      payload: SendThreadMessagePayload;
+    }): Promise<ThreadMessage> => {
+      const response = await api.post<{ data: ThreadMessage }>(
+        CHAT_THREAD_ENDPOINTS.MESSAGES(threadId),
+        payload
+      );
+      return extractData<ThreadMessage>(response);
+    },
+    onSuccess: (_, { threadId }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.structured.threadMessages(threadId),
+      });
+    },
+  });
+};
+
+export const useMarkStructuredThreadRead = () => {
+  const queryClient = useQueryClient();
+  const MARK_READ_ROUTE_ENABLED = false;
+
+  return useMutation({
+    mutationFn: async (threadId: number | string): Promise<void> => {
+      if (!MARK_READ_ROUTE_ENABLED) return;
+      const parsedThreadId = Number(threadId);
+      if (!Number.isFinite(parsedThreadId) || parsedThreadId <= 0) return;
+      await api.post(CHAT_THREAD_ENDPOINTS.MARK_READ(threadId), {});
+    },
+    onSuccess: (_, threadId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.structured.threadMessages(threadId),
+      });
+    },
+    // Best-effort only; keep UI smooth even if endpoint is unavailable.
+    onError: () => {},
   });
 };

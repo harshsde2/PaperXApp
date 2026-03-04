@@ -145,22 +145,21 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
         </View>
         <View style={styles.posterDetailCountCard}>
           <View style={styles.posterDetailCountIconWrap}>
-            <AppIcon.Process width={24} height={24} color={theme.colors.primary.DEFAULT} />
-          </View>
-          <Text style={styles.posterDetailCountValue}>{data.matches_count}</Text>
-          <Text style={styles.posterDetailCountLabel}>Matches</Text>
-        </View>
-        <View style={styles.posterDetailCountCard}>
-          <View style={styles.posterDetailCountIconWrap}>
             <AppIcon.Messages width={24} height={24} color={theme.colors.primary.DEFAULT} />
           </View>
           <Text style={styles.posterDetailCountValue}>{data.responses_count}</Text>
           <Text style={styles.posterDetailCountLabel}>Responses</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.posterDetailChatButton} onPress={onOpenResponsesChat} activeOpacity={0.8}>
-        <Text style={styles.posterDetailChatButtonText}>Open responder chats</Text>
-      </TouchableOpacity>
+      {data.responses_count > 0 && (
+        <TouchableOpacity
+          style={styles.posterDetailChatButton}
+          onPress={onOpenResponsesChat}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.posterDetailChatButtonText}>Open responder chats</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };

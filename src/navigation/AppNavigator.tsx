@@ -5,6 +5,7 @@ import { useAppDispatch } from '@store/hooks';
 import { setCredentials } from '@store/slices/authSlice';
 import { setRoles } from '@store/slices/roleSlice';
 import { storageService } from '@services/storage/storageService';
+import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import AuthStackNavigator from './AuthStackNavigator';
 import MainNavigator from './MainNavigator';
 
@@ -55,8 +56,18 @@ const AppNavigator = () => {
         if (token && userData) {
           const primaryRole = userData.primary_role || userData.primaryRole;
           const secondaryRole = userData.secondary_role ?? userData.secondaryRole;
-          const primaryNormalized = primaryRole === 'machine-dealer' ? 'machineDealer' : primaryRole;
-          const secondaryNormalized = secondaryRole === 'machine-dealer' ? 'machineDealer' : secondaryRole;
+          const normalizeRole = (role: string | null | undefined) => {
+            if (!role) return undefined;
+            const normalized = role.toLowerCase().replace(/[\s-]+/g, '_');
+            if (normalized === 'machine_dealer' || normalized === 'machinedealer') return 'machineDealer';
+            if (normalized === 'scrap_dealer') return 'scrapDealer';
+            if (normalized === 'dealer' || normalized === 'converter' || normalized === 'brand' || normalized === 'mill') {
+              return normalized;
+            }
+            return role;
+          };
+          const primaryNormalized = normalizeRole(primaryRole);
+          const secondaryNormalized = normalizeRole(secondaryRole);
           dispatch(
             setCredentials({
               user: {
@@ -68,6 +79,7 @@ const AppNavigator = () => {
                 companyName: userData.company_name || null,
                 udyamVerifiedAt: userData.udyam_verified_at || null,
                 ...userData,
+                locations: normalizePostingLocationsFromProfile(userData),
               },
               token: token,
             })

@@ -3,7 +3,7 @@
  * Uses same API/payment flow; fields follow machine dealer buy spec.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -25,10 +25,11 @@ import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useForm, validationRules } from '@shared/forms';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useGetMachines } from '@services/api';
+import { useGetMachines, useGetProfile } from '@services/api';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
+import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import {
   MACHINE_CATEGORY_OPTIONS,
   MACHINE_CONDITION_PREFERENCE_OPTIONS,
@@ -46,6 +47,11 @@ export const PostToBuyMachineScreen = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const { data: profileData, refetch: refetchProfile } = useGetProfile();
+
+  useEffect(() => {
+    refetchProfile();
+  }, [refetchProfile]);
 
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showMachineTypePicker, setShowMachineTypePicker] = useState(false);
@@ -93,17 +99,40 @@ export const PostToBuyMachineScreen = () => {
   );
 
   const userLocations: SavedLocation[] = useMemo(() => {
-    if (!user?.locations || !Array.isArray(user.locations)) return [];
-    return user.locations.map((loc: any) => ({
-      id: loc.id,
-      type: loc.type || 'warehouse',
-      address: loc.address || '',
-      latitude: loc.latitude || '0',
-      longitude: loc.longitude || '0',
-      city: loc.city || '',
-      state: loc.state ?? null,
-    }));
-  }, [user]);
+    const profileLocations = normalizePostingLocationsFromProfile(profileData as any);
+    const sourceLocations =
+      profileLocations.length > 0
+        ? profileLocations
+        : Array.isArray(user?.locations)
+          ? user.locations
+          : [];
+
+    return sourceLocations
+      .map((loc: any, index: number) => {
+        const latitude = String(loc?.latitude ?? '').trim();
+        const longitude = String(loc?.longitude ?? '').trim();
+        if (!latitude || !longitude) return null;
+
+        const idCandidate = Number(loc?.id);
+        return {
+          id: Number.isFinite(idCandidate) ? idCandidate : -(1000 + index + 1),
+          type: loc?.type || loc?.source || 'saved_location',
+          address: loc?.address || `${loc?.city || ''}${loc?.state ? `, ${loc.state}` : ''}`.trim(),
+          latitude,
+          longitude,
+          city: loc?.city || '',
+          state: loc?.state ?? null,
+          source: loc?.source,
+          backend_location_id:
+            typeof loc?.backend_location_id === 'number'
+              ? loc.backend_location_id
+              : Number.isFinite(idCandidate) && idCandidate > 0
+                ? idCandidate
+                : undefined,
+        } as SavedLocation;
+      })
+      .filter((loc): loc is SavedLocation => !!loc);
+  }, [profileData, user?.locations]);
 
   const selectedMachine = useMemo(() => machines.find((m) => m.id === machineIdValue), [machines, machineIdValue]);
 
@@ -131,7 +160,11 @@ export const PostToBuyMachineScreen = () => {
 
   const handleSavedLocationSelect = useCallback(
     (savedLocation: SavedLocation) => {
-      setValue('location_id', savedLocation.id, { shouldValidate: true });
+      const backendLocationId =
+        typeof savedLocation.backend_location_id === 'number' && savedLocation.backend_location_id > 0
+          ? savedLocation.backend_location_id
+          : undefined;
+      setValue('location_id', backendLocationId, { shouldValidate: true });
       setValue('location_source', 'saved', { shouldValidate: true });
       setValue(
         'location',

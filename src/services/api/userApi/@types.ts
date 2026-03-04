@@ -39,7 +39,7 @@ export interface UpdateProfileResponse {
   city: string | null;
   udyam_certificate: string | null;
   udyam_verified_at: string | null;
-   /**
+  /**
    * Optional backend-driven flag indicating whether the user has fully
    * completed registration (may include checks beyond company_name).
    */
@@ -47,6 +47,77 @@ export interface UpdateProfileResponse {
   avatar: string | null;
   created_at: string;
   updated_at: string;
+  dealer?: {
+    id: number;
+    user_id: number;
+    profile_complete: boolean;
+    locations?: Array<{
+      id: number;
+      type?: string;
+      address?: string;
+      latitude?: number | string | null;
+      longitude?: number | string | null;
+      city?: string;
+      state?: string | null;
+    }>;
+  } | null;
+  converter?: {
+    id: number;
+    user_id: number;
+    profile_complete: boolean;
+    factory_address?: string | null;
+    factory_city?: string | null;
+    factory_state?: string | null;
+    factory_latitude?: number | string | null;
+    factory_longitude?: number | string | null;
+  } | null;
+  brand?: {
+    id: number;
+    user_id: number;
+    profile_complete: boolean;
+    location?: string | null;
+    city?: string | null;
+    state?: string | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+  } | null;
+  machine_dealer?: {
+    id: number;
+    user_id: number;
+    profile_complete: boolean;
+    location?: string | null;
+    city?: string | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+  } | null;
+  machineDealer?: {
+    id: number;
+    user_id: number;
+    profile_complete: boolean;
+    location?: string | null;
+    city?: string | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+  } | null;
+  posting_locations?: Array<{
+    id?: number | string;
+    source?: string;
+    label?: string | null;
+    address?: string | null;
+    city?: string | null;
+    state?: string | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+  }>;
+  locations?: Array<{
+    id?: number | string;
+    type?: string;
+    address?: string;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+    city?: string;
+    state?: string | null;
+  }>;
 }
 
 export interface UploadUdyamRequest {

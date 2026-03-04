@@ -219,6 +219,41 @@ export const createStyles = (theme: Theme) =>
     },
 
     // ==========================================
+    // DIRECT PAY CARD
+    // ==========================================
+    directPayCard: {
+      backgroundColor: theme.colors.background.primary,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing[4],
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      gap: theme.spacing[2],
+    },
+    directPayTitle: {
+      fontSize: 16,
+      fontWeight: fontWeightForPlatform('700'),
+      color: theme.colors.text.primary,
+    },
+    directPayDescription: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      lineHeight: 20,
+    },
+    directPayButton: {
+      marginTop: theme.spacing[2],
+      backgroundColor: theme.colors.primary.DEFAULT,
+      borderRadius: theme.borderRadius.lg,
+      paddingVertical: theme.spacing[3],
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    directPayButtonText: {
+      fontSize: 14,
+      fontWeight: fontWeightForPlatform('700'),
+      color: '#FFFFFF',
+    },
+
+    // ==========================================
     // COST BREAKDOWN CARD
     // ==========================================
     costCard: {

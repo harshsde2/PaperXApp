@@ -119,6 +119,8 @@ const PostRequirementOptionsScreen: React.FC = () => {
       navigation.navigate(SCREENS.MAIN.POST_TO_SELL_MACHINE as any);
     } else if (option.id === 'post-to-buy-machine') {
       navigation.navigate(SCREENS.MAIN.POST_TO_BUY_MACHINE as any);
+    } else if (option.id === 'post-regular-product-design') {
+      navigation.navigate(SCREENS.CONVERTER_RTD.ADD_PRODUCT as any);
     } else {
       console.log('Selected option:', option.id);
     }

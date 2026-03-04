@@ -3,7 +3,7 @@
  * Form screen for brands to post packaging/product requirements
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -28,10 +28,13 @@ import {
   BrandRequirementType,
   BrandPackagingType,
   BrandTimeline,
+  useGetProfile,
 } from '@services/api';
 import { SCREENS } from '@navigation/constants';
+import { useAppSelector } from '@store/hooks';
+import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import { createStyles } from './styles';
-import { PostBrandRequirementFormData, DropdownOption } from './@types';
+import { PostBrandRequirementFormData, DropdownOption, SavedLocation } from './@types';
 
 // Dropdown options
 const REQUIREMENT_TYPE_OPTIONS: DropdownOption<BrandRequirementType>[] = [
@@ -69,6 +72,12 @@ const PostBrandRequirementScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const user = useAppSelector((state) => state.auth.user);
+  const { data: profileData, refetch: refetchProfile } = useGetProfile();
+
+  useEffect(() => {
+    refetchProfile();
+  }, [refetchProfile]);
 
   const { control, handleSubmit, setValue, watch } = useForm<PostBrandRequirementFormData>({
     defaultValues: {
@@ -81,12 +90,15 @@ const PostBrandRequirementScreen = () => {
       city: '',
       latitude: undefined,
       longitude: undefined,
+      location_id: undefined,
+      location_source: 'saved',
     },
     mode: 'onBlur',
   });
 
   // Picker states
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showRequirementTypePicker, setShowRequirementTypePicker] = useState(false);
   const [showPackagingTypePicker, setShowPackagingTypePicker] = useState(false);
   const [showQuantityRangePicker, setShowQuantityRangePicker] = useState(false);
@@ -95,8 +107,68 @@ const PostBrandRequirementScreen = () => {
   // Watch values
   const requirementType = watch('requirement_type');
   const locationValue = watch('location');
+  const locationIdValue = watch('location_id');
+  const locationSourceValue = watch('location_source');
   const latitudeValue = watch('latitude');
   const longitudeValue = watch('longitude');
+
+  const userLocations: SavedLocation[] = useMemo(() => {
+    const profileLocations = normalizePostingLocationsFromProfile(profileData as any);
+    const sourceLocations =
+      profileLocations.length > 0
+        ? profileLocations
+        : Array.isArray(user?.locations)
+          ? user.locations
+          : [];
+
+    return sourceLocations
+      .map((loc: any, index: number) => {
+        const latitude = String(loc?.latitude ?? '').trim();
+        const longitude = String(loc?.longitude ?? '').trim();
+        if (!latitude || !longitude) return null;
+
+        const idCandidate = Number(loc?.id);
+        return {
+          id: Number.isFinite(idCandidate) ? idCandidate : -(1000 + index + 1),
+          type: loc?.type || loc?.source || 'saved_location',
+          address: loc?.address || `${loc?.city || ''}${loc?.state ? `, ${loc.state}` : ''}`.trim(),
+          latitude,
+          longitude,
+          city: loc?.city || '',
+          state: loc?.state ?? null,
+          source: loc?.source,
+          backend_location_id:
+            typeof loc?.backend_location_id === 'number'
+              ? loc.backend_location_id
+              : Number.isFinite(idCandidate) && idCandidate > 0
+                ? idCandidate
+                : undefined,
+        } as SavedLocation;
+      })
+      .filter((loc): loc is SavedLocation => !!loc);
+  }, [profileData, user?.locations]);
+
+  const handleSavedLocationSelect = useCallback(
+    (savedLocation: SavedLocation) => {
+      const backendLocationId =
+        typeof savedLocation.backend_location_id === 'number' && savedLocation.backend_location_id > 0
+          ? savedLocation.backend_location_id
+          : undefined;
+
+      setValue('location_id', backendLocationId, { shouldValidate: true });
+      setValue('location_source', 'saved', { shouldValidate: true });
+      setValue(
+        'location',
+        savedLocation.address || `${savedLocation.city}${savedLocation.state ? `, ${savedLocation.state}` : ''}`,
+        { shouldValidate: true }
+      );
+      setValue('city', savedLocation.city || '', { shouldValidate: true });
+      setValue('latitude', parseFloat(savedLocation.latitude), { shouldValidate: true });
+      setValue('longitude', parseFloat(savedLocation.longitude), { shouldValidate: true });
+      setShowLocationDropdown(false);
+    },
+    [setValue]
+  );
 
   const handleLocationSelect = useCallback(
     (location: Location) => {
@@ -107,6 +179,8 @@ const PostBrandRequirementScreen = () => {
                    location.address?.city || 
                    location.name || '';
       
+      setValue('location_id', undefined, { shouldValidate: true });
+      setValue('location_source', 'manual', { shouldValidate: true });
       setValue('location', address, { shouldValidate: true });
       setValue('city', city, { shouldValidate: true });
       setValue('latitude', location.latitude, { shouldValidate: true });
@@ -115,6 +189,14 @@ const PostBrandRequirementScreen = () => {
     },
     [setValue]
   );
+
+  const getSelectedLocationDisplay = useCallback(() => {
+    if (locationIdValue && locationSourceValue === 'saved') {
+      const saved = userLocations.find((loc) => loc.id === locationIdValue || loc.backend_location_id === locationIdValue);
+      if (saved) return saved.address || `${saved.city}${saved.state ? `, ${saved.state}` : ''}`;
+    }
+    return locationValue || '';
+  }, [locationIdValue, locationSourceValue, locationValue, userLocations]);
 
   const onSubmit = useCallback(
     (data: PostBrandRequirementFormData) => {
@@ -392,41 +474,33 @@ const PostBrandRequirementScreen = () => {
                 control={control}
                 name="location"
                 rules={validationRules.required('Please select location') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
+                render={({ fieldState: { error } }) => (
                   <>
                     <TouchableOpacity
                       style={styles.locationButton}
-                      onPress={() => setShowLocationPicker(true)}
+                      onPress={() => setShowLocationDropdown(true)}
                       activeOpacity={0.7}
                     >
                       <Text
                         variant="bodyMedium"
                         style={
-                          !value
+                          !getSelectedLocationDisplay()
                             ? { color: theme.colors.text.tertiary }
                             : { color: theme.colors.text.primary }
                         }
                         numberOfLines={1}
                       >
-                        {value || 'Select location on map'}
+                        {getSelectedLocationDisplay() || 'Select location'}
                       </Text>
-                      <AppIcon.Location
+                      <AppIcon.ChevronDown
                         width={20}
                         height={20}
                         color={theme.colors.text.tertiary}
                       />
                     </TouchableOpacity>
                     {error && <Text style={styles.errorText}>{error.message}</Text>}
-                    {!value && (
-                      <TouchableOpacity
-                        onPress={() => setShowLocationPicker(true)}
-                        style={styles.mapButton}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={styles.mapButtonText}>
-                          Select Location on Map
-                        </Text>
-                      </TouchableOpacity>
+                    {userLocations.length === 0 && (
+                      <Text style={styles.errorText}>No saved locations found. Select on map.</Text>
                     )}
                   </>
                 )}
@@ -459,6 +533,64 @@ const PostBrandRequirementScreen = () => {
           title="Select Location"
         />
       </Modal>
+
+      {/* Saved Location Dropdown */}
+      {showLocationDropdown && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+            <View style={styles.modalHeader}>
+              <Text variant="h4" fontWeight="semibold">
+                Select Location
+              </Text>
+              <TouchableOpacity onPress={() => setShowLocationDropdown(false)}>
+                <AppIcon.Close width={24} height={24} color={theme.colors.text.primary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {userLocations.length === 0 ? (
+                <View style={{ paddingVertical: theme.spacing[2] }}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary }}>
+                    No saved locations found.
+                  </Text>
+                </View>
+              ) : (
+                userLocations.map((location) => (
+                  <TouchableOpacity
+                    key={`location-${location.id}`}
+                    style={styles.modalOption}
+                    onPress={() => handleSavedLocationSelect(location)}
+                  >
+                    <Text variant="bodyMedium">{location.address || location.city}</Text>
+                    <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary }}>
+                      {location.city}
+                      {location.state ? `, ${location.state}` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.modalOption,
+                  {
+                    backgroundColor: theme.colors.surface.secondary,
+                    borderRadius: theme.borderRadius.md,
+                    marginTop: theme.spacing[2],
+                  },
+                ]}
+                onPress={() => {
+                  setShowLocationDropdown(false);
+                  setShowLocationPicker(true);
+                }}
+              >
+                <Text variant="bodyMedium" style={{ color: theme.colors.primary.DEFAULT }}>
+                  Select on Map
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      )}
 
       {/* Picker Modals */}
       {renderPickerModal(

@@ -10,6 +10,8 @@ export interface SavedLocation {
   longitude: string;
   city: string;
   state: string | null;
+  source?: string;
+  backend_location_id?: number;
 }
 
 export interface PostToBuyMachineFormData {

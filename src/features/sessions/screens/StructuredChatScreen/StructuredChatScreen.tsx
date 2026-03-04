@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   FlatList,
+  InteractionManager,
   KeyboardAvoidingView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   RefreshControl,
   TextInput,
@@ -11,7 +14,7 @@ import {
 } from 'react-native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useIsFocused } from '@react-navigation/native';
 import { useTheme } from '@theme/index';
 import { useAppSelector } from '@store/hooks';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,6 +28,7 @@ import { createStyles } from './styles';
 import { markThreadOpenedNow } from '../../utils/threadReadState';
 
 const SEND_COOLDOWN_MS = 800;
+const POLL_INTERVAL_MS = 8000;
 
 const formatTime = (value: string) => {
   const date = new Date(value);
@@ -75,6 +79,7 @@ export default function StructuredChatScreen() {
   const threadId = Number(route.params?.threadId ?? 0);
   const inquiryId = Number(route.params?.inquiryId ?? 0);
   const hasValidThreadId = Number.isFinite(threadId) && threadId > 0;
+  const isFocused = useIsFocused();
 
   const authUser = useAppSelector((state) => state.auth.user);
   const currentUserId = useMemo(() => resolveUserId(authUser), [authUser]);
@@ -84,7 +89,10 @@ export default function StructuredChatScreen() {
   const [sendError, setSendError] = useState<string | null>(null);
 
   const listRef = useRef<FlatList<ThreadMessage>>(null);
-  const hasAutoScrolledRef = useRef(false);
+  const hasInitialScrolledRef = useRef(false);
+  const isNearBottomRef = useRef(true);
+  const prevMessageCountRef = useRef(0);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const textRef = useRef('');
   const lastSendTimeRef = useRef(0);
   const isSendingRef = useRef(false);
@@ -95,6 +103,11 @@ export default function StructuredChatScreen() {
     }
   }, [hasValidThreadId, threadId]);
 
+  useEffect(() => {
+    hasInitialScrolledRef.current = false;
+    prevMessageCountRef.current = 0;
+  }, [threadId]);
+
   const {
     data,
     isLoading,
@@ -103,7 +116,14 @@ export default function StructuredChatScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useGetThreadMessagesInfinite(threadId, { limit: 20 }, { enabled: hasValidThreadId });
+  } = useGetThreadMessagesInfinite(
+    threadId,
+    { limit: 20 },
+    {
+      enabled: hasValidThreadId,
+      refetchInterval: isFocused ? POLL_INTERVAL_MS : false,
+    }
+  );
 
   const sendMessage = useSendThreadMessage();
 
@@ -125,14 +145,37 @@ export default function StructuredChatScreen() {
     return combined;
   }, [data, optimisticMessages, serverMessageIds]);
 
-  useEffect(() => {
-    if (messages.length > 0 && !hasAutoScrolledRef.current) {
-      hasAutoScrolledRef.current = true;
-      requestAnimationFrame(() => {
-        listRef.current?.scrollToEnd({ animated: false });
-      });
-    }
-  }, [messages.length]);
+  const scrollToEndSmooth = useCallback((animated = true) => {
+    InteractionManager.runAfterInteractions(() => {
+      listRef.current?.scrollToEnd({ animated });
+    });
+  }, []);
+
+  const handleContentSizeChange = useCallback(
+    (_w: number, h: number) => {
+      if (messages.length === 0 || h <= 0) return;
+      if (!hasInitialScrolledRef.current) {
+        hasInitialScrolledRef.current = true;
+        prevMessageCountRef.current = messages.length;
+        scrollToEndSmooth(false);
+      } else if (isNearBottomRef.current && messages.length > prevMessageCountRef.current) {
+        prevMessageCountRef.current = messages.length;
+        scrollToEndSmooth(true);
+      } else {
+        prevMessageCountRef.current = messages.length;
+      }
+    },
+    [messages.length, scrollToEndSmooth]
+  );
+
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+      const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+      isNearBottomRef.current = distanceFromBottom < 120;
+    },
+    []
+  );
 
   const handleTextChange = useCallback((value: string) => {
     textRef.current = value;
@@ -152,7 +195,7 @@ export default function StructuredChatScreen() {
     lastSendTimeRef.current = now;
     setSendError(null);
 
-    const tempId = -now;
+    const tempId = now + 1e12;
     const optimistic: ThreadMessage = {
       id: tempId,
       thread_id: threadId,
@@ -168,24 +211,62 @@ export default function StructuredChatScreen() {
     setOptimisticMessages((prev) => [...prev, optimistic]);
     textRef.current = '';
     setText('');
+    isNearBottomRef.current = true;
 
-    requestAnimationFrame(() => {
+    InteractionManager.runAfterInteractions(() => {
       listRef.current?.scrollToEnd({ animated: true });
     });
 
     sendMessage.mutate(
       { threadId, payload: { body } },
       {
-        onSuccess: () => {
+        onSuccess: (createdMessage) => {
           isSendingRef.current = false;
           setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempId));
           setSendError(null);
+
+          const normalized = createdMessage && typeof createdMessage === 'object'
+            ? {
+                id: Number(createdMessage.id),
+                thread_id: Number(createdMessage.thread_id ?? threadId),
+                sender_user_id: Number(createdMessage.sender_user_id ?? currentUserId),
+                sender_role: createdMessage.sender_role ?? authUser?.primary_role ?? null,
+                body: String(createdMessage.body ?? body),
+                attachment: createdMessage.attachment ?? null,
+                status: createdMessage.status ?? 'sent',
+                created_at: createdMessage.created_at ?? new Date().toISOString(),
+                updated_at: createdMessage.updated_at ?? new Date().toISOString(),
+              }
+            : null;
+
+          if (normalized && normalized.id > 0) {
+            queryClient.setQueryData(
+              queryKeys.chat.structured.threadMessages(threadId, { limit: 20 }),
+              (old: any) => {
+                if (!old?.pages?.length) return old;
+                const [firstPage, ...rest] = old.pages;
+                const exists = firstPage.data.some((m: any) => Number(m.id) === normalized.id);
+                if (exists) return old;
+                return {
+                  ...old,
+                  pages: [
+                    {
+                      ...firstPage,
+                      data: [...firstPage.data, normalized],
+                    },
+                    ...rest,
+                  ],
+                };
+              }
+            );
+          }
+
           if (inquiryId > 0) {
             queryClient.invalidateQueries({
               queryKey: queryKeys.chat.structured.inquiryThreads(inquiryId),
             });
           }
-          requestAnimationFrame(() => {
+          InteractionManager.runAfterInteractions(() => {
             listRef.current?.scrollToEnd({ animated: true });
           });
         },
@@ -237,6 +318,17 @@ export default function StructuredChatScreen() {
     [styles.emptyText]
   );
 
+  const handleRefresh = useCallback(() => {
+    setIsManualRefreshing(true);
+    refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    if (!isRefetching && isManualRefreshing) {
+      setIsManualRefreshing(false);
+    }
+  }, [isRefetching, isManualRefreshing]);
+
   const isSendDisabled = !text.trim();
 
   if (!hasValidThreadId) {
@@ -277,10 +369,18 @@ export default function StructuredChatScreen() {
           initialNumToRender={15}
           removeClippedSubviews={Platform.OS === 'android'}
           scrollEventThrottle={64}
+          onScroll={handleScroll}
+          onContentSizeChange={handleContentSizeChange}
+          {...(Platform.OS === 'ios' && {
+            maintainVisibleContentPosition: {
+              minIndexForVisible: 0,
+              autoscrollToTopThreshold: 5,
+            },
+          })}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
+              refreshing={isManualRefreshing && isRefetching}
+              onRefresh={handleRefresh}
               tintColor={theme.colors.primary.DEFAULT}
             />
           }

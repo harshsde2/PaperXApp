@@ -25,7 +25,6 @@ import { SessionTabBar } from '../../components/SessionTabBar';
 import { SessionCard } from '../../components/SessionCard';
 import { SessionDashboardScreenRouteProp } from './@types';
 import { createStyles } from './styles';
-import { useAppSelector } from '@store/hooks';
 
 const SessionDashboardScreen = () => {
   const navigation = useNavigation<any>();
@@ -33,17 +32,14 @@ const SessionDashboardScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-  const token = useAppSelector((state) => state.auth.token);
-  console.log('token ->', JSON.stringify(token, null, 2));
 
   const initialTab = route.params?.initialTab || 'all';
-  const [activeTab, setActiveTab] = useState<SessionTabType>(initialTab);
+  const [activeTab, setActiveTab] = useState<SessionTabType>(
+    initialTab === 'my_posts' ? 'my_posts' : 'all'
+  );
 
   // Map frontend tab to API filter
-  const apiFilter: SessionFilter = useMemo(() => {
-    if (activeTab === 'all') return 'all';
-    return activeTab;
-  }, [activeTab]);
+  const apiFilter: SessionFilter = useMemo(() => 'all', []);
 
   const {
     data: sessionsResponse,
@@ -64,9 +60,23 @@ const SessionDashboardScreen = () => {
     return sessions.map((session: ActiveSessionListItem) => {
       const firstItem = session.items[0];
       const totalQuantity = session.items.reduce((sum, item) => sum + item.quantity, 0);
+      const isOwner = session.is_owner ?? true;
+      const safeResponsesReceived = Number(session.responses_received ?? 0);
+      const safeMatchedCount = Number(session.matched_dealers_count ?? 0);
+      const safeMatchingProgressTotal = Number(session.matching_progress?.total ?? 0);
+      const safeMatchingProgressMatched = Number(session.matching_progress?.matched ?? 0);
+      const hasExplicitResponses = session.responses_received !== null && session.responses_received !== undefined;
+      const ownerResolvedResponses = hasExplicitResponses
+        ? Number.isFinite(safeResponsesReceived)
+          ? safeResponsesReceived
+          : 0
+        : Math.max(
+            Number.isFinite(safeMatchingProgressMatched) ? safeMatchingProgressMatched : 0,
+            Number.isFinite(safeMatchedCount) ? safeMatchedCount : 0
+          );
       
       // Map status from API to frontend
-      let frontendStatus: SessionTabType = 'active';
+      let frontendStatus: Session['status'] = 'active';
       if (session.status === 'MATCHING') {
         frontendStatus = 'finding_matches';
       } else if (session.status === 'LOCKED') {
@@ -91,21 +101,29 @@ const SessionDashboardScreen = () => {
               (session.countdown.seconds * 1000)
             ).toISOString()
           : undefined,
-        responsesReceived: session.responses_received || 0,
-        totalExpectedResponses: session.matching_progress?.total || session.matched_dealers_count || 15,
+        responsesReceived: isOwner
+          ? ownerResolvedResponses
+          : Number.isFinite(safeResponsesReceived)
+            ? safeResponsesReceived
+            : 0,
+        totalExpectedResponses: isOwner
+          ? 10
+          : Number.isFinite(safeMatchingProgressTotal) && safeMatchingProgressTotal > 0
+            ? safeMatchingProgressTotal
+            : 10,
         materialName: firstItem?.material_category || 'Material',
         quantity: String(totalQuantity),
         quantityUnit: firstItem?.quantity_unit || 'units',
-        isOwner: session.is_owner ?? true,
+        isOwner,
         posterLabel: session.poster_label,
         intent: session.intent === 'sell' ? 'sell' : 'buy',
       };
     });
-  }, [sessions, activeTab]);
+  }, [sessions]);
 
   const filteredSessions = useMemo(() => {
     if (activeTab === 'all') return transformedSessions;
-    return transformedSessions.filter((session) => session.status === activeTab);
+    return transformedSessions.filter((session) => session.isOwner !== false);
   }, [transformedSessions, activeTab]);
 
   const handleTabChange = useCallback((tab: SessionTabType) => {
@@ -160,26 +178,16 @@ const SessionDashboardScreen = () => {
   }, []);
 
   const handleNotifications = useCallback(() => {
-    // TODO: Navigate to notifications
-  }, []);
+    navigation.navigate(SCREENS.MAIN.NOTIFICATIONS);
+  }, [navigation]);
 
   const renderEmptyState = () => {
     const getEmptyMessage = () => {
       switch (activeTab) {
-        case 'finding_matches':
+        case 'my_posts':
           return {
-            title: 'No sessions finding matches',
-            subtitle: 'Your new requirements will appear here while we find matches for you.',
-          };
-        case 'active':
-          return {
-            title: 'No active sessions',
-            subtitle: 'Sessions with responses will appear here for your review.',
-          };
-        case 'locked':
-          return {
-            title: 'No locked sessions',
-            subtitle: 'Completed sessions where you\'ve selected partners will appear here.',
+            title: 'No posts yet',
+            subtitle: 'Your posted requirements will appear here.',
           };
         default:
           return {
@@ -232,9 +240,9 @@ const SessionDashboardScreen = () => {
             <Text style={styles.headerTitle}>Sourcing Hub</Text>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
+            {/* <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
               <AppIcon.Search width={20} height={20} color={theme.colors.text.primary} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity style={styles.headerButton} onPress={handleNotifications}>
               <AppIcon.Notification width={20} height={20} color={theme.colors.text.primary} />
             </TouchableOpacity>

@@ -19,7 +19,7 @@ import type { DispatchProofModalProps } from './@types';
 import { createStyles } from './styles';
 
 const PROOF_OPTIONS: { value: RtdDispatchProofType; label: string }[] = [
-  { value: 'tracking_number', label: 'Tracking Number' },
+  { value: 'tracking_number', label: 'Courier Tracking Number' },
   { value: 'lr_photo', label: 'LR Photo' },
   { value: 'delivery_challan', label: 'Delivery Challan' },
 ];

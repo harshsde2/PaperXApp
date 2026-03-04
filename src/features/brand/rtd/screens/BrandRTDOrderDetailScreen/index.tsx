@@ -16,7 +16,6 @@ import { SCREENS } from '@navigation/constants';
 import {
   useGetBrandRtdOrderDetail,
   useConfirmRtdPayment,
-  useConfirmRtdDelivery,
   useRaiseRtdDispute,
   useCancelRtdOrder,
 } from '@services/api/brandRtdApi';
@@ -24,8 +23,8 @@ import type { RtdOrderStatus } from '@services/api';
 import { BrandOrderTimeline } from '../../components/BrandOrderTimeline';
 import { BrandOrderSummaryCard } from '../../components/BrandOrderSummaryCard';
 import { OrderCountdownTimer } from '../../components/OrderCountdownTimer';
-import { EscrowBanner } from '../../components/EscrowBanner';
 import { TrackingInfoCard } from '../../components/TrackingInfoCard';
+import { ContactDetailsCard } from '@shared/components/ContactDetailsCard';
 import type { BrandRTDOrderDetailScreenProps } from './@types';
 import { createStyles } from './styles';
 
@@ -114,7 +113,6 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   } = useGetBrandRtdOrderDetail(orderId);
 
   const confirmPayment = useConfirmRtdPayment();
-  const confirmDelivery = useConfirmRtdDelivery();
   const raiseDispute = useRaiseRtdDispute();
   const cancelOrder = useCancelRtdOrder();
 
@@ -141,26 +139,6 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
       },
     ]);
   }, [activeOrder, confirmPayment, refetch]);
-
-  const handleConfirmDelivery = useCallback(() => {
-    if (!activeOrder) return;
-    Alert.alert(
-      'Confirm Delivery',
-      'Have you received this order in good condition?',
-      [
-        { text: 'Not yet', style: 'cancel' },
-        {
-          text: 'Yes, Received',
-          onPress: () =>
-            confirmDelivery.mutate(activeOrder.id, {
-              onSuccess: () => refetch(),
-              onError: (err) =>
-                Alert.alert('Error', err?.message ?? 'Failed to confirm'),
-            }),
-        },
-      ],
-    );
-  }, [activeOrder, confirmDelivery, refetch]);
 
   const handleRaiseDispute = useCallback(() => {
     if (!activeOrder) return;
@@ -306,9 +284,9 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <Text style={styles.statusDescription}>{meta.description}</Text>
             </View>
 
-            <View style={{ marginTop: theme.spacing[2], marginHorizontal: theme.spacing[4] }}>
+            {/* <View style={{ marginTop: theme.spacing[2], marginHorizontal: theme.spacing[4] }}>
               <EscrowBanner description="Funds are held safely until your order is delivered." />
-            </View>
+            </View> */}
 
             <View style={styles.pricingCard}>
               <Text style={styles.pricingHeader}>Full Order Summary</Text>
@@ -348,14 +326,14 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               </View>
             </View>
 
-            <View style={styles.infoNote}>
+            {/* <View style={styles.infoNote}>
               <AppIcon.Warning width={16} height={16} color={theme.colors.primary.DEFAULT} />
               <Text style={styles.infoNoteText}>
                 By proceeding, you agree to the terms for escrow transactions. Once
                 paid, the converter will receive immediate notification to begin
                 fulfillment.
               </Text>
-            </View>
+            </View> */}
           </>
         )}
 
@@ -385,9 +363,9 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <Text style={styles.statusDescription}>{meta.description}</Text>
             </View>
 
-            <View style={{ marginTop: theme.spacing[2], marginHorizontal: theme.spacing[4] }}>
+            {/* <View style={{ marginTop: theme.spacing[2], marginHorizontal: theme.spacing[4] }}>
               <EscrowBanner />
-            </View>
+            </View> */}
 
             <BrandOrderSummaryCard order={activeOrder} />
           </>
@@ -434,12 +412,30 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
                 <Text style={styles.completedBadgeText}>Completed</Text>
               </View>
               <Text fontWeight="bold" style={styles.completedTitle}>
-                Successfully Delivered
+                Order Dispatched Successfully
               </Text>
               <Text style={styles.completedSubtitle}>
-                Your order has been delivered.
+                Your order has been dispatched by the converter.
               </Text>
             </View>
+
+            <View style={{ marginHorizontal: theme.spacing[4], marginTop: theme.spacing[2] }}>
+              <TrackingInfoCard
+                trackingNumber={activeOrder.tracking_number ?? null}
+                courierService={null}
+                onCopyTracking={
+                  activeOrder.tracking_number ? handleCopyTracking : undefined
+                }
+              />
+            </View>
+
+            <ContactDetailsCard
+              title="Converter Contact"
+              name={activeOrder.converter?.name}
+              companyName={activeOrder.converter?.company_name}
+              email={activeOrder.converter?.email}
+              phone={activeOrder.converter?.mobile}
+            />
 
             <BrandOrderSummaryCard order={activeOrder} />
 
@@ -538,20 +534,24 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
         )}
 
         {status === 'DISPATCHED' && (
+          <CustomButton
+            title="Back to Dashboard"
+            onPress={handleBackToDashboard}
+            variant="gradient"
+            size="lg"
+          />
+        )}
+
+        {status === 'COMPLETED' && (
           <>
             <CustomButton
-              title={
-                confirmDelivery.isPending
-                  ? 'Confirming...'
-                  : 'Confirm Delivery'
-              }
-              onPress={handleConfirmDelivery}
+              title="Back to Dashboard"
+              onPress={handleBackToDashboard}
               variant="gradient"
               size="lg"
-              disabled={confirmDelivery.isPending}
             />
             <View style={styles.footerGap} />
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.dangerOutlineButton}
               onPress={handleRaiseDispute}
               activeOpacity={0.7}
@@ -561,11 +561,11 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <Text style={styles.dangerOutlineButtonText}>
                 {raiseDispute.isPending ? 'Submitting...' : 'Raise Dispute'}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </>
         )}
 
-        {(status === 'COMPLETED' || status === 'DISPUTED') && (
+        {status === 'DISPUTED' && (
           <CustomButton
             title="Back to Dashboard"
             onPress={handleBackToDashboard}

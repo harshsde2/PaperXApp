@@ -41,6 +41,7 @@ import {
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { SCREENS } from './constants';
 import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
+import NotificationsScreen from '@features/main/screens/NotificationsScreen/NotificationsScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
@@ -78,6 +79,7 @@ export type MainStackParamList = {
     };
     creditsDeducted: number;
   };
+  Notifications: undefined;
   // Wallet Screens
   WalletMain: undefined;
   CreditPacks: undefined;
@@ -85,7 +87,7 @@ export type MainStackParamList = {
   AddCustomCredits: undefined;
   // Session Screens
   SessionDashboard: {
-    initialTab?: 'all' | 'finding_matches' | 'active' | 'locked';
+    initialTab?: 'all' | 'my_posts';
   };
   SessionDetails: {
     sessionId: string;
@@ -231,6 +233,14 @@ const MainNavigator = () => {
           headerShown: false,
           animation: 'slide_from_bottom',
           gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.NOTIFICATIONS}
+        component={NotificationsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
         }}
       />
       {/* Wallet Screens */}

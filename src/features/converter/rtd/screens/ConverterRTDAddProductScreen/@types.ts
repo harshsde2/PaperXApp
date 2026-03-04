@@ -12,6 +12,8 @@ export interface SavedLocation {
   longitude: string;
   city: string;
   state: string | null;
+  source?: string;
+  backend_location_id?: number;
 }
 
 export interface FormData {
@@ -20,9 +22,15 @@ export interface FormData {
   image: PickedImage | null;
   image_path: string | null;
   size: string;
+  size_unit: 'inches' | 'cm' | 'mm' | '';
+  material_id?: number;
   material: string;
-  gsm: string;
+  thickness: string;
+  thickness_unit: 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON' | '';
+  finish_ids: number[];
   finish: string;
+  branding_enabled: boolean;
+  branding_methods: string[];
   branding_method: string;
   lead_time: RtdLeadTime | '';
   moq: string;
@@ -41,8 +49,11 @@ export interface FormErrors {
   category?: string;
   product_name?: string;
   size?: string;
+  size_unit?: string;
   material?: string;
-  gsm?: string;
+  thickness?: string;
+  thickness_unit?: string;
+  branding_methods?: string;
   finish?: string;
   branding_method?: string;
   lead_time?: string;

@@ -31,8 +31,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
   const progressPercent = useMemo(() => {
     if (session.totalExpectedResponses === 0) return 0;
-    return (session.responsesReceived / session.totalExpectedResponses) * 100;
+    const rawProgress = (session.responsesReceived / session.totalExpectedResponses) * 100;
+    return Math.max(0, Math.min(rawProgress, 100));
   }, [session.responsesReceived, session.totalExpectedResponses]);
+
+  const displayResponsesReceived = useMemo(
+    () => Math.max(0, Math.min(session.responsesReceived, session.totalExpectedResponses)),
+    [session.responsesReceived, session.totalExpectedResponses]
+  );
 
   const formattedDate = useMemo(() => {
     const date = new Date(session.createdAt);
@@ -109,7 +115,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <View style={styles.progressHeader}>
                 <Text style={styles.progressLabel}>Responses Received</Text>
                 <Text style={styles.progressValue}>
-                  {session.responsesReceived}/{session.totalExpectedResponses}
+                  {displayResponsesReceived}/{session.totalExpectedResponses}
                 </Text>
               </View>
               <View style={styles.progressBar}>
@@ -141,7 +147,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <View style={styles.progressHeader}>
                 <Text style={styles.progressLabel}>Matching Suppliers</Text>
                 <Text style={[styles.progressValue, { color: theme.colors.text.tertiary }]}>
-                  {session.responsesReceived}/{session.totalExpectedResponses}
+                  {displayResponsesReceived}/{session.totalExpectedResponses}
                 </Text>
               </View>
               <View style={styles.progressBar}>

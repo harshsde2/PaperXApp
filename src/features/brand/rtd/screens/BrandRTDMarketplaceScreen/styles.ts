@@ -8,25 +8,6 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
       backgroundColor: theme.colors.background.secondary,
     },
-    filterContainer: {
-      paddingHorizontal: theme.spacing[4],
-      backgroundColor: theme.colors.surface.primary,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border.primary,
-    },
-    filterHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    myOrdersLink: {
-      paddingLeft: theme.spacing[3],
-      paddingVertical: theme.spacing[2],
-    },
-    myOrdersLinkText: {
-      fontSize: 13,
-      fontWeight: fontWeightForPlatform('700'),
-      color: theme.colors.primary.DEFAULT,
-    },
     listContent: {
       paddingHorizontal: theme.spacing[4],
       paddingBottom: theme.spacing[24],
@@ -52,5 +33,35 @@ export const createStyles = (theme: Theme) =>
     },
     footerLoader: {
       paddingVertical: theme.spacing[4],
+    },
+    filterIconWrapper: {
+      position: 'relative',
+    },
+    filterBadge: {
+      position: 'absolute',
+      top: -6,
+      right: -8,
+      backgroundColor: theme.colors.primary.DEFAULT,
+      borderRadius: 8,
+      minWidth: 16,
+      height: 16,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      paddingHorizontal: 3,
+    },
+    filterBadgeText: {
+      color: theme.colors.surface.primary,
+      fontWeight: fontWeightForPlatform('700'),
+      fontSize: 9,
+      lineHeight: 12,
+    },
+    sheetBackground: {
+      backgroundColor: theme.colors.surface.primary,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+    },
+    sheetHandle: {
+      backgroundColor: theme.colors.border.primary,
+      width: 40,
     },
   });

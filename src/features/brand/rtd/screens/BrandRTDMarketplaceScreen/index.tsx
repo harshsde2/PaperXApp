@@ -1,25 +1,25 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
+import { View, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
+import { CustomHeader } from '@shared/components/CustomHeader';
+import { AppIcon } from '@assets/svgs';
 import { useGetRtdCatalogInfinite, useGetBrandRtdOrders } from '@services/api/brandRtdApi';
 import { SCREENS } from '@navigation/constants';
-import { RTDFilterBar } from '../../components/RTDFilterBar';
 import { RTDProductCard } from '../../components/RTDProductCard';
-import type { RTDFilterState, RTDFilterKey } from '../../components/RTDFilterBar/@types';
-import type { RtdProduct } from '@services/api/rtdApi/@types';
+import { MarketplaceFilterSheet } from '../../components/MarketplaceFilterSheet';
+import type { RtdProduct, RtdLeadTime, GetRtdCatalogParams } from '@services/api/rtdApi/@types';
 import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
-import type { BrandRTDMarketplaceScreenProps, MarketplaceFilterState } from './@types';
+import type {
+  BrandRTDMarketplaceScreenProps,
+  AdvancedFilterState,
+} from './@types';
+import { INITIAL_ADVANCED_FILTERS } from './@types';
 import { createStyles } from './styles';
 
-const INITIAL_FILTERS: RTDFilterState = {
-  category: null,
-  leadTime: null,
-  moq: null,
-  price: null,
-  filter: null,
-};
+const FILTER_SNAP_POINTS = ['75%'];
 
 export const BrandRTDMarketplaceScreen: React.FC<
   BrandRTDMarketplaceScreenProps
@@ -27,7 +27,10 @@ export const BrandRTDMarketplaceScreen: React.FC<
   const theme = useTheme();
   const styles = createStyles(theme);
 
-  const [chipFilters, setChipFilters] = useState<RTDFilterState>(INITIAL_FILTERS);
+  const filterSheetRef = useRef<BottomSheetModal>(null);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterState>(
+    INITIAL_ADVANCED_FILTERS,
+  );
 
   const { data: rtdOrders, refetch: refetchOrders } = useGetBrandRtdOrders();
 
@@ -46,16 +49,71 @@ export const BrandRTDMarketplaceScreen: React.FC<
     }, [refetchOrders]),
   );
 
-  const apiParams = useMemo<MarketplaceFilterState>(() => {
-    const params: MarketplaceFilterState = {};
-    if (chipFilters.category) params.category = chipFilters.category;
-    if (chipFilters.leadTime) params.lead_time = chipFilters.leadTime;
-    if (chipFilters.price) {
-      params.sort_by = 'base_price';
-      params.sort_dir = chipFilters.price === 'low' ? 'asc' : 'desc';
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (advancedFilters.delivery_geography) count++;
+    if (advancedFilters.lead_time) count++;
+    if (advancedFilters.min_price || advancedFilters.max_price) count++;
+    if (advancedFilters.min_moq || advancedFilters.max_moq) count++;
+    if (advancedFilters.has_branding) count++;
+    return count;
+  }, [advancedFilters]);
+
+  const handleFilterPress = useCallback(() => {
+    filterSheetRef.current?.present();
+  }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      header: (props: any) => (
+        <CustomHeader
+          {...props}
+          rightButton={{
+            icon: (
+              <View style={styles.filterIconWrapper}>
+                <AppIcon.Filter width={22} height={22} color={theme.colors.text.primary} />
+                {activeFilterCount > 0 && (
+                  <View style={styles.filterBadge}>
+                    <Text variant="captionSmall" style={styles.filterBadgeText}>
+                      {activeFilterCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ),
+            onPress: handleFilterPress,
+          }}
+        />
+      ),
+    });
+  }, [navigation, handleFilterPress, activeFilterCount, styles, theme]);
+
+  const apiParams = useMemo<Omit<GetRtdCatalogParams, 'page'>>(() => {
+    const params: Omit<GetRtdCatalogParams, 'page'> = {};
+
+    if (advancedFilters.delivery_geography) {
+      params.delivery_geography = advancedFilters.delivery_geography;
+    }
+    if (advancedFilters.lead_time) {
+      params.lead_time = advancedFilters.lead_time as RtdLeadTime;
+    }
+    if (advancedFilters.min_price) {
+      params.min_price = Number(advancedFilters.min_price);
+    }
+    if (advancedFilters.max_price) {
+      params.max_price = Number(advancedFilters.max_price);
+    }
+    if (advancedFilters.min_moq) {
+      params.min_moq = Number(advancedFilters.min_moq);
+    }
+    if (advancedFilters.max_moq) {
+      params.max_moq = Number(advancedFilters.max_moq);
+    }
+    if (advancedFilters.has_branding) {
+      params.has_branding = advancedFilters.has_branding;
     }
     return params;
-  }, [chipFilters]);
+  }, [advancedFilters]);
 
   const {
     data,
@@ -72,11 +130,14 @@ export const BrandRTDMarketplaceScreen: React.FC<
     [data],
   );
 
-  const handleFilterChange = useCallback((key: RTDFilterKey) => {
-    setChipFilters((prev) => ({
-      ...prev,
-      [key]: prev[key] ? null : key,
-    }));
+  const handleApplyAdvancedFilters = useCallback((filters: AdvancedFilterState) => {
+    setAdvancedFilters(filters);
+    filterSheetRef.current?.dismiss();
+  }, []);
+
+  const handleResetAdvancedFilters = useCallback(() => {
+    setAdvancedFilters(INITIAL_ADVANCED_FILTERS);
+    filterSheetRef.current?.dismiss();
   }, []);
 
   const handleBuyNow = useCallback(
@@ -100,10 +161,6 @@ export const BrandRTDMarketplaceScreen: React.FC<
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleMyOrders = useCallback(() => {
-    navigation.navigate(SCREENS.BRAND_RTD.MY_ORDERS as any);
-  }, [navigation]);
 
   const renderItem = useCallback(
     ({ item }: { item: RtdProduct }) => (
@@ -150,35 +207,42 @@ export const BrandRTDMarketplaceScreen: React.FC<
   }, [isFetchingNextPage, theme]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.filterContainer}>
-        <View style={styles.filterHeaderRow}>
-          <RTDFilterBar filters={chipFilters} onFilterChange={handleFilterChange} />
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        <FlatList
+          data={products}
+          renderItem={renderItem}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmpty}
+          ListFooterComponent={renderFooter}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching && !isLoading}
+              onRefresh={() => refetch()}
+              tintColor={theme.colors.primary.DEFAULT}
+            />
+          }
+        />
 
-          {/* <TouchableOpacity onPress={handleMyOrders} style={styles.myOrdersLink} activeOpacity={0.7}>
-            <Text fontWeight="bold" style={styles.myOrdersLinkText}>My Orders</Text>
-          </TouchableOpacity> */}
-        </View>
-      </View>
-
-      <FlatList
-        data={products}
-        renderItem={renderItem}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={renderEmpty}
-        ListFooterComponent={renderFooter}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching && !isLoading}
-            onRefresh={() => refetch()}
-            tintColor={theme.colors.primary.DEFAULT}
+        <BottomSheetModal
+          ref={filterSheetRef}
+          snapPoints={FILTER_SNAP_POINTS}
+          enablePanDownToClose
+          enableDynamicSizing={false}
+          backgroundStyle={styles.sheetBackground}
+          handleIndicatorStyle={styles.sheetHandle}
+        >
+          <MarketplaceFilterSheet
+            filters={advancedFilters}
+            onApply={handleApplyAdvancedFilters}
+            onReset={handleResetAdvancedFilters}
           />
-        }
-      />
-    </View>
+        </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };

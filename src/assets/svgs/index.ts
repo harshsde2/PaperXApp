@@ -53,6 +53,7 @@ import Order from './Order.svg';
 import Pause from './Pause.svg';
 import Play from './Play.svg';
 import Filter from './Filter.svg';
+import MarketIcon from './MarketIcon.svg';
 
 
 
@@ -112,4 +113,5 @@ export const AppIcon = {
   Pause,
   Play,
   Filter,
+  MarketIcon,
 };

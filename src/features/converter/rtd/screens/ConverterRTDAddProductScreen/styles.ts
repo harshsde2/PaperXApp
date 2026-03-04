@@ -14,6 +14,9 @@ export const createStyles = (theme: Theme) =>
     sectionContainer: {
       marginBottom: theme.spacing[6],
     },
+    card: {
+      marginBottom: theme.spacing[4],
+    },
     sectionTitle: {
       marginBottom: theme.spacing[4],
     },
@@ -43,6 +46,7 @@ export const createStyles = (theme: Theme) =>
     },
     errorText: {
       marginTop: theme.spacing[1],
+      color: theme.colors.error.DEFAULT,
     },
     switchRow: {
       flexDirection: 'row',
@@ -52,6 +56,51 @@ export const createStyles = (theme: Theme) =>
     },
     switchLabel: {
       flex: 1,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    halfField: {
+      flex: 1,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+      marginBottom: theme.spacing[1],
+    },
+    optionalLabel: {
+      color: theme.colors.text.tertiary,
+    },
+    customMaterialRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+    },
+    customMaterialInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing[3],
+      fontSize: 16,
+      backgroundColor: theme.colors.surface.primary,
+      color: theme.colors.text.primary,
+      fontFamily: theme.fontFamily.regular,
+    },
+    addMaterialButton: {
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[4],
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor: theme.colors.primary.DEFAULT,
+      justifyContent: 'center',
+    },
+    buttonText: {
+      color: theme.colors.text.inverse,
+    },
+    helperText: {
+      color: theme.colors.text.tertiary,
     },
     leadTimeChipsContainer: {
       flexDirection: 'row',
@@ -98,5 +147,71 @@ export const createStyles = (theme: Theme) =>
       borderRadius: theme.borderRadius.lg,
       padding: theme.spacing[3],
       backgroundColor: theme.colors.surface.primary,
+    },
+    sheetContainer: {
+      flex: 1,
+      paddingHorizontal: theme.spacing[4],
+      paddingTop: theme.spacing[4],
+    },
+    sheetTitle: {
+      marginBottom: theme.spacing[3],
+    },
+    searchInput: {
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      paddingHorizontal: theme.spacing[3],
+      paddingVertical: theme.spacing[3],
+      color: theme.colors.text.primary,
+      fontFamily: theme.fontFamily.regular,
+      marginBottom: theme.spacing[3],
+    },
+    sheetOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border.secondary,
+    },
+    sheetListContent: {
+      paddingBottom: theme.spacing[5],
+    },
+    loadingMore: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: theme.spacing[4],
+    },
+    modalOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+      zIndex: 1004,
+    },
+    modalContent: {
+      backgroundColor: theme.colors.background.primary,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: theme.spacing[4],
+      maxHeight: '70%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing[4],
+    },
+    closeIcon: {
+      fontSize: 24,
+      color: theme.colors.text.primary,
+    },
+    modalOption: {
+      paddingVertical: theme.spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border.secondary,
     },
   });

@@ -86,6 +86,18 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
       const firstItem = session.items?.[0];
       const totalQuantity =
         session.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+      const safeResponsesReceived = Number(session.responses_received ?? 0);
+      const safeMatchedDealers = Number(session.matched_dealers_count ?? 0);
+      const safeMatchingProgressMatched = Number(session.matching_progress?.matched ?? 0);
+      const hasExplicitResponses = session.responses_received !== null && session.responses_received !== undefined;
+      const resolvedResponsesReceived = hasExplicitResponses
+        ? Number.isFinite(safeResponsesReceived)
+          ? safeResponsesReceived
+          : 0
+        : Math.max(
+            Number.isFinite(safeMatchingProgressMatched) ? safeMatchingProgressMatched : 0,
+            Number.isFinite(safeMatchedDealers) ? safeMatchedDealers : 0
+          );
       let status: TransformedSession['status'] = 'ACTIVE';
       if (session.status === 'RESPONSES_RECEIVED' || session.status === 'CHAT_ACTIVE') {
         status = 'NEGOTIATION';
@@ -102,10 +114,12 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
       const materialName = firstItem?.material_category || 'Material';
       const quantityUnit = firstItem?.quantity_unit || 'units';
       const description = `${materialName} • ${totalQuantity} ${quantityUnit}`;
-      const stepProgress = session.responses_received > 0 ? 2 : 1;
-      const totalSteps = 4;
-      const step = session.responses_received > 0 ? 'Reviewing Responses' : 'Waiting for Responses';
-      const waitingOn = session.responses_received > 0 ? 'Reviewing' : 'Waiting for responses';
+      const totalExpectedResponses = 10;
+      const responsesReceived = Math.max(
+        0,
+        Math.min(resolvedResponsesReceived, totalExpectedResponses)
+      );
+      const progressPercent = (responsesReceived / totalExpectedResponses) * 100;
       const actionRequired = session.status === 'RESPONSES_RECEIVED';
       return {
         id: String(session.id),
@@ -115,10 +129,9 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
         company: companyName,
         description,
         actionRequired,
-        stepProgress,
-        totalSteps,
-        step,
-        waitingOn,
+        responsesReceived,
+        totalExpectedResponses,
+        progressPercent,
       };
     });
   }, [dashboardData.activeSessions]);
@@ -136,7 +149,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
   };
 
   const handlePostRequirement = () => {
-    navigation.navigate(SCREENS.MAIN.POST_BRAND_REQUIREMENT);
+    navigation.navigate(SCREENS.MAIN.POST);
   };
 
   const handleListRTDProduct = () => {
@@ -173,13 +186,13 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
     ].filter(Boolean) as string[],
     [theme.colors.primary],
   );
-  const successGradient = useMemo(
+  const secondaryBlueGradient = useMemo(
     () => [
-      theme.colors.success.dark ?? theme.colors.success[700],
-      theme.colors.success.DEFAULT,
-      theme.colors.success.light ?? theme.colors.success[400],
+      theme.colors.primary[700],
+      theme.colors.primary[500],
+      theme.colors.primary[300],
     ].filter(Boolean) as string[],
-    [theme.colors.success],
+    [theme.colors.primary],
   );
 
   return (
@@ -199,7 +212,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
       }
     >
       {/* PaperX Credits */}
-      <View style={styles.creditsBar}>
+      {/* <View style={styles.creditsBar}>
         <View style={styles.creditsLeft}>
           <View style={styles.creditsIconWrap}>
             <AppIcon.Wallet width={24} height={24} color={theme.colors.primary.DEFAULT} />
@@ -209,9 +222,6 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
             <Text style={styles.creditsValue}>{creditsFormatted}</Text>
           </View>
         </View>
-        {/* <TouchableOpacity style={styles.addCreditsButton} onPress={handleAddCredits}>
-          <Text style={styles.addCreditsButtonText}>Add Credits</Text>
-        </TouchableOpacity> */}
         <CustomButton
           title="Add Credits"
           onPress={handleAddCredits}
@@ -220,7 +230,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
           // style={styles.addCreditsButton}
           textStyle={styles.addCreditsButtonText}
         />
-      </View>
+      </View> */}
 
       {/* Quick Actions */}
       <View style={styles.section}>
@@ -248,13 +258,14 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
               </RoundedRect>
             </Canvas>
             <View style={styles.quickActionContent}>
-              <View style={styles.quickActionIconBg}>
+              {/* <View style={styles.quickActionIconBg}>
                 <AppIcon.Inquiries width={48} height={48} color={theme.colors.text.inverse} />
-              </View>
+              </View> */}
               <View style={styles.quickActionIcon}>
                 <AppIcon.Inquiries width={36} height={36} color={theme.colors.text.inverse} />
               </View>
-              <Text  fontWeight={'bold'} style={styles.quickActionLabel}>Post Requirement</Text>
+              <Text fontWeight={'bold'} style={styles.quickActionLabel}>Post Requirement</Text>
+              <Text style={styles.quickActionSubtext}>Share demand to match with suppliers</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -273,18 +284,19 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
                 <LinearGradient
                   start={vec(0, 0)}
                   end={vec(cardLayout.width, cardLayout.height)}
-                  colors={successGradient.length >= 2 ? successGradient : [theme.colors.success.DEFAULT, theme.colors.success.light ?? theme.colors.success.DEFAULT]}
+                  colors={secondaryBlueGradient.length >= 2 ? secondaryBlueGradient : [theme.colors.primary.DEFAULT, theme.colors.primary.light]}
                 />
               </RoundedRect>
             </Canvas>
             <View style={styles.quickActionContent}>
-              <View style={styles.quickActionIconBg}>
+              {/* <View style={styles.quickActionIconBg}>
                 <AppIcon.Market width={48} height={48} color={theme.colors.text.inverse} />
-              </View>
+              </View> */}
               <View style={styles.quickActionIcon}>
                 <AppIcon.Market width={36} height={36} color={theme.colors.text.inverse} />
               </View>
               <Text fontWeight={'bold'} style={styles.quickActionLabel}>List RTD Product</Text>
+              <Text style={styles.quickActionSubtext}>Publish ready stock for faster deals</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -349,7 +361,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
             <View style={styles.viewAllSessionsButtonContainer}>
               <CustomButton
                 title="View All Sessions"
-                onPress={ ()=>{}}
+                onPress={() => { }}
                 variant="gradient"
                 size="sm"
                 style={{ marginTop: theme.spacing[2], alignSelf: 'flex-start' }}
@@ -409,35 +421,35 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
                   )}
                 </View>
                 <View style={styles.sessionProgress}>
+                  <View style={styles.progressMetaRow}>
+                    <Text style={styles.progressMetaLabel}>Responses Received</Text>
+                    <Text style={styles.progressMetaValue}>
+                      {session.responsesReceived}/{session.totalExpectedResponses}
+                    </Text>
+                  </View>
                   <View style={styles.progressBar}>
                     <View
                       style={[
                         styles.progressFill,
                         {
-                          width: `${(session.stepProgress / session.totalSteps) * 100}%`,
+                          width: `${session.progressPercent}%`,
                         },
                       ]}
                     />
                   </View>
                 </View>
-                <View style={styles.sessionFooter}>
-                  <Text style={styles.sessionStep}>
-                    Step {session.stepProgress}/{session.totalSteps}: {session.step}
-                  </Text>
-                  <Text style={styles.sessionWaiting}>
-                    {session.actionRequired ? 'Your Turn' : session.waitingOn}
-                  </Text>
-                </View>
               </TouchableOpacity>
             ))}
-            <CustomButton
-              title="View All Sessions"
-              onPress={handleViewAllSessions}
-              variant="gradient"
-              size="sm"
-              style={{ marginTop: theme.spacing[2], alignSelf: 'flex-start' }}
-              textStyle={styles.viewAllSessionsButtonText}
-            />
+            <View style={{ alignSelf: 'center' }}>
+              <CustomButton
+                title="View All Sessions"
+                onPress={handleViewAllSessions}
+                variant="gradient"
+                size="sm"
+                style={{ marginTop: theme.spacing[2], alignSelf: 'flex-start' }}
+                textStyle={styles.viewAllSessionsButtonText}
+              />
+            </View>
           </>
         )}
       </View>

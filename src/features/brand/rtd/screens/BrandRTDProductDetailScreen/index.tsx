@@ -138,7 +138,7 @@ export const BrandRTDProductDetailScreen: React.FC<
           />
         </View>
 
-        <View style={styles.infoBanner}>
+        {/* <View style={styles.infoBanner}>
           <AppIcon.Security
             width={20}
             height={20}
@@ -148,11 +148,11 @@ export const BrandRTDProductDetailScreen: React.FC<
             PaperX Trade Assurance — Your payment is protected through our
             escrow service until order fulfilment is verified.
           </Text>
-        </View>
+        </View> */}
 
-        <View style={styles.escrowWrapper}>
+        {/* <View style={styles.escrowWrapper}>
           <EscrowBanner />
-        </View>
+        </View> */}
       </ScrollView>
 
       <View style={styles.footer}>

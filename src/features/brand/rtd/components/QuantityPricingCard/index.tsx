@@ -94,7 +94,7 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
           </Text>
         </View>
 
-        <View style={styles.escrowBadge}>
+        {/* <View style={styles.escrowBadge}>
           <View style={styles.escrowIcon}>
             <AppIcon.Security
               width={12}
@@ -105,7 +105,7 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
           <Text variant="captionLarge" style={styles.escrowText}>
             Escrow Protected
           </Text>
-        </View>
+        </View> */}
       </View>
     );
   },

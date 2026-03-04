@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -7,8 +7,10 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
+import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import type { DealerDashboardData } from '@services/api';
@@ -30,6 +32,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
   refreshing = false,
 }) => {
   const navigation = useNavigation<any>();
+  const theme = useTheme();
 
   const companyName = profileData?.company_name || 'Your Company';
 
@@ -43,6 +46,44 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
     unreadNotifications: apiData?.unread_notifications_count ?? 0,
     postedRequirements: apiData?.posted_requirements_count ?? 0,
   };
+
+  const [actionCardLayout, setActionCardLayout] = useState({ width: 160, height: 170 });
+  const onActionCardLayout = useCallback((event: any) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > 0 && height > 0) setActionCardLayout({ width, height });
+  }, []);
+  const [statCardLayout, setStatCardLayout] = useState({ width: 160, height: 150 });
+  const onStatCardLayout = useCallback((event: any) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > 0 && height > 0) setStatCardLayout({ width, height });
+  }, []);
+
+  const primaryGradient = useMemo(
+    () =>
+      [theme.colors.primary[800], theme.colors.primary[600], theme.colors.primary[400]].filter(
+        Boolean
+      ) as string[],
+    [theme.colors.primary]
+  );
+
+  const secondaryBlueGradient = useMemo(
+    () =>
+      [theme.colors.primary[700], theme.colors.primary[500], theme.colors.primary[300]].filter(
+        Boolean
+      ) as string[],
+    [theme.colors.primary]
+  );
+  const statsBlueGradient = useMemo(
+    () =>
+      [theme.colors.primary[700], theme.colors.primary[500], theme.colors.primary[300]].filter(
+        Boolean
+      ) as string[],
+    [theme.colors.primary]
+  );
+  const statsGreyGradient = useMemo(
+    () => ['#6B7280', '#4B5563', '#374151'],
+    []
+  );
 
   return (
     <ScrollView
@@ -66,49 +107,78 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
         <Text style={styles.subtitle}>Manage your opportunities and sessions.</Text>
       </View>
 
-      {/* Profile Completion Progress */}
-      {/* {dashboardData.profileCompletionPercentage < 100 && (
-        <TouchableOpacity style={styles.profileProgressCard} activeOpacity={0.8}>
-          <View style={styles.profileProgressHeader}>
-            <View style={styles.profileProgressIconContainer}>
-              <AppIcon.Profile width={20} height={20} color="#F59E0B" />
-            </View>
-            <View style={styles.profileProgressInfo}>
-              <Text style={styles.profileProgressTitle}>Complete Your Profile</Text>
-              <Text style={styles.profileProgressSubtitle}>
-                {dashboardData.profileCompletionPercentage}% complete
-              </Text>
-            </View>
-            <AppIcon.ChevronRight width={20} height={20} color="#9CA3AF" />
-          </View>
-          <View style={styles.progressBarContainer}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${dashboardData.profileCompletionPercentage}%` }
-              ]}
-            />
-          </View>
-        </TouchableOpacity>
-      )} */}
+   
 
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
+        <View
+          style={[styles.statCard, styles.statCardBlue, styles.statCardWithGradient]}
+          onLayout={onStatCardLayout}
+        >
+          <Canvas
+            style={[
+              styles.statGradientCanvas,
+              { width: statCardLayout.width, height: statCardLayout.height },
+            ]}
+          >
+            <RoundedRect
+              x={0}
+              y={0}
+              width={statCardLayout.width}
+              height={statCardLayout.height}
+              r={16}
+            >
+              <LinearGradient
+                start={vec(0, 0)}
+                end={vec(statCardLayout.width, statCardLayout.height)}
+                colors={
+                  statsBlueGradient.length >= 2
+                    ? statsBlueGradient
+                    : [theme.colors.primary.DEFAULT, theme.colors.primary.light]
+                }
+              />
+            </RoundedRect>
+          </Canvas>
+          <View style={styles.statContent}>
           <View style={styles.statIconContainer}>
-            <AppIcon.Inquiries width={22} height={22} color="#2563EB" />
+            <AppIcon.Inquiries width={22} height={22} color="#FFFFFF" />
           </View>
-          <Text style={styles.statValue}>{dashboardData.activeInquiries}</Text>
-          <Text style={styles.statLabel}>Inquiries</Text>
-          <Text style={styles.statSublabel}>Open – until 10 people respond</Text>
+          <Text style={[styles.statValue, styles.statValueDark]}>{dashboardData.activeInquiries}</Text>
+          <Text style={[styles.statLabel, styles.statLabelDark]}>Inquiries</Text>
+          <Text style={[styles.statSublabel, styles.statLabelDark]}>
+            Open – until 10 people respond
+          </Text>
+        </View>
         </View>
 
-        <View style={[styles.statCard, styles.statCardDark]}>
+        <View style={[styles.statCard, styles.statCardGrey, styles.statCardWithGradient]}>
+          <Canvas
+            style={[
+              styles.statGradientCanvas,
+              { width: statCardLayout.width, height: statCardLayout.height },
+            ]}
+          >
+            <RoundedRect
+              x={0}
+              y={0}
+              width={statCardLayout.width}
+              height={statCardLayout.height}
+              r={16}
+            >
+              <LinearGradient
+                start={vec(0, 0)}
+                end={vec(statCardLayout.width, statCardLayout.height)}
+                colors={statsGreyGradient}
+              />
+            </RoundedRect>
+          </Canvas>
+          <View style={styles.statContent}>
           <View style={[styles.statIconContainer, styles.statIconDark]}>
             <AppIcon.Sessions width={22} height={22} color="#FFFFFF" />
           </View>
           <Text style={[styles.statValue, styles.statValueDark]}>{dashboardData.lockedSessions}</Text>
           <Text style={[styles.statLabel, styles.statLabelDark]}>Locked{'\n'}Sessions</Text>
+        </View>
         </View>
       </View>
 
@@ -139,24 +209,81 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY)} style={styles.actionCardPrimary} activeOpacity={0.85}>
-            <View style={styles.actionIcon}>
-              <AppIcon.Market width={28} height={28} color="#FFFFFF" />
+          <TouchableOpacity
+            onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY)}
+            style={[styles.actionCardPrimary, styles.actionCardWithGradient]}
+            onLayout={onActionCardLayout}
+            activeOpacity={0.85}
+          >
+            <Canvas
+              style={[
+                styles.actionGradientCanvas,
+                { width: actionCardLayout.width, height: actionCardLayout.height },
+              ]}
+            >
+              <RoundedRect
+                x={0}
+                y={0}
+                width={actionCardLayout.width}
+                height={actionCardLayout.height}
+                r={16}
+              >
+                <LinearGradient
+                  start={vec(0, 0)}
+                  end={vec(actionCardLayout.width, actionCardLayout.height)}
+                  colors={
+                    primaryGradient.length >= 2
+                      ? primaryGradient
+                      : [theme.colors.primary.DEFAULT, theme.colors.primary.light]
+                  }
+                />
+              </RoundedRect>
+            </Canvas>
+            <View style={styles.actionContent}>
+              <View style={styles.actionIcon}>
+                <AppIcon.Market width={28} height={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionTitlePrimary}>Post Buy Req</Text>
+              <Text style={styles.actionSubtitlePrimary}>Find Materials</Text>
             </View>
-            <Text style={styles.actionTitlePrimary}>Post Buy Req</Text>
-            <Text style={styles.actionSubtitlePrimary}>Find Materials</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate(SCREENS.MAIN.POST_TO_BUY, { intent: 'sell' })}
-            style={styles.actionCardSecondary}
+            style={[styles.actionCardSecondary, styles.actionCardWithGradient]}
             activeOpacity={0.85}
           >
-            <View style={styles.actionIconSecondary}>
-              <AppIcon.Inquiries width={28} height={28} color="#2563EB" />
+            <Canvas
+              style={[
+                styles.actionGradientCanvas,
+                { width: actionCardLayout.width, height: actionCardLayout.height },
+              ]}
+            >
+              <RoundedRect
+                x={0}
+                y={0}
+                width={actionCardLayout.width}
+                height={actionCardLayout.height}
+                r={16}
+              >
+                <LinearGradient
+                  start={vec(0, 0)}
+                  end={vec(actionCardLayout.width, actionCardLayout.height)}
+                  colors={
+                    secondaryBlueGradient.length >= 2
+                      ? secondaryBlueGradient
+                      : [theme.colors.primary.DEFAULT, theme.colors.primary.light]
+                  }
+                />
+              </RoundedRect>
+            </Canvas>
+            <View style={styles.actionContent}>
+              <View style={styles.actionIconSecondary}>
+                <AppIcon.Inquiries width={28} height={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionTitleSecondary}>Post Sell Offer</Text>
+              <Text style={styles.actionSubtitleSecondary}>List Inventory</Text>
             </View>
-            <Text style={styles.actionTitleSecondary}>Post Sell Offer</Text>
-            <Text style={styles.actionSubtitleSecondary}>List Inventory</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -327,6 +454,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  statCardWithGradient: {
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+  statGradientCanvas: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  statContent: {
+    zIndex: 1,
+  },
+  statCardBlue: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  statCardGrey: {
+    backgroundColor: '#4B5563',
+    borderColor: '#4B5563',
+  },
   statCardDark: {
     backgroundColor: '#111827',
     borderColor: '#111827',
@@ -335,7 +480,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -349,6 +494,9 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     marginBottom: 4,
   },
+  statValueBlue: {
+    color: '#1D4ED8',
+  },
   statValueDark: {
     color: '#FFFFFF',
   },
@@ -357,10 +505,16 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 18,
   },
+  statLabelBlue: {
+    color: '#1E40AF',
+  },
   statSublabel: {
     fontSize: 11,
     color: '#9CA3AF',
     marginTop: 2,
+  },
+  statSublabelBlue: {
+    color: '#475569',
   },
   statLabelDark: {
     color: 'rgba(255,255,255,0.7)',
@@ -406,6 +560,17 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
+  actionCardWithGradient: {
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+  actionGradientCanvas: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  actionContent: {
+    alignItems: 'center',
+    zIndex: 1,
+  },
   actionIcon: {
     width: 52,
     height: 52,
@@ -419,7 +584,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -437,12 +602,12 @@ const styles = StyleSheet.create({
   actionTitleSecondary: {
     fontSize: 15,
     fontWeight: fontWeightForPlatform('700'),
-    color: '#111827',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   actionSubtitleSecondary: {
     fontSize: 13,
-    color: '#6B7280',
+    color: 'rgba(255,255,255,0.82)',
   },
   sessionCard: {
     flexDirection: 'row',

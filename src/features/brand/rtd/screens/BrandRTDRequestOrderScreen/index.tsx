@@ -12,6 +12,7 @@ import {
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
+import { ImagePicker } from '@shared/components/ImagePicker';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { useGetRtdProductDetail } from '@services/api';
@@ -222,31 +223,13 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
           <Text style={styles.fieldLabel}>
             Upload Logo <Text style={styles.optionalTag}>(Optional)</Text>
           </Text>
-          {!form.logoFile ? (
-            <TouchableOpacity style={styles.uploadArea} activeOpacity={0.7}>
-              <View style={styles.uploadIconContainer}>
-                <AppIcon.PlusCircle width={24} height={24} color={theme.colors.primary.DEFAULT} />
-              </View>
-              <Text style={styles.uploadTitle}>Select File</Text>
-              <Text style={styles.uploadHint}>SVG, PNG, or PDF (Max 10MB)</Text>
-              <TouchableOpacity style={styles.chooseFileButton} activeOpacity={0.8}>
-                <Text style={styles.chooseFileText}>Choose File</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.selectedFileRow}>
-              <AppIcon.TickCheckedBox width={16} height={16} color={theme.colors.primary.DEFAULT} />
-              <Text style={styles.selectedFileName} numberOfLines={1}>
-                {form.logoFile.name}
-              </Text>
-              <TouchableOpacity
-                style={styles.removeFileButton}
-                onPress={() => setForm((s) => ({ ...s, logoFile: null }))}
-              >
-                <AppIcon.Close width={16} height={16} color={theme.colors.text.tertiary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <ImagePicker
+            value={form.logoFile}
+            onChange={(logoFile) => setForm((s) => ({ ...s, logoFile }))}
+            placeholderText="Add brand logo"
+            hintText="PNG, JPG up to 10MB"
+            showCamera={false}
+          />
         </View>
 
         {/* Logistics */}

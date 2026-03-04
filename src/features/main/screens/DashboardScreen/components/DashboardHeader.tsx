@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@theme/index';
 import { useAppSelector } from '@store/hooks';
-import { useGetProfile } from '@services/api';
+import { useGetProfile, useNotificationUnreadCount } from '@services/api';
 import { Text } from '@shared/components/Text';
 import { WalletBadge } from '@shared/components/WalletBadge';
 import { AppIcon } from '@assets/svgs';
@@ -13,19 +12,20 @@ import { styles } from '../styles';
 import { useNavigationHelpers } from '@navigation/helpers';
 
 export const DashboardHeader: React.FC = () => {
-    const navigation = useNavigationHelpers();
+  const navigation = useNavigationHelpers();
   const insets = useSafeAreaInsets();
   const { user } = useAppSelector((state) => state.auth);
   const { data: profileData } = useGetProfile();
+  const { data: unreadData } = useNotificationUnreadCount();
   const theme = useTheme();
   const primaryRole = profileData?.primary_role || user?.primaryRole || 'dealer';
   const companyName = profileData?.company_name || 'Your Company';
   const isVerified = !!profileData?.udyam_verified_at;
   const logoUrl = profileData?.avatar;
+  const unreadCount = unreadData?.unread_count ?? 0;
 
   const handleNotificationPress = () => {
-    // TODO: Navigate to notifications screen
-    console.log('Notifications pressed');
+    navigation.navigate(SCREENS.MAIN.NOTIFICATIONS);
   };
 
   const handleProfilePress = () => {
@@ -35,6 +35,22 @@ export const DashboardHeader: React.FC = () => {
   const handleWalletPress = () => {
     navigation.navigate(SCREENS.WALLET.MAIN);
   };
+
+  const renderHeaderActions = () => (
+    <View style={styles.headerActions}>
+      <WalletBadge onPress={handleWalletPress} />
+      <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationButtonContainer}>
+        <AppIcon.Notification width={20} height={20} color={theme.colors.text.primary} />
+        {unreadCount > 0 && (
+          <View style={styles.notificationBadge}>
+            <Text variant="captionSmall" style={styles.notificationBadgeText}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
 
   const renderBrandHeader = () => (
     <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
@@ -69,8 +85,7 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </View>
 
-        {/* Wallet Badge */}
-        <WalletBadge onPress={handleWalletPress} />
+        {renderHeaderActions()}
       </View>
     </View>
   );
@@ -100,8 +115,7 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Wallet Badge */}
-        <WalletBadge onPress={handleWalletPress} />
+        {renderHeaderActions()}
       </View>
     </View>
   );
@@ -128,8 +142,7 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </View>
 
-        {/* Wallet Badge */}
-        <WalletBadge onPress={handleWalletPress} />
+        {renderHeaderActions()}
       </View>
     </View>
   );
@@ -157,8 +170,7 @@ export const DashboardHeader: React.FC = () => {
           </View>
         </View>
 
-        {/* Wallet Badge */}
-        <WalletBadge onPress={handleWalletPress} />
+        {renderHeaderActions()}
       </View>
     </View>
   );

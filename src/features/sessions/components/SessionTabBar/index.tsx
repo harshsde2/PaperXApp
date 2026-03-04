@@ -13,9 +13,7 @@ import { createStyles } from './styles';
 
 const DEFAULT_TABS: TabItem[] = [
   { key: 'all', label: 'All' },
-  { key: 'finding_matches', label: 'Finding Matches' },
-  { key: 'active', label: 'Active' },
-  { key: 'locked', label: 'Locked' },
+  { key: 'my_posts', label: 'My Posts' },
 ];
 
 export const SessionTabBar: React.FC<SessionTabBarProps> = ({

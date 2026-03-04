@@ -45,6 +45,7 @@ const getIconComponent = (iconName: string) => {
     Dashboard: AppIcon.Dashboard,
     Messages: AppIcon.Messages,
     Market: AppIcon.Market,
+    MarketIcon: AppIcon.MarketIcon,
     Settings: AppIcon.Settings,
     Inquiries: AppIcon.Inquiries,
     Capacity: AppIcon.Capacity,

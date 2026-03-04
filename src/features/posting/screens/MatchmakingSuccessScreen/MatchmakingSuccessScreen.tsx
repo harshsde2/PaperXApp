@@ -237,6 +237,7 @@ const MatchmakingSuccessScreen = () => {
           <Text style={styles.successTitle}>Your requirement is{'\n'}live</Text>
           <Text style={styles.successSubtitle}>
             We are finding the best matches for{'\n'}your industrial material needs.
+            As soos as there's Match found, you'll be notified.
           </Text>
         </Animated.View>
 

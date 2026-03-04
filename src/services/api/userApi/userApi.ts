@@ -19,6 +19,7 @@ import { queryKeys } from '../queryClient';
 import { useAppDispatch } from '@store/hooks';
 import { updateUser } from '@store/slices/authSlice';
 import { setRoles } from '@store/slices/roleSlice';
+import { normalizePostingLocationsFromProfile } from './locationNormalizer';
 
 // ============================================
 // GET PROFILE
@@ -126,6 +127,16 @@ export const useUploadUdyam = () => {
 export const useSwitchRole = () => {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const normalizeRole = (role: string | null | undefined) => {
+    if (!role) return undefined;
+    const normalized = role.toLowerCase().replace(/[\s-]+/g, '_');
+    if (normalized === 'machine_dealer' || normalized === 'machinedealer') return 'machineDealer';
+    if (normalized === 'scrap_dealer') return 'scrapDealer';
+    if (normalized === 'dealer' || normalized === 'converter' || normalized === 'brand' || normalized === 'mill') {
+      return normalized;
+    }
+    return role;
+  };
 
   return useMutation({
     mutationFn: async (data: SwitchRoleRequest): Promise<SwitchRoleResponse> => {
@@ -138,25 +149,54 @@ export const useSwitchRole = () => {
 
       return responseData;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log('[Switch Role Success] Full response:', JSON.stringify(data, null, 2));
 
       // Update role in Redux
       if (data.user) {
+        const nextPrimaryRole = normalizeRole(data.user.primary_role || data.current_role);
+        const nextSecondaryRole = normalizeRole(data.user.secondary_role);
         dispatch(
           setRoles({
-            primaryRole: (data.user.primary_role || data.current_role) as any,
-            secondaryRole: data.user.secondary_role as any,
+            primaryRole: nextPrimaryRole as any,
+            secondaryRole: nextSecondaryRole as any,
           })
         );
 
         // Update user data if needed
         dispatch(
           updateUser({
-            primaryRole: (data.user.primary_role || data.current_role) as any,
-            secondaryRole: data.user.secondary_role as any,
+            primaryRole: nextPrimaryRole as any,
+            primary_role: nextPrimaryRole as any,
+            secondaryRole: nextSecondaryRole as any,
           })
         );
+      }
+
+      try {
+        const profileResponse = await api.get(USER_ENDPOINTS.PROFILE);
+        const rawProfile = (profileResponse.data as any)?.data ?? profileResponse.data;
+        const normalizedLocations = normalizePostingLocationsFromProfile(rawProfile);
+        const normalizedPrimaryRole = normalizeRole(rawProfile?.primary_role);
+        const normalizedSecondaryRole = normalizeRole(rawProfile?.secondary_role);
+
+        dispatch(
+          updateUser({
+            primaryRole: normalizedPrimaryRole as any,
+            primary_role: normalizedPrimaryRole as any,
+            secondaryRole: normalizedSecondaryRole as any,
+            companyName: rawProfile?.company_name ?? null,
+            udyamVerifiedAt: rawProfile?.udyam_verified_at ?? null,
+            company_name: rawProfile?.company_name ?? '',
+            state: rawProfile?.state ?? '',
+            city: rawProfile?.city ?? '',
+            locations: normalizedLocations as any,
+          })
+        );
+
+        storageService.setUserData(rawProfile);
+      } catch (error) {
+        console.warn('[Switch Role] Failed to refresh profile after role switch', error);
       }
 
       // Invalidate user-related queries to refresh data for new role

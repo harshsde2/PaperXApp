@@ -44,4 +44,19 @@ export const createStyles = (theme: Theme) =>
     chevronActive: {
       color: theme.colors.primary.DEFAULT,
     },
+    badge: {
+      backgroundColor: theme.colors.primary.DEFAULT,
+      borderRadius: 10,
+      minWidth: 18,
+      height: 18,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      paddingHorizontal: 4,
+    },
+    badgeText: {
+      color: theme.colors.surface.primary,
+      fontWeight: fontWeightForPlatform('700'),
+      fontSize: 10,
+      lineHeight: 14,
+    },
   });

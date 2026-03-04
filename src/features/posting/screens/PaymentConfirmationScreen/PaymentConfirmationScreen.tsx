@@ -21,8 +21,7 @@ import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { useGetWalletBalance, useDeductCredits, usePostDealerRequirement, usePostBrandRequirement, usePostConverterRequirement, usePostConverterMachine, usePostMachine } from '@services/api';
-import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { showToast } from '@store/slices/uiSlice';
+import { useAppSelector } from '@store/hooks';
 import { SCREENS } from '@navigation/constants';
 import { queryKeys } from '@services/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -44,7 +43,6 @@ const PaymentConfirmationScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const user = useAppSelector((state) => state.auth.user);
 
@@ -153,6 +151,19 @@ const PaymentConfirmationScreen = () => {
 
   const hasEnoughCredits = (wallet?.balance ?? 0) >= costBreakdown.total;
 
+  // Converter material posting endpoint accepts only location_source = "manual".
+  // Keep dropdown UX, but normalize payload just before API submit.
+  const effectiveFormData = useMemo(() => {
+    if (!formData || typeof formData !== 'object') return formData;
+    if (typedRequirementType !== 'converter') return formData;
+
+    return {
+      ...formData,
+      location_source: 'manual',
+      location_id: null,
+    };
+  }, [formData, typedRequirementType]);
+
   const formatBalance = (balance: number): string => {
     if (balance >= 10000) {
       return (balance / 1000).toFixed(1) + 'K';
@@ -167,6 +178,10 @@ const PaymentConfirmationScreen = () => {
   const handleBuyCredits = useCallback(() => {
     navigation.navigate(SCREENS.WALLET.CREDIT_PACKS);
   }, [navigation]);
+
+  const handleDirectPay = useCallback(() => {
+    Alert.alert('Payment Unavailable', 'Payment gateway not found');
+  }, []);
 
   const handlePayAndPost = useCallback(() => {
 
@@ -197,7 +212,7 @@ const PaymentConfirmationScreen = () => {
     setIsProcessing(true);
 
     // First post the requirement (formData shape depends on requirementType: dealer/brand/converter/machineDealer)
-    (postRequirement as (data: any, opts?: { onSuccess?: (r: any) => void; onError?: (e: any) => void }) => void)(formData, {
+    (postRequirement as (data: any, opts?: { onSuccess?: (r: any) => void; onError?: (e: any) => void }) => void)(effectiveFormData, {
       onSuccess: (response: any) => {
         console.log('response', JSON.stringify(response, null, 2));
         // Handle dealer (inquiry_id), brand (id), machine dealer (inquiry_id/id) response formats
@@ -266,7 +281,7 @@ const PaymentConfirmationScreen = () => {
   }, [
     hasEnoughCredits,
     costBreakdown.total,
-    formData,
+    effectiveFormData,
     listingDetails,
     navigation,
     postRequirement,
@@ -415,6 +430,22 @@ const PaymentConfirmationScreen = () => {
                 </Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.directPayCard}>
+            <Text style={styles.directPayTitle}>Pay directly for this chat</Text>
+            <Text style={styles.directPayDescription}>
+              Skip buying credits and pay this requirement instantly using card or UPI.
+            </Text>
+            <TouchableOpacity
+              style={styles.directPayButton}
+              onPress={handleDirectPay}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.directPayButtonText}>Pay Directly</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

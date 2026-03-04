@@ -31,6 +31,26 @@ export type {
 export { ERROR_CODES } from './types';
 
 // ============================================
+// NOTIFICATION API (Unified for all roles)
+// ============================================
+
+export {
+  useFlattenedNotificationFeed,
+  useNotificationFeedInfinite,
+  useNotificationUnreadCount,
+  useMarkNotificationRead as useNotificationMarkRead,
+  useMarkAllNotificationsRead as useNotificationMarkAllRead,
+} from './notificationApi';
+export type {
+  NotificationFeedParams,
+  NotificationFeedPagination,
+  NotificationFeedResponse,
+  NotificationItem,
+  NotificationNavigationType,
+  NotificationUnreadCountResponse,
+} from './notificationApi';
+
+// ============================================
 // AUTH API
 // ============================================
 
@@ -441,7 +461,6 @@ export {
   useRequestRtdOrder,
   useRequestRtdOrderWithLogo,
   useConfirmRtdPayment,
-  useConfirmRtdDelivery,
   useRaiseRtdDispute,
   useCancelRtdOrder,
 } from './brandRtdApi';
@@ -484,6 +503,7 @@ export type {
   RtdOrderPayout,
   RtdOrderProduct,
   RtdOrderBrand,
+  RtdOrderConverter,
   RtdDispatchProofType,
   DispatchRtdOrderRequest,
   GetRtdOrdersParams,

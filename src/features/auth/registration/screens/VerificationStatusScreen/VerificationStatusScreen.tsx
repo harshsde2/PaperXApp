@@ -186,7 +186,7 @@ const VerificationStatusScreen = () => {
           />
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.secondaryButton}
           onPress={handleContactSupport}
           activeOpacity={0.8}
@@ -195,7 +195,7 @@ const VerificationStatusScreen = () => {
             Contact Support
           </Text>
           <Text style={styles.supportIcon}>🎧</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Security Footer */}
         <View style={styles.securityFooter}>

@@ -1,6 +1,7 @@
 import type { StackScreenProps } from '@react-navigation/stack';
 import type { MainStackParamList } from '@navigation/MainNavigator';
 import { SCREENS } from '@navigation/constants';
+import type { PickedImage } from '@shared/utils/imagePicker';
 
 export type BrandRTDRequestOrderScreenProps = StackScreenProps<
   MainStackParamList,
@@ -11,11 +12,5 @@ export interface OrderFormState {
   quantity: string;
   deliveryAddress: string;
   orderNotes: string;
-  logoFile: LogoFile | null;
-}
-
-export interface LogoFile {
-  uri: string;
-  name: string;
-  type: string;
+  logoFile: PickedImage | null;
 }

@@ -20,6 +20,22 @@ import { useAppDispatch } from '@store/hooks';
 import { setCredentials, setOTPSent, setOTPVerified, logout as logoutAction } from '@store/slices/authSlice';
 import { setRoles, clearRoles, setActiveRole } from '@store/slices/roleSlice';
 import type { User } from '@shared/types';
+import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
+
+const normalizeRole = (role: string | null | undefined): User['primaryRole'] => {
+  const normalized = (role || '').toLowerCase().replace(/[\s-]+/g, '_');
+  if (normalized === 'machine_dealer' || normalized === 'machinedealer') return 'machineDealer';
+  if (normalized === 'scrap_dealer') return 'scrapDealer';
+  if (normalized === 'dealer' || normalized === 'converter' || normalized === 'brand' || normalized === 'mill') {
+    return normalized as User['primaryRole'];
+  }
+  return 'dealer';
+};
+
+const normalizeSecondaryRole = (role: string | null | undefined): User['secondaryRole'] => {
+  if (!role) return undefined;
+  return normalizeRole(role);
+};
 
 /** Map API profile (snake_case) to auth User shape for Redux/storage */
 function profileToAuthUser(
@@ -40,9 +56,9 @@ function profileToAuthUser(
       user: {
         id: String(profile.id ?? minimalUser?.id ?? ''),
         mobile: profile.mobile ?? minimalUser?.mobile ?? '',
-        primaryRole: (profile.primary_role ?? minimalUser?.primary_role) as User['primaryRole'],
-        primary_role: (profile.primary_role ?? minimalUser?.primary_role) as User['primary_role'],
-        secondaryRole: (profile.secondary_role ?? minimalUser?.secondary_role) as User['secondaryRole'],
+        primaryRole: normalizeRole(profile.primary_role ?? minimalUser?.primary_role),
+        primary_role: normalizeRole(profile.primary_role ?? minimalUser?.primary_role),
+        secondaryRole: normalizeSecondaryRole(profile.secondary_role ?? minimalUser?.secondary_role),
         isVerified: true,
         companyName: profile.company_name ?? null,
         udyamVerifiedAt: profile.udyam_verified_at ?? null,
@@ -58,7 +74,7 @@ function profileToAuthUser(
         updated_at: profile.updated_at ?? '',
         materials: (profile as any).materials ?? [],
         machines: (profile as any).machines ?? [],
-        locations: (profile as any).locations ?? [],
+        locations: normalizePostingLocationsFromProfile(profile as any),
         // Use backend's completed-registration flag when present, otherwise
         // fall back to profile_complete or simple company_name heuristic.
         profile_complete:
@@ -79,9 +95,9 @@ function profileToAuthUser(
     user: {
       id: String(minimalUser?.user_id ?? minimalUser?.id ?? ''),
       mobile: minimalUser?.mobile ?? '',
-      primaryRole: (minimalUser?.primary_role) as User['primaryRole'],
-      primary_role: (minimalUser?.primary_role) as User['primary_role'],
-      secondaryRole: (minimalUser?.secondary_role) as User['secondaryRole'],
+        primaryRole: normalizeRole(minimalUser?.primary_role),
+        primary_role: normalizeRole(minimalUser?.primary_role),
+        secondaryRole: normalizeSecondaryRole(minimalUser?.secondary_role),
       isVerified: true,
       companyName: null,
       udyamVerifiedAt: null,
@@ -97,7 +113,7 @@ function profileToAuthUser(
       updated_at: '',
       materials: [],
       machines: [],
-      locations: [],
+      locations: normalizePostingLocationsFromProfile(minimalUser as any),
       profile_complete: false,
       grades: null,
       capacity_daily: '',

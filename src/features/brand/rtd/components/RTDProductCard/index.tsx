@@ -35,21 +35,24 @@ export const RTDProductCard = memo<RTDProductCardProps>(
               resizeMode="cover"
             />
           )}
-          {product.lead_time_label && (
-            <View style={styles.badgeContainer}>
-              <View style={styles.badge}>
-                <Text variant="captionSmall" style={styles.badgeText}>
-                  {product.lead_time_label}
-                </Text>
-              </View>
-            </View>
-          )}
         </View>
 
         <View style={styles.content}>
-          <Text variant="bodyLarge" fontWeight="bold" style={styles.title}>
-            {product.product_name}
-          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text variant="bodyLarge" fontWeight="bold" style={styles.title}>
+              {product.product_name}
+            </Text>
+            {product.lead_time_label && (
+              <View style={styles.badgeContainer}>
+                <View style={styles.badge}>
+                  <Text variant="captionSmall" style={styles.badgeText}>
+                    {product.lead_time_label}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+
 
           {subtitle ? (
             <Text variant="bodySmall" style={styles.subtitle}>
@@ -72,6 +75,7 @@ export const RTDProductCard = memo<RTDProductCardProps>(
             <Text variant="bodySmall" fontWeight="bold" style={styles.priceText}>
               {pricePerUnit}
             </Text>
+
           </View>
 
           <CustomButton

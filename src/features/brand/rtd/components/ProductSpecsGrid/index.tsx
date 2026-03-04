@@ -16,7 +16,13 @@ export const ProductSpecsGrid = memo<ProductSpecsGridProps>(
           { label: 'Category', value: product.category },
           { label: 'Size', value: product.size },
           { label: 'Material', value: product.material },
-          { label: 'GSM', value: product.gsm },
+          {
+            label: 'Thickness',
+            value:
+              product.thickness && product.thickness_unit
+                ? `${product.thickness} ${product.thickness_unit}`
+                : product.thickness || null,
+          },
           { label: 'Finish', value: product.finish },
           { label: 'MOQ', value: String(product.moq) },
         ].filter((spec): spec is SpecItem => spec.value != null),

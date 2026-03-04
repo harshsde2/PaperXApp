@@ -20,7 +20,7 @@ import { createStyles } from './styles';
 export interface InterestedModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: { approx_price?: number; description: string }) => void;
+  onSubmit: (data: { approx_price?: number; description?: string }) => void;
   isSubmitting?: boolean;
 }
 
@@ -37,18 +37,17 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
 
   const handleSubmit = useCallback(() => {
     const desc = description.trim();
-    if (!desc) return;
     const priceNum = parseFloat(approxPrice.replace(/,/g, '.'));
     const hasValidPrice = !Number.isNaN(priceNum) && priceNum >= 0;
     onSubmit({
       ...(hasValidPrice ? { approx_price: priceNum } : {}),
-      description: desc,
+      ...(desc !== '' ? { description: desc } : {}),
     });
   }, [approxPrice, description, onSubmit]);
 
   const priceNum = parseFloat(approxPrice.replace(/,/g, '.'));
   const hasInvalidPrice = approxPrice.trim() !== '' && (Number.isNaN(priceNum) || priceNum < 0);
-  const isValid = description.trim().length > 0 && !hasInvalidPrice;
+  const isValid = !hasInvalidPrice;
 
   return (
     <Modal
@@ -85,7 +84,7 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
               keyboardType="decimal-pad"
             />
             <Text style={[styles.modalLabel, { color: theme.colors.text.secondary, marginTop: 12 }]}>
-              Any other details you want to add
+              Any other details you want to add (optional)
             </Text>
             <TextInput
               style={[

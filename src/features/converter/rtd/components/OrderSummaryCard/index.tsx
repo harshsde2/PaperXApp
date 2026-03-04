@@ -5,6 +5,12 @@ import { useTheme } from '@theme/index';
 import type { OrderSummaryCardProps } from './@types';
 import { createStyles } from './styles';
 
+const formatPrice = (val: string | number | undefined): string => {
+  if (val == null || val === '') return '0';
+  const n = typeof val === 'string' ? parseFloat(val) : val;
+  return isNaN(n) ? '0' : n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummaryCard({
   order,
 }) {
@@ -15,6 +21,10 @@ export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummar
   const productName = product?.product_name ?? 'Product';
   const category = product?.category ?? '-';
   const imagePath = product?.image_path;
+
+  const unitPrice = order.unit_price ?? order.price_per_unit;
+  const unitPriceNum = typeof unitPrice === 'string' ? parseFloat(unitPrice) : Number(unitPrice);
+  const converterTotal = !isNaN(unitPriceNum) ? order.quantity * unitPriceNum : 0;
 
   return (
     <View style={styles.card}>
@@ -47,31 +57,7 @@ export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummar
             Price per unit
           </Text>
           <Text variant="captionMedium" style={styles.value}>
-            ₹{order.price_per_unit}
-          </Text>
-        </View>
-        <View style={styles.rowItem}>
-          <Text variant="captionMedium" style={styles.label}>
-            Subtotal
-          </Text>
-          <Text variant="captionMedium" style={styles.value}>
-            ₹{order.subtotal}
-          </Text>
-        </View>
-        <View style={styles.rowItem}>
-          <Text variant="captionMedium" style={styles.label}>
-            Commission
-          </Text>
-          <Text variant="captionMedium" style={styles.value}>
-            ₹{order.commission_amount}
-          </Text>
-        </View>
-        <View style={styles.rowItem}>
-          <Text variant="captionMedium" style={styles.label}>
-            GST
-          </Text>
-          <Text variant="captionMedium" style={styles.value}>
-            ₹{order.gst_amount}
+            ₹{formatPrice(order.unit_price ?? order.price_per_unit)}
           </Text>
         </View>
         <View style={styles.totalRow}>
@@ -79,7 +65,7 @@ export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummar
             Total
           </Text>
           <Text variant="bodyMedium" style={styles.totalValue}>
-            ₹{order.total_amount}
+            ₹{formatPrice(converterTotal)}
           </Text>
         </View>
       </View>

@@ -49,6 +49,7 @@ export default function ResponderDetailsScreen() {
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
   const [interestedModalVisible, setInterestedModalVisible] = useState(false);
+  const [isRefreshingAfterInterest, setIsRefreshingAfterInterest] = useState(false);
 
   const params = route.params?.params ?? route.params;
   const { sessionId, session: routeSession } = params ?? {};
@@ -117,20 +118,22 @@ export default function ResponderDetailsScreen() {
   }, []);
 
   const handleSubmitInterested = useCallback(
-    (data: { approx_price?: number; description: string }) => {
-      if (!inquiryId) return;
-      expressInterest.mutate(
-        { inquiryId, ...(data.approx_price != null ? { approx_price: data.approx_price } : {}), description: data.description },
-        {
-          onSuccess: () => {
-            setInterestedModalVisible(false);
-            refetchResponder();
-            refetchSession();
-          },
-        }
-      );
+    async (data: { approx_price?: number; description?: string }) => {
+      if (!inquiryId || expressInterest.isPending || isRefreshingAfterInterest) return;
+      setIsRefreshingAfterInterest(true);
+      try {
+        await expressInterest.mutateAsync({
+          inquiryId,
+          ...(data.approx_price != null ? { approx_price: data.approx_price } : {}),
+          ...(data.description ? { description: data.description } : {}),
+        });
+        setInterestedModalVisible(false);
+        await Promise.allSettled([refetchResponder(), refetchSession()]);
+      } finally {
+        setIsRefreshingAfterInterest(false);
+      }
     },
-    [inquiryId, expressInterest, refetchResponder, refetchSession]
+    [inquiryId, expressInterest, isRefreshingAfterInterest, refetchResponder, refetchSession]
   );
 
   const handleNotInterested = useCallback(() => {
@@ -157,6 +160,7 @@ export default function ResponderDetailsScreen() {
   }, [navigation, inquiryId, posterLabel, openStructuredThread]);
 
   const isLoading = isLoadingSession || isLoadingResponder;
+  const isInterestFlowLoading = expressInterest.isPending || isRefreshingAfterInterest;
   if (isLoading && !responderDetail && !sessionDetail) {
     return (
       <ScreenWrapper>
@@ -270,25 +274,27 @@ export default function ResponderDetailsScreen() {
 
               {!expressedInterest && !shortlisted && !declined && (
                 <View style={styles.actionSection}>
+                  {isInterestFlowLoading && !interestedModalVisible ? (
+                    <View style={styles.statusBox}>
+                      <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                      <Text style={styles.statusText}>
+                        Submitting your response...
+                      </Text>
+                    </View>
+                  ) : (
+                    <>
                   <TouchableOpacity
                     style={styles.primaryButton}
                     onPress={handleOpenInterestedModal}
-                    disabled={expressInterest.isPending}
+                    disabled={isInterestFlowLoading}
                     activeOpacity={0.8}
                   >
-                    {expressInterest.isPending ? (
-                      <ActivityIndicator size="small" color="#FFF" />
-                    ) : (
-                      <>
-                        <AppIcon.Process width={20} height={20} color="#FFF" />
-                        <Text style={styles.primaryButtonText}>Interested</Text>
-                      </>
-                    )}
+                    <Text style={styles.primaryButtonText}>Interested</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={handleNotInterested}
-                    disabled={declineInquiry.isPending}
+                    disabled={declineInquiry.isPending || isInterestFlowLoading}
                     activeOpacity={0.8}
                   >
                     {declineInquiry.isPending ? (
@@ -297,6 +303,8 @@ export default function ResponderDetailsScreen() {
                       <Text style={styles.secondaryButtonText}>Not interested</Text>
                     )}
                   </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               )}
             </View>
@@ -308,7 +316,7 @@ export default function ResponderDetailsScreen() {
         visible={interestedModalVisible}
         onClose={handleCloseInterestedModal}
         onSubmit={handleSubmitInterested}
-        isSubmitting={expressInterest.isPending}
+        isSubmitting={isInterestFlowLoading}
       />
     </ScreenWrapper>
   );

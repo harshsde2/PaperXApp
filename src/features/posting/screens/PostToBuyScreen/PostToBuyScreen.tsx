@@ -32,10 +32,12 @@ import {
   useGetMaterialFinishesInfinite,
   MaterialFinish,
   useCreateMaterial,
+  useGetProfile,
 } from '@services/api';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
+import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import { createStyles } from './styles';
 import { PostToBuyFormData, SizeUnit, SavedLocation, VisibilityType } from './@types';
 import { MaterialsSelectionContent, type GradeListItem } from './MaterialsSelectionContent';
@@ -155,6 +157,11 @@ const PostToBuyScreen = () => {
 
   const user = useAppSelector((state) => state.auth.user);
   const token = useAppSelector((state) => state.auth.token);
+  const { data: profileData, refetch: refetchProfile } = useGetProfile();
+
+  React.useEffect(() => {
+    refetchProfile();
+  }, [refetchProfile]);
 
 
 
@@ -184,27 +191,40 @@ const PostToBuyScreen = () => {
 
   // Get user's saved locations from their profile
   const userLocations: SavedLocation[] = useMemo(() => {
-    // console.log('[PostToBuy] User object:', user);
-    // console.log('[PostToBuy] User locations:', user?.locations);
+    const profileLocations = normalizePostingLocationsFromProfile(profileData as any);
+    const sourceLocations =
+      profileLocations.length > 0
+        ? profileLocations
+        : Array.isArray(user?.locations)
+          ? user.locations
+          : [];
 
-    if (!user?.locations || !Array.isArray(user.locations)) {
-      console.log('[PostToBuy] No locations found or not an array');
-      return [];
-    }
+    return sourceLocations
+      .map((loc: any, index: number) => {
+        const latitude = String(loc?.latitude ?? '').trim();
+        const longitude = String(loc?.longitude ?? '').trim();
+        if (!latitude || !longitude) return null;
 
-    const mappedLocations = user.locations.map((loc: any) => ({
-      id: loc.id,
-      type: loc.type || 'warehouse',
-      address: loc.address || '',
-      latitude: loc.latitude || '0',
-      longitude: loc.longitude || '0',
-      city: loc.city || '',
-      state: loc.state || null,
-    }));
-
-    // console.log('[PostToBuy] Mapped locations:', mappedLocations);
-    return mappedLocations;
-  }, [user]);
+        const idCandidate = Number(loc?.id);
+        return {
+          id: Number.isFinite(idCandidate) ? idCandidate : -(1000 + index + 1),
+          type: loc?.type || loc?.source || 'saved_location',
+          address: loc?.address || `${loc?.city || ''}${loc?.state ? `, ${loc.state}` : ''}`.trim(),
+          latitude,
+          longitude,
+          city: loc?.city || '',
+          state: loc?.state || null,
+          source: loc?.source,
+          backend_location_id:
+            typeof loc?.backend_location_id === 'number'
+              ? loc.backend_location_id
+              : Number.isFinite(idCandidate) && idCandidate > 0
+                ? idCandidate
+                : undefined,
+        } as SavedLocation;
+      })
+      .filter((loc): loc is SavedLocation => !!loc);
+  }, [profileData, user?.locations]);
 
   const { control, handleSubmit, setValue, watch } = useForm<PostToBuyFormData>({
     defaultValues: {
@@ -437,7 +457,11 @@ const PostToBuyScreen = () => {
   // Handle selection of a saved location from dropdown
   const handleSavedLocationSelect = useCallback(
     (savedLocation: SavedLocation) => {
-      setValue('location_id', savedLocation.id, { shouldValidate: true });
+      const backendLocationId =
+        typeof savedLocation.backend_location_id === 'number' && savedLocation.backend_location_id > 0
+          ? savedLocation.backend_location_id
+          : undefined;
+      setValue('location_id', backendLocationId, { shouldValidate: true });
       setValue('location_source', 'saved', { shouldValidate: true });
       setValue('location', savedLocation.address || `${savedLocation.city}${savedLocation.state ? `, ${savedLocation.state}` : ''}`, {
         shouldValidate: true,
@@ -891,7 +915,7 @@ const PostToBuyScreen = () => {
                 {/* Grade / Finishes / Variant (Optional) */}
                 <View style={styles.formGroup}>
                   <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                    Grade / Finish / Variant (Optional)
+                    Grade / Finish / Certifications (Optional)
                   </Text>
                   <Controller
                     control={control}
@@ -978,7 +1002,7 @@ const PostToBuyScreen = () => {
                 {/* Urgency */}
                 <View style={styles.formGroup}>
                   <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                    Timeline
+                    Material Requirement Timeline
                   </Text>
                   <Controller
                     control={control}

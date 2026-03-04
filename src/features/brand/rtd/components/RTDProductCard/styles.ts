@@ -21,9 +21,10 @@ export const createStyles = (theme: Theme) =>
       height: '100%',
     },
     badgeContainer: {
-      position: 'absolute',
-      top: theme.spacing[2],
-      left: theme.spacing[2],
+      // position: 'absolute',
+      // top: theme.spacing[2],
+      // left: theme.spacing[2],
+      // marginTop: theme.spacing[2],
       flexDirection: 'row',
       gap: theme.spacing[1],
     },

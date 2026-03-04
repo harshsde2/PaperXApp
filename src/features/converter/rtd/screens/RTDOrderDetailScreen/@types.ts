@@ -29,10 +29,10 @@ export const STATUS_LABELS: Record<RtdOrderStatus, string> = {
 export const STATUS_DESCRIPTIONS: Record<RtdOrderStatus, string> = {
   REQUESTED: 'A brand has requested this order. Accept or decline before the deadline.',
   ACCEPTED: 'You accepted this order. Waiting for the brand to complete payment.',
-  PAID: 'Payment has been received. Start production and mark when ready.',
+  PAID: 'Payment has been received on your behalf. Start production and mark when ready.',
   IN_PRODUCTION: 'Order is being produced. Dispatch when ready.',
-  DISPATCHED: 'Order has been dispatched. Waiting for delivery confirmation from the brand.',
-  COMPLETED: 'Order completed successfully. Payout has been released.',
+  DISPATCHED: 'Order has been dispatched and completed. Payout has been released.',
+  COMPLETED: 'Order dispatched and completed successfully. Payout has been released.',
   CANCELLED: 'This order was cancelled by the brand.',
   DISPUTED: 'A dispute has been raised on this order. Payout is on hold.',
 };

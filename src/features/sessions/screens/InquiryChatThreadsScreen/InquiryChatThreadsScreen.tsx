@@ -62,7 +62,7 @@ export default function InquiryChatThreadsScreen() {
   );
 
   const threads = useMemo(() => {
-    const list = data ?? [];
+    const list = Array.isArray(data) ? data : [];
     return [...list].sort((a, b) => {
       const aTime = new Date(a.last_message_at ?? 0).getTime();
       const bTime = new Date(b.last_message_at ?? 0).getTime();

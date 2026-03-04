@@ -211,8 +211,10 @@ export const queryKeys = {
   // Notifications
   notifications: {
     all: ['notifications'] as const,
-    lists: () => [...queryKeys.notifications.all, 'list'] as const,
-    unreadCount: () => [...queryKeys.notifications.all, 'unread-count'] as const,
+    feed: () => [...queryKeys.notifications.all, 'feed'] as const,
+    feedPage: (cursor: string = 'initial') =>
+      [...queryKeys.notifications.all, 'feed', cursor] as const,
+    unread: () => [...queryKeys.notifications.all, 'unread'] as const,
   },
 
   // Wallet

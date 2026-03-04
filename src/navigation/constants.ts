@@ -44,6 +44,7 @@ export const SCREENS = {
     REQUIREMENTS: 'Requirements',
     PAYMENT_CONFIRMATION: 'PaymentConfirmation',
     MATCHMAKING_SUCCESS: 'MatchmakingSuccess',
+    NOTIFICATIONS: 'Notifications',
   },
   WALLET: {
     MAIN: 'WalletMain',
@@ -85,20 +86,21 @@ export type UserRole = 'dealer' | 'machine-dealer' | 'converter' | 'brand';
 export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: string }[]> = {
   dealer: [
     { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
-    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
+    { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
     { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
     { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
   ],
   'machine-dealer': [
     { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
-    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
-    { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
+    { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
+    { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
+    { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
   ],
   converter: [
     { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },
+    { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
     { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
     // { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
-    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
     { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
     // { name: SCREENS.MAIN.CAPACITY, label: 'Capacity', icon: 'Capacity' },
   ],

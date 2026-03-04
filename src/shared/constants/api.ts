@@ -247,7 +247,6 @@ export const RTD_ENDPOINTS = {
   ORDER_CONFIRM_PAYMENT: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/confirm-payment`,
   ORDER_IN_PRODUCTION: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/in-production`,
   ORDER_DISPATCH: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/dispatch`,
-  ORDER_CONFIRM_DELIVERY: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/confirm-delivery`,
   ORDER_DISPUTE: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/dispute`,
   ORDER_CANCEL: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/cancel`,
 } as const;

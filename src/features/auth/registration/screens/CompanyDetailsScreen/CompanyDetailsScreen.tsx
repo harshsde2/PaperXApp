@@ -256,16 +256,22 @@ const CompanyDetailsScreen = () => {
                 <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                   GSTIN
                 </Text>
+                <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary }}>
+                  (Optional)
+                </Text>
               </View>
               <FormInput
                 name="gstin"
                 control={control}
                 placeholder="15-DIGIT GST NUMBER"
                 maxLength={15}
-                rules={validationRules.combine(
-                  validationRules.required('Please enter GSTIN'),
-                  validationRules.gstin('Please enter a valid 15-digit GSTIN')
-                ) as any}
+                rules={{
+                  validate: (value: string) => {
+                    const normalizedValue = value?.trim() || '';
+                    if (!normalizedValue) return true;
+                    return /^[0-9A-Z]{15}$/.test(normalizedValue) || 'Please enter a valid 15-digit GSTIN';
+                  },
+                } as any}
                 helperText="Auto-verifies your business type."
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}

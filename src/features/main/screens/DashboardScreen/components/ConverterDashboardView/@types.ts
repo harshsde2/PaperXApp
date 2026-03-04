@@ -27,8 +27,7 @@ export interface TransformedSession {
   company: string;
   description: string;
   actionRequired: boolean;
-  stepProgress: number;
-  totalSteps: number;
-  step: string;
-  waitingOn: string;
+  responsesReceived: number;
+  totalExpectedResponses: number;
+  progressPercent: number;
 }

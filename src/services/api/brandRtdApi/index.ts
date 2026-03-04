@@ -7,7 +7,6 @@ export {
   useRequestRtdOrder,
   useRequestRtdOrderWithLogo,
   useConfirmRtdPayment,
-  useConfirmRtdDelivery,
   useRaiseRtdDispute,
   useCancelRtdOrder,
 } from './brandRtdApi';

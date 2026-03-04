@@ -627,7 +627,12 @@ const MaterialsScreen = () => {
                 {selectedMaterialsList.length} material
                 {selectedMaterialsList.length !== 1 ? 's' : ''} selected
               </Text>
-              {/*  */}
+              <AppIcon.ChevronDown
+                width={20}
+                height={20}
+                style={{ marginLeft: theme.spacing[2] }}
+                color={theme.colors.text.inverse}
+              />
             </TouchableOpacity>
           )}
 

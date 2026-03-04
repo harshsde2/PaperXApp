@@ -95,6 +95,8 @@ const CreditPacksScreen = () => {
   } = useGetCreditPacks();
   const { mutate: purchaseCredits, isPending: purchasing } = usePurchaseCredits();
 
+  // console.log('creditPacks', JSON.stringify(creditPacks, null, 2));
+
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod>('UPI');
@@ -397,7 +399,7 @@ const CreditPacksScreen = () => {
                     <View style={styles.packPriceRow}>
                       <View style={styles.packPriceContainer}>
                         <Text style={styles.packGst}>
-                          ₹{formatPrice(pack.price)} + ₹{formatPrice(pack.gst_amount)} GST
+                          ₹{formatPrice(pack.price)} + {pack.gst_percentage}% GST
                         </Text>
                         <View style={styles.packPriceMain}>
                           <Text style={styles.packPriceCurrency}>₹</Text>

@@ -13,7 +13,7 @@ export const BrandOrderSummaryCard = memo<BrandOrderSummaryCardProps>(
     const product = order.product;
     const productName = product?.product_name ?? 'Product';
     const imagePath = product?.image_path;
-    const converterName = order.brand?.company_name ?? order.brand?.name ?? '-';
+    const converterName = order.converter?.company_name ?? order.converter?.name ?? '-';
 
     return (
       <View style={styles.card}>

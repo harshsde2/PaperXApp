@@ -9,7 +9,7 @@ export type SessionStatus = 'finding_matches' | 'active' | 'locked' | 'completed
 export type MatchType = 'all' | 'responded' | 'exact_match' | 'slight_variation' | 'nearest';
 
 // Tab Types for Session Dashboard
-export type SessionTabType = 'all' | 'finding_matches' | 'active' | 'locked';
+export type SessionTabType = 'all' | 'my_posts';
 
 // Session Data
 export interface Session {

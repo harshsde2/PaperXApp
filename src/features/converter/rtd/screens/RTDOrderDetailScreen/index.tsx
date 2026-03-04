@@ -23,6 +23,7 @@ import { OrderSummaryCard } from '../../components/OrderSummaryCard';
 import { OrderTimeline } from '../../components/OrderTimeline';
 import { OrderActionButtons } from '../../components/OrderActionButtons';
 import { DispatchProofModal } from '../../components/DispatchProofModal';
+import { ContactDetailsCard } from '@shared/components/ContactDetailsCard';
 import type { RTDOrderDetailScreenProps, CountdownState } from './@types';
 import { STATUS_LABELS, STATUS_DESCRIPTIONS } from './@types';
 import { createStyles } from './styles';
@@ -310,6 +311,17 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           <Text style={styles.sectionTitle}>Order Details</Text>
           <OrderSummaryCard order={order} />
         </View>
+
+        {/* Brand Contact (shown on COMPLETED) */}
+        {(order.status === 'COMPLETED' || order.status === 'DISPATCHED') && (
+          <ContactDetailsCard
+            title="Brand Contact"
+            name={order.brand?.name}
+            companyName={order.brand?.company_name}
+            email={order.brand?.email}
+            phone={order.brand?.mobile}
+          />
+        )}
 
         {/* Actions */}
         <View style={styles.actionContainer}>

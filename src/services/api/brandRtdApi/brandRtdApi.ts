@@ -1,6 +1,6 @@
 /**
  * Brand RTD (Ready-to-Dispatch) API
- * Catalog browsing, order lifecycle (request → pay → confirm delivery → dispute)
+ * Catalog browsing, order lifecycle (request → pay → dispatch/complete → dispute)
  */
 
 import {
@@ -205,22 +205,6 @@ export const useConfirmRtdPayment = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.brandRtd.orders() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.brandRtd.orderDetail(variables.order_id),
-      });
-    },
-  });
-};
-
-export const useConfirmRtdDelivery = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (orderId: number): Promise<RtdOrder> => {
-      const response = await api.post(RTD_ENDPOINTS.ORDER_CONFIRM_DELIVERY(orderId));
-      return extractData<RtdOrder>(response);
-    },
-    onSuccess: (_data, orderId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.brandRtd.orders() });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.brandRtd.orderDetail(orderId),
       });
     },
   });

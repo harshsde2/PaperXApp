@@ -7,7 +7,7 @@ export interface ConverterRegistrationFormData {
   raw_material_ids: number[];
   capacity_daily?: number;
   capacity_monthly?: number;
-  capacity_unit: string;
+  capacity_unit?: string;
   factory_address: string;
   factory_city: string;
   factory_state: string;

@@ -6,8 +6,8 @@ import { useTheme } from '@theme/index';
 import type { EscrowBannerProps } from './@types';
 import { createStyles } from './styles';
 
-const DEFAULT_DESCRIPTION =
-  'Your payment is held securely in escrow until the order is fulfilled and verified.';
+// const DEFAULT_DESCRIPTION =
+//   'Your payment is held securely in escrow until the order is fulfilled and verified.';
 
 export const EscrowBanner = memo<EscrowBannerProps>(
   function EscrowBanner({ description }) {
@@ -24,14 +24,14 @@ export const EscrowBanner = memo<EscrowBannerProps>(
           />
         </View>
 
-        <View style={styles.textContainer}>
+        {/* <View style={styles.textContainer}>
           <Text variant="bodySmall" fontWeight="bold" style={styles.title}>
             Escrow Protected
           </Text>
           <Text variant="captionMedium" style={styles.description}>
             {description ?? DEFAULT_DESCRIPTION}
           </Text>
-        </View>
+        </View> */}
       </View>
     );
   },

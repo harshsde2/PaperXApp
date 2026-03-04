@@ -105,6 +105,15 @@ export const createStyles = (theme: Theme) =>
       fontSize: 14,
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.inverse,
+      textAlign: 'center',
+    },
+    quickActionSubtext: {
+      marginTop: theme.spacing[1],
+      fontSize: 12,
+      fontWeight: fontWeightForPlatform('500'),
+      color: theme.colors.text.inverse,
+      textAlign: 'center',
+      opacity: 0.9,
     },
     rtdHeader: {
       flexDirection: 'row',
@@ -299,6 +308,22 @@ export const createStyles = (theme: Theme) =>
     },
     sessionProgress: {
       marginBottom: theme.spacing[2],
+    },
+    progressMetaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing[2],
+    },
+    progressMetaLabel: {
+      fontSize: 12,
+      fontWeight: fontWeightForPlatform('500'),
+      color: theme.colors.text.primary,
+    },
+    progressMetaValue: {
+      fontSize: 12,
+      fontWeight: fontWeightForPlatform('700'),
+      color: theme.colors.primary.DEFAULT,
     },
     progressBar: {
       height: 4,

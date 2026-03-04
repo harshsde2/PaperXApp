@@ -2,7 +2,7 @@
  * App Configuration Constants
  */
 
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 export const ENV = {
   DEVELOPMENT: 'development',
@@ -18,36 +18,48 @@ export const CURRENT_ENV: Environment =
 
 /**
  * DEVELOPMENT API URL CONFIGURATION
- * 
- * For Simulators/Emulators (automatic):
- * - iOS Simulator: uses localhost (same machine) ✅
- * - Android Emulator: uses 10.0.2.2 (special IP that maps to host's localhost) ✅
- * 
- * For Physical Devices:
- * - Set USE_PHYSICAL_DEVICE_IP to true and update PHYSICAL_DEVICE_IP below
- * - Make sure your phone and computer are on the same WiFi network
- * - Find your IP: run `ifconfig | grep "inet " | grep -v 127.0.0.1` on Mac/Linux
+ *
+ * Auto-detect host IP from Metro's scriptURL in dev mode.
+ * This avoids hardcoding a Wi-Fi IP that can change frequently.
+ *
+ * Optional manual override:
+ * - Set DEV_API_HOST to your machine's LAN IP (e.g. 10.0.0.5) when needed
+ * - Keep it empty to use automatic detection
  */
-const USE_PHYSICAL_DEVICE_IP = true; // Set to true when testing on physical device (same WiFi as Mac)
-const PHYSICAL_DEVICE_IP = '192.168.29.149'; // Your Mac's local network IP (run: ipconfig getifaddr en0)
+const DEV_API_HOST = '';
+
+const getMetroHost = (): string | null => {
+  const scriptURL = (NativeModules as { SourceCode?: { scriptURL?: string } })?.SourceCode?.scriptURL;
+  if (!scriptURL) return null;
+
+  const match = scriptURL.match(/^https?:\/\/([^/:]+):\d+/);
+  return match?.[1] || null;
+};
 
 const getDevelopmentApiUrl = (): string => {
-  // Override: Use network IP for physical devices
-  if (USE_PHYSICAL_DEVICE_IP) {
-    return `http://${PHYSICAL_DEVICE_IP}:8000`;
+  // Manual override for special networking setups
+  if (DEV_API_HOST.trim()) {
+    return `http://${DEV_API_HOST.trim()}:8000`;
   }
 
-  // Default: Use simulator/emulator URLs
+  // Auto-detect host from Metro bundler URL in development
+  const metroHost = getMetroHost();
+  if (metroHost) {
+    // Android emulator uses 10.0.2.2 instead of localhost
+    if (Platform.OS === 'android' && (metroHost === 'localhost' || metroHost === '127.0.0.1')) {
+      return 'http://10.0.2.2:8000';
+    }
+    return `http://${metroHost}:8000`;
+  }
+
+  // Fallback when Metro host is unavailable
   if (Platform.OS === 'android') {
-    // Android Emulator uses 10.0.2.2 to access host machine's localhost
     return 'http://10.0.2.2:8000';
   } else if (Platform.OS === 'ios') {
-    // iOS Simulator can use localhost directly
     return 'http://localhost:8000';
   }
 
-  // Fallback
-  return `http://${PHYSICAL_DEVICE_IP}:8000`;
+  return 'http://localhost:8000';
 };
 
 // API Base URLs

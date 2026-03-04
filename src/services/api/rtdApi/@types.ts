@@ -19,9 +19,15 @@ export interface RtdProduct {
   product_name: string;
   image_path: string | null;
   size: string | null;
+  size_unit?: 'inches' | 'cm' | 'mm' | null;
+  material_id?: number | null;
   material: string | null;
-  gsm: string | null;
+  material_custom?: string | null;
+  thickness: string | null;
+  thickness_unit?: 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON' | null;
+  finish_ids?: number[] | null;
   finish: string | null;
+  branding_methods?: string[] | null;
   branding_method: string | null;
   lead_time: string | null;
   lead_time_label: string | null;
@@ -30,6 +36,10 @@ export interface RtdProduct {
   base_price: string;
   buy_now_enabled: boolean;
   delivery_geography: string | null;
+  location_id?: number | null;
+  location_source?: 'saved' | 'manual' | null;
+  latitude?: number | null;
+  longitude?: number | null;
   status: 'active' | 'paused' | 'pending' | string;
   decline_count?: number;
   visibility_score?: number;
@@ -45,9 +55,15 @@ export interface CreateRtdProductRequest {
   product_name: string;
   image_path?: string | null;
   size?: string;
+  size_unit?: 'inches' | 'cm' | 'mm';
+  material_id?: number;
   material?: string;
-  gsm?: string;
+  material_custom?: string;
+  thickness?: string;
+  thickness_unit?: 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON';
+  finish_ids?: number[];
   finish?: string;
+  branding_methods?: string[];
   branding_method?: string;
   lead_time: RtdLeadTime;
   moq: number;
@@ -55,16 +71,27 @@ export interface CreateRtdProductRequest {
   base_price: number;
   buy_now_enabled?: boolean;
   delivery_geography?: string;
+  location_id?: number;
+  location_source?: 'saved' | 'manual';
+  latitude?: number;
+  longitude?: number;
   price_slabs?: Omit<RtdPriceSlab, 'id'>[];
 }
 
 export interface UpdateRtdProductRequest {
+  category?: string;
   product_name?: string;
   image_path?: string | null;
   size?: string;
+  size_unit?: 'inches' | 'cm' | 'mm';
+  material_id?: number;
   material?: string;
-  gsm?: string;
+  material_custom?: string;
+  thickness?: string;
+  thickness_unit?: 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON';
+  finish_ids?: number[];
   finish?: string;
+  branding_methods?: string[];
   branding_method?: string;
   lead_time?: RtdLeadTime;
   moq?: number;
@@ -72,6 +99,10 @@ export interface UpdateRtdProductRequest {
   base_price?: number;
   buy_now_enabled?: boolean;
   delivery_geography?: string;
+  location_id?: number;
+  location_source?: 'saved' | 'manual';
+  latitude?: number;
+  longitude?: number;
   price_slabs?: Omit<RtdPriceSlab, 'id'>[];
 }
 
@@ -123,6 +154,16 @@ export interface RtdOrderBrand {
   id: number;
   name: string;
   company_name?: string;
+  email?: string;
+  mobile?: string;
+}
+
+export interface RtdOrderConverter {
+  id: number;
+  name: string;
+  company_name?: string;
+  email?: string;
+  mobile?: string;
 }
 
 export interface RtdOrder {
@@ -134,7 +175,10 @@ export interface RtdOrder {
   commission_amount: string;
   gst_amount: string;
   total_amount: string;
-  price_per_unit: string;
+  /** @deprecated Use unit_price - API returns unit_price */
+  price_per_unit?: string;
+  /** Converter price per unit (API returns this as unit_price) */
+  unit_price?: string | number;
   confirmation_deadline?: string | null;
   paid_at?: string | null;
   dispatched_at?: string | null;
@@ -147,6 +191,7 @@ export interface RtdOrder {
   transaction_id?: string | null;
   product?: RtdOrderProduct;
   brand?: RtdOrderBrand;
+  converter?: RtdOrderConverter;
   payout?: RtdOrderPayout | null;
   created_at: string;
   updated_at: string;
@@ -186,6 +231,11 @@ export interface GetRtdCatalogParams {
   category?: string;
   lead_time?: RtdLeadTime;
   delivery_geography?: string;
+  min_price?: number;
+  max_price?: number;
+  min_moq?: number;
+  max_moq?: number;
+  has_branding?: 'yes' | 'no';
   sort_by?: 'base_price' | 'created_at' | 'visibility_score';
   sort_dir?: 'asc' | 'desc';
   per_page?: number;

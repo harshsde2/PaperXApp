@@ -98,7 +98,7 @@ const ConverterRegistrationScreen = () => {
       raw_material_ids: [],
       capacity_daily: undefined,
       capacity_monthly: undefined,
-      capacity_unit: 'pieces',
+      capacity_unit: undefined,
       factory_address: '',
       factory_city: '',
       factory_state: '',
@@ -284,9 +284,9 @@ const ConverterRegistrationScreen = () => {
       machine_ids: data.machine_ids,
       scrap_type_ids: (data.scrap_type_ids && data.scrap_type_ids.length > 0) ? data.scrap_type_ids : undefined,
       raw_material_ids: data.raw_material_ids,
-      capacity_daily: data.capacity_daily,
-      capacity_monthly: data.capacity_monthly,
-      capacity_unit: data.capacity_unit,
+      capacity_daily: data.capacity_daily ?? undefined,
+      capacity_monthly: data.capacity_monthly ?? undefined,
+      capacity_unit: data.capacity_unit?.trim() || undefined,
       factory_address: data.factory_address.trim(),
       factory_city: data.factory_city.trim(),
       factory_state: data.factory_state.trim(),
@@ -625,6 +625,9 @@ const ConverterRegistrationScreen = () => {
             <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
               Production Capacity
             </Text>
+            <Text variant="captionSmall" style={styles.optionalLabel}>
+              Optional
+            </Text>
           </View>
 
           <View style={styles.capacityRow}>
@@ -673,7 +676,7 @@ const ConverterRegistrationScreen = () => {
               name="capacity_unit"
               render={({ field: { value } }) => (
                 <DropdownButton
-                  value={value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Pieces'}
+                  value={value ? value.charAt(0).toUpperCase() + value.slice(1) : ''}
                   placeholder="Select unit"
                   onPress={() => capacityUnitSheetRef.current?.present()}
                 />

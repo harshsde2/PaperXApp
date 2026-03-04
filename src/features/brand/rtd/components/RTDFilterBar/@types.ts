@@ -23,4 +23,6 @@ export interface RTDFilterConfig {
 export interface RTDFilterBarProps {
   filters: RTDFilterState;
   onFilterChange: (filterKey: RTDFilterKey) => void;
+  onFilterPress?: () => void;
+  activeFilterCount?: number;
 }

@@ -8,7 +8,9 @@ import { AppIcon } from '@assets/svgs';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
 import { logout } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
+import { useThemeContext, themePalettes } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
+import type { ThemePaletteId } from '@theme/index';
 
 interface SettingItem {
   id: string;
@@ -21,10 +23,20 @@ interface SettingItem {
   danger?: boolean;
 }
 
+const PALETTE_OPTIONS: { id: ThemePaletteId; label: string }[] = [
+  { id: 'base', label: 'Blue' },
+  { id: 'slate', label: 'Slate' },
+  { id: 'indigo', label: 'Indigo' },
+  { id: 'forest', label: 'Forest' },
+  { id: 'navy', label: 'Navy' },
+  { id: 'violet', label: 'Violet' },
+];
+
 const SettingsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
+  const themeContext = useThemeContext();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkMode, setDarkMode] = React.useState(false);
 
@@ -37,7 +49,33 @@ const SettingsScreen: React.FC = () => {
     navigation.navigate(SCREENS.MAIN.PROFILE);
   };
 
+  const handleNavigateToRegistrationDetails = () => {
+    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
+  };
+
   const settingsSections = [
+    ...(themeContext
+      ? [
+          {
+            title: 'Appearance',
+            items: PALETTE_OPTIONS.map((p) => ({
+                id: `palette-${p.id}`,
+                icon: (
+                  <View
+                    style={[
+                      styles.paletteSwatch,
+                      { backgroundColor: themePalettes[p.id].blue500 },
+                    ]}
+                  />
+                ),
+                title: p.label,
+                type: 'navigation' as const,
+                onPress: () => themeContext.setPalette(p.id),
+                isSelected: themeContext.paletteId === p.id,
+              })),
+          },
+        ]
+      : []),
     {
       title: 'Account',
       items: [
@@ -55,7 +93,7 @@ const SettingsScreen: React.FC = () => {
           title: 'Registration Details',
           subtitle: 'Manage your registration details',
           type: 'navigation',
-          // onPress: handleNavigateToRegistrationDetails,
+          onPress: handleNavigateToRegistrationDetails,
         },
         // {
         //   id: 'notifications',
@@ -146,8 +184,12 @@ const SettingsScreen: React.FC = () => {
           thumbColor={item.value ? '#2563EB' : '#9CA3AF'}
         />
       )}
-      {item.type === 'navigation' && (
-        <AppIcon.ChevronRight width={20} height={20} color="#9CA3AF" />
+      {item.type === 'navigation' &&
+        !('isSelected' in item && item.isSelected) && (
+          <AppIcon.ChevronRight width={20} height={20} color="#9CA3AF" />
+        )}
+      {'isSelected' in item && item.isSelected && (
+        <AppIcon.TickCheckedBox width={20} height={20} color="#2563EB" />
       )}
     </TouchableOpacity>
   );
@@ -267,6 +309,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#9CA3AF',
     marginTop: 20,
+  },
+  paletteSwatch: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
   },
 });
 

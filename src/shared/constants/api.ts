@@ -112,6 +112,9 @@ export const CONVERTER_ENDPOINTS = {
   POST_REQUIREMENT: `${API_VERSION}/converter/requirement/post`,
   // Machine buy/sell (converter)
   POST_MACHINE: `${API_VERSION}/converter/machine/post`,
+  // Jobwork (converter → converter)
+  POST_JOBWORK_FIND: `${API_VERSION}/converter/jobwork/find`,
+  POST_JOBWORK_GIVE: `${API_VERSION}/converter/jobwork/give`,
 } as const;
 
 // Brand Endpoints
@@ -139,6 +142,11 @@ export const REGISTRATION_ENDPOINTS = {
   SCRAP_DEALER_REGISTRATION: `${API_VERSION}/registration/scrap-dealer`,
   UDYAM_UPLOAD: `${API_VERSION}/registration/udyam`,
   VERIFICATION_STATUS: `${API_VERSION}/registration/verification-status`,
+} as const;
+
+// Registration Details Endpoint (Unified view for all roles)
+export const REGISTRATION_DETAILS_ENDPOINTS = {
+  DETAIL: `${API_VERSION}/registration-details`,
 } as const;
 
 // Posting Endpoints
@@ -230,6 +238,11 @@ export const SESSION_ENDPOINTS = {
 
 // RTD (Ready-to-Dispatch) Endpoints
 export const RTD_ENDPOINTS = {
+  // Listing packs (Converter – pay to list products)
+  LISTING_PACKS: `${API_VERSION}/rtd/listing-packs`,
+  LISTING_PACKS_PURCHASE: `${API_VERSION}/rtd/listing-packs/purchase`,
+  RTD_ENTITLEMENT: `${API_VERSION}/rtd/entitlement`,
+  DISPATCH_OPTIONS: `${API_VERSION}/rtd/dispatch-options`,
   // Products (Converter)
   PRODUCTS_MY: `${API_VERSION}/rtd/products/my`,
   PRODUCTS_CATALOG: `${API_VERSION}/rtd/products/catalog`,

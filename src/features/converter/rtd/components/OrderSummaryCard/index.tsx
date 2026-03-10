@@ -1,7 +1,8 @@
-import React, { memo } from 'react';
-import { View, Image } from 'react-native';
+import React, { memo, useCallback, useState } from 'react';
+import { View, Image, TouchableOpacity } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { useTheme } from '@theme/index';
+import { FullScreenImageModal } from '@shared/components/FullScreenImageModal';
 import type { OrderSummaryCardProps } from './@types';
 import { createStyles } from './styles';
 
@@ -16,15 +17,27 @@ export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummar
 }) {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const [logoPreviewVisible, setLogoPreviewVisible] = useState(false);
 
   const product = order.product;
-  const productName = product?.product_name ?? 'Product';
+  const productName = product?.display_name ?? product?.product_name ?? product?.category ?? 'Product';
   const category = product?.category ?? '-';
   const imagePath = product?.image_path;
+  const logoPath = order.logo_path;
 
   const unitPrice = order.unit_price ?? order.price_per_unit;
   const unitPriceNum = typeof unitPrice === 'string' ? parseFloat(unitPrice) : Number(unitPrice);
   const converterTotal = !isNaN(unitPriceNum) ? order.quantity * unitPriceNum : 0;
+
+  const handleOpenLogo = useCallback(() => {
+    if (logoPath) {
+      setLogoPreviewVisible(true);
+    }
+  }, [logoPath]);
+
+  const handleCloseLogo = useCallback(() => {
+    setLogoPreviewVisible(false);
+  }, []);
 
   return (
     <View style={styles.card}>
@@ -48,6 +61,22 @@ export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummar
           <Text variant="captionMedium" style={styles.quantity}>
             Qty: {order.quantity}
           </Text>
+          {logoPath && (
+            <TouchableOpacity
+              style={styles.logoRow}
+              activeOpacity={0.8}
+              onPress={handleOpenLogo}
+            >
+              <Image
+                source={{ uri: logoPath }}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+              <Text variant="captionMedium" style={styles.logoLabel}>
+                Brand logo attached (tap to view)
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -69,6 +98,14 @@ export const OrderSummaryCard = memo<OrderSummaryCardProps>(function OrderSummar
           </Text>
         </View>
       </View>
+
+      {logoPath && (
+        <FullScreenImageModal
+          visible={logoPreviewVisible}
+          imageUrl={logoPath}
+          onClose={handleCloseLogo}
+        />
+      )}
     </View>
   );
 });

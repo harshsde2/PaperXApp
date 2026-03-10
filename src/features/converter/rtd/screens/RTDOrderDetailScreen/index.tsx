@@ -199,7 +199,7 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           styles.bannerCard,
           {
             backgroundColor: theme.colors.text.tertiary + '10',
-            borderColor: theme.colors.border.DEFAULT,
+            borderColor: theme.colors.border.primary,
           },
         ]}
       >
@@ -312,8 +312,11 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           <OrderSummaryCard order={order} />
         </View>
 
-        {/* Brand Contact (shown on COMPLETED) */}
-        {(order.status === 'COMPLETED' || order.status === 'DISPATCHED') && (
+        {/* Brand Contact (shown from PAID onwards for both sides) */}
+        {(order.status === 'PAID' ||
+          order.status === 'IN_PRODUCTION' ||
+          order.status === 'DISPATCHED' ||
+          order.status === 'COMPLETED') && (
           <ContactDetailsCard
             title="Brand Contact"
             name={order.brand?.name}

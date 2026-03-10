@@ -9,7 +9,6 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
@@ -57,7 +56,6 @@ const VARIANT_TEXT_STYLE_KEY: Record<
   gradient: 'textGradient',
 };
 
-const SPRING_CONFIG = { damping: 15, stiffness: 400 };
 const RIPPLE_DURATION = 450;
 
 export const CustomButton = memo<CustomButtonProps>(function CustomButton({
@@ -82,7 +80,6 @@ export const CustomButton = memo<CustomButtonProps>(function CustomButton({
   const styles = createStyles(theme);
 
   const [layout, setLayout] = useState({ width: 0, height: 0 });
-  const scale = useSharedValue(1);
   const rippleProgress = useSharedValue(0);
 
   const isDisabled = disabled || loading;
@@ -144,18 +141,12 @@ export const CustomButton = memo<CustomButtonProps>(function CustomButton({
 
   const handlePressIn = useCallback(() => {
     if (isDisabled || pressAnimation === 'none') return;
-    scale.value = withSpring(0.97, SPRING_CONFIG);
     if (pressAnimation === 'water') runRipple();
-  }, [isDisabled, pressAnimation, scale, runRipple]);
+  }, [isDisabled, pressAnimation, runRipple]);
 
   const handlePressOut = useCallback(() => {
-    if (pressAnimation === 'none') return;
-    scale.value = withSpring(1, SPRING_CONFIG);
-  }, [pressAnimation, scale]);
-
-  const animatedContainerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+    // No-op: scaling removed
+  }, []);
 
   const rippleAnimatedStyle = useAnimatedStyle(() => {
     const progress = rippleProgress.value;
@@ -183,7 +174,6 @@ export const CustomButton = memo<CustomButtonProps>(function CustomButton({
           fullWidth && styles.fullWidth,
           isDisabled && styles.disabled,
           { overflow: 'hidden' },
-          animatedContainerStyle,
         ]}
       >
         {useGradient && resolvedGradientColors && layout.width > 0 && layout.height > 0 && (

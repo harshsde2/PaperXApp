@@ -19,7 +19,7 @@ import type {
 import { INITIAL_ADVANCED_FILTERS } from './@types';
 import { createStyles } from './styles';
 
-const FILTER_SNAP_POINTS = ['75%'];
+const FILTER_SNAP_POINTS = ['75%','100%'];
 
 export const BrandRTDMarketplaceScreen: React.FC<
   BrandRTDMarketplaceScreenProps
@@ -54,8 +54,8 @@ export const BrandRTDMarketplaceScreen: React.FC<
     if (advancedFilters.delivery_geography) count++;
     if (advancedFilters.lead_time) count++;
     if (advancedFilters.min_price || advancedFilters.max_price) count++;
-    if (advancedFilters.min_moq || advancedFilters.max_moq) count++;
-    if (advancedFilters.has_branding) count++;
+    if (advancedFilters.moq) count++;
+    if (advancedFilters.has_branding === 'yes') count++;
     return count;
   }, [advancedFilters]);
 
@@ -103,14 +103,14 @@ export const BrandRTDMarketplaceScreen: React.FC<
     if (advancedFilters.max_price) {
       params.max_price = Number(advancedFilters.max_price);
     }
-    if (advancedFilters.min_moq) {
-      params.min_moq = Number(advancedFilters.min_moq);
+    if (advancedFilters.moq) {
+      const moqNum = Number(advancedFilters.moq);
+      if (!isNaN(moqNum) && moqNum > 0) {
+        params.max_moq = moqNum;
+      }
     }
-    if (advancedFilters.max_moq) {
-      params.max_moq = Number(advancedFilters.max_moq);
-    }
-    if (advancedFilters.has_branding) {
-      params.has_branding = advancedFilters.has_branding;
+    if (advancedFilters.has_branding === 'yes') {
+      params.has_branding = 'yes';
     }
     return params;
   }, [advancedFilters]);

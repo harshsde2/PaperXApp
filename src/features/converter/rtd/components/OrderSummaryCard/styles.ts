@@ -44,6 +44,21 @@ export const createStyles = (theme: Theme) =>
     quantity: {
       color: theme.colors.text.secondary,
     },
+    logoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: theme.spacing[2],
+      gap: theme.spacing[2],
+    },
+    logoImage: {
+      width: 32,
+      height: 32,
+      borderRadius: theme.borderRadius.image.xs,
+      backgroundColor: theme.colors.surface.secondary,
+    },
+    logoLabel: {
+      color: theme.colors.text.secondary,
+    },
     financials: {
       marginTop: theme.spacing[2],
       paddingTop: theme.spacing[3],

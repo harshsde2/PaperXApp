@@ -13,6 +13,8 @@ import { CustomButton } from '@shared/components/CustomButton';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { useGetBrandRtdOrders } from '@services/api/brandRtdApi';
+import { useFetchSessionByInquiry } from '@services/api';
+import { Alert } from 'react-native';
 import type { Theme } from '@theme/types';
 import type { RecentInquiry, RtdOrderStatus } from '@services/api';
 import type { BrandDashboardViewProps } from './@types';
@@ -130,6 +132,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
   );
 
   const { data: rtdOrders } = useGetBrandRtdOrders();
+  const { mutate: fetchSessionByInquiry, isLoading: isFetchingSession } = useFetchSessionByInquiry();
 
   const activeRtdOrders = useMemo(
     () => (rtdOrders ?? []).filter((o) => ACTIVE_ORDER_STATUSES.includes(o.status)).slice(0, 3),
@@ -154,6 +157,23 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
 
   const handleOrderPress = (orderId: number) => {
     navigation.navigate(SCREENS.BRAND_RTD.ORDER_DETAIL, { orderId });
+  };
+
+  const handleInquiryPress = (inquiryId: number) => {
+    fetchSessionByInquiry(inquiryId, {
+      onSuccess: (data) => {
+        navigation.navigate(SCREENS.SESSIONS.DETAILS, {
+          sessionId: String(data.id),
+          session: undefined,
+        });
+      },
+      onError: () => {
+        Alert.alert(
+          'Session not found',
+          'No active session was found for this requirement yet. Please try again in a moment.'
+        );
+      },
+    });
   };
 
   return (
@@ -454,6 +474,8 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
                   key={inquiry.id}
                   style={styles.activityItem}
                   activeOpacity={0.7}
+                  onPress={() => handleInquiryPress(inquiry.id)}
+                  disabled={isFetchingSession}
                 >
                   <View style={styles.activityIconWrap}>
                     <AppIcon.Inquiries

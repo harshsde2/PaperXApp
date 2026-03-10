@@ -17,6 +17,7 @@ import {
   BottomSheetFlatList,
   BottomSheetModal,
   BottomSheetModalProvider,
+  BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import { useTheme } from '@theme/index';
 import { AppIcon } from '@assets/svgs';
@@ -35,6 +36,7 @@ import {
   useGetMaterialsInfinite,
   useGetProfile,
   useGetRtdProductDetail,
+  useGetRtdEntitlement,
   useUpdateRtdProduct,
   useUploadImage,
   type CreateRtdProductRequest,
@@ -51,6 +53,7 @@ import { DeliveryLocationSheetContent } from '../../components/DeliveryLocationS
 import { PriceSlabInput } from '../../components/PriceSlabInput';
 import type { PriceSlabRow } from '../../components/PriceSlabInput';
 import { ProductListingSuccessModal } from '../../components/ProductListingSuccessModal';
+import { RtdListingPackModal } from '../../components/RtdListingPackModal';
 import type { FormData, FormErrors, SavedLocation } from './@types';
 import {
   BRANDING_METHOD_OPTIONS,
@@ -61,10 +64,9 @@ import {
 import { createStyles } from './styles';
 
 const LEAD_TIME_OPTIONS: { value: RtdLeadTime; label: string }[] = [
-  { value: 'SAME_DAY', label: 'Same Day' },
-  { value: 'H24', label: '24 Hours' },
-  { value: 'H48', label: '48 Hours' },
-  { value: 'DAYS_3_5', label: '3-5 Days' },
+  { value: 'H24', label: 'Within 24 hours' },
+  { value: 'H48', label: '24-48 hours' },
+  { value: 'DAYS_3_5', label: '48-72 hours' },
 ];
 
 const INITIAL_FORM: FormData = {
@@ -99,7 +101,7 @@ const INITIAL_FORM: FormData = {
 const validateForm = (form: FormData): FormErrors => {
   const errors: FormErrors = {};
   if (!form.category?.trim()) errors.category = 'Category is required';
-  if (!form.product_name?.trim()) errors.product_name = 'Please add product details';
+  // product_name is optional (additional details)
   if (!form.lead_time) errors.lead_time = 'Lead time is required';
   if (!form.delivery_geography?.trim()) errors.delivery_geography = 'Location is required';
 
@@ -151,6 +153,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showPackModal, setShowPackModal] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showSizeUnitPicker, setShowSizeUnitPicker] = useState(false);
   const [showThicknessUnitPicker, setShowThicknessUnitPicker] = useState(false);
@@ -167,6 +170,10 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const deliveryLocationSheetRef = useRef<BottomSheetModal>(null);
 
   const createProduct = useCreateRtdProduct();
+  const { data: entitlementData } = useGetRtdEntitlement();
+  const hasEntitlement = Boolean(
+    entitlementData?.entitlement && (entitlementData.entitlement.remaining_slots ?? 0) > 0
+  );
   const updateProduct = useUpdateRtdProduct();
   const uploadImage = useUploadImage();
   const { mutateAsync: createMaterial, isPending: isCreatingMaterial } = useCreateMaterial();
@@ -392,11 +399,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     });
   }, []);
 
-  const handleSubmit = useCallback(async () => {
-    const validationErrors = validateForm(form);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-
+  const performCreateProduct = useCallback(async () => {
     const priceSlabs = form.price_slabs
       .filter((slab) => slab.min_qty && slab.max_qty && slab.price_per_unit)
       .map((slab) => ({
@@ -415,16 +418,16 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       }
     }
 
-    const payload = {
+    const payload: CreateRtdProductRequest = {
       category: form.category.trim(),
-      product_name: form.product_name.trim(),
+      product_name: form.product_name?.trim() ?? '',
       image_path: imagePath,
       size: form.size.trim() || undefined,
-      size_unit: form.size ? form.size_unit : undefined,
+      size_unit: form.size ? (form.size_unit as 'inches' | 'cm' | 'mm') : undefined,
       material_id: form.material_id ?? undefined,
       material: form.material.trim() || undefined,
       thickness: form.thickness.trim() || undefined,
-      thickness_unit: form.thickness ? form.thickness_unit : undefined,
+      thickness_unit: form.thickness ? (form.thickness_unit as 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON') : undefined,
       finish_ids: form.finish_ids,
       finish: form.finish.trim() || undefined,
       branding_methods: form.branding_enabled ? form.branding_methods : [],
@@ -435,8 +438,6 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       base_price: parseFloat(form.base_price),
       buy_now_enabled: form.buy_now_enabled,
       delivery_geography: form.delivery_geography.trim() || undefined,
-      // Keep location_id out of payload for DB compatibility across environments.
-      // Some deployed schemas still have smaller numeric range for this column.
       location_id: undefined,
       location_source: form.location_source,
       latitude: form.latitude,
@@ -444,23 +445,87 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       price_slabs: priceSlabs,
     };
 
+    createProduct.mutate(payload, {
+      onSuccess: () => setShowSuccessModal(true),
+      onError: (error: any) => {
+        const msg = error?.response?.data?.message ?? error?.message ?? 'Failed to list product';
+        Alert.alert('Error', msg);
+      },
+    });
+  }, [createProduct, form, uploadImage]);
+
+  const handleSubmit = useCallback(async () => {
+    const validationErrors = validateForm(form);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
     const onError = (error: any, update: boolean) => {
       const msg = error?.response?.data?.message ?? error?.message ?? (update ? 'Failed to update product' : 'Failed to list product');
       Alert.alert('Error', msg);
     };
 
     if (isEdit && productId) {
+      const priceSlabs = form.price_slabs
+        .filter((slab) => slab.min_qty && slab.max_qty && slab.price_per_unit)
+        .map((slab) => ({
+          min_qty: parseFloat(slab.min_qty),
+          max_qty: parseFloat(slab.max_qty),
+          price_per_unit: parseFloat(slab.price_per_unit),
+        }));
+      let imagePath: string | null = form.image_path;
+      if (form.image) {
+        try {
+          imagePath = await uploadImage.mutateAsync(form.image);
+        } catch (error: any) {
+          Alert.alert('Error', error?.response?.data?.message ?? error?.message ?? 'Image upload failed');
+          return;
+        }
+      }
+      const payload = {
+        category: form.category.trim(),
+        product_name: form.product_name?.trim() ?? '',
+        image_path: imagePath,
+        size: form.size.trim() || undefined,
+        size_unit: form.size ? form.size_unit : undefined,
+        material_id: form.material_id ?? undefined,
+        material: form.material.trim() || undefined,
+        thickness: form.thickness.trim() || undefined,
+        thickness_unit: form.thickness ? form.thickness_unit : undefined,
+        finish_ids: form.finish_ids,
+        finish: form.finish.trim() || undefined,
+        branding_methods: form.branding_enabled ? form.branding_methods : [],
+        branding_method: form.branding_enabled ? form.branding_method || undefined : undefined,
+        lead_time: form.lead_time as RtdLeadTime,
+        moq: parseFloat(form.moq),
+        max_capacity: form.max_capacity ? parseFloat(form.max_capacity) : undefined,
+        base_price: parseFloat(form.base_price),
+        buy_now_enabled: form.buy_now_enabled,
+        delivery_geography: form.delivery_geography.trim() || undefined,
+        location_id: undefined,
+        location_source: form.location_source,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        price_slabs: priceSlabs,
+      };
       updateProduct.mutate(
         { id: productId, data: payload as any },
         { onSuccess: () => setShowSuccessModal(true), onError: (error: any) => onError(error, true) },
       );
-    } else {
-      createProduct.mutate(payload as CreateRtdProductRequest, {
-        onSuccess: () => setShowSuccessModal(true),
-        onError: (error: any) => onError(error, false),
-      });
+      return;
     }
-  }, [createProduct, form, isEdit, productId, updateProduct, uploadImage]);
+
+    if (!hasEntitlement) {
+      setShowPackModal(true);
+      return;
+    }
+
+    performCreateProduct();
+  }, [form, isEdit, productId, hasEntitlement, performCreateProduct, updateProduct, uploadImage]);
+
+  const handlePackPurchaseSuccess = useCallback(() => {
+    setShowPackModal(false);
+    performCreateProduct();
+  }, [performCreateProduct]);
 
   return (
     <BottomSheetModalProvider>
@@ -570,9 +635,9 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           </Card>
 
           <Card style={styles.card}>
-            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Pricing</Text>
+            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Pricing and Other Details</Text>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Lead Time</Text>
+              <Text variant="captionMedium" style={styles.label}>Dispatch Lead Time</Text>
               <View style={styles.leadTimeChipsContainer}>
                 {LEAD_TIME_OPTIONS.map((opt) => {
                   const isActive = form.lead_time === opt.value;
@@ -583,8 +648,11 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
                   );
                 })}
               </View>
+              <Text variant="captionSmall" size={8} style={{fontStyle: 'italic'}} >This is a commitment. Failure to honour affects your visibility & trust score and may result in the product being de-listed.</Text>
               {!!errors.lead_time && <Text variant="captionSmall" style={styles.errorText}>{errors.lead_time}</Text>}
             </View>
+            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Standard Capacity and Price Details</Text>
+
             <View style={styles.fieldContainer}>
               <Text variant="captionMedium" style={styles.label}>MOQ (units)</Text>
               <TextInput value={form.moq} onChangeText={(v) => updateField('moq', v)} placeholder="e.g. 10" placeholderTextColor={theme.colors.text.placeholder} keyboardType="numeric" style={[styles.input, errors.moq && styles.inputError]} />
@@ -599,6 +667,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
               <TextInput value={form.base_price} onChangeText={(v) => updateField('base_price', v)} placeholder="e.g. 25.50" placeholderTextColor={theme.colors.text.placeholder} keyboardType="decimal-pad" style={[styles.input, errors.base_price && styles.inputError]} />
               {!!errors.base_price && <Text variant="captionSmall" style={styles.errorText}>{errors.base_price}</Text>}
             </View>
+            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Price Slabs for the brand to view as per quantity</Text>
             <View style={styles.switchRow}>
               <Text variant="bodyMedium" style={styles.switchLabel}>Buy Now Enabled</Text>
               <Switch value={form.buy_now_enabled} onValueChange={(v) => updateField('buy_now_enabled', v)} trackColor={{ false: theme.colors.border.primary, true: theme.colors.primary[300] }} thumbColor={theme.colors.background.primary} />
@@ -637,12 +706,21 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           </View>
         </ScrollView>
 
+        <RtdListingPackModal
+          visible={showPackModal}
+          onClose={() => setShowPackModal(false)}
+          onPurchaseSuccess={handlePackPurchaseSuccess}
+          onAddCredits={() => {
+            setShowPackModal(false);
+            navigation.navigate(SCREENS.WALLET.MAIN as never);
+          }}
+        />
         <ProductListingSuccessModal
           visible={showSuccessModal}
-          productName={form.product_name}
+          productName={form.product_name?.trim() || form.category}
           onViewListing={() => {
             setShowSuccessModal(false);
-            navigation.navigate(SCREENS.CONVERTER_RTD.LISTING);
+            navigation.goBack();
           }}
           onAddAnother={() => {
             setShowSuccessModal(false);
@@ -653,13 +731,28 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         />
       </KeyboardAvoidingView>
 
-      <BottomSheetModal ref={categorySheetRef} snapPoints={['70%', '95%']} enablePanDownToClose onDismiss={() => setCategorySearch('')}>
+      <BottomSheetModal
+        ref={categorySheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onDismiss={() => setCategorySearch('')}
+      >
         <View style={styles.sheetContainer}>
           <Text variant="h4" fontWeight="semibold" style={styles.sheetTitle}>Select Category</Text>
-          <TextInput value={categorySearch} onChangeText={setCategorySearch} placeholder="Search category..." placeholderTextColor={theme.colors.text.tertiary} style={styles.searchInput} />
+          <BottomSheetTextInput
+            value={categorySearch}
+            onChangeText={setCategorySearch}
+            placeholder="Search category..."
+            placeholderTextColor={theme.colors.text.tertiary}
+            style={styles.searchInput}
+          />
           <BottomSheetFlatList
             data={filteredCategories}
             keyExtractor={(item: string) => item}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item }: { item: string }) => (
               <TouchableOpacity style={styles.sheetOption} onPress={() => { updateField('category', item); categorySheetRef.current?.dismiss(); }}>
                 <Text variant="bodyMedium">{item}</Text>
@@ -669,13 +762,28 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         </View>
       </BottomSheetModal>
 
-      <BottomSheetModal ref={materialSheetRef} snapPoints={['70%', '95%']} enablePanDownToClose onDismiss={() => setMaterialSearch('')}>
+      <BottomSheetModal
+        ref={materialSheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onDismiss={() => setMaterialSearch('')}
+      >
         <View style={styles.sheetContainer}>
           <Text variant="h4" fontWeight="semibold" style={styles.sheetTitle}>Select Material</Text>
-          <TextInput value={materialSearch} onChangeText={setMaterialSearch} placeholder="Search material..." placeholderTextColor={theme.colors.text.tertiary} style={styles.searchInput} />
+          <BottomSheetTextInput
+            value={materialSearch}
+            onChangeText={setMaterialSearch}
+            placeholder="Search material..."
+            placeholderTextColor={theme.colors.text.tertiary}
+            style={styles.searchInput}
+          />
           <BottomSheetFlatList
             data={filteredMaterials}
             keyExtractor={(item: Material) => `material-${item.id}`}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item }: { item: Material }) => (
               <TouchableOpacity style={styles.sheetOption} onPress={() => { updateField('material_id', item.id); updateField('material', item.name); materialSheetRef.current?.dismiss(); }}>
                 <Text variant="bodyMedium">{item.name}</Text>
@@ -717,13 +825,28 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         />
       </BottomSheetModal>
 
-      <BottomSheetModal ref={brandingSheetRef} snapPoints={['60%', '80%']} enablePanDownToClose onDismiss={() => setBrandingSearch('')}>
+      <BottomSheetModal
+        ref={brandingSheetRef}
+        snapPoints={['60%', '80%']}
+        enablePanDownToClose
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onDismiss={() => setBrandingSearch('')}
+      >
         <View style={styles.sheetContainer}>
           <Text variant="h4" fontWeight="semibold" style={styles.sheetTitle}>Select Branding Methods (max 2)</Text>
-          <TextInput value={brandingSearch} onChangeText={setBrandingSearch} placeholder="Search branding method..." placeholderTextColor={theme.colors.text.tertiary} style={styles.searchInput} />
+          <BottomSheetTextInput
+            value={brandingSearch}
+            onChangeText={setBrandingSearch}
+            placeholder="Search branding method..."
+            placeholderTextColor={theme.colors.text.tertiary}
+            style={styles.searchInput}
+          />
           <BottomSheetFlatList
             data={filteredBrandingMethods}
             keyExtractor={(item: string) => item}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item }: { item: string }) => (
               <TouchableOpacity style={styles.sheetOption} onPress={() => toggleBrandingMethod(item)}>
                 <Text variant="bodyMedium" style={{ flex: 1 }}>{item}</Text>

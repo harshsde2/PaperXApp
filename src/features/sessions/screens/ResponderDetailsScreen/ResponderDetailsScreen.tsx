@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
@@ -21,10 +21,39 @@ import {
   useDeclineInquiry,
   useOpenStructuredThread,
 } from '@services/api';
+import type { JobworkDetails } from '@services/api';
+import { FullScreenImageModal } from '@shared/components/FullScreenImageModal';
 import { ElapsedTimer } from '../../components/ElapsedTimer';
 import { InterestedModal } from './InterestedModal';
 import { ResponderDetailsParams } from './@types';
 import { createStyles } from './styles';
+
+const JOBWORK_FIND_INQUIRY_TYPE = 'jobwork_find';
+
+function buildJobworkDetailLines(j: JobworkDetails): string[] {
+  const lines: string[] = [];
+  const v = (x: string | number | null | undefined) => (x != null && String(x).trim() !== '' ? String(x).trim() : null);
+  if (v(j.jobwork_type)) lines.push(`Jobwork type: ${v(j.jobwork_type)}`);
+  if (j.mode === 'find') {
+    if (v(j.machinery_available)) lines.push(`Machinery: ${v(j.machinery_available)}`);
+    if (v(j.location)) lines.push(`Location: ${v(j.location)}`);
+    else if (v(j.city)) lines.push(`Location: ${v(j.city)}`);
+    if (j.quantity != null && String(j.quantity).trim() !== '') lines.push(`Min order: ${j.quantity} ${j.quantity_unit ?? 'pieces'}`.trim());
+    if (v(j.timeline)) lines.push(`Timeline: ${v(j.timeline)}`);
+    if (v(j.special_instructions)) lines.push(`Special instructions: ${v(j.special_instructions)}`);
+  } else {
+    if (j.quantity != null && String(j.quantity).trim() !== '') lines.push(`Quantity: ${j.quantity} ${j.quantity_unit ?? 'pieces'}`.trim());
+    if (v(j.raw_materials)) lines.push(`Raw materials: ${v(j.raw_materials)}`);
+    if (v(j.size)) lines.push(`Size: ${[v(j.size), v(j.size_unit)].filter(Boolean).join(' ') || v(j.size)}`);
+    if (v(j.thickness)) lines.push(`Thickness: ${[v(j.thickness), v(j.thickness_unit)].filter(Boolean).join(' ') || v(j.thickness)}`);
+    if (v(j.grade_finish)) lines.push(`Grade / finish: ${v(j.grade_finish)}`);
+    if (v(j.quality_requirements)) lines.push(`Quality: ${v(j.quality_requirements)}`);
+    if (v(j.other_instructions)) lines.push(`Other instructions: ${v(j.other_instructions)}`);
+    if (v(j.timeline)) lines.push(`Timeline: ${v(j.timeline)}`);
+    if (v(j.location)) lines.push(`Delivery location: ${v(j.location)}`);
+  }
+  return lines;
+}
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -50,6 +79,7 @@ export default function ResponderDetailsScreen() {
   const insets = useSafeAreaInsets();
   const [interestedModalVisible, setInterestedModalVisible] = useState(false);
   const [isRefreshingAfterInterest, setIsRefreshingAfterInterest] = useState(false);
+  const [sampleImageFullScreenVisible, setSampleImageFullScreenVisible] = useState(false);
 
   const params = route.params?.params ?? route.params;
   const { sessionId, session: routeSession } = params ?? {};
@@ -86,7 +116,14 @@ export default function ResponderDetailsScreen() {
 
   const summaryTitle = responderDetail?.title ?? sessionDetail?.inquiry?.title ?? matchmakingData?.inquiry?.title ?? routeSession?.title ?? 'Requirement';
 
+  const jobworkMode = responderDetail?.jobwork_mode;
+  const jobwork = responderDetail?.jobwork;
+
   const requirementItems = useMemo(() => {
+    if (jobwork && Object.keys(jobwork).length > 0) {
+      const jobworkLines = buildJobworkDetailLines(jobwork);
+      if (jobworkLines.length > 0) return jobworkLines;
+    }
     const items = responderDetail?.requirement_summary?.items ?? [];
     if (items.length) {
       return items.map((i) => {
@@ -102,10 +139,14 @@ export default function ResponderDetailsScreen() {
     }
     const spec = routeSession?.specifications;
     return spec ? [spec] : ['No details'];
-  }, [responderDetail?.requirement_summary, matchmakingData?.inquiry?.items, sessionDetail?.inquiry?.items, routeSession?.specifications]);
+  }, [jobwork, responderDetail?.requirement_summary, matchmakingData?.inquiry?.items, sessionDetail?.inquiry?.items, routeSession?.specifications]);
 
   const createdAt = responderDetail?.created_at ?? sessionDetail?.created_at ?? null;
   const expiresAt = responderDetail?.expires_at ?? sessionDetail?.expires_at ?? null;
+
+  const isJobworkFind = responderDetail?.inquiry_type === JOBWORK_FIND_INQUIRY_TYPE;
+  const sampleImageUrl = responderDetail?.sample_image_url ?? null;
+  const showSampleImage = isJobworkFind && !!sampleImageUrl;
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
@@ -188,10 +229,16 @@ export default function ResponderDetailsScreen() {
         contentContainerStyle={styles.responderContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero: Someone wants to buy/sell + Posted by */}
+        {/* Hero: jobwork-specific or buy/sell + Posted by */}
         <View style={[styles.responderHero, intent === 'sell' ? styles.responderHeroSell : styles.responderHeroBuy]}>
           <Text style={[styles.responderHeroHeadline, intent === 'sell' ? styles.responderHeroHeadlineSell : styles.responderHeroHeadlineBuy]}>
-            {intent === 'sell' ? 'Someone wants to sell' : 'Someone wants to buy'}
+            {jobworkMode === 'find'
+              ? 'Converter is looking for jobwork'
+              : jobworkMode === 'give'
+                ? 'Converter wants to outsource jobwork'
+                : intent === 'sell'
+                  ? 'Someone wants to sell'
+                  : 'Someone wants to buy'}
           </Text>
           <Text style={styles.responderHeroByline}>Posted by {posterLabel}</Text>
         </View>
@@ -217,6 +264,20 @@ export default function ResponderDetailsScreen() {
             )}
           </View>
         </View>
+
+        {/* Jobwork find: sample image (only when inquiry is jobwork_find and has sample_image_url) */}
+        {showSampleImage && sampleImageUrl && (
+          <View style={styles.sampleImageSection}>
+            <Text style={styles.responderSectionLabel}>Sample image</Text>
+            <TouchableOpacity
+              style={styles.sampleImageThumbnailWrap}
+              onPress={() => setSampleImageFullScreenVisible(true)}
+              activeOpacity={0.9}
+            >
+              <Image source={{ uri: sampleImageUrl }} style={styles.sampleImageThumbnail} resizeMode="cover" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Time since post (elapsed, counts up to 24h or backend end) */}
         {!isLocked && createdAt && (
@@ -318,6 +379,13 @@ export default function ResponderDetailsScreen() {
         onSubmit={handleSubmitInterested}
         isSubmitting={isInterestFlowLoading}
       />
+      {showSampleImage && sampleImageUrl && (
+        <FullScreenImageModal
+          visible={sampleImageFullScreenVisible}
+          imageUrl={sampleImageUrl}
+          onClose={() => setSampleImageFullScreenVisible(false)}
+        />
+      )}
     </ScreenWrapper>
   );
 }

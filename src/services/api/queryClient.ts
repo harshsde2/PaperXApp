@@ -130,6 +130,9 @@ export const queryKeys = {
   // Converter RTD (Ready-to-Dispatch) - converter only
   converterRtd: {
     all: ['converter-rtd'] as const,
+    listingPacks: () => [...queryKeys.converterRtd.all, 'listing-packs'] as const,
+    entitlement: () => [...queryKeys.converterRtd.all, 'entitlement'] as const,
+    dispatchOptions: () => [...queryKeys.converterRtd.all, 'dispatch-options'] as const,
     myProducts: (params?: Record<string, any>) =>
       [...queryKeys.converterRtd.all, 'products', params] as const,
     productDetail: (id: number | string) =>

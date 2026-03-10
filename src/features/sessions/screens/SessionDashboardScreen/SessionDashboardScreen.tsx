@@ -24,6 +24,7 @@ import { Session, SessionTabType } from '../../@types';
 import { SessionTabBar } from '../../components/SessionTabBar';
 import { SessionCard } from '../../components/SessionCard';
 import { SessionDashboardScreenRouteProp } from './@types';
+import { useActiveRole } from '@shared/hooks/useActiveRole';
 import { createStyles } from './styles';
 
 const SessionDashboardScreen = () => {
@@ -32,8 +33,9 @@ const SessionDashboardScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const activeRole = useActiveRole();
 
-  const initialTab = route.params?.initialTab || 'all';
+  const initialTab = route.params?.initialTab || (activeRole === 'brand' ? 'my_posts' : 'all');
   const [activeTab, setActiveTab] = useState<SessionTabType>(
     initialTab === 'my_posts' ? 'my_posts' : 'all'
   );
@@ -60,6 +62,35 @@ const SessionDashboardScreen = () => {
     return sessions.map((session: ActiveSessionListItem) => {
       const firstItem = session.items[0];
       const totalQuantity = session.items.reduce((sum, item) => sum + item.quantity, 0);
+      const brandReq = session.brand_requirement ?? null;
+      const isBrandInquiry = !!brandReq;
+
+      const displayTitle = isBrandInquiry
+        ? [
+            brandReq?.requirement_type ?? 'Brand Requirement',
+            brandReq?.packaging_type || undefined,
+            brandReq?.quantity_range ? `(${brandReq.quantity_range})` : undefined,
+          ]
+            .filter(Boolean)
+            .join(' ')
+        : session.title;
+
+      const displayCategory = isBrandInquiry
+        ? [
+            brandReq?.requirement_type ?? 'Brand Requirement',
+            brandReq?.packaging_type || undefined,
+          ]
+            .filter(Boolean)
+            .join(' - ')
+        : firstItem?.material_category || 'Material';
+
+      const displayQuantity = isBrandInquiry
+        ? String(brandReq?.quantity_range ?? '')
+        : String(totalQuantity);
+
+      const displayQuantityUnit = isBrandInquiry
+        ? 'pieces'
+        : firstItem?.quantity_unit || 'units';
       const isOwner = session.is_owner ?? true;
       const safeResponsesReceived = Number(session.responses_received ?? 0);
       const safeMatchedCount = Number(session.matched_dealers_count ?? 0);
@@ -88,8 +119,8 @@ const SessionDashboardScreen = () => {
       return {
         id: String(session.id),
         inquiryId: `INQ-${String(session.inquiry_id).padStart(3, '0')}`,
-        title: session.title,
-        category: firstItem?.material_category || 'Material',
+        title: displayTitle,
+        category: displayCategory,
         createdAt: session.created_at,
         status: frontendStatus,
         isUrgent: session.urgency === 'urgent',
@@ -111,12 +142,14 @@ const SessionDashboardScreen = () => {
           : Number.isFinite(safeMatchingProgressTotal) && safeMatchingProgressTotal > 0
             ? safeMatchingProgressTotal
             : 10,
-        materialName: firstItem?.material_category || 'Material',
-        quantity: String(totalQuantity),
-        quantityUnit: firstItem?.quantity_unit || 'units',
+        materialName: displayCategory,
+        quantity: displayQuantity,
+        quantityUnit: displayQuantityUnit,
         isOwner,
         posterLabel: session.poster_label,
         intent: session.intent === 'sell' ? 'sell' : 'buy',
+        jobwork_mode: session.jobwork_mode,
+        inquiry_type: session.inquiry_type,
       };
     });
   }, [sessions]);

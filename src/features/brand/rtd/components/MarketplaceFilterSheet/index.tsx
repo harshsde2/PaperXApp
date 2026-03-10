@@ -2,6 +2,7 @@ import React, { memo, useState, useCallback, useEffect } from 'react';
 import { View, TextInput, ScrollView, Pressable } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
+import { PriceRangeSlider } from '@shared/components/PriceRangeSlider';
 import { useTheme } from '@theme/index';
 import { INITIAL_ADVANCED_FILTERS } from '../../screens/BrandRTDMarketplaceScreen/@types';
 import type { AdvancedFilterState } from '../../screens/BrandRTDMarketplaceScreen/@types';
@@ -9,10 +10,9 @@ import type { MarketplaceFilterSheetProps, LeadTimeOption } from './@types';
 import { createStyles } from './styles';
 
 const LEAD_TIME_OPTIONS: LeadTimeOption[] = [
-  { value: 'SAME_DAY', label: 'Same Day' },
-  { value: 'H24', label: '24 Hours' },
-  { value: 'H48', label: '48 Hours' },
-  { value: 'DAYS_3_5', label: '3-5 Days' },
+  { value: 'H24', label: 'Within 24 hours' },
+  { value: 'H48', label: '24-48 hours' },
+  { value: 'DAYS_3_5', label: '48-72 hours' },
 ];
 
 const BRANDING_OPTIONS = [
@@ -37,6 +37,42 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
       },
       [],
     );
+
+    const PRICE_MIN = 0;
+    const PRICE_MAX = 1000;
+    const handleMinPriceChange = useCallback((value: string) => {
+      setDraft((prev) => {
+        const num = parseFloat(value);
+        if (value === '' || value === '-') {
+          return { ...prev, min_price: value };
+        }
+        if (!Number.isFinite(num)) return prev;
+        const minClamped = Math.max(PRICE_MIN, Math.min(PRICE_MAX, Math.round(num)));
+        const maxNum = parseFloat(prev.max_price) || PRICE_MAX;
+        if (minClamped >= maxNum) {
+          const newMax = Math.min(minClamped + 1, PRICE_MAX);
+          return { ...prev, min_price: String(minClamped), max_price: String(newMax) };
+        }
+        return { ...prev, min_price: String(minClamped) };
+      });
+    }, []);
+
+    const handleMaxPriceChange = useCallback((value: string) => {
+      setDraft((prev) => {
+        const num = parseFloat(value);
+        if (value === '' || value === '-') {
+          return { ...prev, max_price: value };
+        }
+        if (!Number.isFinite(num)) return prev;
+        const maxClamped = Math.max(PRICE_MIN, Math.min(PRICE_MAX, Math.round(num)));
+        const minNum = parseFloat(prev.min_price) || PRICE_MIN;
+        if (maxClamped <= minNum) {
+          const newMin = Math.max(maxClamped - 1, PRICE_MIN);
+          return { ...prev, max_price: String(maxClamped), min_price: String(newMin) };
+        }
+        return { ...prev, max_price: String(maxClamped) };
+      });
+    }, []);
 
     const handleLeadTimePress = useCallback(
       (value: string) => {
@@ -88,21 +124,6 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
         >
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              Location
-            </Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Search by location"
-              placeholderTextColor={theme.colors.text.tertiary}
-              value={draft.delivery_geography}
-              onChangeText={(text) => updateField('delivery_geography', text)}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          <View style={styles.section}>
-            <Text variant="bodyMedium" style={styles.sectionLabel}>
               Dispatch Time
             </Text>
             <View style={styles.chipsRow}>
@@ -131,56 +152,30 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
 
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              Price per Piece (₹)
+              Price per Piece (₹) 0 – 1000
             </Text>
-            <View style={styles.rangeRow}>
-              <TextInput
-                style={styles.rangeInput}
-                placeholder="Min"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={draft.min_price}
-                onChangeText={(text) => updateField('min_price', text)}
-                keyboardType="numeric"
-              />
-              <Text variant="bodyMedium" style={styles.rangeSeparator}>
-                to
-              </Text>
-              <TextInput
-                style={styles.rangeInput}
-                placeholder="Max"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={draft.max_price}
-                onChangeText={(text) => updateField('max_price', text)}
-                keyboardType="numeric"
-              />
-            </View>
+            <PriceRangeSlider
+              minPrice={draft.min_price}
+              maxPrice={draft.max_price}
+              onMinChange={handleMinPriceChange}
+              onMaxChange={handleMaxPriceChange}
+              rangeMin={0}
+              rangeMax={1000}
+            />
           </View>
 
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              MOQ (Minimum Order Quantity)
+              MOQ (Maximum)
             </Text>
-            <View style={styles.rangeRow}>
-              <TextInput
-                style={styles.rangeInput}
-                placeholder="Min"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={draft.min_moq}
-                onChangeText={(text) => updateField('min_moq', text)}
-                keyboardType="numeric"
-              />
-              <Text variant="bodyMedium" style={styles.rangeSeparator}>
-                to
-              </Text>
-              <TextInput
-                style={styles.rangeInput}
-                placeholder="Max"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={draft.max_moq}
-                onChangeText={(text) => updateField('max_moq', text)}
-                keyboardType="numeric"
-              />
-            </View>
+            <TextInput
+              style={styles.textInput}
+              placeholder="e.g. 500"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={draft.moq}
+              onChangeText={(text) => updateField('moq', text)}
+              keyboardType="numeric"
+            />
           </View>
 
           <View style={styles.section}>

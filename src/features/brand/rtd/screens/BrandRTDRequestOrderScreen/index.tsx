@@ -95,16 +95,30 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
     [product?.price_slabs, product?.base_price, qty],
   );
   const subtotal = qty * pricePerUnit;
-  const gst = subtotal * 0.18;
-  const total = subtotal + gst;
+  const PLATFORM_FEE_SLABS: { max: number; percent: number }[] = [
+    { max: 25000, percent: 9 },
+    { max: 75000, percent: 8 },
+    { max: 200000, percent: 6 },
+    { max: 300000, percent: 5 },
+  ];
+  const platformFeePercent = PLATFORM_FEE_SLABS.find((s) => subtotal <= s.max)?.percent ?? 5;
+  const platformFee = subtotal * (platformFeePercent / 100);
+  const sellerGstRegistered = product?.seller_gst_registered !== false;
+  const gst = sellerGstRegistered ? (subtotal + platformFee) * 0.18 : 0;
+  const total = subtotal + platformFee + gst;
 
   const isSubmitting = requestOrder.isPending || requestOrderWithLogo.isPending;
   const qtyInSlab = isQuantityInSlab(product?.price_slabs, qty);
   const maxQty = getMaxSlabQty(product?.price_slabs);
-  const canSubmit = qty >= (product?.moq ?? 1) && qtyInSlab && !isSubmitting;
+  const hasAddress = form.deliveryAddress.trim().length > 0;
+  const canSubmit = qty >= (product?.moq ?? 1) && qtyInSlab && hasAddress && !isSubmitting;
 
   const handleSubmit = useCallback(() => {
     if (!product || isSubmitting) return;
+    if (!form.deliveryAddress.trim()) {
+      Alert.alert('Invalid Address', 'Delivery address is required.');
+      return;
+    }
     if (qty < product.moq) {
       Alert.alert('Invalid Quantity', `Minimum order quantity is ${product.moq} units.`);
       return;
@@ -317,7 +331,8 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
           disabled={!canSubmit}
         />
         <Text style={styles.termsText}>
-          By clicking Request Order, you agree to PaperX Terms of Service
+          By clicking Request Order, you agree to PaperX Terms of Service.
+          Zupply acts as a payment collection facilitator on behalf of the seller.
         </Text>
       </View>
     </KeyboardAvoidingView>

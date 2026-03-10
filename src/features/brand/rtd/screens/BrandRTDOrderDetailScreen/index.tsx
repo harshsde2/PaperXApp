@@ -293,7 +293,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <View style={styles.pricingProductRow}>
                 <View style={{ flex: 1 }}>
                   <Text fontWeight="bold" style={styles.pricingProductName}>
-                    {activeOrder.product?.product_name ?? 'Product'}
+                    {activeOrder.product?.display_name ?? activeOrder.product?.product_name ?? activeOrder.product?.category ?? 'Product'}
                   </Text>
                   <Text style={styles.pricingRef}>Ref: #PX-{activeOrder.id}</Text>
                 </View>
@@ -306,15 +306,23 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
                 <Text style={styles.pricingValue}>{activeOrder.quantity} Units</Text>
               </View>
               <View style={styles.pricingRow}>
-                <Text style={styles.pricingLabel}>Commission</Text>
+                <Text style={styles.pricingLabel}>Product value</Text>
+                <Text style={styles.pricingValue}>
+                  ₹{activeOrder.subtotal}
+                </Text>
+              </View>
+              <View style={styles.pricingRow}>
+                <Text style={styles.pricingLabel}>Platform fee</Text>
                 <Text style={styles.pricingValue}>
                   ₹{activeOrder.commission_amount}
                 </Text>
               </View>
-              <View style={styles.pricingRow}>
-                <Text style={styles.pricingLabel}>GST (18%)</Text>
-                <Text style={styles.pricingValue}>₹{activeOrder.gst_amount}</Text>
-              </View>
+              {activeOrder.seller_gst_registered !== false && Number(activeOrder.gst_amount) > 0 && (
+                <View style={styles.pricingRow}>
+                  <Text style={styles.pricingLabel}>GST (18%)</Text>
+                  <Text style={styles.pricingValue}>₹{activeOrder.gst_amount}</Text>
+                </View>
+              )}
               <View style={styles.pricingDivider} />
               <View style={styles.pricingTotalRow}>
                 <Text fontWeight="bold" style={styles.pricingTotalLabel}>
@@ -326,14 +334,14 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               </View>
             </View>
 
-            {/* <View style={styles.infoNote}>
-              <AppIcon.Warning width={16} height={16} color={theme.colors.primary.DEFAULT} />
-              <Text style={styles.infoNoteText}>
-                By proceeding, you agree to the terms for escrow transactions. Once
-                paid, the converter will receive immediate notification to begin
-                fulfillment.
+            <View style={styles.facilitatorNote}>
+              <Text style={styles.facilitatorText}>
+                Zupply acts as a payment collection facilitator on behalf of the seller.
+                Product amount is collected on behalf of the seller; platform fee is
+                charged by Zupply for its services. Zupply does not guarantee product
+                quality or delivery — the seller is solely responsible.
               </Text>
-            </View> */}
+            </View>
           </>
         )}
 
@@ -368,6 +376,14 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
             </View> */}
 
             <BrandOrderSummaryCard order={activeOrder} />
+
+            <ContactDetailsCard
+              title="Converter Contact"
+              name={activeOrder.converter?.name}
+              companyName={activeOrder.converter?.company_name}
+              email={activeOrder.converter?.email}
+              phone={activeOrder.converter?.mobile}
+            />
           </>
         )}
 
@@ -398,6 +414,14 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
             </View>
 
             <BrandOrderSummaryCard order={activeOrder} />
+
+            <ContactDetailsCard
+              title="Converter Contact"
+              name={activeOrder.converter?.name}
+              companyName={activeOrder.converter?.company_name}
+              email={activeOrder.converter?.email}
+              phone={activeOrder.converter?.mobile}
+            />
           </>
         )}
 

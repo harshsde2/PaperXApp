@@ -11,6 +11,7 @@ export interface CustomHeaderRightButton {
 export interface CustomHeaderProps {
   route?: RouteProp<any>;
   navigation: StackNavigationProp<any>;
+  options?: { title?: string; [key: string]: any };
   title?: string;
   showBackButton?: boolean;
   rightButton?: CustomHeaderRightButton;

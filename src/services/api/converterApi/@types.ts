@@ -135,3 +135,38 @@ export interface ConverterReferenceDataResponse {
   }>;
 }
 
+// ============================================
+// JOBWORK (Converter → Converter)
+// ============================================
+
+export type JobworkType = string;
+export type JobworkTimeline = 'Normal' | 'Urgent';
+
+export interface PostJobworkFindPayload {
+  jobwork_type: string;
+  machinery_available: string;
+  timeline: JobworkTimeline;
+  minimum_order_quantity?: number;
+  special_instructions?: string;
+  sample_available?: boolean;
+  sample_image?: string | null;
+}
+
+export interface PostJobworkGivePayload {
+  jobwork_type: string;
+  raw_materials?: string;
+  quantity: number;
+  quality_requirements?: string;
+  timeline: JobworkTimeline;
+  delivery_location: string;
+  latitude?: number;
+  longitude?: number;
+  other_instructions?: string;
+}
+
+export interface JobworkPostResponse {
+  inquiry_id: number;
+  session_id: number;
+  matched_converters_count: number;
+}
+

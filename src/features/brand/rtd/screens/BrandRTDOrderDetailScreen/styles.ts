@@ -175,6 +175,20 @@ export const createStyles = (theme: Theme) =>
       color: theme.colors.primary.DEFAULT,
     },
 
+    // Facilitator note
+    facilitatorNote: {
+      marginHorizontal: theme.spacing[4],
+      marginTop: theme.spacing[2],
+      padding: theme.spacing[3],
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: theme.borderRadius.card.md,
+    },
+    facilitatorText: {
+      fontSize: 12,
+      color: theme.colors.text.tertiary,
+      lineHeight: 18,
+    },
+
     // Dispatched info
     dispatchedCard: {
       marginHorizontal: theme.spacing[4],

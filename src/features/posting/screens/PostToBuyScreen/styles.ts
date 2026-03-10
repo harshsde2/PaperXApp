@@ -224,4 +224,30 @@ export const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacing[3],
       paddingHorizontal: theme.spacing[3],
     },
+    card: {
+      marginBottom: theme.spacing[4],
+      padding: theme.spacing[4],
+      backgroundColor: theme.colors.surface.primary,
+      borderRadius: theme.borderRadius.lg,
+    },
+    sectionTitle: {
+      marginBottom: theme.spacing[4],
+    },
+    fieldContainer: {
+      marginBottom: theme.spacing[4],
+    },
+    halfField: {
+      flex: 1,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      paddingHorizontal: theme.spacing[3],
+      paddingVertical: theme.spacing[3],
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      backgroundColor: theme.colors.surface.primary,
+      fontFamily: theme.fontFamily.regular,
+    },
   });

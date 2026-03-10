@@ -40,8 +40,11 @@ import { PostBrandRequirementFormData, DropdownOption, SavedLocation } from './@
 const REQUIREMENT_TYPE_OPTIONS: DropdownOption<BrandRequirementType>[] = [
   { label: 'Packaging', value: 'Packaging' },
   { label: 'Printing', value: 'Printing' },
-  { label: 'Labels', value: 'Labels' },
-  { label: 'Other', value: 'Other' },
+  { label: 'Packaging + Printing', value: 'Packaging + Printing' },
+  {
+    label: 'Corporate Gifting / Stationery',
+    value: 'Corporate Gifting / Stationery',
+  },
 ];
 
 const PACKAGING_TYPE_OPTIONS: DropdownOption<BrandPackagingType>[] = [

@@ -394,6 +394,28 @@ export const createStyles = (theme: Theme) =>
       fontSize: 13,
       color: theme.colors.text.tertiary,
     },
+    posterDetailSampleImageSection: {
+      marginBottom: theme.spacing[4],
+    },
+    posterDetailSampleImageLabel: {
+      fontSize: 11,
+      fontWeight: fontWeightForPlatform('700'),
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing[2],
+      color: theme.colors.text.tertiary,
+    },
+    posterDetailSampleImageThumbnailWrap: {
+      borderRadius: theme.borderRadius.xl,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.background.primary,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+    },
+    posterDetailSampleImageThumbnail: {
+      width: '100%',
+      height: 200,
+    },
     posterDetailCountsTitle: {
       fontSize: 15,
       fontWeight: fontWeightForPlatform('700'),

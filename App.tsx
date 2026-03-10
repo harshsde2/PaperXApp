@@ -7,19 +7,22 @@ import { store } from './src/store';
 import { queryClient } from './src/services/api/queryClient';
 import AppNavigator from './src/navigation/AppNavigator';
 import { BottomSheetProvider } from '@shared/components/BottomSheet';
-import ToastManager from 'toastify-react-native'
+import { ThemeProvider } from './src/theme';
+import ToastManager from 'toastify-react-native';
 
 function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetProvider>
-            <SafeAreaProvider>
-              <ToastManager />
-              <AppNavigator />
-            </SafeAreaProvider>
-          </BottomSheetProvider>
+          <ThemeProvider>
+            <BottomSheetProvider>
+              <SafeAreaProvider>
+                <ToastManager />
+                <AppNavigator />
+              </SafeAreaProvider>
+            </BottomSheetProvider>
+          </ThemeProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
     </Provider>

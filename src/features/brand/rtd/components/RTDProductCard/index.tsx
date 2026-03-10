@@ -5,6 +5,7 @@ import { CustomButton } from '@shared/components/CustomButton';
 import { useTheme } from '@theme/index';
 import type { RTDProductCardProps } from './@types';
 import { createStyles } from './styles';
+import { AppIcon } from '@assets/svgs';
 
 export const RTDProductCard = memo<RTDProductCardProps>(
   function RTDProductCard({ product, onBuyNow, hasActiveOrder = false, activeOrderId, onViewOrder }) {
@@ -38,9 +39,9 @@ export const RTDProductCard = memo<RTDProductCardProps>(
         </View>
 
         <View style={styles.content}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',flexWrap: 'wrap' }}>
             <Text variant="bodyLarge" fontWeight="bold" style={styles.title}>
-              {product.product_name}
+              {product.display_name ?? product.product_name ?? product.category}
             </Text>
             {product.lead_time_label && (
               <View style={styles.badgeContainer}>
@@ -52,13 +53,19 @@ export const RTDProductCard = memo<RTDProductCardProps>(
               </View>
             )}
           </View>
-
+          <View style={[styles.infoRow,{gap: theme.spacing[1]}]}>
+            <AppIcon.Location width={10} height={10} color={theme.colors.primary.DEFAULT} />
+            <Text variant="bodySmall" fontWeight="semibold" style={styles.priceText}>
+              {product.delivery_geography ?? ''}
+            </Text>
+          </View>
 
           {subtitle ? (
             <Text variant="bodySmall" style={styles.subtitle}>
               {subtitle}
             </Text>
           ) : null}
+        
 
           <View style={styles.infoRow}>
             <Text variant="captionMedium" style={styles.moqLabel}>
@@ -75,6 +82,7 @@ export const RTDProductCard = memo<RTDProductCardProps>(
             <Text variant="bodySmall" fontWeight="bold" style={styles.priceText}>
               {pricePerUnit}
             </Text>
+            
 
           </View>
 

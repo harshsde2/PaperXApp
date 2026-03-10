@@ -17,14 +17,19 @@
 // ============================================================================
 // Main Theme Configuration
 // ============================================================================
-export { defaultTheme, lightTheme, darkTheme, themes, getTheme } from './config';
+export { defaultTheme, lightTheme, darkTheme, themes, getTheme, buildTheme, themePalettes } from './config';
 import { lightTheme } from './config';
 export type { Theme, ThemeMode } from './types';
 
 // ============================================================================
+// Theme Provider & Context
+// ============================================================================
+export { ThemeProvider, ThemeContext } from './context/ThemeContext';
+
+// ============================================================================
 // Hooks
 // ============================================================================
-export { useTheme } from './hooks/useTheme';
+export { useTheme, useThemeContext } from './hooks/useTheme';
 
 // ============================================================================
 // Design Tokens (Direct Access)
@@ -54,6 +59,7 @@ export type {
   SemanticShadows,
   ThemeContextValue,
 } from './types';
+export type { ThemePaletteId, BaseColorPalette } from './tokens/palettes/types';
 
 // ============================================================================
 // Legacy Exports (Backward Compatibility)

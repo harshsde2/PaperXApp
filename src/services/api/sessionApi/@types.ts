@@ -71,6 +71,18 @@ export interface ActiveSessionListItem {
   urgency: string;
   created_at: string;
   items: SessionItem[];
+  /**
+   * Optional brand-specific requirement summary when poster_type === 'brand'.
+   * Present only for brand → converter flows.
+   */
+  brand_requirement?: {
+    requirement_type: string | null;
+    packaging_type: string | null;
+    quantity_range: string | null;
+    timeline: string | null;
+    description: string | null;
+    special_needs: string | null;
+  } | null;
   countdown: SessionCountdown | null;
   responses_received: number;
   matched_dealers_count: number;
@@ -81,6 +93,12 @@ export interface ActiveSessionListItem {
   poster_label?: string;
   /** Post intent: 'buy' | 'sell' for card badge. */
   intent?: 'buy' | 'sell';
+  /** Present for converter jobwork sessions. */
+  inquiry_type?: 'jobwork_find' | 'jobwork_give' | string;
+  /** Present for converter jobwork sessions: 'find' | 'give'. */
+  jobwork_mode?: 'find' | 'give';
+  /** Present for converter jobwork sessions (jobwork type name). */
+  jobwork_type?: string;
 }
 
 // ============================================
@@ -215,6 +233,30 @@ export interface PosterDetailRequirementSummary {
   }>;
 }
 
+/** Normalized jobwork details returned for converter jobwork inquiries (jobwork_find / jobwork_give). */
+export interface JobworkDetails {
+  mode: 'find' | 'give';
+  jobwork_type?: string | null;
+  quantity?: number | string | null;
+  quantity_unit?: string | null;
+  timeline?: string | null;
+  location?: string | null;
+  /** Find: machinery, city, sample, special_instructions */
+  machinery_available?: string | null;
+  city?: string | null;
+  sample_available?: boolean;
+  special_instructions?: string | null;
+  /** Give: raw_materials, size, thickness, grade_finish, quality, other */
+  raw_materials?: string | null;
+  size?: string | null;
+  size_unit?: string | null;
+  thickness?: string | null;
+  thickness_unit?: string | null;
+  grade_finish?: string | null;
+  quality_requirements?: string | null;
+  other_instructions?: string | null;
+}
+
 export interface PosterDetailResponse {
   poster_type: string;
   intent: 'buy' | 'sell';
@@ -224,6 +266,14 @@ export interface PosterDetailResponse {
   reached_count: number;
   matches_count: number;
   responses_count: number;
+  /** Present for jobwork inquiries: 'jobwork_find' | 'jobwork_give'. */
+  inquiry_type?: 'jobwork_find' | 'jobwork_give' | string;
+  /** Present for converter jobwork inquiries. */
+  jobwork_mode?: 'find' | 'give';
+  /** Present for converter jobwork inquiries. */
+  jobwork?: JobworkDetails;
+  sample_available?: boolean;
+  sample_image_url?: string | null;
 }
 
 // ============================================
@@ -245,6 +295,14 @@ export interface ResponderDetailResponse {
   created_at: string | null;
   expires_at: string | null;
   my_responder_status: ResponderDetailMyStatus;
+  /** Present for jobwork inquiries: 'jobwork_find' | 'jobwork_give'. */
+  inquiry_type?: 'jobwork_find' | 'jobwork_give' | string;
+  /** Present for converter jobwork inquiries. */
+  jobwork_mode?: 'find' | 'give';
+  /** Present for converter jobwork inquiries. */
+  jobwork?: JobworkDetails;
+  sample_available?: boolean;
+  sample_image_url?: string | null;
 }
 
 // ============================================
@@ -363,7 +421,8 @@ export interface GetSessionDetailResponse {
 // ============================================
 
 export interface LockSessionRequest {
-  selected_dealer_ids: number[];
+  selected_dealer_ids?: number[];
+  selected_converter_ids?: number[];
 }
 
 export interface LockSessionResponse {

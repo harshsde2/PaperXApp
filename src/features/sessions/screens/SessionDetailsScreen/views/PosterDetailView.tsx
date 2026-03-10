@@ -4,19 +4,54 @@
  * Uses data from poster-detail API; layout is fuller so the page does not look empty.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   ScrollView,
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
-import type { PosterDetailResponse } from '@services/api';
+import { FullScreenImageModal } from '@shared/components/FullScreenImageModal';
+import type { PosterDetailResponse, JobworkDetails } from '@services/api';
 import { createStyles } from '../styles';
+
+const JOBWORK_FIND_INQUIRY_TYPE = 'jobwork_find';
+
+function getIntentBadgeLabel(data: PosterDetailResponse): string {
+  if (data.jobwork_mode === 'find') return 'Jobwork – find work';
+  if (data.jobwork_mode === 'give') return 'Jobwork – give work';
+  return data.intent === 'sell' ? 'Wants to sell' : 'Wants to buy';
+}
+
+function buildJobworkDetailLines(j: JobworkDetails): { label: string; value: string }[] {
+  const lines: { label: string; value: string }[] = [];
+  const v = (x: string | number | null | undefined) => (x != null && String(x).trim() !== '' ? String(x).trim() : null);
+  if (v(j.jobwork_type)) lines.push({ label: 'Jobwork type', value: v(j.jobwork_type)! });
+  if (j.mode === 'find') {
+    if (v(j.machinery_available)) lines.push({ label: 'Machinery', value: v(j.machinery_available)! });
+    if (v(j.location)) lines.push({ label: 'Location', value: v(j.location)! });
+    else if (v(j.city)) lines.push({ label: 'Location', value: v(j.city)! });
+    if (j.quantity != null && String(j.quantity).trim() !== '') lines.push({ label: 'Min order', value: `${j.quantity} ${j.quantity_unit ?? 'pieces'}`.trim() });
+    if (v(j.timeline)) lines.push({ label: 'Timeline', value: v(j.timeline)! });
+    if (v(j.special_instructions)) lines.push({ label: 'Special instructions', value: v(j.special_instructions)! });
+  } else {
+    if (j.quantity != null && String(j.quantity).trim() !== '') lines.push({ label: 'Quantity', value: `${j.quantity} ${j.quantity_unit ?? 'pieces'}`.trim() });
+    if (v(j.raw_materials)) lines.push({ label: 'Raw materials', value: v(j.raw_materials)! });
+    if (v(j.size)) lines.push({ label: 'Size', value: [v(j.size), v(j.size_unit)].filter(Boolean).join(' ') || v(j.size)! });
+    if (v(j.thickness)) lines.push({ label: 'Thickness', value: [v(j.thickness), v(j.thickness_unit)].filter(Boolean).join(' ') || v(j.thickness)! });
+    if (v(j.grade_finish)) lines.push({ label: 'Grade / finish', value: v(j.grade_finish)! });
+    if (v(j.quality_requirements)) lines.push({ label: 'Quality', value: v(j.quality_requirements)! });
+    if (v(j.other_instructions)) lines.push({ label: 'Other instructions', value: v(j.other_instructions)! });
+    if (v(j.timeline)) lines.push({ label: 'Timeline', value: v(j.timeline)! });
+    if (v(j.location)) lines.push({ label: 'Delivery location', value: v(j.location)! });
+  }
+  return lines;
+}
 
 export interface PosterDetailViewProps {
   data: PosterDetailResponse | undefined;
@@ -54,6 +89,7 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const [sampleImageFullScreenVisible, setSampleImageFullScreenVisible] = useState(false);
 
   if (isLoading && !data) {
     return (
@@ -72,8 +108,9 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
     );
   }
 
-  const intentLabel = data.intent === 'sell' ? 'Wants to sell' : 'Wants to buy';
+  const intentLabel = getIntentBadgeLabel(data);
   const summary = data.requirement_summary;
+  const jobwork = data.jobwork;
   const subtitleParts = summary.items?.length
     ? summary.items.map(
         (i) =>
@@ -81,6 +118,11 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
       ).filter(Boolean)
     : [summary.material, `${summary.quantity ?? ''} ${summary.quantity_unit ?? ''}`].filter(Boolean);
   const subtitle = subtitleParts.length ? subtitleParts.join(' • ') : data.title;
+  const isJobworkFind = data.inquiry_type === JOBWORK_FIND_INQUIRY_TYPE;
+  const sampleImageUrl = data.sample_image_url ?? null;
+  const showSampleImage = isJobworkFind && !!sampleImageUrl;
+
+  const jobworkDetailLines = jobwork ? buildJobworkDetailLines(jobwork) : [];
 
   return (
     <ScrollView
@@ -133,6 +175,35 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
         </View>
       </View>
 
+      {/* Jobwork details (when jobwork payload present) */}
+      {jobwork && jobworkDetailLines.length > 0 && (
+        <View style={styles.posterDetailCard}>
+          <Text style={styles.posterDetailCardLabel}>Jobwork details</Text>
+          {jobworkDetailLines.map((line, idx) => (
+            <View key={idx} style={{ marginBottom: theme.spacing[2] }}>
+              <Text style={[styles.posterDetailCardSubtitle, { marginBottom: 2 }]} numberOfLines={2}>
+                <Text style={{ fontWeight: '600', color: theme.colors.text.primary }}>{line.label}: </Text>
+                {line.value}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Jobwork find: sample image (only when inquiry is jobwork_find and has sample_image_url) */}
+      {showSampleImage && sampleImageUrl && (
+        <View style={styles.posterDetailSampleImageSection}>
+          <Text style={styles.posterDetailSampleImageLabel}>Sample image</Text>
+          <TouchableOpacity
+            style={styles.posterDetailSampleImageThumbnailWrap}
+            onPress={() => setSampleImageFullScreenVisible(true)}
+            activeOpacity={0.9}
+          >
+            <Image source={{ uri: sampleImageUrl }} style={styles.posterDetailSampleImageThumbnail} resizeMode="cover" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Counts section */}
       <Text style={styles.posterDetailCountsTitle}>Reach & responses</Text>
       <View style={styles.posterDetailCountsRow}>
@@ -159,6 +230,13 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
         >
           <Text style={styles.posterDetailChatButtonText}>Open responder chats</Text>
         </TouchableOpacity>
+      )}
+      {showSampleImage && sampleImageUrl && (
+        <FullScreenImageModal
+          visible={sampleImageFullScreenVisible}
+          imageUrl={sampleImageUrl}
+          onClose={() => setSampleImageFullScreenVisible(false)}
+        />
       )}
     </ScrollView>
   );

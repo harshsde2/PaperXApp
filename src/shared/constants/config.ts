@@ -91,6 +91,7 @@ export const STORAGE_KEYS = {
   USER_DATA: 'user_data',
   ONBOARDING_COMPLETED: 'onboarding_completed',
   FCM_TOKEN: 'fcm_token',
+  THEME_PALETTE: 'theme_palette',
 } as const;
 
 // React Query Defaults

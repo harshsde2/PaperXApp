@@ -141,7 +141,7 @@ export const BrandRTDMyOrdersScreen: React.FC<BrandRTDMyOrdersScreenProps> = ({
             )}
             <View style={styles.cardInfo}>
               <Text fontWeight="semibold" style={styles.productName} numberOfLines={1}>
-                {item.product?.product_name ?? 'Product'}
+                {item.product?.display_name ?? item.product?.product_name ?? item.product?.category ?? 'Product'}
               </Text>
               <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
             </View>

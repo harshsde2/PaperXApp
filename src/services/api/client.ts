@@ -133,9 +133,13 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle other error status codes (Laravel returns { message }, some APIs use { error: { message } })
-    const errorMessage =
+    // Handle other error status codes (Laravel returns { message, errors }, some APIs use { error: { message } })
+    let errorMessage =
       data?.message || data?.error?.message || error.message || `Request failed with status ${status}`;
+    if (status === 422 && data?.errors && typeof data.errors === 'object') {
+      const firstMessage = Object.values(data.errors).flat().find((m): m is string => typeof m === 'string');
+      if (firstMessage) errorMessage = firstMessage;
+    }
 
     // Log error details (include full data for 4xx to debug validation/backend messages)
     if (__DEV__) {

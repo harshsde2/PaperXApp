@@ -8,8 +8,23 @@ import { createStyles } from './styles';
 
 const GST_RATE = 0.18;
 
+/** Platform fee slabs (match backend CommissionCalculator): ≤25k→9%, ≤75k→8%, ≤200k→6%, ≤300k→5% */
+const PLATFORM_FEE_SLABS: { max: number; percent: number }[] = [
+  { max: 25000, percent: 9 },
+  { max: 75000, percent: 8 },
+  { max: 200000, percent: 6 },
+  { max: 300000, percent: 5 },
+];
+
+function getPlatformFeePercent(subtotal: number): number {
+  for (const slab of PLATFORM_FEE_SLABS) {
+    if (subtotal <= slab.max) return slab.percent;
+  }
+  return PLATFORM_FEE_SLABS[PLATFORM_FEE_SLABS.length - 1].percent;
+}
+
 export const QuantityPricingCard = memo<QuantityPricingCardProps>(
-  function QuantityPricingCard({ product, quantity, onQuantityChange, priceSlab }) {
+  function QuantityPricingCard({ product, quantity, onQuantityChange, priceSlab, sellerGstRegistered = true }) {
     const theme = useTheme();
     const styles = createStyles(theme);
 
@@ -27,16 +42,22 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
       const pricePerUnit = priceSlab
         ? Number(priceSlab.price_per_unit)
         : parseFloat(product.base_price);
-      const subtotal = pricePerUnit * quantity;
-      const gst = subtotal * GST_RATE;
-      const total = subtotal + gst;
+      const subtotal = Math.round(pricePerUnit * quantity * 100) / 100;
+      const platformFeePercent = getPlatformFeePercent(subtotal);
+      const platformFee = Math.round(subtotal * (platformFeePercent / 100) * 100) / 100;
+      const gst = sellerGstRegistered
+        ? Math.round((subtotal + platformFee) * GST_RATE * 100) / 100
+        : 0;
+      const total = Math.round((subtotal + platformFee + gst) * 100) / 100;
 
       return {
         subtotal: subtotal.toFixed(2),
+        platformFee: platformFee.toFixed(2),
         gst: gst.toFixed(2),
         total: total.toFixed(2),
+        showGst: sellerGstRegistered,
       };
-    }, [priceSlab, product.base_price, quantity]);
+    }, [priceSlab, product.base_price, quantity, sellerGstRegistered]);
 
     return (
       <View style={styles.card}>
@@ -69,7 +90,7 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
 
         <View style={styles.pricingRow}>
           <Text variant="bodySmall" style={styles.pricingLabel}>
-            Subtotal
+            Product value (on behalf of seller)
           </Text>
           <Text variant="bodySmall" style={styles.pricingValue}>
             ₹{pricing.subtotal}
@@ -78,12 +99,23 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
 
         <View style={styles.pricingRow}>
           <Text variant="bodySmall" style={styles.pricingLabel}>
-            GST (18%)
+            Platform fee (Zupply)
           </Text>
           <Text variant="bodySmall" style={styles.pricingValue}>
-            ₹{pricing.gst}
+            ₹{pricing.platformFee}
           </Text>
         </View>
+
+        {pricing.showGst && (
+          <View style={styles.pricingRow}>
+            <Text variant="bodySmall" style={styles.pricingLabel}>
+              GST (18%)
+            </Text>
+            <Text variant="bodySmall" style={styles.pricingValue}>
+              ₹{pricing.gst}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.totalRow}>
           <Text variant="bodyMedium" fontWeight="bold" style={styles.totalLabel}>
@@ -94,18 +126,9 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
           </Text>
         </View>
 
-        {/* <View style={styles.escrowBadge}>
-          <View style={styles.escrowIcon}>
-            <AppIcon.Security
-              width={12}
-              height={12}
-              color={theme.colors.text.inverse as string}
-            />
-          </View>
-          <Text variant="captionLarge" style={styles.escrowText}>
-            Escrow Protected
-          </Text>
-        </View> */}
+        <Text variant="captionMedium" style={styles.facilitatorText}>
+          Zupply acts as a payment collection facilitator on behalf of the seller.
+        </Text>
       </View>
     );
   },

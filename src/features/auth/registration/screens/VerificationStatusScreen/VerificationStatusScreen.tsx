@@ -11,7 +11,8 @@ import { updateUser } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
 import { VerificationStatusScreenNavigationProp, VerificationStatusScreenRouteProp } from './@types';
 import { createStyles } from './styles';
-import { setActiveRole } from '@store/slices/roleSlice';
+import { setRoles } from '@store/slices/roleSlice';
+import { UserRole } from '@shared/types';
 
 const VerificationStatusScreen = () => {
   const navigation = useNavigation<VerificationStatusScreenNavigationProp>();
@@ -46,7 +47,15 @@ const VerificationStatusScreen = () => {
 
     storageService.setUserData(completedProfile);
 
-    dispatch(setActiveRole(profileData.primary_role as any));
+    // Initialize roles in role slice so dashboard uses correct activeRole immediately
+    if (profileData.primary_role) {
+      dispatch(
+        setRoles({
+          primaryRole: profileData.primary_role as UserRole,
+          secondaryRole: (profileData as any).secondary_role as UserRole | undefined,
+        })
+      );
+    }
 
     dispatch(
       updateUser({

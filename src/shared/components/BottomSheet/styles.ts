@@ -1,7 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import type { Theme } from '@theme/types';
 import { WithSpringConfig } from 'react-native-reanimated';
-import { baseColors } from '@theme/tokens/base';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -19,7 +18,7 @@ export const createBottomSheetStyles = (theme: Theme) =>
   StyleSheet.create({
     backdrop: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: baseColors.black,
+      backgroundColor: theme.colors.black,
       zIndex: theme.zIndex.overlay,
     },
     container: {

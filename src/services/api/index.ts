@@ -258,6 +258,11 @@ export type {
   ConverterType,
   FinishedProduct,
   ScrapType,
+  JobworkType,
+  JobworkTimeline,
+  PostJobworkFindPayload,
+  PostJobworkGivePayload,
+  JobworkPostResponse,
 } from './converterApi/@types';
 
 // ============================================
@@ -417,6 +422,7 @@ export type {
   // Poster Detail (owner only)
   PosterDetailResponse,
   PosterDetailRequirementSummary,
+  JobworkDetails,
   // Responder Detail (non-owner only)
   ResponderDetailResponse,
   ResponderDetailMyStatus,
@@ -476,6 +482,10 @@ export type {
 // ============================================
 
 export {
+  useGetRtdListingPacks,
+  useGetRtdEntitlement,
+  useGetRtdDispatchOptions,
+  usePurchaseRtdListingPack,
   useGetConverterRtdProducts,
   useGetRtdProductDetail,
   useCreateRtdProduct,
@@ -491,6 +501,9 @@ export {
   useDispatchRtdOrder,
 } from './rtdApi/rtdApi';
 export type {
+  RtdListingPackItem,
+  RtdEntitlementItem,
+  PurchaseRtdPackPayload,
   RtdProduct,
   RtdPriceSlab,
   RtdLeadTime,
@@ -509,3 +522,15 @@ export type {
   GetRtdOrdersParams,
   GetRtdOrdersResponse,
 } from './rtdApi/@types';
+export type { RtdDispatchOptions } from './rtdApi/rtdApi';
+
+// ============================================
+// REGISTRATION DETAILS API (Unified for all roles)
+// ============================================
+
+export { useRegistrationDetails } from './registrationDetailsApi/registrationDetailsApi';
+export type {
+  RegistrationDetails,
+  RegistrationDetailsSection,
+  RegistrationDetailsRow,
+} from './registrationDetailsApi/@types';

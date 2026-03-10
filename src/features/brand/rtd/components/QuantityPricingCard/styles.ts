@@ -94,4 +94,10 @@ export const createStyles = (theme: Theme) =>
       fontWeight: fontWeightForPlatform('600'),
       flex: 1,
     },
+    facilitatorText: {
+      color: theme.colors.text.tertiary,
+      marginTop: theme.spacing[3],
+      lineHeight: 16,
+      fontSize: 11,
+    },
   });

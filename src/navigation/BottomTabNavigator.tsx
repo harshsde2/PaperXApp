@@ -20,7 +20,7 @@ import ProfileScreen from '@features/main/screens/ProfileScreen/ProfileScreen';
 import MessagesScreen from '@features/main/screens/MessagesScreen/MessagesScreen';
 import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
 import SettingsScreen from '@features/main/screens/SettingsScreen/SettingsScreen';
-import InquiriesScreen from '@features/main/screens/InquiriesScreen/InquiriesScreen';
+// Inquiries tab for brand now uses the unified SessionDashboardScreen
 import CapacityScreen from '@features/main/screens/CapacityScreen/CapacityScreen';
 import SessionDashboardScreen from '@features/sessions/screens/SessionDashboardScreen/SessionDashboardScreen';
 
@@ -63,7 +63,7 @@ const getScreenComponent = (screenName: string) => {
     [SCREENS.MAIN.MESSAGES]: MessagesScreen,
     [SCREENS.MAIN.MARKET]: MarketScreen,
     [SCREENS.MAIN.SETTINGS]: SettingsScreen,
-    [SCREENS.MAIN.INQUIRIES]: InquiriesScreen,
+    [SCREENS.MAIN.INQUIRIES]: SessionDashboardScreen,
     [SCREENS.MAIN.CAPACITY]: CapacityScreen,
     [SCREENS.MAIN.SESSIONS]: SessionDashboardScreen,
     [SCREENS.MAIN.PROFILE]: ProfileScreen,

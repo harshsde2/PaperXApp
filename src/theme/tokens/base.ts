@@ -6,100 +6,10 @@
  */
 
 // ============================================================================
-// COLOR PALETTE - Base Colors
+// COLOR PALETTE - Base Colors (re-export from palettes for backward compat)
 // ============================================================================
 
-export const baseColors = {
-  // Primary Blue Palette (Main brand color from designs)
-  blue50: '#EFF6FF',
-  blue100: '#DBEAFE',
-  blue200: '#BFDBFE',
-  blue300: '#93C5FD',
-  blue400: '#60A5FA',
-  blue500: '#3B82F6', // Primary blue from designs
-  blue600: '#2563EB', // Primary dark
-  blue700: '#1D4ED8',
-  blue800: '#1E40AF',
-  blue900: '#1E3A8A', // Primary darkest (used in splash/login)
-  blue950: '#172554',
-
-  // Neutral/Gray Palette
-  gray50: '#F9FAFB',
-  gray100: '#F3F4F6',
-  gray200: '#E5E7EB',
-  gray300: '#D1D5DB',
-  gray400: '#9CA3AF',
-  gray500: '#6B7280',
-  gray600: '#4B5563',
-  gray700: '#374151',
-  gray800: '#1F2937',
-  gray900: '#111827',
-  gray950: '#030712',
-
-  // White & Black
-  white: '#FFFFFF',
-  black: '#000000',
-
-  // Semantic Colors - Success
-  green50: '#F0FDF4',
-  green100: '#DCFCE7',
-  green200: '#BBF7D0',
-  green300: '#86EFAC',
-  green400: '#4ADE80',
-  green500: '#22C55E',
-  green600: '#16A34A', // Success/Approved from designs
-  green700: '#15803D',
-  green800: '#166534',
-  green900: '#14532D',
-
-  // Semantic Colors - Warning/Urgent
-  orange50: '#FFF7ED',
-  orange100: '#FFEDD5',
-  orange200: '#FED7AA',
-  orange300: '#FDBA74',
-  orange400: '#FB923C',
-  orange500: '#F97316', // Urgent/Warning from designs
-  orange600: '#EA580C',
-  orange700: '#C2410C',
-  orange800: '#9A3412',
-  orange900: '#7C2D12',
-
-  // Semantic Colors - Error
-  red50: '#FEF2F2',
-  red100: '#FEE2E2',
-  red200: '#FECACA',
-  red300: '#FCA5A5',
-  red400: '#F87171',
-  red500: '#EF4444', // Error
-  red600: '#DC2626',
-  red700: '#B91C1C',
-  red800: '#991B1B',
-  red900: '#7F1D1D',
-
-  // Semantic Colors - Info
-  indigo50: '#EEF2FF',
-  indigo100: '#E0E7FF',
-  indigo200: '#C7D2FE',
-  indigo300: '#A5B4FC',
-  indigo400: '#818CF8',
-  indigo500: '#6366F1',
-  indigo600: '#4F46E5',
-  indigo700: '#4338CA',
-  indigo800: '#3730A3',
-  indigo900: '#312E81',
-
-  // Semantic Colors - Purple (Reviewing status from designs)
-  purple50: '#FAF5FF',
-  purple100: '#F3E8FF',
-  purple200: '#E9D5FF',
-  purple300: '#D8B4FE',
-  purple400: '#C084FC',
-  purple500: '#A855F7',
-  purple600: '#9333EA', // Reviewing status
-  purple700: '#7E22CE',
-  purple800: '#6B21A8',
-  purple900: '#581C87',
-} as const;
+export { basePalette as baseColors } from './palettes/base';
 
 // ============================================================================
 // TYPOGRAPHY - Base Typography Scale

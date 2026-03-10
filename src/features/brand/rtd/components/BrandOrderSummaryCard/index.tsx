@@ -11,7 +11,7 @@ export const BrandOrderSummaryCard = memo<BrandOrderSummaryCardProps>(
     const styles = createStyles(theme);
 
     const product = order.product;
-    const productName = product?.product_name ?? 'Product';
+    const productName = product?.display_name ?? product?.product_name ?? product?.category ?? 'Product';
     const imagePath = product?.image_path;
     const converterName = order.converter?.company_name ?? order.converter?.name ?? '-';
 
@@ -54,6 +54,17 @@ export const BrandOrderSummaryCard = memo<BrandOrderSummaryCardProps>(
             {converterName}
           </Text>
         </View>
+
+        {product?.delivery_geography ? (
+          <View style={styles.detailRow}>
+            <Text variant="captionMedium" style={styles.detailLabel}>
+              Location
+            </Text>
+            <Text variant="captionMedium" style={styles.detailValueMedium}>
+              {product.delivery_geography}
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.detailRow}>
           <Text variant="captionMedium" style={styles.detailLabel}>

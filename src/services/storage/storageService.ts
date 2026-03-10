@@ -115,6 +115,15 @@ class StorageService {
   isAuthenticated(): boolean {
     return this.contains(STORAGE_KEYS.AUTH_TOKEN);
   }
+
+  // Theme palette preference
+  getThemePalette(): string | undefined {
+    return this.getString(STORAGE_KEYS.THEME_PALETTE);
+  }
+
+  setThemePalette(paletteId: string): void {
+    this.setString(STORAGE_KEYS.THEME_PALETTE, paletteId);
+  }
 }
 
 // Export singleton instance

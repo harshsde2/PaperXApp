@@ -168,6 +168,20 @@ export const createStyles = (theme: Theme) =>
       fontSize: 13,
       color: theme.colors.text.tertiary,
     },
+    sampleImageSection: {
+      marginBottom: theme.spacing[4],
+    },
+    sampleImageThumbnailWrap: {
+      borderRadius: theme.borderRadius.xl,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.background.primary,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+    },
+    sampleImageThumbnail: {
+      width: '100%',
+      height: 200,
+    },
     responderTimerWrap: {
       marginBottom: theme.spacing[4],
     },

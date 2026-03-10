@@ -1,255 +1,226 @@
 /**
  * Semantic Design Tokens
- * 
+ *
  * Semantic tokens that map base tokens to meaningful, purpose-driven names.
  * These tokens are theme-aware and will change based on light/dark mode.
  */
 
-import { baseColors, baseTypography, baseSpacing, baseBorderRadius, baseShadows, baseOpacity } from './base';
+import type { BaseColorPalette } from './palettes/types';
+import { basePalette } from './palettes/base';
+import { baseTypography, baseSpacing, baseBorderRadius, baseShadows } from './base';
 
 // ============================================================================
-// LIGHT THEME - Semantic Color Tokens
+// BUILD SEMANTIC COLORS - Palette-aware
 // ============================================================================
 
-export const lightColors = {
-  // Primary Colors
-  primary: {
-    50: baseColors.blue50,
-    100: baseColors.blue100,
-    200: baseColors.blue200,
-    300: baseColors.blue300,
-    400: baseColors.blue400,
-    500: baseColors.blue500,
-    600: baseColors.blue600,
-    700: baseColors.blue700,
-    800: baseColors.blue800,
-    900: baseColors.blue900, // Primary darkest
-    DEFAULT: baseColors.blue800, // Default primary color
-    light: baseColors.blue300,
-    dark: baseColors.blue900,
-  },
+export function buildLightColors(palette: BaseColorPalette) {
+  return {
+    primary: {
+      50: palette.blue50,
+      100: palette.blue100,
+      200: palette.blue200,
+      300: palette.blue300,
+      400: palette.blue400,
+      500: palette.blue500,
+      600: palette.blue600,
+      700: palette.blue700,
+      800: palette.blue800,
+      900: palette.blue900,
+      DEFAULT: palette.blue800,
+      light: palette.blue300,
+      dark: palette.blue900,
+    },
+    secondary: {
+      50: palette.gray50,
+      100: palette.gray100,
+      200: palette.gray200,
+      300: palette.gray300,
+      400: palette.gray400,
+      500: palette.gray500,
+      600: palette.gray600,
+      700: palette.gray700,
+      800: palette.gray800,
+      900: palette.gray900,
+      DEFAULT: palette.gray600,
+    },
+    success: {
+      50: palette.green50,
+      100: palette.green100,
+      200: palette.green200,
+      300: palette.green300,
+      400: palette.green400,
+      500: palette.green500,
+      600: palette.green600,
+      700: palette.green700,
+      DEFAULT: palette.green600,
+      light: palette.green100,
+      dark: palette.green700,
+    },
+    warning: {
+      50: palette.orange50,
+      100: palette.orange100,
+      500: palette.orange500,
+      600: palette.orange600,
+      700: palette.orange700,
+      DEFAULT: palette.orange500,
+      light: palette.orange100,
+      dark: palette.orange700,
+    },
+    error: {
+      50: palette.red50,
+      100: palette.red100,
+      500: palette.red500,
+      600: palette.red600,
+      700: palette.red700,
+      DEFAULT: palette.red500,
+      light: palette.red100,
+      dark: palette.red700,
+    },
+    info: {
+      50: palette.indigo50,
+      100: palette.indigo100,
+      500: palette.indigo500,
+      600: palette.indigo600,
+      700: palette.indigo700,
+      DEFAULT: palette.indigo500,
+      light: palette.indigo100,
+      dark: palette.indigo700,
+    },
+    status: {
+      matching: palette.green600,
+      reviewing: palette.purple600,
+      pending: palette.orange500,
+      urgent: palette.orange600,
+      approved: palette.green600,
+      expired: palette.gray500,
+      closed: palette.gray600,
+      active: palette.blue600,
+      negotiating: palette.blue500,
+    },
+    background: {
+      primary: palette.white,
+      secondary: palette.gray50,
+      tertiary: palette.gray100,
+      inverse: palette.gray900,
+      overlay: palette.gray900 + 'CC',
+    },
+    surface: {
+      primary: palette.white,
+      secondary: palette.gray50,
+      tertiary: palette.gray100,
+      elevated: palette.white,
+      disabled: palette.gray100,
+    },
+    text: {
+      primary: palette.gray900,
+      secondary: palette.gray600,
+      tertiary: palette.gray500,
+      disabled: palette.gray400,
+      inverse: palette.white,
+      link: palette.blue800,
+      linkHover: palette.blue900,
+      placeholder: palette.gray400,
+    },
+    border: {
+      primary: palette.gray200,
+      secondary: palette.gray300,
+      focus: palette.blue800,
+      error: palette.red500,
+      success: palette.green500,
+      disabled: palette.gray300,
+    },
+    divider: {
+      primary: palette.gray200,
+      secondary: palette.gray100,
+    },
+    white: palette.white,
+    black: palette.black,
+  } as const;
+}
 
-  // Secondary Colors (can be customized)
-  secondary: {
-    50: baseColors.gray50,
-    100: baseColors.gray100,
-    200: baseColors.gray200,
-    300: baseColors.gray300,
-    400: baseColors.gray400,
-    500: baseColors.gray500,
-    600: baseColors.gray600,
-    700: baseColors.gray700,
-    800: baseColors.gray800,
-    900: baseColors.gray900,
-    DEFAULT: baseColors.gray600,
-  },
-
-  // Status Colors
-  success: {
-    50: baseColors.green50,
-    100: baseColors.green100,
-    200: baseColors.green200,
-    300: baseColors.green300,
-    400: baseColors.green400,
-    500: baseColors.green500,
-    600: baseColors.green600, // Approved/Matching status
-    700: baseColors.green700,
-    DEFAULT: baseColors.green600,
-    light: baseColors.green100,
-    dark: baseColors.green700,
-  },
-
-  warning: {
-    50: baseColors.orange50,
-    100: baseColors.orange100,
-    500: baseColors.orange500, // Urgent status
-    600: baseColors.orange600,
-    700: baseColors.orange700,
-    DEFAULT: baseColors.orange500,
-    light: baseColors.orange100,
-    dark: baseColors.orange700,
-  },
-
-  error: {
-    50: baseColors.red50,
-    100: baseColors.red100,
-    500: baseColors.red500,
-    600: baseColors.red600,
-    700: baseColors.red700,
-    DEFAULT: baseColors.red500,
-    light: baseColors.red100,
-    dark: baseColors.red700,
-  },
-
-  info: {
-    50: baseColors.indigo50,
-    100: baseColors.indigo100,
-    500: baseColors.indigo500,
-    600: baseColors.indigo600,
-    700: baseColors.indigo700,
-    DEFAULT: baseColors.indigo500,
-    light: baseColors.indigo100,
-    dark: baseColors.indigo700,
-  },
-
-  // Status-specific colors from designs
-  status: {
-    matching: baseColors.green600,      // Green - Matching status
-    reviewing: baseColors.purple600,    // Purple - Reviewing status
-    pending: baseColors.orange500,      // Orange - Pending status
-    urgent: baseColors.orange600,       // Orange - Urgent
-    approved: baseColors.green600,      // Green - Approved
-    expired: baseColors.gray500,        // Gray - Expired
-    closed: baseColors.gray600,         // Gray - Closed
-    active: baseColors.blue600,         // Blue - Active
-    negotiating: baseColors.blue500,    // Blue - Negotiating
-  },
-
-  // Background Colors
-  background: {
-    primary: baseColors.white,
-    secondary: baseColors.gray50,
-    tertiary: baseColors.gray100,
-    inverse: baseColors.gray900,
-    overlay: baseColors.gray900 + 'CC', // 80% opacity
-  },
-
-  // Surface Colors (Cards, Modals, etc.)
-  surface: {
-    primary: baseColors.white,
-    secondary: baseColors.gray50,
-    tertiary: baseColors.gray100,
-    elevated: baseColors.white,
-    disabled: baseColors.gray100,
-  },
-
-  // Text Colors
-  text: {
-    primary: baseColors.gray900,
-    secondary: baseColors.gray600,
-    tertiary: baseColors.gray500,
-    disabled: baseColors.gray400,
-    inverse: baseColors.white,
-    link: baseColors.blue800,
-    linkHover: baseColors.blue900,
-    placeholder: baseColors.gray400,
-  },
-
-  // Border Colors
-  border: {
-    primary: baseColors.gray200,
-    secondary: baseColors.gray300,
-    focus: baseColors.blue800,
-    error: baseColors.red500,
-    success: baseColors.green500,
-    disabled: baseColors.gray300,
-  },
-
-  // Divider Colors
-  divider: {
-    primary: baseColors.gray200,
-    secondary: baseColors.gray100,
-  },
-
-  // Common Colors (direct access)
-  white: baseColors.white,
-  black: baseColors.black,
-} as const;
+export function buildDarkColors(palette: BaseColorPalette) {
+  const light = buildLightColors(palette);
+  return {
+    primary: {
+      50: palette.blue950,
+      100: palette.blue900,
+      200: palette.blue800,
+      300: palette.blue700,
+      400: palette.blue600,
+      500: palette.blue500,
+      600: palette.blue400,
+      700: palette.blue300,
+      800: palette.blue200,
+      900: palette.blue100,
+      DEFAULT: palette.blue400,
+      light: palette.blue300,
+      dark: palette.blue600,
+    },
+    secondary: {
+      50: palette.gray950,
+      100: palette.gray900,
+      200: palette.gray800,
+      300: palette.gray700,
+      400: palette.gray600,
+      500: palette.gray500,
+      600: palette.gray400,
+      700: palette.gray300,
+      800: palette.gray200,
+      900: palette.gray100,
+      DEFAULT: palette.gray400,
+    },
+    success: light.success,
+    warning: light.warning,
+    error: light.error,
+    info: light.info,
+    status: light.status,
+    background: {
+      primary: palette.gray900,
+      secondary: palette.gray800,
+      tertiary: palette.gray700,
+      inverse: palette.white,
+      overlay: palette.black + 'CC',
+    },
+    surface: {
+      primary: palette.gray800,
+      secondary: palette.gray700,
+      tertiary: palette.gray600,
+      elevated: palette.gray700,
+      disabled: palette.gray700,
+    },
+    text: {
+      primary: palette.gray50,
+      secondary: palette.gray300,
+      tertiary: palette.gray400,
+      disabled: palette.gray500,
+      inverse: palette.gray900,
+      link: palette.blue400,
+      linkHover: palette.blue300,
+      placeholder: palette.gray500,
+    },
+    border: {
+      primary: palette.gray700,
+      secondary: palette.gray600,
+      focus: palette.blue400,
+      error: palette.red400,
+      success: palette.green400,
+      disabled: palette.gray600,
+    },
+    divider: {
+      primary: palette.gray700,
+      secondary: palette.gray800,
+    },
+    white: palette.white,
+    black: palette.black,
+  } as const;
+}
 
 // ============================================================================
-// DARK THEME - Semantic Color Tokens (Prepared for future use)
+// DEFAULT LIGHT/DARK COLORS (backward compatibility - uses base palette)
 // ============================================================================
 
-export const darkColors = {
-  // Primary Colors (same as light, but can be adjusted)
-  primary: {
-    50: baseColors.blue950,
-    100: baseColors.blue900,
-    200: baseColors.blue800,
-    300: baseColors.blue700,
-    400: baseColors.blue600,
-    500: baseColors.blue500,
-    600: baseColors.blue400,
-    700: baseColors.blue300,
-    800: baseColors.blue200,
-    900: baseColors.blue100,
-    DEFAULT: baseColors.blue400,
-    light: baseColors.blue300,
-    dark: baseColors.blue600,
-  },
-
-  // Secondary Colors
-  secondary: {
-    50: baseColors.gray950,
-    100: baseColors.gray900,
-    200: baseColors.gray800,
-    300: baseColors.gray700,
-    400: baseColors.gray600,
-    500: baseColors.gray500,
-    600: baseColors.gray400,
-    700: baseColors.gray300,
-    800: baseColors.gray200,
-    900: baseColors.gray100,
-    DEFAULT: baseColors.gray400,
-  },
-
-  // Status Colors (same values, but can be adjusted for dark mode)
-  success: lightColors.success,
-  warning: lightColors.warning,
-  error: lightColors.error,
-  info: lightColors.info,
-  status: lightColors.status,
-
-  // Background Colors
-  background: {
-    primary: baseColors.gray900,
-    secondary: baseColors.gray800,
-    tertiary: baseColors.gray700,
-    inverse: baseColors.white,
-    overlay: baseColors.black + 'CC', // 80% opacity
-  },
-
-  // Surface Colors
-  surface: {
-    primary: baseColors.gray800,
-    secondary: baseColors.gray700,
-    tertiary: baseColors.gray600,
-    elevated: baseColors.gray700,
-    disabled: baseColors.gray700,
-  },
-
-  // Text Colors
-  text: {
-    primary: baseColors.gray50,
-    secondary: baseColors.gray300,
-    tertiary: baseColors.gray400,
-    disabled: baseColors.gray500,
-    inverse: baseColors.gray900,
-    link: baseColors.blue400,
-    linkHover: baseColors.blue300,
-    placeholder: baseColors.gray500,
-  },
-
-  // Border Colors
-  border: {
-    primary: baseColors.gray700,
-    secondary: baseColors.gray600,
-    focus: baseColors.blue400,
-    error: baseColors.red400,
-    success: baseColors.green400,
-    disabled: baseColors.gray600,
-  },
-
-  // Divider Colors
-  divider: {
-    primary: baseColors.gray700,
-    secondary: baseColors.gray800,
-  },
-
-  // Common Colors (direct access)
-  white: baseColors.white,
-  black: baseColors.black,
-} as const;
+export const lightColors = buildLightColors(basePalette);
+export const darkColors = buildDarkColors(basePalette);
 
 // ============================================================================
 // SEMANTIC TYPOGRAPHY TOKENS

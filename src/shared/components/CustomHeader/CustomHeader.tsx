@@ -45,7 +45,8 @@ const formatScreenTitle = (routeName: string): string => {
 const CustomHeader: React.FC<CustomHeaderProps> = ({
   route,
   navigation,
-  title,
+  title: titleProp,
+  options,
   showBackButton,
   rightButton,
   titleStyle,
@@ -75,7 +76,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
     mainName = 'OrderHistory';
   }
 
-  const displayTitle = title || (mainName ? formatScreenTitle(mainName) : '');
+  const displayTitle = titleProp ?? (options as any)?.title ?? (mainName ? formatScreenTitle(mainName) : '');
 
   
 

@@ -48,7 +48,7 @@ export const PriceSlabInput: React.FC<PriceSlabInputProps> = ({
         <View key={index} style={styles.row}>
           <View style={styles.inputContainer}>
             <Text variant="captionSmall" style={styles.inputLabel}>
-              Min Qty
+             If  Min Qty is
             </Text>
             <TextInput
               value={slab.min_qty}
@@ -61,7 +61,7 @@ export const PriceSlabInput: React.FC<PriceSlabInputProps> = ({
           </View>
           <View style={styles.inputContainer}>
             <Text variant="captionSmall" style={styles.inputLabel}>
-              Max Qty
+            and Max Qty is
             </Text>
             <TextInput
               value={slab.max_qty}
@@ -74,7 +74,7 @@ export const PriceSlabInput: React.FC<PriceSlabInputProps> = ({
           </View>
           <View style={styles.inputContainer}>
             <Text variant="captionSmall" style={styles.inputLabel}>
-              Price/Unit
+             =  Price/Unit
             </Text>
             <TextInput
               value={slab.price_per_unit}

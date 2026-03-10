@@ -15,8 +15,12 @@ export interface RtdPriceSlab {
 
 export interface RtdProduct {
   id: number;
+  /** When false, brand sees no GST (product value + platform fee only). */
+  seller_gst_registered?: boolean;
   category: string;
   product_name: string;
+  /** When product_name is empty, API returns category as display title */
+  display_name?: string;
   image_path: string | null;
   size: string | null;
   size_unit?: 'inches' | 'cm' | 'mm' | null;
@@ -148,6 +152,8 @@ export interface RtdOrderProduct {
   image_path: string | null;
   base_price: string;
   moq: number;
+  delivery_geography?: string | null;
+  display_name?: string;
 }
 
 export interface RtdOrderBrand {
@@ -168,6 +174,8 @@ export interface RtdOrderConverter {
 
 export interface RtdOrder {
   id: number;
+  /** When false, order has no GST (gst_amount = 0). */
+  seller_gst_registered?: boolean;
   product_id: number;
   quantity: number;
   status: RtdOrderStatus;
@@ -197,12 +205,20 @@ export interface RtdOrder {
   updated_at: string;
 }
 
-export type RtdDispatchProofType = 'tracking_number' | 'lr_photo' | 'delivery_challan';
+/** Document type for dispatch proof (one of these + file is required). */
+export type RtdDispatchProofType =
+  | 'courier_receipt'
+  | 'lr_copy'
+  | 'eway_bill'
+  | 'transport_challan'
+  | 'invoice_copy';
 
 export interface DispatchRtdOrderRequest {
+  courier_name: string;
+  tracking_number: string;
+  dispatch_date: string; // YYYY-MM-DD
   proof_type: RtdDispatchProofType;
-  tracking_number?: string;
-  file?: any;
+  file_path: string;
 }
 
 export interface GetRtdOrdersParams {
@@ -255,4 +271,31 @@ export interface RequestRtdOrderPayload {
 export interface ConfirmRtdPaymentPayload {
   order_id: number;
   transaction_id?: string;
+}
+
+// ============================================
+// RTD LISTING PACKS (Converter pay to list)
+// ============================================
+
+export interface RtdListingPackItem {
+  slug: string;
+  name: string;
+  product_limit: number;
+  validity_days: number;
+  price: number;
+  sort_order?: number;
+}
+
+export interface RtdEntitlementItem {
+  id: number;
+  pack_slug: string;
+  product_limit: number;
+  used_count: number;
+  remaining_slots: number;
+  validity_ends_at: string;
+  purchased_at: string;
+}
+
+export interface PurchaseRtdPackPayload {
+  pack_slug: string;
 }

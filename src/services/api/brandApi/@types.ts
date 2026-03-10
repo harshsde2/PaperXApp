@@ -112,7 +112,11 @@ export interface BrandType {
 // POST REQUIREMENT
 // ============================================
 
-export type BrandRequirementType = 'Packaging' | 'Printing' | 'Labels' | 'Other';
+export type BrandRequirementType =
+  | 'Packaging'
+  | 'Printing'
+  | 'Packaging + Printing'
+  | 'Corporate Gifting / Stationery';
 export type BrandPackagingType = 'Boxes' | 'Bags' | 'Pouches' | 'Cartons' | 'Containers' | 'Other';
 export type BrandTimeline = 'Urgent 1-2 Days' | 'Normal 3-5 Days';
 

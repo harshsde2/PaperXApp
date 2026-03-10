@@ -26,8 +26,7 @@ export interface AdvancedFilterState {
   lead_time: string;
   min_price: string;
   max_price: string;
-  min_moq: string;
-  max_moq: string;
+  moq: string;
   has_branding: 'yes' | 'no' | null;
 }
 
@@ -36,7 +35,6 @@ export const INITIAL_ADVANCED_FILTERS: AdvancedFilterState = {
   lead_time: '',
   min_price: '',
   max_price: '',
-  min_moq: '',
-  max_moq: '',
+  moq: '',
   has_branding: null,
 };

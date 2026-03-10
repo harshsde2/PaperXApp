@@ -37,6 +37,10 @@ export interface Session {
   posterLabel?: string;
   /** Post intent: 'buy' | 'sell' for card badge. */
   intent?: 'buy' | 'sell';
+  /** Present for converter jobwork sessions: 'find' | 'give'. */
+  jobwork_mode?: 'find' | 'give';
+  /** Present for converter jobwork sessions: 'jobwork_find' | 'jobwork_give'. */
+  inquiry_type?: string;
 }
 
 // Match Response from Supplier

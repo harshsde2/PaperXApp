@@ -109,7 +109,7 @@ export const BrandRTDProductDetailScreen: React.FC<
 
         <View style={styles.infoSection}>
           <Text fontWeight="bold" style={styles.title}>
-            {product.product_name}
+            {product.display_name ?? product.product_name ?? product.category}
           </Text>
 
           {product.lead_time_label && (
@@ -135,6 +135,7 @@ export const BrandRTDProductDetailScreen: React.FC<
             quantity={effectiveQuantity}
             onQuantityChange={handleQuantityChange}
             priceSlab={priceSlab}
+            sellerGstRegistered={product.seller_gst_registered !== false}
           />
         </View>
 

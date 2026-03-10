@@ -26,7 +26,7 @@ export const OrderCard = memo<OrderCardProps>(function OrderCard({
   const theme = useTheme();
   const styles = createStyles(theme);
 
-  const productName = order.product?.product_name ?? 'Product';
+  const productName = order.product?.display_name ?? order.product?.product_name ?? order.product?.category ?? 'Product';
   const brandName = order.brand?.name ?? 'Brand';
 
   return (

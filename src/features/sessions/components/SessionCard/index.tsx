@@ -222,10 +222,28 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <View style={styles.headerContent}>
-            {!isOwner && (session.intent === 'sell' || session.intent === 'buy') && (
-              <View style={[styles.urgentBadge, session.intent === 'sell' ? styles.postSellBadge : styles.postBuyBadge]}>
-                <Text style={[styles.urgentText, { color: session.intent === 'sell' ? '#1D4ED8' : '#059669' }]}>
-                  {session.intent === 'sell' ? 'Post to sell' : 'Post to buy'}
+            {!isOwner && (session.jobwork_mode === 'find' || session.jobwork_mode === 'give' || session.intent === 'sell' || session.intent === 'buy') && (
+              <View
+                style={[
+                  styles.urgentBadge,
+                  session.jobwork_mode === 'give' || (session.jobwork_mode !== 'find' && session.intent === 'buy') ? styles.postBuyBadge : styles.postSellBadge,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.urgentText,
+                    {
+                      color: session.jobwork_mode === 'find' || session.intent === 'sell' ? '#1D4ED8' : '#059669',
+                    },
+                  ]}
+                >
+                  {session.jobwork_mode === 'find'
+                    ? 'Jobwork – find work'
+                    : session.jobwork_mode === 'give'
+                      ? 'Jobwork – give work'
+                      : session.intent === 'sell'
+                        ? 'Post to sell'
+                        : 'Post to buy'}
                 </Text>
               </View>
             )}

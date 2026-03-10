@@ -16,11 +16,13 @@ import type {
   ScrapType,
   ConverterReferenceDataResponse,
 } from './@types';
-import type {
-  PostRequirementRequest,
-  PostRequirementResponse,
-} from '../dealerApi/@types';
+import type { PostRequirementRequest, PostRequirementResponse } from '../dealerApi/@types';
 import type { PostMachineRequest } from '../machineDealerApi/@types';
+import type {
+  JobworkPostResponse,
+  PostJobworkFindPayload,
+  PostJobworkGivePayload,
+} from './@types';
 
 // ============================================
 // HELPER FUNCTION
@@ -253,6 +255,54 @@ export const usePostConverterMachine = () => {
     },
     onError: (error: Error) => {
       console.error('Post converter machine error:', error);
+    },
+  });
+};
+
+// ============================================
+// JOBWORK (Converter → Converter)
+// ============================================
+
+export const usePostConverterJobworkFind = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: PostJobworkFindPayload): Promise<JobworkPostResponse> => {
+      const response = await api.post<JobworkPostResponse>(
+        CONVERTER_ENDPOINTS.POST_JOBWORK_FIND,
+        data,
+      );
+      return extractData<JobworkPostResponse>(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.active() });
+    },
+    onError: (error: Error) => {
+      console.error('Post converter jobwork (find) error:', error);
+    },
+  });
+};
+
+export const usePostConverterJobworkGive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: PostJobworkGivePayload): Promise<JobworkPostResponse> => {
+      const response = await api.post<JobworkPostResponse>(
+        CONVERTER_ENDPOINTS.POST_JOBWORK_GIVE,
+        data,
+      );
+      return extractData<JobworkPostResponse>(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.active() });
+    },
+    onError: (error: Error) => {
+      console.error('Post converter jobwork (give) error:', error);
     },
   });
 };

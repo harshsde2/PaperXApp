@@ -167,13 +167,19 @@ export const ConverterRTDListingScreen: React.FC = () => {
                 <View style={styles.productBody}>
                   <View style={styles.productRow}>
                     <Text fontWeight={'semibold'} style={styles.productName} numberOfLines={1}>
-                      {product.product_name}
+                      {product.display_name ?? product.product_name ?? product.category}
                     </Text>
                     <View style={[styles.statusBadge, statusStyle.badge]}>
                       <Text style={[styles.statusBadgeText, statusStyle.text]}>
                         {formatStatus(product.status)}
                       </Text>
                     </View>
+                  </View>
+                  <View style={[ {flexDirection: 'row', alignItems: 'center', gap: theme.spacing[1],marginBottom: theme.spacing[1] }]}>
+                    <AppIcon.Location width={10} height={10} color={theme.colors.primary.DEFAULT} />
+                    <Text variant='bodySmall' size={10} fontWeight='regular' >
+                      {product.delivery_geography}
+                    </Text>
                   </View>
                   <Text style={styles.productMoq}>MOQ: {product.moq} units</Text>
                   <View style={styles.productPriceRow}>

@@ -3,32 +3,37 @@ import { useWindowDimensions, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '@navigation/constants';
 import { Text } from '@shared/components/Text';
-import { baseColors } from '@theme/tokens/base';
+import { useTheme } from '@theme/index';
 import { useAppSelector } from '@store/hooks';
 import { SplashScreenNavigationProp } from './@types';
-import { styles } from './styles';
+import { createStyles } from './styles';
 import { Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
 import { AppIcon } from '@assets/svgs';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
-import { View, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { appContent } from '@utils/appContent';
 
 const SplashScreen = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { width, height } = useWindowDimensions();
 
-  // Gradient Colors
-  const gradientColors = [
-    baseColors.blue50,    // Lightest blue
-    '#FFFFFF',            // White
-    baseColors.blue100,
-    baseColors.blue200,
-    baseColors.blue300,   // Slightly darker middle
-    baseColors.blue200,
-    baseColors.blue100,
-    '#FFFFFF',
-  ];
+  const gradientColors = useMemo(
+    () => [
+      theme.colors.primary[50],
+      theme.colors.white,
+      theme.colors.primary[100],
+      theme.colors.primary[200],
+      theme.colors.primary[300],
+      theme.colors.primary[200],
+      theme.colors.primary[100],
+      theme.colors.white,
+    ],
+    [theme.colors]
+  );
 
   const GridBackground = useMemo(() => {
     const gridSize = 40;
@@ -75,7 +80,7 @@ const SplashScreen = () => {
         
         {/* Header / Logo */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <AppIcon.ZupplyMainLogo width={200} height={200} color={baseColors.black} />
+          <AppIcon.ZupplyMainLogo width={200} height={200} color={theme.colors.black} />
         </View>
 
         {/* Bottom Section */}
@@ -88,14 +93,21 @@ const SplashScreen = () => {
             {appContent.splashScreen.subheadline}
           </Text>
 
-          <TouchableOpacity
-            style={styles.actionButton}
+          <CustomButton
+            title={appContent.splashScreen.actionButtonText}
             onPress={() => navigation.navigate(SCREENS.AUTH.LOGIN)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.actionButtonText}>{appContent.splashScreen.actionButtonText}</Text>
-            <AppIcon.ArrowRight width={20} height={20} color={baseColors.white} />
-          </TouchableOpacity>
+            variant="gradient"
+            fullWidth
+            size="lg"
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+          />
         </View>
 
       </View>

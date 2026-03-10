@@ -41,10 +41,13 @@ export const SCREENS = {
     POST_TO_SELL_MACHINE: 'PostToSellMachine',
     POST_TO_BUY_MACHINE: 'PostToBuyMachine',
     POST_BRAND_REQUIREMENT: 'PostBrandRequirement',
+    POST_JOBWORK_FIND: 'PostJobworkFind',
+    POST_JOBWORK_GIVE: 'PostJobworkGive',
     REQUIREMENTS: 'Requirements',
     PAYMENT_CONFIRMATION: 'PaymentConfirmation',
     MATCHMAKING_SUCCESS: 'MatchmakingSuccess',
     NOTIFICATIONS: 'Notifications',
+    REGISTRATION_DETAILS: 'RegistrationDetails',
   },
   WALLET: {
     MAIN: 'WalletMain',
@@ -64,6 +67,7 @@ export const SCREENS = {
   // Converter RTD (Ready-to-Dispatch) - converter only
   CONVERTER_RTD: {
     LISTING: 'ConverterRTDListing',
+    LISTING_PACK: 'ConverterRTDListingPack',
     ADD_PRODUCT: 'ConverterRTDAddProduct',
     MY_PRODUCTS: 'ConverterRTDMyProducts',
     ORDER_HISTORY: 'ConverterRTDOrderHistory',
@@ -101,13 +105,13 @@ export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: 
     { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
     { name: SCREENS.MAIN.SESSIONS, label: 'Sessions', icon: 'Sessions' },
     // { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
-    { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
+    { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
     // { name: SCREENS.MAIN.CAPACITY, label: 'Capacity', icon: 'Capacity' },
   ],
   brand: [
     { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },
+    { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
     { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
-    { name: SCREENS.MAIN.MESSAGES, label: 'Messages', icon: 'Messages' },
-    { name: SCREENS.MAIN.PROFILE, label: 'Profile', icon: 'Profile' },
+    { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
   ],
 } as const;

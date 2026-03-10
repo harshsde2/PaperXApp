@@ -15,7 +15,6 @@ import {
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
-import { baseColors } from '@theme/tokens/base';
 import { Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
 import type { UserRole } from '@shared/types';
@@ -35,17 +34,19 @@ const OTPVerificationScreen = () => {
   const [timeLeft, setTimeLeft] = useState(120);
   const [canResend, setCanResend] = useState(false);
 
-  // Gradient Colors (Same as SplashScreen and LoginScreen)
-  const gradientColors = [
-    baseColors.blue50,    // Lightest blue
-    '#FFFFFF',            // White
-    baseColors.blue100,
-    baseColors.blue200,
-    baseColors.blue300,   // Slightly darker middle
-    baseColors.blue200,
-    baseColors.blue100,
-    '#FFFFFF',
-  ];
+  const gradientColors = useMemo(
+    () => [
+      theme.colors.primary[50],
+      theme.colors.white,
+      theme.colors.primary[100],
+      theme.colors.primary[200],
+      theme.colors.primary[300],
+      theme.colors.primary[200],
+      theme.colors.primary[100],
+      theme.colors.white,
+    ],
+    [theme.colors]
+  );
 
   const GridBackground = useMemo(() => {
     const gridSize = 40;

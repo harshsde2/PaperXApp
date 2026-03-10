@@ -20,7 +20,17 @@ import { useTheme } from '@theme/index';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
-import { useGetWalletBalance, useDeductCredits, usePostDealerRequirement, usePostBrandRequirement, usePostConverterRequirement, usePostConverterMachine, usePostMachine } from '@services/api';
+import {
+  useGetWalletBalance,
+  useDeductCredits,
+  usePostDealerRequirement,
+  usePostBrandRequirement,
+  usePostConverterRequirement,
+  usePostConverterMachine,
+  usePostMachine,
+  usePostConverterJobworkFind,
+  usePostConverterJobworkGive,
+} from '@services/api';
 import { useAppSelector } from '@store/hooks';
 import { SCREENS } from '@navigation/constants';
 import { queryKeys } from '@services/api';
@@ -35,7 +45,13 @@ import {
 const CARD_HEIGHT = 200;
 
 // Requirement type definitions
-type RequirementType = 'dealer' | 'brand' | 'converter' | 'machineDealer';
+type RequirementType =
+  | 'dealer'
+  | 'brand'
+  | 'converter'
+  | 'machineDealer'
+  | 'converter-jobwork-find'
+  | 'converter-jobwork-give';
 
 const PaymentConfirmationScreen = () => {
   const navigation = useNavigation<any>();
@@ -63,11 +79,19 @@ const PaymentConfirmationScreen = () => {
   const { mutate: postConverterRequirement } = usePostConverterRequirement();
   const { mutate: postMachine } = usePostMachine();
   const { mutate: postConverterMachine } = usePostConverterMachine();
+  const { mutate: postConverterJobworkFind } = usePostConverterJobworkFind();
+  const { mutate: postConverterJobworkGive } = usePostConverterJobworkGive();
 
   // Get the appropriate mutation: for machine post, converter uses converter API, machine dealer uses machine-dealer API
   const postRequirement = useMemo(() => {
     if (typedRequirementType === 'machineDealer' && user?.primary_role === 'converter') {
       return postConverterMachine;
+    }
+    if (typedRequirementType === 'converter-jobwork-find') {
+      return postConverterJobworkFind;
+    }
+    if (typedRequirementType === 'converter-jobwork-give') {
+      return postConverterJobworkGive;
     }
     const mutationMap = {
       dealer: postDealerRequirement,
@@ -472,7 +496,7 @@ const PaymentConfirmationScreen = () => {
 
             <View style={[styles.costRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total Deduction</Text>
-              <Text style={styles.totalValue}>{20} Credits</Text>
+              <Text style={styles.totalValue}>{costBreakdown.total} Credits</Text>
             </View>
           </View>
         </View>

@@ -59,12 +59,13 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
   const pauseProduct = usePauseRtdProduct();
   const resumeProduct = useResumeRtdProduct();
 
+  const getProductTitle = (p: RtdProduct) => p.display_name ?? p.product_name ?? p.category ?? '';
   const filteredProducts = useMemo(() => {
     if (!search.trim()) return products;
     const q = search.toLowerCase();
     return products.filter(
       (p) =>
-        p.product_name.toLowerCase().includes(q) ||
+        getProductTitle(p).toLowerCase().includes(q) ||
         (p.category && p.category.toLowerCase().includes(q)),
     );
   }, [products, search]);
@@ -131,7 +132,7 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
               <View>
                 <View style={styles.cardNameRow}>
                   <Text fontWeight={'semibold'} style={styles.cardName} numberOfLines={2}>
-                    {item.product_name}
+                    {item.display_name ?? item.product_name ?? item.category}
                   </Text>
                   {leadLabel && (
                     <View style={styles.leadTimeBadge}>

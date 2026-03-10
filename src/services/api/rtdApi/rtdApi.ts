@@ -15,6 +15,9 @@ import { queryKeys } from '../queryClient';
 import type {
   RtdProduct,
   RtdOrder,
+  RtdListingPackItem,
+  RtdEntitlementItem,
+  PurchaseRtdPackPayload,
   GetConverterRtdProductsParams,
   GetConverterRtdProductsResponse,
   GetRtdOrdersParams,
@@ -32,6 +35,73 @@ const extractData = <T>(response: any): T => {
     return response.data;
   }
   return response;
+};
+
+// ============================================
+// LISTING PACKS & ENTITLEMENT
+// ============================================
+
+export const useGetRtdListingPacks = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: queryKeys.converterRtd.listingPacks(),
+    queryFn: async (): Promise<RtdListingPackItem[]> => {
+      const response = await api.get(RTD_ENDPOINTS.LISTING_PACKS);
+      const raw = extractData<{ data?: RtdListingPackItem[] } | RtdListingPackItem[]>(response);
+      if (Array.isArray(raw)) return raw;
+      return (raw as { data?: RtdListingPackItem[] })?.data ?? [];
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 0,
+    enabled: options?.enabled ?? true,
+  });
+};
+
+export const useGetRtdEntitlement = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: queryKeys.converterRtd.entitlement(),
+    queryFn: async (): Promise<{ entitlement: RtdEntitlementItem | null }> => {
+      const response = await api.get(RTD_ENDPOINTS.RTD_ENTITLEMENT);
+      const raw = extractData<{ entitlement?: RtdEntitlementItem | null }>(response);
+      return { entitlement: raw?.entitlement ?? null };
+    },
+    staleTime: 0,
+    gcTime: 0,
+    enabled: options?.enabled ?? true,
+  });
+};
+
+export interface RtdDispatchOptions {
+  allowed_couriers: string[];
+}
+
+export const useGetRtdDispatchOptions = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: queryKeys.converterRtd.dispatchOptions(),
+    queryFn: async (): Promise<RtdDispatchOptions> => {
+      const response = await api.get(RTD_ENDPOINTS.DISPATCH_OPTIONS);
+      const raw = extractData<RtdDispatchOptions>(response);
+      return {
+        allowed_couriers: Array.isArray(raw?.allowed_couriers) ? raw.allowed_couriers : [],
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+    enabled: options?.enabled ?? true,
+  });
+};
+
+export const usePurchaseRtdListingPack = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: PurchaseRtdPackPayload): Promise<{ entitlement: RtdEntitlementItem }> => {
+      const response = await api.post(RTD_ENDPOINTS.LISTING_PACKS_PURCHASE, payload);
+      const raw = extractData<{ entitlement?: RtdEntitlementItem }>(response);
+      return { entitlement: raw?.entitlement ?? (raw as any)?.entitlement };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.entitlement() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.all });
+    },
+  });
 };
 
 // ============================================
@@ -254,17 +324,7 @@ export const useDispatchRtdOrder = () => {
       id: number;
       data: DispatchRtdOrderRequest;
     }): Promise<RtdOrder> => {
-      const formData = new FormData();
-      formData.append('proof_type', data.proof_type);
-      if (data.tracking_number) {
-        formData.append('tracking_number', data.tracking_number);
-      }
-      if (data.file) {
-        formData.append('file', data.file);
-      }
-      const response = await api.post(RTD_ENDPOINTS.ORDER_DISPATCH(id), formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post(RTD_ENDPOINTS.ORDER_DISPATCH(id), data);
       return extractData<RtdOrder>(response);
     },
     onSuccess: (_data, variables) => {

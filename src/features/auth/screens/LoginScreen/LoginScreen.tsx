@@ -18,7 +18,6 @@ import { useForm, FormInput, validationRules } from '@shared/forms';
 import { LoginScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
-import { baseColors } from '@theme/tokens/base';
 import { Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
 
 type LoginFormData = {
@@ -54,17 +53,19 @@ const LoginScreen = () => {
     });
   };
 
-  // Gradient Colors (Same as SplashScreen)
-  const gradientColors = [
-    baseColors.blue50,    // Lightest blue
-    '#FFFFFF',            // White
-    baseColors.blue100,
-    baseColors.blue200,
-    baseColors.blue300,   // Slightly darker middle
-    baseColors.blue200,
-    baseColors.blue100,
-    '#FFFFFF',
-  ];
+  const gradientColors = useMemo(
+    () => [
+      theme.colors.primary[50],
+      theme.colors.white,
+      theme.colors.primary[100],
+      theme.colors.primary[200],
+      theme.colors.primary[300],
+      theme.colors.primary[200],
+      theme.colors.primary[100],
+      theme.colors.white,
+    ],
+    [theme.colors]
+  );
 
   const GridBackground = useMemo(() => {
     const gridSize = 40;
@@ -108,7 +109,7 @@ const LoginScreen = () => {
     >
       <View style={[styles.container, { paddingTop: 60 }]}>
         <View style={{alignItems: 'center', marginBottom: 40 }}>
-          <AppIcon.ZupplyMainLogo width={100} height={100} color={baseColors.black} />
+          <AppIcon.ZupplyMainLogo width={100} height={100} color={theme.colors.black} />
         </View>
 
         <Text variant="h1" style={styles.title}>

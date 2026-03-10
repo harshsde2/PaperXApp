@@ -7,6 +7,8 @@ import PostToBuyScreen from '@features/posting/screens/PostToBuyScreen/PostToBuy
 import PostToSellMachineScreen from '@features/posting/screens/PostToSellMachineScreen/PostToSellMachineScreen';
 import PostToBuyMachineScreen from '@features/posting/screens/PostToBuyMachineScreen/PostToBuyMachineScreen';
 import PostBrandRequirementScreen from '@features/posting/screens/PostBrandRequirementScreen/PostBrandRequirementScreen';
+import PostJobworkFindScreen from '@features/posting/screens/PostJobworkFindScreen/PostJobworkFindScreen';
+import PostJobworkGiveScreen from '@features/posting/screens/PostJobworkGiveScreen/PostJobworkGiveScreen';
 import RequirementsListScreen from '@features/posting/screens/RequirementsListScreen/RequirementsListScreen';
 import PaymentConfirmationScreen from '@features/posting/screens/PaymentConfirmationScreen/PaymentConfirmationScreen';
 import MatchmakingSuccessScreen from '@features/posting/screens/MatchmakingSuccessScreen/MatchmakingSuccessScreen';
@@ -26,6 +28,7 @@ import {
 } from '@features/sessions';
 import {
   ConverterRTDListingScreen,
+  ConverterRTDListingPackScreen,
   ConverterRTDAddProductScreen,
   ConverterRTDMyProductsScreen,
   RTDOrderHistoryScreen,
@@ -42,6 +45,7 @@ import { CustomHeader } from '@shared/components/CustomHeader';
 import { SCREENS } from './constants';
 import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
 import NotificationsScreen from '@features/main/screens/NotificationsScreen/NotificationsScreen';
+import RegistrationDetailsScreen from '@features/main/screens/RegistrationDetailsScreen/RegistrationDetailsScreen';
 
 export type MainStackParamList = {
   MainTabs: undefined;
@@ -65,10 +69,18 @@ export type MainStackParamList = {
       tags: string[];
     };
     formData: any;
-    requirementType?: 'dealer' | 'brand' | 'converter' | 'machineDealer';
+    requirementType?:
+      | 'dealer'
+      | 'brand'
+      | 'converter'
+      | 'machineDealer'
+      | 'converter-jobwork-find'
+      | 'converter-jobwork-give';
   };
   PostToSellMachine: undefined;
   PostToBuyMachine: undefined;
+  PostJobworkFind: undefined;
+  PostJobworkGive: undefined;
   MatchmakingSuccess: {
     requirementDetails: {
       id: string;
@@ -80,6 +92,7 @@ export type MainStackParamList = {
     creditsDeducted: number;
   };
   Notifications: undefined;
+  RegistrationDetails: undefined;
   // Wallet Screens
   WalletMain: undefined;
   CreditPacks: undefined;
@@ -118,6 +131,7 @@ export type MainStackParamList = {
   };
   // Converter RTD
   ConverterRTDListing: undefined;
+  ConverterRTDListingPack: undefined;
   ConverterRTDAddProduct: { productId?: number } | undefined;
   ConverterRTDMyProducts: undefined;
   ConverterRTDOrderHistory: undefined;
@@ -137,7 +151,12 @@ const MainNavigator = () => {
     <Stack.Navigator
       initialRouteName={SCREENS.MAIN.TABS}
       screenOptions={{
-        header: (props) => <CustomHeader {...props} />,
+        header: (props) => (
+          <CustomHeader
+            {...props}
+            title={(props as any).scene?.descriptor?.options?.title}
+          />
+        ),
         cardStyle: { backgroundColor: '#FFFFFF' },
       }}
     >
@@ -209,6 +228,24 @@ const MainNavigator = () => {
         }}
       />
       <Stack.Screen
+        name={SCREENS.MAIN.POST_JOBWORK_FIND}
+        component={PostJobworkFindScreen}
+        options={{
+          headerShown: true,
+          title: 'Post to Find Jobwork',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.POST_JOBWORK_GIVE}
+        component={PostJobworkGiveScreen}
+        options={{
+          headerShown: true,
+          title: 'Post to Give Jobwork',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
         name={SCREENS.MAIN.REQUIREMENTS}
         component={RequirementsListScreen}
         options={{
@@ -238,6 +275,14 @@ const MainNavigator = () => {
       <Stack.Screen
         name={SCREENS.MAIN.NOTIFICATIONS}
         component={NotificationsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.REGISTRATION_DETAILS}
+        component={RegistrationDetailsScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',
@@ -337,6 +382,15 @@ const MainNavigator = () => {
         options={{
           headerShown: true,
           title: 'Ready-to-Dispatch',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.CONVERTER_RTD.LISTING_PACK}
+        component={ConverterRTDListingPackScreen}
+        options={{
+          headerShown: true,
+          title: 'Listing pack',
           animation: 'slide_from_right',
         }}
       />

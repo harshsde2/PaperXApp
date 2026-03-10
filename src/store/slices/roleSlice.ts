@@ -34,8 +34,18 @@ const roleSlice = createSlice({
       // Otherwise, preserve the current activeRole
     },
     setActiveRole: (state, action: PayloadAction<UserRole>) => {
-      if (state.availableRoles.includes(action.payload)) {
-        state.activeRole = action.payload;
+      const nextRole = action.payload;
+
+      // If no roles have been initialized yet, treat this as initial setup
+      if (!state.availableRoles.length) {
+        state.availableRoles = [nextRole];
+        state.primaryRole = nextRole;
+        state.activeRole = nextRole;
+        return;
+      }
+
+      if (state.availableRoles.includes(nextRole)) {
+        state.activeRole = nextRole;
       }
     },
     switchRole: (state) => {

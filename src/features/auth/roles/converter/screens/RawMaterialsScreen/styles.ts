@@ -110,15 +110,6 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     padding: theme.spacing[4],
     paddingBottom: theme.spacing[10],
   },
-  continueButton: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  continueButtonText: {
-    color: theme.colors.text.inverse,
-  },
+  continueButton: {},
 });
 

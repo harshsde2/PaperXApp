@@ -80,7 +80,7 @@ const SplashScreen = () => {
         
         {/* Header / Logo */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <AppIcon.ZupplyMainLogo width={200} height={200} color={theme.colors.black} />
+          <AppIcon.ZupplyLogo width={220} height={220} />
         </View>
 
         {/* Bottom Section */}

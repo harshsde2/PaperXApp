@@ -5,19 +5,6 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   scrollContent: {
     paddingBottom: theme.spacing[6],
   },
-  button: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
-    width: '100%',
-  },
-  buttonText: {
-    color: theme.colors.text.inverse,
-  },
   container: {
     flex: 1,
     paddingHorizontal: theme.spacing[4],
@@ -171,58 +158,48 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   clearAllButtonText: {
     color: theme.colors.primary.DEFAULT,
   },
-  confirmButton: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
-    width: '100%',
-  },
-  halfButton: {
-    flex: 1,
-    width: undefined,
-  },
-  secondaryButton: {
-    flex: 1,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.surface.primary,
-    borderWidth: 1,
-    borderColor: theme.colors.border.primary,
-  },
-  secondaryButtonText: {
-    color: theme.colors.text.primary,
-  },
   bottomActionsRow: {
     flexDirection: 'row',
     gap: theme.spacing[2],
     width: '100%',
   },
-  confirmButtonText: {
-    color: theme.colors.text.inverse,
+  addCustomButton: {
+    flex: 1,
+    // minWidth: 0,
+    backgroundColor: theme.colors.primary[50],
+    borderWidth: 1,
+    borderColor: theme.colors.primary[200],
+    borderRadius: theme.borderRadius.md,
+  },
+  confirmButton: {
+    flex: 1,
+    minWidth: 0,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.background.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing[4],
   },
   modalContent: {
-    backgroundColor: theme.colors.surface.primary,
+    backgroundColor: theme.colors.background.primary,
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing[4],
     width: '100%',
     maxWidth: 400,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing[4],
+  },
   modalTitle: {
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing[4],
+  },
+  modalCloseButton: {
+    padding: theme.spacing[1],
   },
   modalActions: {
     flexDirection: 'row',
@@ -231,14 +208,10 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     marginTop: theme.spacing[4],
   },
   modalCancelButton: {
-    paddingVertical: theme.spacing[3],
-    paddingHorizontal: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.primary,
+    minWidth: 80,
   },
-  modalCancelText: {
-    color: theme.colors.text.primary,
+  modalAddButton: {
+    minWidth: 80,
   },
 });
 

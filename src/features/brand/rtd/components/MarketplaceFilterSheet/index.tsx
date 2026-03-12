@@ -166,7 +166,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
 
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              MOQ (Maximum)
+              Quantity
             </Text>
             <TextInput
               style={styles.textInput}

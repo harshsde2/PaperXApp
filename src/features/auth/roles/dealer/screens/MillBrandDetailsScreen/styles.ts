@@ -60,7 +60,8 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[3],
     },
     relationshipCardSelected: {
-      borderColor: theme.colors.primary.DEFAULT,
+      backgroundColor: theme.colors.primary[50],
+      borderColor: theme.colors.primary[200],
     },
     relationshipLeft: {
       flexDirection: 'row',
@@ -95,18 +96,5 @@ export const createStyles = (theme: Theme) =>
     },
     relationshipSubtext: {
       color: theme.colors.text.tertiary,
-    },
-    button: {
-      backgroundColor: theme.colors.primary.DEFAULT,
-      paddingVertical: theme.spacing[4],
-      borderRadius: theme.borderRadius.lg,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: theme.spacing[2],
-      width: '100%',
-    },
-    buttonText: {
-      color: theme.colors.text.inverse,
     },
   });

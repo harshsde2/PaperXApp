@@ -139,7 +139,7 @@ const TransactionHistoryScreen = () => {
         <View style={styles.errorContainer}>
           <View style={styles.errorCard}>
             <View style={styles.errorIconWrapper}>
-              <AppIcon.Warning width={32} height={32} color="#DC2626" />
+              <AppIcon.Warning width={32} height={32} color={theme.colors.error.DEFAULT} />
             </View>
             <Text style={styles.errorText}>
               Failed to load transactions. Please try again.
@@ -170,18 +170,22 @@ const TransactionHistoryScreen = () => {
                   height={BALANCE_CARD_HEIGHT}
                   r={16}
                 >
-                  <LinearGradient
-                    start={vec(0, 0)}
-                    end={vec(SCREEN_WIDTH - 32, BALANCE_CARD_HEIGHT)}
-                    colors={['#1E3A8A', '#3B82F6', '#60A5FA']}
-                  />
+                <LinearGradient
+                  start={vec(0, 0)}
+                  end={vec(SCREEN_WIDTH - 32, BALANCE_CARD_HEIGHT)}
+                  colors={[
+                    theme.colors.primary[800],
+                    theme.colors.primary.DEFAULT,
+                    theme.colors.primary[400],
+                  ].filter(Boolean) as string[]}
+                />
                 </RoundedRect>
               </Canvas>
 
               {/* Card Content */}
               <View style={styles.balanceCardContent}>
                 <View style={styles.balanceIconWrapper}>
-                  <AppIcon.Wallet width={22} height={22} color="#FFFFFF" />
+                  <AppIcon.Wallet width={22} height={22} color={theme.colors.text.inverse} />
                 </View>
                 <View style={styles.balanceContent}>
                   <Text style={styles.balanceLabel}>Current Balance</Text>
@@ -243,6 +247,7 @@ const TransactionHistoryScreen = () => {
               refreshing={refreshing}
               onRefresh={onRefresh}
               tintColor={theme.colors.primary.DEFAULT}
+              colors={[theme.colors.primary.DEFAULT]}
             />
           }
         />

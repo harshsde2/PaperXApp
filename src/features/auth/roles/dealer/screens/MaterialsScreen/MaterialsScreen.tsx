@@ -8,6 +8,7 @@ import {
   ListRenderItem,
   Modal,
 } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { SelectedMaterialsModal } from './components/SelectedMaterialsModal';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
@@ -568,14 +569,12 @@ const MaterialsScreen = () => {
           >
             Failed to load materials
           </Text>
-          <TouchableOpacity
-            style={[styles.button, { paddingHorizontal: theme.spacing[6] }]}
+          <CustomButton
+            title="Retry"
             onPress={() => refetch()}
-          >
-            <Text variant="buttonMedium" style={styles.buttonText}>
-              Retry
-            </Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="md"
+          />
         </View>
       </ScreenWrapper>
     );
@@ -692,29 +691,28 @@ const MaterialsScreen = () => {
               autoFocus
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
+              <CustomButton
+                title="Cancel"
                 onPress={() => setIsCustomMaterialModalVisible(false)}
-                activeOpacity={0.8}
-              >
-                <Text variant="bodyMedium" style={styles.modalCancelText}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.addMaterialButton, isCreatingMaterial && { opacity: 0.6 }]}
+                variant="outline"
+                size="md"
+                style={styles.modalCancelButton}
+              />
+              <CustomButton
+                title="Add"
                 onPress={handleAddCustomMaterial}
+                variant="gradient"
+                size="md"
+                loading={isCreatingMaterial}
                 disabled={isCreatingMaterial || !customMaterialName.trim()}
-                activeOpacity={0.8}
-              >
-                {isCreatingMaterial ? (
-                  <ActivityIndicator size="small" color={theme.colors.text.inverse} />
-                ) : (
-                  <Text variant="bodyMedium" fontWeight="medium" style={styles.buttonText}>
-                    Add
-                  </Text>
-                )}
-              </TouchableOpacity>
+                gradientColors={[
+                  theme.colors.primary[400],
+                  theme.colors.primary.DEFAULT,
+                ]}
+                gradientStart={{ x: 0, y: 0 }}
+                gradientEnd={{ x: 1, y: 1 }}
+                style={styles.addMaterialButton}
+              />
             </View>
           </View>
         </View>
@@ -722,34 +720,32 @@ const MaterialsScreen = () => {
 
       <FloatingBottomContainer>
         <View style={styles.bottomActionsRow}>
-          <TouchableOpacity
-            style={styles.secondaryButton}
+          <CustomButton
+            title="Add Custom"
             onPress={() => setIsCustomMaterialModalVisible(true)}
-            activeOpacity={0.8}
-          >
-            <Text variant="buttonMedium" style={styles.secondaryButtonText}>
-              Add Custom
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              styles.halfButton,
-              selectedKeys.size === 0 && { opacity: 0.5 },
-            ]}
+            variant="outline"
+            size="md"
+            leftIcon={<AppIcon.PlusCircle width={18} height={18} color={theme.colors.primary.DEFAULT} />}
+            textStyle={{ color: theme.colors.primary.DEFAULT }}
+            style={styles.addCustomButton}
+          />
+          <CustomButton
+            title={`Continue (${selectedKeys.size})`}
             onPress={handleSaveAndContinue}
-            activeOpacity={0.8}
+            variant="gradient"
+            size="md"
+            fullWidth={false}
             disabled={selectedKeys.size === 0}
-          >
-            <Text variant="buttonMedium" style={styles.buttonText}>
-              Continue ({selectedKeys.size})
-            </Text>
-            <AppIcon.ArrowRight
-              width={20}
-              height={20}
-              color={theme.colors.text.inverse}
-            />
-          </TouchableOpacity>
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+            style={[styles.halfButton, selectedKeys.size === 0 && { opacity: 0.5 }]}
+          />
         </View>
       </FloatingBottomContainer>
     </>

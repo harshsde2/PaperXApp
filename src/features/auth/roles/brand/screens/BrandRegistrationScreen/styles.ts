@@ -88,8 +88,13 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   validationIcon: {
     marginLeft: theme.spacing[2],
   },
+  brandTypeModalOverlay: {
+    flex: 1,
+    backgroundColor: theme.colors.background.overlay,
+    justifyContent: 'flex-end',
+  },
   brandTypeModal: {
-    backgroundColor: theme.colors.surface.primary,
+    backgroundColor: theme.colors.background.primary,
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
     padding: theme.spacing[4],
@@ -183,20 +188,10 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontFamily: theme.fontFamily.regular,
   },
   continueButton: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing[2],
+    width: '100%',
   },
-  continueButtonText: {
-    color: theme.colors.text.inverse,
-  },
-  continueButtonDisabled: {
-    backgroundColor: theme.colors.border.primary,
-    opacity: 0.5,
+  mapLocationButton: {
+    marginTop: theme.spacing[2],
   },
 });
 

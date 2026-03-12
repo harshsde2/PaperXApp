@@ -73,11 +73,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontFamily: theme.fontFamily.regular,
   },
   addMaterialButton: {
-    paddingVertical: theme.spacing[3],
-    paddingHorizontal: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.primary.DEFAULT,
-    justifyContent: 'center',
+    minWidth: 80,
   },
   selectedCountPill: {
     flexDirection: 'row',
@@ -118,32 +114,15 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   materialItemSubtitle: {
     color: theme.colors.text.tertiary,
   },
-  button: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
-    width: '100%',
-  },
   halfButton: {
     flex: 1,
-    width: undefined,
   },
-  secondaryButton: {
+  addCustomButton: {
     flex: 1,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.surface.primary,
+    backgroundColor: theme.colors.primary[50],
     borderWidth: 1,
-    borderColor: theme.colors.border.primary,
-  },
-  secondaryButtonText: {
-    color: theme.colors.text.primary,
+    borderColor: theme.colors.primary[200],
+    borderRadius: theme.borderRadius.md,
   },
   bottomActionsRow: {
     flexDirection: 'row',
@@ -152,7 +131,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: theme.colors.background.overlay,
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[4],
   },
@@ -171,17 +150,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     gap: theme.spacing[2],
   },
   modalCancelButton: {
-    paddingVertical: theme.spacing[3],
-    paddingHorizontal: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.primary,
-  },
-  modalCancelText: {
-    color: theme.colors.text.primary,
-  },
-  buttonText: {
-    color: theme.colors.text.inverse,
+    minWidth: 80,
   },
 });
 

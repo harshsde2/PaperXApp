@@ -6,9 +6,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingBottom: theme.spacing[6],
   },
   roleCompleteText: {
-    color: 'red',
+    color: theme.colors.error.DEFAULT,
     marginTop: theme.spacing[2],
-    
   },
   roleCardIncomplete: {
     opacity: 0.5,
@@ -128,18 +127,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: 20,
   },
   button: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginTop: theme.spacing[4],
     marginBottom: theme.spacing[4],
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: theme.colors.text.inverse,
   },
 });

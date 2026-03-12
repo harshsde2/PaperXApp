@@ -9,6 +9,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -372,14 +373,12 @@ const MaterialSpecsScreen = () => {
           >
             Failed to load specs
           </Text>
-          <TouchableOpacity
-            style={[styles.button, { paddingHorizontal: theme.spacing[6] }]}
+          <CustomButton
+            title="Retry"
             onPress={() => refetch()}
-          >
-            <Text variant="buttonMedium" style={styles.buttonText}>
-              Retry
-            </Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="md"
+          />
         </View>
       </ScreenWrapper>
     );
@@ -455,9 +454,18 @@ const MaterialSpecsScreen = () => {
           onPress={() => setIsCustomModalVisible(false)}
         >
           <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
-            <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
-              Add custom spec
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+                Add custom spec
+              </Text>
+              <TouchableOpacity
+                onPress={() => setIsCustomModalVisible(false)}
+                style={styles.modalCloseButton}
+                activeOpacity={0.7}
+              >
+                <AppIcon.Close width={24} height={24} color={theme.colors.text.primary} />
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.customInput}
               placeholder="Type specific grade or finish..."
@@ -487,29 +495,27 @@ const MaterialSpecsScreen = () => {
               </View>
             )}
             <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
+              <CustomButton
+                title="Cancel"
                 onPress={() => setIsCustomModalVisible(false)}
-                activeOpacity={0.8}
-              >
-                <Text variant="bodyMedium" style={styles.modalCancelText}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.confirmButton,
-                  { flex: 0, width: 'auto', paddingHorizontal: theme.spacing[5] },
-                  !customInput.trim() && { opacity: 0.5 },
-                ]}
+                variant="outline"
+                size="md"
+                style={styles.modalCancelButton}
+              />
+              <CustomButton
+                title="Add"
                 onPress={handleAddCustom}
-                activeOpacity={0.8}
+                variant="gradient"
+                size="md"
                 disabled={!customInput.trim()}
-              >
-                <Text variant="buttonMedium" style={styles.confirmButtonText}>
-                  Add
-                </Text>
-              </TouchableOpacity>
+                gradientColors={[
+                  theme.colors.primary[400],
+                  theme.colors.primary.DEFAULT,
+                ]}
+                gradientStart={{ x: 0, y: 0 }}
+                gradientEnd={{ x: 1, y: 1 }}
+                style={styles.modalAddButton}
+              />
             </View>
           </Pressable>
         </Pressable>
@@ -528,49 +534,33 @@ const MaterialSpecsScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: theme.spacing[2],
-            width: '100%',
-          }}
-        >
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              paddingVertical: theme.spacing[4],
-              borderRadius: theme.borderRadius.lg,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: theme.colors.surface.primary,
-              borderWidth: 1,
-              borderColor: theme.colors.border.primary,
-            }}
+        <View style={styles.bottomActionsRow}>
+          <CustomButton
+            title={`Add Custom${customSpecs.length > 0 ? ` (${customSpecs.length})` : ''}`}
             onPress={() => setIsCustomModalVisible(true)}
-            activeOpacity={0.8}
-          >
-            <Text
-              variant="buttonMedium"
-              style={{ color: theme.colors.text.primary }}
-            >
-              Add Custom{customSpecs.length > 0 ? ` (${customSpecs.length})` : ''}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.confirmButton,
-              { flex: 1, width: undefined },
-              totalSelectedCount === 0 && { opacity: 0.5 },
-            ]}
+            variant="outline"
+            size="md"
+            leftIcon={<AppIcon.PlusCircle width={18} height={18} color={theme.colors.primary.DEFAULT} />}
+            textStyle={{ color: theme.colors.primary.DEFAULT }}
+            style={styles.addCustomButton}
+          />
+          <CustomButton
+            title="Confirm"
             onPress={handleConfirm}
-            activeOpacity={0.8}
+            variant="gradient"
+            size="md"
+            fullWidth={false}
             disabled={totalSelectedCount === 0}
-          >
-            <Text variant="buttonMedium" style={styles.confirmButtonText}>
-              Confirm
-            </Text>
-            <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-          </TouchableOpacity>
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+            style={styles.confirmButton}
+          />
         </View>
       </FloatingBottomContainer>
     </>

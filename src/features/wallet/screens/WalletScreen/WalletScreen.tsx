@@ -105,7 +105,7 @@ const WalletScreen = () => {
         <View style={styles.errorContainer}>
           <View style={styles.errorCard}>
             <View style={styles.errorIconWrapper}>
-              <AppIcon.Warning width={32} height={32} color="#DC2626" />
+              <AppIcon.Warning width={32} height={32} color={theme.colors.error.DEFAULT} />
             </View>
             <Text style={styles.errorTitle}>Oops!</Text>
             <Text style={styles.errorText}>
@@ -131,6 +131,7 @@ const WalletScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={theme.colors.primary.DEFAULT}
+            colors={[theme.colors.primary.DEFAULT]}
           />
         }
       >
@@ -143,7 +144,11 @@ const WalletScreen = () => {
                 <LinearGradient
                   start={vec(0, 0)}
                   end={vec(400, CARD_HEIGHT)}
-                  colors={['#1E3A8A', '#3B82F6', '#60A5FA']}
+                  colors={[
+                    theme.colors.primary[800],
+                    theme.colors.primary.DEFAULT,
+                    theme.colors.primary[400],
+                  ].filter(Boolean) as string[]}
                 />
               </RoundedRect>
             </Canvas>
@@ -161,7 +166,7 @@ const WalletScreen = () => {
                   </View>
                 </View>
                 <View style={styles.balanceCardIcon}>
-                  <AppIcon.Wallet width={24} height={24} color="#FFFFFF" />
+                  <AppIcon.Wallet width={24} height={24} color={theme.colors.text.inverse} />
                 </View>
               </View>
 
@@ -183,7 +188,7 @@ const WalletScreen = () => {
             activeOpacity={0.7}
           >
             <View style={[styles.quickActionIconWrapper, styles.quickActionIconBuy]}>
-              <AppIcon.Wallet width={28} height={28} color="#16A34A" />
+              <AppIcon.Wallet width={28} height={28} color={theme.colors.success.DEFAULT} />
             </View>
             <Text style={styles.quickActionTitle}>Buy Credits</Text>
             <Text style={styles.quickActionSubtitle}>Add more credits</Text>
@@ -195,7 +200,7 @@ const WalletScreen = () => {
             activeOpacity={0.7}
           >
             <View style={[styles.quickActionIconWrapper, styles.quickActionIconHistory]}>
-              <AppIcon.Transactions width={28} height={28} color="#2563EB" />
+              <AppIcon.Transactions width={28} height={28} color={theme.colors.primary.DEFAULT} />
             </View>
             <Text style={styles.quickActionTitle}>History</Text>
             <Text style={styles.quickActionSubtitle}>View all transactions</Text>
@@ -208,7 +213,7 @@ const WalletScreen = () => {
             <View style={styles.statCard}>
               <View style={styles.statIconRow}>
                 <View style={[styles.statIconWrapper, styles.statIconCredit]}>
-                  <AppIcon.ArrowRight width={16} height={16} color="#16A34A" />
+                  <AppIcon.ArrowRight width={16} height={16} color={theme.colors.success.DEFAULT} />
                 </View>
                 <Text style={styles.statLabel}>Total Added</Text>
               </View>
@@ -219,7 +224,7 @@ const WalletScreen = () => {
             <View style={styles.statCard}>
               <View style={styles.statIconRow}>
                 <View style={[styles.statIconWrapper, styles.statIconDebit]}>
-                  <AppIcon.ArrowLeft width={16} height={16} color="#DC2626" />
+                  <AppIcon.ArrowLeft width={16} height={16} color={theme.colors.error.DEFAULT} />
                 </View>
                 <Text style={styles.statLabel}>Total Used</Text>
               </View>

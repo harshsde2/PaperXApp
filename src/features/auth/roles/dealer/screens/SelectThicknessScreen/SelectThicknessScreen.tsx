@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -304,26 +305,32 @@ const SelectThicknessScreen = () => {
       {/* Floating Bottom Buttons */}
       <FloatingBottomContainer>
         <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={styles.addButton}
+          <CustomButton
+            title="Add Thickness"
             onPress={handleAddThickness}
-            activeOpacity={0.8}
-          >
-            <Text variant="buttonMedium" style={styles.addButtonText}>
-              Add Thickness
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.continueButton, selectedRanges.length === 0 && styles.continueButtonDisabled]}
+            variant="outline"
+            size="md"
+            leftIcon={<AppIcon.PlusCircle width={18} height={18} color={theme.colors.primary.DEFAULT} />}
+            textStyle={{ color: theme.colors.primary.DEFAULT }}
+            style={styles.addButton}
+          />
+          <CustomButton
+            title="Continue"
             onPress={handleContinue}
-            activeOpacity={0.8}
+            variant="gradient"
+            size="md"
+            fullWidth={false}
             disabled={selectedRanges.length === 0}
-          >
-            <Text variant="buttonMedium" style={styles.continueButtonText}>
-              Continue
-            </Text>
-            <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-          </TouchableOpacity>
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+            style={styles.continueButton}
+          />
         </View>
       </FloatingBottomContainer>
 
@@ -339,9 +346,18 @@ const SelectThicknessScreen = () => {
           onPress={() => setIsUnitModalVisible(false)}
         >
           <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
-            <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
-              Select Unit
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+                Select Unit
+              </Text>
+              <TouchableOpacity
+                onPress={() => setIsUnitModalVisible(false)}
+                style={styles.modalCloseButton}
+                activeOpacity={0.7}
+              >
+                <AppIcon.Close width={24} height={24} color={theme.colors.text.primary} />
+              </TouchableOpacity>
+            </View>
             {availableUnits.map((unitOption) => {
               const isSelected = unit === unitOption;
               return (

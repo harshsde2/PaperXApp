@@ -8,6 +8,7 @@ import {
   Modal,
   InteractionManager,
 } from 'react-native';
+import { Toast } from 'toastify-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import RNFS from 'react-native-fs';
@@ -20,6 +21,7 @@ import {
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
+import { CustomButton } from '@shared/components/CustomButton';
 import { DropdownButton } from '@shared/components/DropdownButton';
 import { StateSelectionContent } from '@shared/components/StateSelectionContent';
 import { CitySelectionContent } from '@shared/components/CitySelectionContent';
@@ -113,7 +115,12 @@ const CompanyDetailsScreen = () => {
 
   const openCitySelector = useCallback(() => {
     if (!selectedStateName) {
-      Alert.alert('Select State', 'Please select a state first');
+      Toast.show({
+        type: 'info',
+        text1: 'Select State',
+        text2: 'Please select a state first',
+        position: 'top',
+      });
       return;
     }
     citySheetRef.current?.present();
@@ -122,6 +129,20 @@ const CompanyDetailsScreen = () => {
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  const onInvalid = useCallback(
+    (errors: Record<string, { message?: string }>) => {
+      const firstError = Object.values(errors)[0];
+      const message = firstError?.message || 'Please check the form and try again.';
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: message,
+        position: 'top',
+      });
+    },
+    []
+  );
 
   const onSubmit = (data: CompanyDetailsFormData) => {
     navigation.navigate(SCREENS.AUTH.ROLE_SELECTION, {
@@ -177,7 +198,12 @@ const CompanyDetailsScreen = () => {
       });
     } catch (error: any) {
       console.error('File selection error:', error);
-      Alert.alert('Error', error?.message || 'Failed to process file. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.message || 'Failed to process file. Please try again.',
+        position: 'top',
+      });
     } finally {
       setIsConverting(false);
     }
@@ -248,6 +274,7 @@ const CompanyDetailsScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                showError={false}
               />
             </View>
 
@@ -276,6 +303,7 @@ const CompanyDetailsScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                showError={false}
               />
             </View>
           </Card>
@@ -295,7 +323,7 @@ const CompanyDetailsScreen = () => {
                 control={control}
                 name="state"
                 rules={validationRules.required('Please select a state') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
+                render={({ field: { value } }) => (
                   <>
                     <View style={styles.labelRow}>
                       <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
@@ -307,14 +335,6 @@ const CompanyDetailsScreen = () => {
                       placeholder="Select State"
                       onPress={openStateSelector}
                     />
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
                   </>
                 )}
               />
@@ -325,7 +345,7 @@ const CompanyDetailsScreen = () => {
                 control={control}
                 name="city"
                 rules={validationRules.required('Please select a city') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
+                render={({ field: { value } }) => (
                   <>
                     <View style={styles.labelRow}>
                       <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
@@ -338,14 +358,6 @@ const CompanyDetailsScreen = () => {
                       onPress={openCitySelector}
                       disabled={!selectedStateName}
                     />
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{ color: (theme.colors.error as any)?.DEFAULT || '#FF3B30', marginTop: 4 }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
                   </>
                 )}
               />
@@ -385,6 +397,7 @@ const CompanyDetailsScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                showError={false}
               />
             </View>
             <View style={styles.orContainer}>
@@ -495,19 +508,27 @@ const CompanyDetailsScreen = () => {
             </View> */}
           </Card>
 
-          <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)} activeOpacity={0.8}>
-            <Text variant="buttonMedium" style={styles.buttonText}>
-              Save & Continue
-            </Text>
-            <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-          </TouchableOpacity>
-
-          <View style={styles.securityFooter}>
-            <Text style={styles.lockIcon}>🔒</Text>
-            <Text variant="captionSmall" style={styles.securityText}>
-              YOUR DATA IS ENCRYPTED & SECURE
-            </Text>
-          </View>
+          <CustomButton
+            title="Save & Continue"
+            onPress={() => handleSubmit(onSubmit, onInvalid)()}
+            variant="gradient"
+            size="md"
+            fullWidth
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
+                color={theme.colors.text.inverse}
+              />
+            }
+          />
         </View>
       </ScreenWrapper>
 

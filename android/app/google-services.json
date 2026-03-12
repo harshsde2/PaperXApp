@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "181168825979",
+    "project_id": "zuppy-f6e66",
+    "storage_bucket": "zuppy-f6e66.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:181168825979:android:ead4f401259026bc49e4de",
+        "android_client_info": {
+          "package_name": "com.paperxapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy6aAtWbzokTw197rP0H9PVTfuY1lXqJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

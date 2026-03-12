@@ -5,6 +5,11 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
+import {
+  getHeadingStyle,
+  getBodyStyle,
+  getCaptionStyle,
+} from '../../../main/screens/DashboardScreen/components/sharedDashboardStyles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BALANCE_CARD_HEIGHT = 90;
@@ -26,7 +31,7 @@ export const createStyles = (theme: Theme) =>
       paddingBottom: theme.spacing[4],
       borderBottomLeftRadius: theme.borderRadius['2xl'],
       borderBottomRightRadius: theme.borderRadius['2xl'],
-      shadowColor: '#000',
+      shadowColor: theme.colors.black,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.05,
       shadowRadius: 8,
@@ -77,26 +82,27 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
     },
     balanceLabel: {
-      fontSize: 11,
+      ...getCaptionStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
-      color: 'rgba(255, 255, 255, 0.7)',
+      color: 'rgba(255, 255, 255, 0.85)',
       marginBottom: 2,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
     balanceValue: {
-      fontSize: 32,
-      fontWeight: fontWeightForPlatform('800'),
-      color: '#FFFFFF',
+      fontSize: theme.typography.heading.h2.fontSize,
+      fontFamily: theme.fontFamily.bold,
+      fontWeight: fontWeightForPlatform('700'),
+      color: theme.colors.text.inverse,
       letterSpacing: -0.5,
     },
     creditsUnitContainer: {
       alignItems: 'flex-end',
     },
     creditsUnit: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
-      color: 'rgba(255, 255, 255, 0.8)',
+      color: 'rgba(255, 255, 255, 0.9)',
       marginBottom: theme.spacing[2],
     },
     statusDot: {
@@ -145,12 +151,12 @@ export const createStyles = (theme: Theme) =>
       elevation: 2,
     },
     filterTabText: {
-      fontSize: 13,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.secondary,
     },
     filterTabTextActive: {
-      color: theme.colors.white,
+      color: theme.colors.text.inverse,
     },
 
     // ==========================================
@@ -172,7 +178,7 @@ export const createStyles = (theme: Theme) =>
       borderRadius: theme.borderRadius.xl,
       overflow: 'hidden',
       borderWidth: 1,
-      borderColor: theme.colors.border.light,
+      borderColor: theme.colors.border.primary,
     },
     transactionDivider: {
       height: 1,
@@ -220,13 +226,12 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[4],
     },
     emptyTitle: {
-      fontSize: 18,
-      fontWeight: fontWeightForPlatform('700'),
+      ...getHeadingStyle(theme, 'h5'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
     },
     emptySubtitle: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.tertiary,
       textAlign: 'center',
       lineHeight: 20,
@@ -266,13 +271,13 @@ export const createStyles = (theme: Theme) =>
       width: 64,
       height: 64,
       borderRadius: 32,
-      backgroundColor: '#FEE2E2',
+      backgroundColor: theme.colors.error[50] ?? theme.colors.error.light,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: theme.spacing[4],
     },
     errorText: {
-      fontSize: 16,
+      ...getBodyStyle(theme, 'medium'),
       color: theme.colors.error.DEFAULT,
       textAlign: 'center',
       marginBottom: theme.spacing[4],
@@ -284,8 +289,8 @@ export const createStyles = (theme: Theme) =>
       borderRadius: theme.borderRadius.lg,
     },
     retryButtonText: {
-      color: theme.colors.white,
-      fontSize: 14,
+      color: theme.colors.text.inverse,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
     },
   });

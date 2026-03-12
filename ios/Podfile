@@ -17,6 +17,9 @@ end
 target 'PaperXApp' do
   config = use_native_modules!
 
+  # Fix: Firebase Swift pods need GoogleUtilities with modular headers for static library builds
+  pod 'GoogleUtilities', :modular_headers => true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

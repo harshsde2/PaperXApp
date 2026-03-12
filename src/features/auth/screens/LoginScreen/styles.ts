@@ -55,28 +55,34 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     padding: theme.spacing[4],
     fontSize: 16,
     backgroundColor: theme.colors.surface.primary,
-    marginBottom: theme.spacing[6],
+    marginBottom: theme.spacing[1],
     color: theme.colors.text.primary,
     fontFamily: theme.fontFamily.regular,
   },
-  button: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
+  termsRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginTop: theme.spacing[4],
     gap: theme.spacing[2],
+    paddingHorizontal: theme.spacing[2],
   },
-  buttonDisabled: {
-    backgroundColor: theme.colors.text.disabled,
-    opacity: 0.6,
+  termsTextWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
   },
-  buttonText: {
-    color: theme.colors.text.inverse,
-    fontSize: 16,
+  termsText: {
+    color: theme.colors.text.secondary,
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: theme.colors.primary.DEFAULT,
     fontWeight: fontWeightForPlatform('600'),
-    fontFamily: theme.fontFamily.medium,
+  },
+  buttonContainer: {
+    width: '100%',
+    paddingHorizontal: theme.spacing[5],
   },
   footer: {
     alignItems: 'center',

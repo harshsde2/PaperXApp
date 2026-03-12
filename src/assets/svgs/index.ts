@@ -48,12 +48,15 @@ import Profile from './Profile.svg';
 import AppLogo from './AppLogo.svg';
 import Satellite from './Satellite.svg';
 import ZupplyMainLogo from './ZupplyMainLogo.svg';
+import ZupplyLogo from './ZupplyLogo.svg';
 import PlusCircle from './PlusCircle.svg';
 import Order from './Order.svg';
 import Pause from './Pause.svg';
 import Play from './Play.svg';
 import Filter from './Filter.svg';
 import MarketIcon from './MarketIcon.svg';
+import UncheckedBox from './UncheckedBox.svg';
+import CheckedBox from './CheckedBox.svg';
 
 
 
@@ -108,10 +111,13 @@ export const AppIcon = {
   AppLogo,
   Satellite,
   ZupplyMainLogo,
+  ZupplyLogo,
   PlusCircle,
   Order,
   Pause,
   Play,
   Filter,
   MarketIcon,
+  UncheckedBox,
+  CheckedBox,
 };

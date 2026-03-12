@@ -125,16 +125,6 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   continueButton: {
     flex: 1,
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
-  },
-  continueButtonText: {
-    color: theme.colors.text.inverse,
   },
 });
 

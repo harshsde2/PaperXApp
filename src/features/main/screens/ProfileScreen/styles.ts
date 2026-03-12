@@ -53,6 +53,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: theme.colors.primary[100],
     justifyContent: 'center',
     alignItems: 'center',
+    padding: theme.spacing[2],
   },
   profileImage: {
     width: 100,
@@ -196,22 +197,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.tertiary,
   },
   logoutButton: {
-    backgroundColor: theme.colors.error.DEFAULT,
     marginHorizontal: theme.spacing[5],
     marginTop: theme.spacing[6],
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: theme.colors.text.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   logoutButtonText: {
     color: theme.colors.text.inverse,
@@ -341,15 +328,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingHorizontal: theme.spacing[6],
-    paddingVertical: theme.spacing[3],
-    borderRadius: theme.borderRadius.md,
-  },
-  retryButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: 16,
-    fontWeight: fontWeightForPlatform('600'),
+    marginTop: theme.spacing[4],
   },
   // Status Container
   statusContainer: {
@@ -376,14 +355,18 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     gap: theme.spacing[3],
   },
   roleBadge: {
-    backgroundColor: theme.colors.primary.light,
     paddingHorizontal: theme.spacing[4],
     paddingVertical: theme.spacing[3],
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.primary[300],
     minWidth: 140,
     alignItems: 'flex-start',
+  },
+  roleBadgeWithGradient: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  roleBadgeGradientCanvas: {
+    ...StyleSheet.absoluteFillObject,
   },
   roleBadgeLabel: {
     marginBottom: theme.spacing[1],
@@ -394,8 +377,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     textTransform: 'capitalize',
   },
   roleBadgeActive: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderColor: theme.colors.primary.dark,
+    // Gradient handles background in component
   },
   roleBadgeDisabled: {
     opacity: 0.6,
@@ -405,6 +387,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+    zIndex: 1,
   },
   roleBadgeLeft: {
     flex: 1,

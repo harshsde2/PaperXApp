@@ -12,6 +12,7 @@ import { AppIcon } from '@assets/svgs';
 import { Text } from '@shared/components/Text';
 import { useGetChatList } from '@services/api';
 import type { ChatListItem } from '@services/api';
+import { useTheme } from '@theme/index';
 import { SCREENS, TAB_CONFIGS, UserRole } from './constants';
 
 // Import Screens
@@ -79,6 +80,8 @@ const getBadgeLabel = (count: number): string | null => {
 
 // Custom Tab Bar Component
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+  const theme = useTheme();
+  const styles = useMemo(() => createTabBarStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const stackNavigation = useNavigation<any>();
   const messagesUnreadCount = useAppSelector((s: RootState) => s.ui.messagesUnreadCount);
@@ -145,7 +148,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               <IconComponent
                 width={24}
                 height={24}
-                color={isFocused ? '#2563EB' : '#9CA3AF'}
+                color={isFocused ? theme.colors.primary.DEFAULT : theme.colors.text.disabled}
               />
               {badgeLabel !== null && (
                 <View style={styles.tabBadge}>
@@ -158,7 +161,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
             <Text
               style={[
                 styles.tabLabel,
-                { color: isFocused ? '#2563EB' : '#6B7280' },
+                { color: isFocused ? theme.colors.primary.DEFAULT : theme.colors.text.secondary },
               ]}
             >
               {label}
@@ -227,7 +230,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               <IconComponent
                 width={24}
                 height={24}
-                color={isFocused ? '#2563EB' : '#9CA3AF'}
+                color={isFocused ? theme.colors.primary.DEFAULT : theme.colors.text.disabled}
               />
               {badgeLabel !== null && (
                 <View style={styles.tabBadge}>
@@ -240,7 +243,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
             <Text
               style={[
                 styles.tabLabel,
-                { color: isFocused ? '#2563EB' : '#6B7280' },
+                { color: isFocused ? theme.colors.primary.DEFAULT : theme.colors.text.secondary },
               ]}
             >
               {label}
@@ -252,6 +255,107 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
     </View>
   );
 };
+
+const createTabBarStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    tabBarContainer: {
+      flexDirection: 'row',
+      backgroundColor: theme.colors.surface.primary,
+      paddingTop: 12,
+      paddingHorizontal: 8,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border.primary,
+      shadowColor: theme.colors.black,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tabItem: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 4,
+      position: 'relative',
+    },
+    iconContainer: {
+      position: 'relative',
+      width: 44,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 16,
+      marginBottom: 4,
+    },
+    iconContainerActive: {
+      backgroundColor: theme.colors.primary[50],
+    },
+    tabBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -8,
+      minWidth: 18,
+      height: 18,
+      paddingHorizontal: 5,
+      borderRadius: 9,
+      backgroundColor: theme.colors.error.DEFAULT,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: theme.colors.white,
+    },
+    tabBadgeText: {
+      fontSize: 10,
+      fontWeight: fontWeightForPlatform('700'),
+      color: theme.colors.white,
+    },
+    tabLabel: {
+      fontSize: 11,
+      fontWeight: fontWeightForPlatform('500'),
+      letterSpacing: 0.2,
+    },
+    activeIndicator: {
+      position: 'absolute',
+      top: -12,
+      width: 24,
+      height: 3,
+      backgroundColor: theme.colors.primary.DEFAULT,
+      borderRadius: 2,
+    },
+    postButton: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.colors.primary.DEFAULT,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 4,
+      marginTop: -24,
+      shadowColor: theme.colors.primary.DEFAULT,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 10,
+    },
+    postButtonInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.colors.primary.DEFAULT,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    postButtonText: {
+      fontSize: 32,
+      fontWeight: fontWeightForPlatform('300'),
+      color: theme.colors.white,
+      lineHeight: 36,
+      marginTop: -2,
+    },
+  });
 
 const BottomTabNavigator: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -293,105 +397,5 @@ const BottomTabNavigator: React.FC = () => {
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  tabBarContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingTop: 12,
-    paddingHorizontal: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-    position: 'relative',
-  },
-  iconContainer: {
-    position: 'relative',
-    width: 44,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    marginBottom: 4,
-  },
-  iconContainerActive: {
-    backgroundColor: '#EEF2FF',
-  },
-  tabBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -8,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 5,
-    borderRadius: 9,
-    backgroundColor: '#EF4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  tabBadgeText: {
-    fontSize: 10,
-    fontWeight: fontWeightForPlatform('700'),
-    color: '#FFFFFF',
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: fontWeightForPlatform('500'),
-    letterSpacing: 0.2,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    top: -12,
-    width: 24,
-    height: 3,
-    backgroundColor: '#2563EB',
-    borderRadius: 2,
-  },
-  postButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 4,
-    marginTop: -24,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 10,
-  },
-  postButtonInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  postButtonText: {
-    fontSize: 32,
-    fontWeight: fontWeightForPlatform('300'),
-    color: '#FFFFFF',
-    lineHeight: 36,
-    marginTop: -2,
-  },
-});
 
 export default BottomTabNavigator;

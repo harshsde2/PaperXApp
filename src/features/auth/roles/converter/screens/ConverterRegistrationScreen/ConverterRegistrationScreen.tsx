@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, TouchableOpacity, Alert, ActivityIndicator, InteractionManager, ScrollView, Modal, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator, InteractionManager, ScrollView, Modal, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { State, City, ICity } from 'country-state-city';
@@ -29,6 +29,10 @@ import { LocationPicker } from '@shared/location';
 import type { Location } from '@shared/location/types';
 import { ConverterRegistrationFormData } from './@types';
 import { createStyles } from './styles';
+import { Toast } from 'toastify-react-native';
+import { CustomButton } from '@shared/components/CustomButton';
+import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
+import { useKeyboard, useFloatingBottomPadding } from '@shared/hooks';
 
 const INDIA_COUNTRY_CODE = 'IN';
 const INDIAN_STATES = State.getStatesOfCountry(INDIA_COUNTRY_CODE);
@@ -164,7 +168,7 @@ const ConverterRegistrationScreen = () => {
   // Open city selector
   const openCitySelector = useCallback(() => {
     if (!factoryStateValue) {
-      Alert.alert('Select State', 'Please select a state first');
+      Toast.show({ type: 'error', text1: 'Select State', text2: 'Please select a state first', position: 'top' });
       return;
     }
     citySheetRef.current?.present();
@@ -219,7 +223,7 @@ const ConverterRegistrationScreen = () => {
       selectedIds: number[]
     ) => {
       if (!items || items.length === 0) {
-        Alert.alert('No Data', 'No items available to select');
+        Toast.show({ type: 'error', text1: 'No Data', text2: 'No items available to select', position: 'top' });
         return;
       }
       const searchKey = fieldName as string;
@@ -239,41 +243,60 @@ const ConverterRegistrationScreen = () => {
     [setValue, getValues]
   );
 
+  const { isKeyboardVisible } = useKeyboard();
+  const floatingContainerPadding = useFloatingBottomPadding({
+    buttonHeight: 60,
+  });
+
+  const onInvalid = useCallback(
+    (errors: Record<string, { message?: string }>) => {
+      const firstError = Object.values(errors)[0];
+      const message = firstError?.message || 'Please check the form and try again.';
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: message,
+        position: 'top',
+      });
+    },
+    []
+  );
+
   const onSubmit = (data: ConverterRegistrationFormData) => {
     // Validate required fields
     if (data.converter_type_ids.length === 0 && !data.converter_type_custom?.trim()) {
-      Alert.alert('Validation Error', 'Please select at least one converter type or enter a custom type');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select at least one converter type or enter a custom type', position: 'top' });
       return;
     }
 
     if (data.finished_product_ids.length === 0) {
-      Alert.alert('Validation Error', 'Please select at least one finished product');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select at least one finished product', position: 'top' });
       return;
     }
 
     if (data.machine_ids.length === 0) {
-      Alert.alert('Validation Error', 'Please select at least one machine');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select at least one machine', position: 'top' });
       return;
     }
 
     if (data.raw_material_ids.length === 0) {
-      Alert.alert('Validation Error', 'Please select at least one raw material');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select at least one raw material', position: 'top' });
       return;
     }
 
     if (!data.factory_address?.trim()) {
-      Alert.alert('Validation Error', 'Please enter factory address');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please enter factory address', position: 'top' });
       return;
     }
 
     if (!data.factory_city?.trim() || !data.factory_state?.trim()) {
-      Alert.alert('Validation Error', 'Please select factory city and state');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select factory city and state', position: 'top' });
       return;
     }
 
     // Coordinates are required if location was selected from map, optional if manually entered
     if (!showManualLocationEntry && (data.factory_latitude === 0 || data.factory_longitude === 0)) {
-      Alert.alert('Validation Error', 'Please select factory location');
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select factory location', position: 'top' });
       return;
     }
 
@@ -340,7 +363,7 @@ const ConverterRegistrationScreen = () => {
         }
       },
       onError: (error: any) => {
-        Alert.alert('Error', error?.message || 'Failed to complete profile. Please try again.');
+        Toast.show({ type: 'error', text1: 'Error', text2: error?.message || 'Failed to complete profile. Please try again.', position: 'top' });
       },
     });
   };
@@ -368,7 +391,7 @@ const ConverterRegistrationScreen = () => {
       scrollable
       backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={{ ...styles.scrollContent, paddingBottom: floatingContainerPadding }}
     >
       <View style={styles.container}>
         {hasPrefilledCompanyDetails && (profileData?.company_name || profileData?.gst_in || profileData?.state || profileData?.city) && (
@@ -488,6 +511,7 @@ const ConverterRegistrationScreen = () => {
               inputStyle={styles.input}
               containerStyle={{ marginBottom: 0 }}
               showLabel={false}
+              showError={false}
             />
           </View>
         </Card>
@@ -525,11 +549,6 @@ const ConverterRegistrationScreen = () => {
                       watchedValues.finished_product_ids || []
                     )}
                   />
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                 </>
               )}
             />
@@ -569,11 +588,6 @@ const ConverterRegistrationScreen = () => {
                       watchedValues.machine_ids || []
                     )}
                   />
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                 </>
               )}
             />
@@ -645,6 +659,7 @@ const ConverterRegistrationScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                showError={false}
               />
             </View>
             <View style={styles.capacityInput}>
@@ -661,6 +676,7 @@ const ConverterRegistrationScreen = () => {
                 inputStyle={styles.input}
                 containerStyle={{ marginBottom: 0 }}
                 showLabel={false}
+                showError={false}
               />
             </View>
           </View>
@@ -724,11 +740,6 @@ const ConverterRegistrationScreen = () => {
                       watchedValues.raw_material_ids || []
                     )}
                   />
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                 </>
               )}
             />
@@ -765,11 +776,6 @@ const ConverterRegistrationScreen = () => {
                     onPress={openStateSelector}
                     disabled={hasPrefilledCompanyDetails}
                   />
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                 </>
               )}
             />
@@ -794,11 +800,6 @@ const ConverterRegistrationScreen = () => {
                     onPress={openCitySelector}
                     disabled={hasPrefilledCompanyDetails || !factoryStateValue}
                   />
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                 </>
               )}
             />
@@ -835,11 +836,6 @@ const ConverterRegistrationScreen = () => {
                       numberOfLines={2}
                     />
                   </View>
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                 </>
               )}
             />
@@ -914,11 +910,6 @@ const ConverterRegistrationScreen = () => {
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {error && (
-                    <Text variant="captionSmall" style={styles.errorText}>
-                      {error.message}
-                    </Text>
-                  )}
                   {!showManualLocationEntry && (
                     <TouchableOpacity
                       onPress={() => setShowLocationPicker(true)}
@@ -973,32 +964,40 @@ const ConverterRegistrationScreen = () => {
           />
         </Modal>
 
-        <TouchableOpacity
-          style={[styles.button, isSubmitting && styles.buttonDisabled]}
-          onPress={handleSubmit(onSubmit)}
-          activeOpacity={0.8}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color={theme.colors.text.inverse} size="small" />
-          ) : (
-            <>
-              <Text variant="buttonMedium" style={styles.buttonText}>
-                Complete Registration
-              </Text>
-              <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-            </>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.securityFooter}>
-          <Text style={styles.lockIcon}>🔒</Text>
-          <Text variant="captionSmall" style={styles.securityText}>
-            YOUR DATA IS ENCRYPTED & SECURE
-          </Text>
-        </View>
       </View>
     </ScreenWrapper>
+
+        {!isKeyboardVisible && (
+          <FloatingBottomContainer
+            backgroundColor={theme.colors.background.primary}
+            paddingHorizontal={theme.spacing[4]}
+            paddingVertical={theme.spacing[4]}
+            shadow
+          >
+            <CustomButton
+              title="Complete Registration"
+              onPress={() => handleSubmit(onSubmit, onInvalid)()}
+              variant="gradient"
+              size="md"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              gradientColors={[
+                theme.colors.primary[400],
+                theme.colors.primary[600],
+                theme.colors.primary.DEFAULT,
+              ]}
+              gradientStart={{ x: 0, y: 0 }}
+              gradientEnd={{ x: 1, y: 1 }}
+              rightIcon={
+                <AppIcon.ArrowRight
+                  width={20}
+                  height={20}
+                  color={theme.colors.text.inverse}
+                />
+              }
+            />
+          </FloatingBottomContainer>
+        )}
 
         <BottomSheetModal
           ref={stateSheetRef}

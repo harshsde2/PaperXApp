@@ -3,12 +3,48 @@ import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
+  content: {
+    flex: 1,
+    padding: theme.spacing[4],
+    paddingTop: theme.spacing[6],
+  },
   scrollContent: {
     paddingBottom: 120,
   },
   otpInputContainer: {
     width: '100%',
     alignItems: 'center',
+    marginVertical: theme.spacing[6],
+  },
+  otpContainer: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  otpBox: {
+    width: 48,
+    height: 56,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primary,
+    backgroundColor: theme.colors.surface.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: theme.spacing[1],
+  },
+  otpBoxFocused: {
+    borderColor: theme.colors.primary.DEFAULT,
+    shadowColor: theme.colors.primary.DEFAULT,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  otpText: {
+    fontSize: 20,
+    fontWeight: fontWeightForPlatform('600'),
+    color: theme.colors.text.primary,
+    fontFamily: theme.fontFamily.medium,
   },
   container: {
     flex: 1,
@@ -92,26 +128,6 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: 14,
     color: theme.colors.text.secondary,
     fontFamily: theme.fontFamily.regular,
-  },
-  button: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: theme.spacing[8],
-    gap: theme.spacing[2],
-  },
-  buttonDisabled: {
-    backgroundColor: theme.colors.text.disabled,
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: theme.colors.text.inverse,
-    fontSize: 16,
-    fontWeight: fontWeightForPlatform('600'),
-    fontFamily: theme.fontFamily.medium,
   },
   footer: {
     alignItems: 'center',

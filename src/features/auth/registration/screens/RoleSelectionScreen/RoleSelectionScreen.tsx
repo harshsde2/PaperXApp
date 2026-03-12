@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Switch,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, TouchableOpacity, Switch, Alert } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -81,7 +76,7 @@ const RoleSelectionScreen = () => {
   const geographyOptions = [
     { id: 'local' as Geography, label: 'Local', icon: AppIcon.Location },
     { id: 'state' as Geography, label: 'State', icon: AppIcon.State },
-    { id: 'pan india' as Geography, label: 'Pan-India', icon: AppIcon.Globe },
+    { id: 'panIndia' as Geography, label: 'Pan-India', icon: AppIcon.Globe },
   ];
 
   const handleSecondaryRoleToggle = (value: boolean) => {
@@ -332,23 +327,24 @@ const RoleSelectionScreen = () => {
         </View>
 
         {/* Continue Button */}
-        <TouchableOpacity
-          style={[
-            styles.button,
-            updateProfileMutation.isPending && styles.buttonDisabled,
-          ]}
+        <CustomButton
+          title="Continue"
           onPress={handleContinue}
-          activeOpacity={0.8}
+          variant="gradient"
+          size="md"
+          fullWidth
+          loading={updateProfileMutation.isPending}
           disabled={updateProfileMutation.isPending}
-        >
-          {updateProfileMutation.isPending ? (
-            <ActivityIndicator color={theme.colors.text.inverse} />
-          ) : (
-            <Text variant="buttonMedium" style={styles.buttonText}>
-              Continue
-            </Text>
-          )}
-        </TouchableOpacity>
+          gradientColors={[
+            theme.colors.primary[400],
+            theme.colors.primary[600],
+            theme.colors.primary.DEFAULT,
+          ]}
+          gradientStart={{ x: 0, y: 0 }}
+          gradientEnd={{ x: 1, y: 1 }}
+          rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+          style={styles.button}
+        />
       </View>
     </ScreenWrapper>
   );

@@ -2,17 +2,18 @@ import React, { useState, useLayoutEffect, useCallback } from 'react';
 import {
   View,
   TouchableOpacity,
-  ActivityIndicator,
   Modal,
   Alert,
   Dimensions,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { CustomButton } from '@shared/components/CustomButton';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
+import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import {
@@ -43,6 +44,7 @@ import {
 } from '@shared/location';
 import { WarehouseAddressForm } from '@shared/components/WarehouseAddressForm/WarehouseAddressForm';
 import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -67,6 +69,7 @@ const ManageWarehousesScreen = () => {
   const [expandedLocationIds, setExpandedLocationIds] = useState<string[]>([]);
 
   const activeLocationsCount = locations.length;
+  const insets = useSafeAreaInsets();
 
   const { mutate: completeProfileMutation, isPending } =
     useCompleteDealerProfile();
@@ -445,7 +448,13 @@ const ManageWarehousesScreen = () => {
         scrollable
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          ...styles.scrollContent,
+          paddingBottom:
+            (noWarehouse ? 56 : 56 * 2 + theme.spacing[3]) +
+            theme.spacing[4] * 2 +
+            insets.bottom,
+        }}
       >
         <View style={styles.container}>
           {/* No Warehouse Option */}
@@ -666,7 +675,7 @@ const ManageWarehousesScreen = () => {
                           pinColor={
                             location.isPrimary
                               ? theme.colors.primary.DEFAULT
-                              : theme.colors.error.DEFAULT
+                              : theme.colors.secondary.DEFAULT
                           }
                         />
                       </MapView>
@@ -729,53 +738,47 @@ const ManageWarehousesScreen = () => {
         </View>
       </ScreenWrapper>
       {/* Footer */}
-      <View style={styles.footer}>
+      <FloatingBottomContainer>
         {!noWarehouse && (
-          <TouchableOpacity
-            style={styles.secondaryButton}
+          <CustomButton
+            title="Search Address"
             onPress={handleSearchAddress}
-            activeOpacity={0.8}
-          >
-            <AppIcon.Search
+            variant="outline"
+            size="md"
+            leftIcon={
+              <AppIcon.Search
+                width={18}
+                height={18}
+                color={theme.colors.primary.DEFAULT}
+              />
+            }
+            textStyle={{ color: theme.colors.primary.DEFAULT }}
+            style={styles.searchAddressButton}
+          />
+        )}
+        <CustomButton
+          title="Complete Registration"
+          onPress={handleSave}
+          variant="gradient"
+          size="md"
+          loading={isPending}
+          disabled={isPending}
+          gradientColors={[
+            theme.colors.primary[400],
+            theme.colors.primary[600],
+            theme.colors.primary.DEFAULT,
+          ]}
+          gradientStart={{ x: 0, y: 0 }}
+          gradientEnd={{ x: 1, y: 1 }}
+          rightIcon={
+            <AppIcon.ArrowRight
               width={20}
               height={20}
-              color={theme.colors.primary.DEFAULT}
+              color={theme.colors.text.inverse}
             />
-            <Text variant="buttonMedium" style={styles.secondaryButtonText}>
-              SEARCH ADDRESS
-            </Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          style={[
-            styles.primaryButton,
-            {
-              marginTop: 12,
-              backgroundColor: isPending
-                ? theme.colors.primary.light
-                : theme.colors.primary.DEFAULT,
-            },
-          ]}
-          onPress={handleSave}
-          activeOpacity={0.8}
-          disabled={isPending}
-        >
-          {isPending ? (
-            <ActivityIndicator size="small" color={theme.colors.text.inverse} />
-          ) : (
-            <>
-              <Text variant="buttonMedium" style={styles.primaryButtonText}>
-                Complete Registration
-              </Text>
-              <AppIcon.ArrowRight
-                width={20}
-                height={20}
-                color={theme.colors.text.inverse}
-              />
-            </>
-          )}
-        </TouchableOpacity>
-
+          }
+          style={styles.completeButton}
+        />
         {error && (
           <View style={styles.errorContainer}>
             <Text variant="bodySmall" style={styles.errorText}>
@@ -783,7 +786,7 @@ const ManageWarehousesScreen = () => {
             </Text>
           </View>
         )}
-      </View>
+      </FloatingBottomContainer>
 
       {/* Location Picker Modal */}
       <Modal
@@ -839,33 +842,22 @@ const ManageWarehousesScreen = () => {
         onRequestClose={handleWarehouseFormCancel}
       >
         <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: theme.colors.background.secondary,
-          }}
+          style={[styles.warehouseModalContainer, { backgroundColor: theme.colors.background.secondary }]}
         >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: theme.spacing[4],
-              paddingVertical: theme.spacing[3],
-              borderBottomWidth: 1,
-              borderBottomColor: theme.colors.border.primary,
-            }}
-          >
-            <Text variant="h5" fontWeight="semibold" style={{ color: theme.colors.text.primary }}>
+          <View style={styles.formModalHeader}>
+            <Text variant="h5" fontWeight="semibold" style={styles.formModalTitle}>
               {editingLocation ? 'Edit Warehouse Details' : 'Add Warehouse Details'}
             </Text>
             <TouchableOpacity
               onPress={handleWarehouseFormCancel}
+              style={styles.formModalCloseButton}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              activeOpacity={0.7}
             >
               <AppIcon.Close
-                width={22}
-                height={22}
-                color={theme.colors.text.secondary}
+                width={24}
+                height={24}
+                color={theme.colors.text.primary}
               />
             </TouchableOpacity>
           </View>

@@ -1,6 +1,11 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
+import {
+  getHeadingStyle,
+  getBodyStyle,
+  getCaptionStyle,
+} from '../sharedDashboardStyles';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -36,14 +41,15 @@ export const createStyles = (theme: Theme) =>
       justifyContent: 'center',
     },
     creditsLabel: {
-      fontSize: 11,
+      ...getCaptionStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       letterSpacing: 0.5,
     },
     creditsValue: {
-      fontSize: 22,
-      fontWeight: fontWeightForPlatform('800'),
+      fontSize: theme.typography.heading.h4.fontSize,
+      fontFamily: theme.fontFamily.bold,
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     addCreditsButton: {
@@ -53,7 +59,7 @@ export const createStyles = (theme: Theme) =>
       backgroundColor: theme.colors.primary.DEFAULT,
     },
     addCreditsButtonText: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.inverse,
     },
@@ -62,8 +68,7 @@ export const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacing[5],
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: fontWeightForPlatform('800'),
+      ...getHeadingStyle(theme, 'h5'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[3],
     },
@@ -102,15 +107,14 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[2],
     },
     quickActionLabel: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.inverse,
       textAlign: 'center',
     },
     quickActionSubtext: {
       marginTop: theme.spacing[1],
-      fontSize: 12,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.inverse,
       textAlign: 'center',
       opacity: 0.9,
@@ -122,7 +126,7 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[3],
     },
     detailsLink: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
@@ -141,14 +145,15 @@ export const createStyles = (theme: Theme) =>
       justifyContent: 'space-between',
     },
     rtdCardLabel: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.secondary,
       marginBottom: theme.spacing[2],
     },
     rtdCardValue: {
-      fontSize: 24,
-      fontWeight: fontWeightForPlatform('800'),
+      fontSize: theme.typography.heading.h4.fontSize,
+      fontFamily: theme.fontFamily.bold,
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
     },
@@ -159,7 +164,7 @@ export const createStyles = (theme: Theme) =>
       minHeight: 20,
     },
     rtdCardSubText: {
-      fontSize: 11,
+      ...getCaptionStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.tertiary,
     },
@@ -175,6 +180,7 @@ export const createStyles = (theme: Theme) =>
       borderWidth: 2,
       borderStyle: 'dashed',
       borderColor: theme.colors.border.primary,
+      marginTop: theme.spacing[2],
     },
     emptySessionsIconWrap: {
       width: 64,
@@ -186,14 +192,12 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[3],
     },
     emptySessionsTitle: {
-      fontSize: 16,
-      fontWeight: fontWeightForPlatform('800'),
+      ...getHeadingStyle(theme, 'h6'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
     emptySessionsDesc: {
-      fontSize: 14,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.secondary,
       textAlign: 'center',
       marginBottom: theme.spacing[4],
@@ -206,7 +210,7 @@ export const createStyles = (theme: Theme) =>
       // marginTop: theme.spacing[2],
     },
     viewAllSessionsButtonText: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.inverse,
     },
@@ -235,7 +239,7 @@ export const createStyles = (theme: Theme) =>
       borderRadius: 4,
     },
     sessionStatusText: {
-      fontSize: 11,
+      ...getCaptionStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       letterSpacing: 0.3,
@@ -250,7 +254,7 @@ export const createStyles = (theme: Theme) =>
       gap: theme.spacing[1],
     },
     sessionTimeText: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
     },
@@ -269,7 +273,7 @@ export const createStyles = (theme: Theme) =>
       marginRight: theme.spacing[3],
     },
     sessionAvatarText: {
-      fontSize: 16,
+      ...getBodyStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
@@ -277,14 +281,13 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
     },
     sessionCompany: {
-      fontSize: 15,
-      fontWeight: fontWeightForPlatform('700'),
+      ...getBodyStyle(theme, 'medium'),
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
       marginBottom: 2,
     },
     sessionDescription: {
-      fontSize: 13,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.secondary,
     },
     actionButton: {
@@ -294,7 +297,7 @@ export const createStyles = (theme: Theme) =>
       borderRadius: theme.borderRadius.button.sm,
     },
     actionButtonText: {
-      fontSize: 13,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.inverse,
     },
@@ -316,12 +319,11 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[2],
     },
     progressMetaLabel: {
-      fontSize: 12,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.primary,
     },
     progressMetaValue: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
@@ -341,12 +343,11 @@ export const createStyles = (theme: Theme) =>
       justifyContent: 'space-between',
     },
     sessionStep: {
-      fontSize: 12,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.tertiary,
     },
     sessionWaiting: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.secondary,
     },

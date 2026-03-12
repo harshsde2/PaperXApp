@@ -1,6 +1,11 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
+import {
+  getHeadingStyle,
+  getBodyStyle,
+  getCaptionStyle,
+} from '../sharedDashboardStyles';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -29,14 +34,13 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
     },
     notificationTitle: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
       marginBottom: 2,
     },
     notificationSubtitle: {
-      fontSize: 12,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.primary[400],
     },
 
@@ -65,24 +69,24 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[3],
     },
     actionCardBadgeText: {
+      ...getCaptionStyle(theme, 'small'),
       fontSize: 11,
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.inverse,
       letterSpacing: 0.8,
     },
     actionCardTitle: {
-      fontSize: 22,
-      fontWeight: fontWeightForPlatform('800'),
+      ...getHeadingStyle(theme, 'h4'),
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.inverse,
       marginBottom: theme.spacing[2],
     },
     actionCardSubtitle: {
-      fontSize: 13,
-      fontWeight: fontWeightForPlatform('400'),
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.inverse,
-      opacity: 0.85,
+      opacity: 0.9,
       marginBottom: theme.spacing[5],
-      lineHeight: 18,
+      lineHeight: 20,
       maxWidth: '80%',
     },
     actionCardIconWrap: {
@@ -99,14 +103,17 @@ export const createStyles = (theme: Theme) =>
     actionCardButton: {
       backgroundColor: theme.colors.surface.primary,
       paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[4],
       borderRadius: theme.borderRadius.button.lg,
       alignItems: 'center',
       justifyContent: 'center',
+      marginBottom: theme.spacing[2],
     },
     actionCardButtonText: {
-      fontSize: 15,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
+      lineHeight: 20,
     },
     actionCardButtonTextSuccess: {
       color: theme.colors.success.DEFAULT,
@@ -133,15 +140,17 @@ export const createStyles = (theme: Theme) =>
       position: 'relative',
     },
     statLabel: {
-      fontSize: 10,
+      ...getCaptionStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.tertiary,
       letterSpacing: 0.8,
       marginBottom: theme.spacing[2],
+      textTransform: 'uppercase',
     },
     statValue: {
       fontSize: 28,
-      fontWeight: fontWeightForPlatform('800'),
+      fontFamily: theme.fontFamily.bold,
+      fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
@@ -149,8 +158,7 @@ export const createStyles = (theme: Theme) =>
       color: theme.colors.primary.DEFAULT,
     },
     statCategory: {
-      fontSize: 12,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.secondary,
     },
     statDot: {
@@ -175,12 +183,11 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[4],
     },
     recentTitle: {
-      fontSize: 20,
-      fontWeight: fontWeightForPlatform('800'),
+      ...getHeadingStyle(theme, 'h5'),
       color: theme.colors.text.primary,
     },
     viewAllLink: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.primary.DEFAULT,
     },
@@ -199,7 +206,7 @@ export const createStyles = (theme: Theme) =>
       backgroundColor: theme.colors.text.primary,
     },
     tabText: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.secondary,
     },
@@ -231,14 +238,13 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
     },
     activityTitle: {
-      fontSize: 15,
-      fontWeight: fontWeightForPlatform('700'),
+      ...getBodyStyle(theme, 'medium'),
+      fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.text.primary,
       marginBottom: 2,
     },
     activityTime: {
-      fontSize: 12,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.tertiary,
     },
     activityBadge: {
@@ -274,14 +280,12 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[3],
     },
     emptyActivityTitle: {
-      fontSize: 16,
-      fontWeight: fontWeightForPlatform('800'),
+      ...getHeadingStyle(theme, 'h6'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
     emptyActivityDesc: {
-      fontSize: 14,
-      fontWeight: fontWeightForPlatform('500'),
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.secondary,
       textAlign: 'center',
       marginBottom: theme.spacing[4],

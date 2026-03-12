@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   InteractionManager,
-  Alert as RNAlert,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
@@ -32,9 +32,10 @@ import { useCompleteBrandProfile } from '@services/api';
 import type { UpdateProfileResponse } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
+import { Toast } from 'toastify-react-native';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
 import { ROLES } from '@utils/constants';
-import { Alert, ActivityIndicator } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import {
   BrandRegistrationScreenNavigationProp,
   BrandTypeCategory,
@@ -745,11 +746,16 @@ const BrandRegistrationScreen = () => {
   // Open city selector
   const openCitySelector = useCallback(() => {
     if (!stateValue) {
-      RNAlert.alert('Select State', 'Please select a state first');
+      dispatch(
+        showToast({
+          message: 'Please select a state first',
+          type: 'error',
+        })
+      );
       return;
     }
     citySheetRef.current?.present();
-  }, [stateValue]);
+  }, [stateValue, dispatch]);
 
   // Handle location selection from LocationPicker
   const handleLocationSelect = useCallback(
@@ -892,9 +898,11 @@ const BrandRegistrationScreen = () => {
     (data: BrandRegistrationFormData) => {
       // Validate that at least one brand type is selected
       if (selectedBrandTypes.size === 0) {
-        Alert.alert(
-          'Validation Error',
-          'Please select at least one brand type',
+        dispatch(
+          showToast({
+            message: 'Please select at least one brand type',
+            type: 'error',
+          })
         );
         return;
       }
@@ -905,9 +913,11 @@ const BrandRegistrationScreen = () => {
         .filter((id): id is number => id !== undefined && !isNaN(id));
 
       if (brandTypeIds.length === 0) {
-        Alert.alert(
-          'Validation Error',
-          'Please select at least one valid brand type',
+        dispatch(
+          showToast({
+            message: 'Please select at least one valid brand type',
+            type: 'error',
+          })
         );
         return;
       }
@@ -1067,6 +1077,20 @@ const BrandRegistrationScreen = () => {
 
   const citiesForState = getCitiesForState(selectedStateIso);
 
+  const onInvalid = useCallback(
+    (errors: Record<string, { message?: string }>) => {
+      const firstError = Object.values(errors)[0];
+      const message = firstError?.message || 'Please check the form and try again.';
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: message,
+        position: 'top',
+      });
+    },
+    []
+  );
+
   return (
     <BottomSheetModalProvider>
       <View style={{ flex: 1 }}>
@@ -1141,18 +1165,6 @@ const BrandRegistrationScreen = () => {
                           editable={!hasPrefilledCompanyDetails}
                         />
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1198,18 +1210,6 @@ const BrandRegistrationScreen = () => {
                           }}
                         />
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1265,18 +1265,6 @@ const BrandRegistrationScreen = () => {
                           color={theme.colors.text.tertiary}
                         />
                       </TouchableOpacity>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1331,18 +1319,6 @@ const BrandRegistrationScreen = () => {
                           }}
                         />
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1412,18 +1388,6 @@ const BrandRegistrationScreen = () => {
                           </View>
                         )}
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1493,18 +1457,6 @@ const BrandRegistrationScreen = () => {
                           </View>
                         )}
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1558,18 +1510,6 @@ const BrandRegistrationScreen = () => {
                           editable={!hasPrefilledCompanyDetails}
                         />
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1596,18 +1536,6 @@ const BrandRegistrationScreen = () => {
                         onPress={openStateSelector}
                         disabled={hasPrefilledCompanyDetails}
                       />
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1634,18 +1562,6 @@ const BrandRegistrationScreen = () => {
                         onPress={openCitySelector}
                         disabled={hasPrefilledCompanyDetails || !stateValue}
                       />
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1696,18 +1612,6 @@ const BrandRegistrationScreen = () => {
                           numberOfLines={2}
                         />
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                     </>
                   )}
                 />
@@ -1794,37 +1698,14 @@ const BrandRegistrationScreen = () => {
                           </TouchableOpacity>
                         </View>
                       </View>
-                      {error && (
-                        <Text
-                          variant="captionSmall"
-                          style={{
-                            color:
-                              (theme.colors.error as any)?.DEFAULT || '#FF3B30',
-                            marginTop: 4,
-                          }}
-                        >
-                          {error.message}
-                        </Text>
-                      )}
                       {!showManualLocationEntry && (
-                        <TouchableOpacity
+                        <CustomButton
+                          title={value ? 'Change Location on Map' : 'Select Location on Map'}
                           onPress={() => setShowLocationPicker(true)}
-                          style={{
-                            marginTop: theme.spacing[2],
-                            padding: theme.spacing[2],
-                            backgroundColor: theme.colors.primary.DEFAULT,
-                            borderRadius: 8,
-                            alignItems: 'center',
-                          }}
-                          activeOpacity={0.8}
-                        >
-                          <Text
-                            variant="bodyMedium"
-                            style={{ color: theme.colors.text.inverse }}
-                          >
-                            {value ? 'Change Location on Map' : 'Select Location on Map'}
-                          </Text>
-                        </TouchableOpacity>
+                          variant="primary"
+                          size="md"
+                          style={styles.mapLocationButton}
+                        />
                       )}
                     </>
                   )}
@@ -1837,17 +1718,20 @@ const BrandRegistrationScreen = () => {
           <Modal
             visible={showBrandTypeModal}
             animationType="slide"
-            transparent={true}
+            transparent
             onRequestClose={() => setShowBrandTypeModal(false)}
           >
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                justifyContent: 'flex-end',
+            <Pressable
+              style={styles.brandTypeModalOverlay}
+              onPress={() => {
+                setShowBrandTypeModal(false);
+                setBrandTypeSearchQuery('');
               }}
             >
-              <View style={styles.brandTypeModal}>
+              <Pressable
+                style={styles.brandTypeModal}
+                onPress={(e) => e.stopPropagation()}
+              >
                 <View style={styles.brandTypeModalHeader}>
                   <Text
                     variant="h5"
@@ -1864,13 +1748,11 @@ const BrandRegistrationScreen = () => {
                     }}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      variant="bodyMedium"
-                      fontWeight="semibold"
-                      color={theme.colors.primary.DEFAULT}
-                    >
-                      Done
-                    </Text>
+                    <AppIcon.Close
+                      width={24}
+                      height={24}
+                      color={theme.colors.text.primary}
+                    />
                   </TouchableOpacity>
                 </View>
 
@@ -1948,8 +1830,8 @@ const BrandRegistrationScreen = () => {
                     </View>
                   ))}
                 </ScrollView>
-              </View>
-            </View>
+              </Pressable>
+            </Pressable>
           </Modal>
 
           {/* Location Picker Modal */}
@@ -1997,67 +1879,29 @@ const BrandRegistrationScreen = () => {
           <Text variant="bodySmall" style={styles.footerNote}>
             You can add more details later while posting a requirement.
           </Text>
-          <TouchableOpacity
-            style={[
-              styles.continueButton,
-              (!isFormValid || isSubmitting) && styles.continueButtonDisabled,
+          <CustomButton
+            title="Continue"
+            onPress={() => handleSubmit(onSubmit, onInvalid)()}
+            variant="gradient"
+            size="md"
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
             ]}
-            onPress={() => {
-              if (isFormValid && !isSubmitting) {
-                handleSubmit(onSubmit)();
-              } else {
-                // Debug: Log why button is disabled
-                if (__DEV__) {
-                  console.log('Button disabled. Form state:', {
-                    companyName: companyNameValue,
-                    brandName: brandNameValue,
-                    brandTypes: selectedBrandTypes.size,
-                    contactPerson: contactPersonNameValue,
-                    mobile: mobileValue,
-                    email: emailValue,
-                    city: cityValue,
-                    location: locationValue,
-                    latitude: latitudeValue,
-                    longitude: longitudeValue,
-                    isMobileValid,
-                    isEmailValid,
-                    isFormValid,
-                    isSubmitting,
-                  });
-                }
-              }
-            }}
-            activeOpacity={0.8}
-            disabled={!isFormValid || isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
                 color={theme.colors.text.inverse}
-                size="small"
               />
-            ) : (
-              <>
-                <Text
-                  variant="buttonMedium"
-                  style={[
-                    styles.continueButtonText,
-                    {
-                      color: !isFormValid
-                        ? theme.colors.text.primary
-                        : theme.colors.text.inverse,
-                    },
-                  ]}
-                >
-                  Continue
-                </Text>
-                <AppIcon.ArrowRight
-                  width={20}
-                  height={20}
-                  color={theme.colors.text.inverse}
-                />
-              </>
-            )}
-          </TouchableOpacity>
+            }
+            style={styles.continueButton}
+          />
         </FloatingBottomContainer>
       )}
         </>

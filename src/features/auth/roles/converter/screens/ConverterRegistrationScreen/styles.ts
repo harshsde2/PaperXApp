@@ -96,7 +96,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontSize: 12,
   },
   errorText: {
-    color: (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+    color: theme.colors.error.DEFAULT,
     marginTop: theme.spacing[1],
     fontSize: 12,
   },
@@ -135,21 +135,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontWeight: fontWeightForPlatform('600'),
   },
   button: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
     marginTop: theme.spacing[4],
     marginBottom: theme.spacing[6],
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: theme.colors.text.inverse,
   },
   securityFooter: {
     flexDirection: 'row',

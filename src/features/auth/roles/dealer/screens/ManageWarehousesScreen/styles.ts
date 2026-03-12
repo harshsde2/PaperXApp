@@ -67,8 +67,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   locationCardPrimary: {
     borderWidth: 1,
-    borderColor: theme.colors.primary.DEFAULT,
-    backgroundColor: theme.colors.primary.light,
+    borderColor: theme.colors.primary[200],
+    backgroundColor: theme.colors.primary[50],
   },
   locationHeaderRow: {
     flexDirection: 'row',
@@ -204,56 +204,45 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   addLocationDescription: {
     color: theme.colors.text.secondary,
   },
-  footer: {
-    // position: 'absolute',
-    // bottom: 0,
-    // left: 0,
-    // right: 0,
-    backgroundColor: theme.colors.surface.primary,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.primary,
-    padding: theme.spacing[4],
-    // paddingBottom: theme.spacing[10],
-  },
-  primaryButton: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
-  },
-  primaryButtonText: {
-    color: theme.colors.text.inverse,
-    letterSpacing: 0.5,
-  },
-  secondaryButton: {
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing[2],
+  searchAddressButton: {
+    marginBottom: theme.spacing[2],
+    backgroundColor: theme.colors.primary[50],
     borderWidth: 1,
-    borderColor: theme.colors.primary.DEFAULT,
-    backgroundColor: theme.colors.surface.primary,
+    borderColor: theme.colors.primary[200],
+    borderRadius: theme.borderRadius.md,
   },
-  secondaryButtonText: {
-    color: theme.colors.primary.DEFAULT,
-    letterSpacing: 0.5,
+  completeButton: {
+    width: '100%',
   },
   errorContainer: {
     marginTop: theme.spacing[3],
     padding: theme.spacing[3],
-    backgroundColor: theme.colors.error.light || '#FEE2E2',
+    backgroundColor: theme.colors.error.light,
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: theme.colors.error.DEFAULT || '#EF4444',
+    borderColor: theme.colors.error.DEFAULT,
   },
   errorText: {
-    color: theme.colors.error.DEFAULT || '#EF4444',
+    color: theme.colors.error.DEFAULT,
     textAlign: 'center',
+  },
+  formModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing[4],
+    paddingVertical: theme.spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.primary,
+  },
+  formModalTitle: {
+    color: theme.colors.text.primary,
+  },
+  formModalCloseButton: {
+    padding: theme.spacing[1],
+  },
+  warehouseModalContainer: {
+    flex: 1,
   },
 });
 

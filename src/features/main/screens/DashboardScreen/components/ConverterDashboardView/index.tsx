@@ -248,7 +248,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
                 y={0}
                 width={cardLayout.width}
                 height={cardLayout.height}
-                r={theme.borderRadius.card.lg ?? 12}
+                r={theme.borderRadius.card.lg ?? 16}
               >
                 <LinearGradient
                   start={vec(0, 0)}
@@ -279,7 +279,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
                 y={0}
                 width={cardLayout.width}
                 height={cardLayout.height}
-                r={theme.borderRadius.card.lg ?? 12}
+                r={theme.borderRadius.card.lg ?? 16}
               >
                 <LinearGradient
                   start={vec(0, 0)}
@@ -361,7 +361,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
             <View style={styles.viewAllSessionsButtonContainer}>
               <CustomButton
                 title="View All Sessions"
-                onPress={() => { }}
+                onPress={handleViewAllSessions}
                 variant="gradient"
                 size="sm"
                 style={{ marginTop: theme.spacing[2], alignSelf: 'flex-start' }}

@@ -107,7 +107,7 @@ export const CustomButton = memo<CustomButtonProps>(function CustomButton({
   const sizeStyle =
     size === 'sm' ? styles.sizeSm : size === 'lg' ? styles.sizeLg : styles.sizeMd;
   const textColorStyle = isDisabled
-    ? styles.textDisabled
+    ? (useGradient ? styles.textGradient : styles.textDisabled)
     : useGradient
       ? styles.textGradient
       : styles[VARIANT_TEXT_STYLE_KEY[variant]];

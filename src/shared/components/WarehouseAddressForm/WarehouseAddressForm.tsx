@@ -8,12 +8,14 @@ import {
   BottomSheetFlatList,
 } from '@gorhom/bottom-sheet';
 import { Text } from '@shared/components/Text';
+import { AppIcon } from '@assets/svgs';
 import { FormInput } from '@shared/forms';
 import { DropdownButton } from '@shared/components/DropdownButton';
 import { StateSelectionContent } from '@shared/components/StateSelectionContent';
 import { CitySelectionContent } from '@shared/components/CitySelectionContent';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useTheme } from '@theme/index';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
 import { validatePincode } from '@shared/location';
 import type { WarehouseFormData, WarehouseAddressFormProps } from './@types';
@@ -48,6 +50,7 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
   submitLabel = 'Add Location',
 }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const stateSheetRef = useRef<BottomSheetModal>(null);
   const citySheetRef = useRef<BottomSheetModal>(null);
@@ -139,6 +142,7 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
     <BottomSheetModalProvider>
       <ScrollView
         style={styles.container}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: theme.spacing[8] + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -258,8 +262,22 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
           />
           <CustomButton
             title={submitLabel}
-            variant="primary"
+            variant="gradient"
             onPress={handleSubmit(onFormSubmit)}
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
+                color={theme.colors.text.inverse}
+              />
+            }
             style={styles.submitButton}
           />
         </View>

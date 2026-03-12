@@ -1,16 +1,16 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
+import { View, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
-import { useAppSelector, useAppDispatch } from '@store/hooks';
+import { useAppDispatch } from '@store/hooks';
 import { logout } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
-import { useThemeContext, themePalettes } from '@theme/index';
+import { useTheme, useThemeContext, themePalettes } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
 import type { ThemePaletteId } from '@theme/index';
+import { createStyles } from './styles';
 
 interface SettingItem {
   id: string;
@@ -36,7 +36,9 @@ const SettingsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
+  const theme = useTheme();
   const themeContext = useThemeContext();
+  const styles = createStyles(theme);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkMode, setDarkMode] = React.useState(false);
 
@@ -51,6 +53,10 @@ const SettingsScreen: React.FC = () => {
 
   const handleNavigateToRegistrationDetails = () => {
     navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
+  };
+
+  const handleWalletPress = () => {
+    navigation.navigate(SCREENS.WALLET.MAIN);
   };
 
   const settingsSections = [
@@ -81,7 +87,7 @@ const SettingsScreen: React.FC = () => {
       items: [
         {
           id: 'profile',
-          icon: <AppIcon.Person width={22} height={22} color="#6B7280" />,
+          icon: <AppIcon.Person width={22} height={22} color={theme.colors.text.secondary} />,
           title: 'Profile Settings',
           subtitle: 'Manage your account details',
           type: 'navigation',
@@ -89,11 +95,19 @@ const SettingsScreen: React.FC = () => {
         },
         {
           id: 'Registration Details',
-          icon: <AppIcon.Security width={22} height={22} color="#6B7280" />,
+          icon: <AppIcon.Security width={22} height={22} color={theme.colors.text.secondary} />,
           title: 'Registration Details',
           subtitle: 'Manage your registration details',
           type: 'navigation',
           onPress: handleNavigateToRegistrationDetails,
+        },
+        {
+          id: 'wallet',
+          icon: <AppIcon.Wallet width={22} height={22} color={theme.colors.text.secondary} />,
+          title: 'Wallet',
+          subtitle: 'Manage your wallet and credits',
+          type: 'navigation',
+          onPress: handleWalletPress,
         },
         // {
         //   id: 'notifications',
@@ -130,13 +144,13 @@ const SettingsScreen: React.FC = () => {
       items: [
         {
           id: 'help',
-          icon: <AppIcon.Warning width={22} height={22} color="#6B7280" />,
+          icon: <AppIcon.Warning width={22} height={22} color={theme.colors.text.secondary} />,
           title: 'Help Center',
           type: 'navigation',
         },
         {
           id: 'contact',
-          icon: <AppIcon.Mail width={22} height={22} color="#6B7280" />,
+          icon: <AppIcon.Mail width={22} height={22} color={theme.colors.text.secondary} />,
           title: 'Contact Support',
           type: 'navigation',
         },
@@ -147,7 +161,7 @@ const SettingsScreen: React.FC = () => {
       items: [
         {
           id: 'logout',
-          icon: <AppIcon.ArrowRight width={22} height={22} color="#EF4444" />,
+          icon: <AppIcon.ArrowRight width={22} height={22} color={theme.colors.error.DEFAULT} />,
           title: 'Log Out',
           type: 'action',
           danger: true,
@@ -180,16 +194,19 @@ const SettingsScreen: React.FC = () => {
         <Switch
           value={item.value}
           onValueChange={item.onPress}
-          trackColor={{ false: '#E5E7EB', true: '#BFDBFE' }}
-          thumbColor={item.value ? '#2563EB' : '#9CA3AF'}
+          trackColor={{
+            false: theme.colors.border.primary,
+            true: theme.colors.primary[200],
+          }}
+          thumbColor={item.value ? theme.colors.primary.DEFAULT : theme.colors.text.tertiary}
         />
       )}
       {item.type === 'navigation' &&
         !('isSelected' in item && item.isSelected) && (
-          <AppIcon.ChevronRight width={20} height={20} color="#9CA3AF" />
+          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
         )}
       {'isSelected' in item && item.isSelected && (
-        <AppIcon.TickCheckedBox width={20} height={20} color="#2563EB" />
+        <AppIcon.TickCheckedBox width={20} height={20} color={theme.colors.primary.DEFAULT} />
       )}
     </TouchableOpacity>
   );
@@ -222,99 +239,5 @@ const SettingsScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: fontWeightForPlatform('700'),
-    color: '#111827',
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: fontWeightForPlatform('600'),
-    color: '#6B7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  sectionContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  iconContainerDanger: {
-    backgroundColor: '#FEE2E2',
-  },
-  settingContent: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: fontWeightForPlatform('500'),
-    color: '#111827',
-  },
-  settingTitleDanger: {
-    color: '#EF4444',
-  },
-  settingSubtitle: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  version: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: '#9CA3AF',
-    marginTop: 20,
-  },
-  paletteSwatch: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-  },
-});
 
 export default SettingsScreen;

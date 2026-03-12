@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -249,15 +250,21 @@ const RawMaterialsScreen = () => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.continueButton}
+        <CustomButton
+          title="Continue"
           onPress={handleContinue}
-          activeOpacity={0.8}
-        >
-          <Text variant="buttonMedium" style={styles.continueButtonText}>
-            Continue
-          </Text>
-        </TouchableOpacity>
+          variant="gradient"
+          size="md"
+          gradientColors={[
+            theme.colors.primary[400],
+            theme.colors.primary[600],
+            theme.colors.primary.DEFAULT,
+          ]}
+          gradientStart={{ x: 0, y: 0 }}
+          gradientEnd={{ x: 1, y: 1 }}
+          rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+          style={styles.continueButton}
+        />
       </View>
     </ScreenWrapper>
   );

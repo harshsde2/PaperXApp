@@ -1,15 +1,30 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, TextInput } from 'react-native';
 import { useTheme } from '@theme/index';
 import { OTPInputProps } from './@types';
 import { createStyles } from './styles';
 
-const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) => {
+const OTPInput: React.FC<OTPInputProps> = ({ length = 6, value, onComplete }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const [otp, setOtp] = useState<string[]>(Array(length).fill(''));
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
+  // Sync internal state when controlled value changes (e.g. auto-filled OTP)
+  useEffect(() => {
+    if (!value) {
+      return;
+    }
+    if (value.length !== length) {
+      return;
+    }
+    const next = value.split('').slice(0, length);
+    // Only update if different to avoid unnecessary re-renders
+    if (next.join('') !== otp.join('')) {
+      setOtp(next);
+    }
+  }, [value, length, otp]);
 
   const handleChange = (text: string, index: number) => {
     if (text.length > 1) {

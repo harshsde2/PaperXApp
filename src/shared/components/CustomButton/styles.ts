@@ -12,7 +12,7 @@ export const createStyles = (theme: Theme) =>
       alignSelf: 'stretch',
     },
     disabled: {
-      opacity: 0.5,
+      opacity: 0.75,
     },
 
     // Variants

@@ -5,6 +5,11 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
+import {
+  getHeadingStyle,
+  getBodyStyle,
+  getCaptionStyle,
+} from '../../../main/screens/DashboardScreen/components/sharedDashboardStyles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -97,13 +102,13 @@ export const createStyles = (theme: Theme) =>
       width: 8,
       height: 8,
       borderRadius: 4,
-      backgroundColor: '#4ADE80',
+      backgroundColor: theme.colors.success.DEFAULT,
       marginRight: theme.spacing[2],
     },
     statusText: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('600'),
-      color: 'rgba(255, 255, 255, 0.8)',
+      color: 'rgba(255, 255, 255, 0.85)',
       letterSpacing: 0.5,
     },
     walletIdText: {
@@ -123,11 +128,11 @@ export const createStyles = (theme: Theme) =>
     },
     quickActionCard: {
       flex: 1,
-      backgroundColor: theme.colors.background.primary,
+      backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing[4],
       alignItems: 'center',
-      shadowColor: '#000',
+      shadowColor: theme.colors.black,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 12,
@@ -144,19 +149,19 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[3],
     },
     quickActionIconBuy: {
-      backgroundColor: '#ECFDF5',
+      backgroundColor: theme.colors.success[50] ?? theme.colors.success.light,
     },
     quickActionIconHistory: {
-      backgroundColor: '#EFF6FF',
+      backgroundColor: theme.colors.primary[50],
     },
     quickActionTitle: {
-      fontSize: 15,
+      ...getBodyStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[1],
     },
     quickActionSubtitle: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.tertiary,
       textAlign: 'center',
     },
@@ -172,7 +177,7 @@ export const createStyles = (theme: Theme) =>
     },
     statCard: {
       flex: 1,
-      backgroundColor: theme.colors.background.primary,
+      backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.lg,
       padding: theme.spacing[4],
       borderWidth: 1,
@@ -192,26 +197,26 @@ export const createStyles = (theme: Theme) =>
       marginRight: theme.spacing[2],
     },
     statIconCredit: {
-      backgroundColor: '#DCFCE7',
+      backgroundColor: theme.colors.success[50] ?? theme.colors.success.light,
     },
     statIconDebit: {
-      backgroundColor: '#FEE2E2',
+      backgroundColor: theme.colors.error[50] ?? theme.colors.error.light,
     },
     statLabel: {
-      fontSize: 12,
+      ...getCaptionStyle(theme, 'medium'),
       color: theme.colors.text.tertiary,
-      fontWeight: fontWeightForPlatform('500'),
     },
     statValue: {
-      fontSize: 20,
+      fontSize: theme.typography.heading.h5.fontSize,
+      fontFamily: theme.fontFamily.bold,
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
     statValueCredit: {
-      color: '#16A34A',
+      color: theme.colors.success.DEFAULT,
     },
     statValueDebit: {
-      color: '#DC2626',
+      color: theme.colors.error.DEFAULT,
     },
 
     // ==========================================
@@ -241,8 +246,7 @@ export const createStyles = (theme: Theme) =>
       marginRight: theme.spacing[2],
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: fontWeightForPlatform('700'),
+      ...getHeadingStyle(theme, 'h5'),
       color: theme.colors.text.primary,
     },
     viewAllButton: {
@@ -252,7 +256,7 @@ export const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacing[2],
     },
     viewAllText: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
       color: theme.colors.primary.DEFAULT,
       marginRight: theme.spacing[1],
@@ -262,7 +266,7 @@ export const createStyles = (theme: Theme) =>
     // TRANSACTIONS LIST
     // ==========================================
     transactionsCard: {
-      backgroundColor: theme.colors.background.primary,
+      backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.xl,
       overflow: 'hidden',
       borderWidth: 1,
@@ -283,19 +287,18 @@ export const createStyles = (theme: Theme) =>
       width: 80,
       height: 80,
       borderRadius: 40,
-      backgroundColor: theme.colors.background.secondary,
+      backgroundColor: theme.colors.surface.tertiary,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: theme.spacing[4],
     },
     emptyTitle: {
-      fontSize: 17,
-      fontWeight: fontWeightForPlatform('600'),
+      ...getHeadingStyle(theme, 'h6'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
     },
     emptySubtitle: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.tertiary,
       textAlign: 'center',
       lineHeight: 20,
@@ -309,8 +312,8 @@ export const createStyles = (theme: Theme) =>
       borderRadius: theme.borderRadius.lg,
     },
     emptyButtonText: {
-      color: theme.colors.white,
-      fontSize: 14,
+      color: theme.colors.text.inverse,
+      ...getBodyStyle(theme, 'small'),
       fontWeight: fontWeightForPlatform('600'),
     },
 
@@ -324,11 +327,11 @@ export const createStyles = (theme: Theme) =>
       backgroundColor: theme.colors.background.secondary,
     },
     loadingCard: {
-      backgroundColor: theme.colors.background.primary,
+      backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing[8],
       alignItems: 'center',
-      shadowColor: '#000',
+      shadowColor: theme.colors.black,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 12,
@@ -348,7 +351,7 @@ export const createStyles = (theme: Theme) =>
       backgroundColor: theme.colors.background.secondary,
     },
     errorCard: {
-      backgroundColor: theme.colors.background.primary,
+      backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing[6],
       alignItems: 'center',
@@ -359,20 +362,19 @@ export const createStyles = (theme: Theme) =>
       width: 64,
       height: 64,
       borderRadius: 32,
-      backgroundColor: '#FEE2E2',
+      backgroundColor: theme.colors.error[50] ?? theme.colors.error.light,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: theme.spacing[4],
     },
     errorTitle: {
-      fontSize: 18,
-      fontWeight: fontWeightForPlatform('600'),
+      ...getHeadingStyle(theme, 'h5'),
       color: theme.colors.text.primary,
       marginBottom: theme.spacing[2],
       textAlign: 'center',
     },
     errorText: {
-      fontSize: 14,
+      ...getBodyStyle(theme, 'small'),
       color: theme.colors.text.secondary,
       textAlign: 'center',
       marginBottom: theme.spacing[5],
@@ -385,8 +387,8 @@ export const createStyles = (theme: Theme) =>
       borderRadius: theme.borderRadius.lg,
     },
     retryButtonText: {
-      color: theme.colors.white,
-      fontSize: 15,
+      color: theme.colors.text.inverse,
+      ...getBodyStyle(theme, 'medium'),
       fontWeight: fontWeightForPlatform('600'),
     },
   });

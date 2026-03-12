@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, TouchableOpacity, InteractionManager } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import {
   BottomSheetModal,
@@ -267,21 +268,21 @@ const MillBrandDetailsScreen = () => {
 
       {/* Floating Bottom Button */}
       <FloatingBottomContainer>
-        <TouchableOpacity
-          style={[styles.button, !canProceed && { opacity: 0.5 }]}
+        <CustomButton
+          title="Next Step"
           onPress={handleNextStep}
-          activeOpacity={0.8}
+          variant="gradient"
+          size="md"
           disabled={!canProceed}
-        >
-          <Text variant="buttonMedium" style={styles.buttonText}>
-            Next Step
-          </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
-        </TouchableOpacity>
+          gradientColors={[
+            theme.colors.primary[400],
+            theme.colors.primary[600],
+            theme.colors.primary.DEFAULT,
+          ]}
+          gradientStart={{ x: 0, y: 0 }}
+          gradientEnd={{ x: 1, y: 1 }}
+          rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
+        />
       </FloatingBottomContainer>
 
       <BottomSheetModal

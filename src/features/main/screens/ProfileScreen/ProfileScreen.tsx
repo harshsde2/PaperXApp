@@ -1,5 +1,6 @@
-import React, { useLayoutEffect, useEffect } from 'react';
-import { View, TouchableOpacity, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import React, { useLayoutEffect, useEffect, useCallback, useState } from 'react';
+import { View, TouchableOpacity, ActivityIndicator, RefreshControl, Image, LayoutChangeEvent } from 'react-native';
+import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
 import { useLogout, useGetProfile } from '@services/api';
@@ -10,14 +11,25 @@ import { Card } from '@shared/components/Card';
 import { Section } from '@shared/components/Section';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { CustomHeader } from '@shared/components/CustomHeader';
+import { CustomButton } from '@shared/components/CustomButton';
 import { AnimatedCircularProgress } from '@shared/components/AnimatedCircularProgress';
 import { useTheme } from '@theme/index';
 import { ProfileScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
-import type { UserProfile } from '@services/api/types';
 import { AppIcon } from '@assets/svgs';
 import { ROLES } from '@utils/constants';
 import { UserRole } from '@shared/types';
+import { SCREENS } from '@navigation/constants';
+
+const getInitials = (name: string): string => {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed === 'Not Set') return '?';
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+};
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
@@ -36,10 +48,23 @@ const ProfileScreen = () => {
     logoutMutation.mutate();
   };
 
-  const handleEdit = () => {
-    // TODO: Navigate to edit profile screen
-    console.log('Edit profile');
-  };
+  const handleEdit = useCallback(() => {
+    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
+  }, [navigation]);
+
+  const handleAccountSettings = useCallback(() => {
+    // navigation.navigate(SCREENS.MAIN.SETTINGS);
+    return null;
+  }, [navigation]);
+
+  const handleManageRoles = useCallback(() => {
+    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
+  }, [navigation]);
+
+  const handleHelpSupport = useCallback(() => {
+    // navigation.navigate(SCREENS.MAIN.SETTINGS);
+    return null;
+  }, [navigation]);
 
   // Set header options with Edit button
   useLayoutEffect(() => {
@@ -55,21 +80,6 @@ const ProfileScreen = () => {
       ),
     });
   }, [navigation, handleEdit]);
-
-  const handleAccountSettings = () => {
-    // TODO: Navigate to account settings
-    console.log('Account settings');
-  };
-
-  const handleManageRoles = () => {
-    // TODO: Navigate to manage roles
-    console.log('Manage roles');
-  };
-
-  const handleHelpSupport = () => {
-    // TODO: Navigate to help & support
-    console.log('Help & support');
-  };
 
   // Extract user data from API response
   const userData = profileData;
@@ -91,6 +101,7 @@ const ProfileScreen = () => {
   const emailVerified = !!userData?.email_verified_at;
   const udyamCertificate = userData?.udyam_certificate || null;
   const avatarUrl = userData?.avatar || null;
+  const initials = getInitials(companyName);
 
   // Helper function to normalize role from API format to UserRole type
   const normalizeRole = (role: string): UserRole => {
@@ -178,10 +189,18 @@ const ProfileScreen = () => {
     isUdyamVerified,
   ].filter(Boolean).length;
   
-  const profileCompletionPercentage = Math.round(100);
+  const profileCompletionPercentage = Math.round((completedFields / totalFields) * 100);
   
   const profileIncomplete = !isUdyamVerified || !hasEmail || !hasGstIn || !hasState || !hasCity || !hasPrimaryRole || !hasCompanyName;
   
+  const [roleBadgeLayout, setRoleBadgeLayout] = useState({ width: 0, height: 0 });
+  const handleRoleBadgeLayout = useCallback((e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (width > 0 && height > 0) {
+      setRoleBadgeLayout({ width, height });
+    }
+  }, []);
+
   const incompleteFields: string[] = [];
   if (!hasCompanyName) incompleteFields.push('Company Name');
   if (!isUdyamVerified) incompleteFields.push('UDYAM Certificate');
@@ -190,14 +209,9 @@ const ProfileScreen = () => {
   if (!hasState || !hasCity) incompleteFields.push('Location');
   if (!hasPrimaryRole) incompleteFields.push('Primary Role');
 
-  const handleCompleteProfile = () => {
-    if(primaryRole === ROLES.DEALER) {
-
-    }else if(primaryRole === ROLES.CONVERTER) {
-      
-    }
- 
-  };
+  const handleCompleteProfile = useCallback(() => {
+    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
+  }, [navigation]);
 
   // Loading state
   if (isLoading) {
@@ -218,9 +232,7 @@ const ProfileScreen = () => {
         <View style={styles.errorContainer}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <Text style={styles.errorText}>Failed to load profile</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+          <CustomButton title="Retry" onPress={() => refetch()} variant="primary" size="md" style={styles.retryButton} />
         </View>
       </ScreenWrapper>
     );
@@ -242,16 +254,16 @@ const ProfileScreen = () => {
       <Card style={styles.profileCardContainer}>
         <View style={styles.profileImageContainer}>
           <AnimatedCircularProgress
-            percentage={profileCompletionPercentage}
+            percentage={100}
             size={120}
             strokeWidth={8}
             duration={1000}
-            backgroundColor="#E0E0E0"
+            backgroundColor={theme.colors.border.primary}
             showPercentage={true}
             percentagePosition="bottom"
             startPosition="6"
           >
-            {/* Avatar or default icon in center */}
+            {/* Avatar or initials when no avatar URL */}
             {avatarUrl ? (
               <Image
                 source={{ uri: avatarUrl }}
@@ -259,8 +271,18 @@ const ProfileScreen = () => {
                 resizeMode="cover"
               />
             ) : (
-              <View style={styles.avatarPlaceholder}>
-                <AppIcon.Person width={50} height={50} />
+              <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primary[100] }]}>
+                <Text
+                  variant="h4"
+                  fontWeight="bold"
+                  style={{
+                    color: theme.colors.primary.DEFAULT,
+                    fontSize: 28,
+                    lineHeight: 28,
+                  }}
+                >
+                  {initials}
+                </Text>
               </View>
             )}
           </AnimatedCircularProgress>
@@ -288,7 +310,7 @@ const ProfileScreen = () => {
         <Card style={styles.completionCard}>
           <View style={styles.completionHeader}>
             <View style={styles.completionIconContainer}>
-              <AppIcon.Warning width={24} height={24} />
+              <AppIcon.Warning width={24} height={24} color={theme.colors.warning.DEFAULT} />
             </View>
             <View style={styles.completionTextContainer}>
               <Text style={styles.completionTitle}>Complete Your Profile</Text>
@@ -305,14 +327,23 @@ const ProfileScreen = () => {
               </View>
             ))}
           </View>
-          <TouchableOpacity
-            style={styles.completeProfileButton}
+          <CustomButton
+            title="Complete Profile"
             onPress={handleCompleteProfile}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.completeProfileButtonText}>Complete Profile</Text>
-            <Text style={styles.completeProfileArrow}>→</Text>
-          </TouchableOpacity>
+            variant="gradient"
+            size="md"
+            gradientColors={[
+              theme.colors.primary[400],
+              theme.colors.primary[600],
+              theme.colors.primary.DEFAULT,
+            ]}
+            gradientStart={{ x: 0, y: 0 }}
+            gradientEnd={{ x: 1, y: 1 }}
+            rightIcon={
+              <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
+            }
+            style={{ marginTop: theme.spacing[2] }}
+          />
         </Card>
       )} */}
 
@@ -329,27 +360,55 @@ const ProfileScreen = () => {
               const isActive = activeRole === normalizedRole;
               const isPrimary = index === 0;
               
+              const gradientColors = isActive
+                ? [theme.colors.primary[500], theme.colors.primary[600], theme.colors.primary.DEFAULT]
+                : [theme.colors.primary[200], theme.colors.primary[100], theme.colors.primary[50]];
+              const w = Math.max(roleBadgeLayout.width, 140);
+              const h = Math.max(roleBadgeLayout.height, 56);
+
               return (
                 <TouchableOpacity
                   key={index}
                   onPress={() => handleRoleSwitch(role)}
                   disabled={isActive || roles.length === 1}
                   activeOpacity={0.7}
+                  onLayout={handleRoleBadgeLayout}
                 >
-                  <Card 
-                    variant="compact" 
+                  <View
                     style={[
                       styles.roleBadge,
+                      styles.roleBadgeWithGradient,
                       isActive && styles.roleBadgeActive,
-                      roles.length === 1 && styles.roleBadgeDisabled
+                      roles.length === 1 && styles.roleBadgeDisabled,
                     ]}
                   >
+                    {w > 0 && h > 0 && (
+                      <Canvas style={[styles.roleBadgeGradientCanvas, { width: w, height: h }]}>
+                        <RoundedRect x={0} y={0} width={w} height={h} r={theme.borderRadius.lg}>
+                          <LinearGradient
+                            start={vec(0, 0)}
+                            end={vec(w, h)}
+                            colors={gradientColors}
+                          />
+                        </RoundedRect>
+                      </Canvas>
+                    )}
                     <View style={styles.roleBadgeContent}>
                       <View style={styles.roleBadgeLeft}>
-                        <Text variant="captionSmall" fontWeight="semibold" color={theme.colors.primary.dark} style={styles.roleBadgeLabel}>
+                        <Text
+                          variant="captionSmall"
+                          fontWeight="semibold"
+                          color={isActive ? theme.colors.text.inverse : theme.colors.primary[600]}
+                          style={styles.roleBadgeLabel}
+                        >
                           {isPrimary ? 'Primary' : 'Secondary'}
                         </Text>
-                        <Text variant="bodyMedium" fontWeight="semibold" color={theme.colors.text.primary} style={styles.roleBadgeValue}>
+                        <Text
+                          variant="bodyMedium"
+                          fontWeight="semibold"
+                          color={isActive ? theme.colors.text.inverse : theme.colors.text.primary}
+                          style={styles.roleBadgeValue}
+                        >
                           {role}
                         </Text>
                       </View>
@@ -362,7 +421,7 @@ const ProfileScreen = () => {
                         <Text style={styles.switchRoleText}>Tap to switch →</Text>
                       )}
                     </View>
-                  </Card>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -428,9 +487,7 @@ const ProfileScreen = () => {
         style={styles.section}
       >
         <Card variant="compact" style={styles.contactItemContainer}>
-          <View style={styles.infoIconContainer}>
-            <Text style={styles.infoIconText}>🏢</Text>
-          </View>
+          <AppIcon.Organization width={24} height={24} color={theme.colors.text.tertiary} />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Company Name</Text>
             <Text style={styles.contactValue}>{companyName}</Text>
@@ -438,9 +495,7 @@ const ProfileScreen = () => {
         </Card>
 
         <Card variant="compact" style={styles.contactItemContainer}>
-          <View style={styles.infoIconContainer}>
-            <Text style={styles.infoIconText}>📋</Text>
-          </View>
+          <AppIcon.Security width={24} height={24} color={theme.colors.text.tertiary} />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>GSTIN</Text>
             <Text style={styles.contactValue}>{gstIn}</Text>
@@ -449,9 +504,7 @@ const ProfileScreen = () => {
 
         {operationArea && operationArea !== 'Not Set' && (
           <Card variant="compact" style={styles.contactItemContainer}>
-            <View style={styles.infoIconContainer}>
-              <Text style={styles.infoIconText}>🌍</Text>
-            </View>
+            <AppIcon.Globe width={24} height={24} color={theme.colors.text.tertiary} />
             <View style={styles.contactInfo}>
               <Text style={styles.contactLabel}>Operation Area</Text>
               <Text style={styles.contactValue}>{operationArea}</Text>
@@ -505,56 +558,54 @@ const ProfileScreen = () => {
       </Section>
 
       {/* Settings */}
-      {/* <Section
+      <Section
         title="Settings"
         style={styles.section}
       >
-        <TouchableOpacity style={styles.settingsItem} onPress={handleAccountSettings}>
+        <TouchableOpacity style={styles.settingsItem} onPress={handleAccountSettings} activeOpacity={0.7}>
           <View style={styles.settingsItemLeft}>
             <View style={styles.settingsIcon}>
-              <Text style={styles.settingsIconText}>⚙️</Text>
+              <AppIcon.Settings width={22} height={22} color={theme.colors.text.tertiary} />
             </View>
             <Text style={styles.settingsLabel}>Account Settings</Text>
           </View>
-          <Text style={styles.settingsArrow}>›</Text>
+          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingsItem} onPress={handleManageRoles}>
+        <TouchableOpacity style={styles.settingsItem} onPress={handleManageRoles} activeOpacity={0.7}>
           <View style={styles.settingsItemLeft}>
             <View style={styles.settingsIcon}>
-              <Text style={styles.settingsIconText}>👥</Text>
+              <AppIcon.Person width={22} height={22} color={theme.colors.text.tertiary} />
             </View>
             <Text style={styles.settingsLabel}>Manage Roles</Text>
           </View>
-          <Text style={styles.settingsArrow}>›</Text>
+          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingsItem} onPress={handleHelpSupport}>
+        <TouchableOpacity style={styles.settingsItem} onPress={handleHelpSupport} activeOpacity={0.7}>
           <View style={styles.settingsItemLeft}>
             <View style={styles.settingsIcon}>
-              <Text style={styles.settingsIconText}>❓</Text>
+              <AppIcon.Warning width={22} height={22} color={theme.colors.text.tertiary} />
             </View>
             <Text style={styles.settingsLabel}>Help & Support</Text>
           </View>
-          <Text style={styles.settingsArrow}>›</Text>
+          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
         </TouchableOpacity>
-      </Section> */}
+      </Section>
 
       {/* Logout Button */}
-      <TouchableOpacity
-        style={styles.logoutButton}
+      <CustomButton
+        title="Log Out"
         onPress={handleLogout}
+        variant="danger"
+        size="md"
+        loading={logoutMutation.isPending}
         disabled={logoutMutation.isPending}
-      >
-        {logoutMutation.isPending ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <>
-            <Text style={styles.logoutIcon}>→</Text>
-            <Text style={styles.logoutButtonText}>Log Out</Text>
-          </>
-        )}
-      </TouchableOpacity>
+        rightIcon={
+          <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
+        }
+        style={styles.logoutButton}
+      />
 
       {/* Version */}
       <Text style={styles.versionText}>v1.0.4</Text>

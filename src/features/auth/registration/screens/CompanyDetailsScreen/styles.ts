@@ -276,7 +276,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   // Preview modal styles
   previewModalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: theme.colors.background.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -295,7 +295,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.background.inverse,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,

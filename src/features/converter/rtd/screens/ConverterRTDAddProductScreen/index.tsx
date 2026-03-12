@@ -679,9 +679,9 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           </Card>
 
           <Card style={styles.card}>
-            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Delivery</Text>
+            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Dispatch</Text>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Delivery Location</Text>
+              <Text variant="captionMedium" style={styles.label}>Dispatch Location</Text>
               <TouchableOpacity style={styles.locationButton} onPress={() => deliveryLocationSheetRef.current?.present()}>
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyMedium" style={!getSelectedLocationDisplay() ? { color: theme.colors.text.tertiary } : { color: theme.colors.text.primary }} numberOfLines={1}>

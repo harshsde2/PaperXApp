@@ -239,59 +239,40 @@ export const createStyles = (theme: Theme) =>
     },
     addButton: {
       flex: 1,
-      backgroundColor: theme.colors.surface.secondary || theme.colors.background.tertiary,
-      paddingVertical: theme.spacing[4],
-      borderRadius: theme.borderRadius.lg,
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: theme.colors.primary[50],
       borderWidth: 1,
-      borderColor: theme.colors.border.primary,
-    },
-    addButtonDisabled: {
-      opacity: 0.5,
-    },
-    addButtonText: {
-      color: theme.colors.primary.DEFAULT,
-      fontWeight: fontWeightForPlatform('600'),
-    },
-    addButtonTextDisabled: {
-      color: theme.colors.text.tertiary,
+      borderColor: theme.colors.primary[200],
+      borderRadius: theme.borderRadius.md,
     },
     continueButton: {
       flex: 1,
-      backgroundColor: theme.colors.primary.DEFAULT,
-      paddingVertical: theme.spacing[4],
-      borderRadius: theme.borderRadius.lg,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: theme.spacing[2],
-    },
-    continueButtonDisabled: {
-      opacity: 0.5,
-      backgroundColor: theme.colors.surface.secondary || theme.colors.background.tertiary,
-    },
-    continueButtonText: {
-      color: theme.colors.text.inverse,
     },
     // Modal styles
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: theme.colors.background.overlay,
       justifyContent: 'center',
       alignItems: 'center',
       padding: theme.spacing[4],
     },
     modalContent: {
-      backgroundColor: theme.colors.surface.primary,
+      backgroundColor: theme.colors.background.primary,
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing[4],
       width: '100%',
       maxWidth: 400,
     },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing[4],
+    },
     modalTitle: {
       color: theme.colors.text.primary,
-      marginBottom: theme.spacing[4],
+    },
+    modalCloseButton: {
+      padding: theme.spacing[1],
     },
     unitOption: {
       flexDirection: 'row',
@@ -302,11 +283,11 @@ export const createStyles = (theme: Theme) =>
       marginBottom: theme.spacing[2],
       borderWidth: 1,
       borderColor: theme.colors.border.primary,
-      backgroundColor: theme.colors.surface.primary,
+      backgroundColor: theme.colors.surface.secondary,
     },
     unitOptionSelected: {
-      backgroundColor: theme.colors.primary.light || `${theme.colors.primary.DEFAULT}15`,
-      borderColor: theme.colors.primary.DEFAULT,
+      backgroundColor: theme.colors.primary[50],
+      borderColor: theme.colors.primary[200],
     },
     unitOptionText: {
       color: theme.colors.text.primary,
@@ -317,7 +298,7 @@ export const createStyles = (theme: Theme) =>
     radioButton: {
       width: 20,
       height: 20,
-      borderRadius: 10,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 2,
       borderColor: theme.colors.border.primary,
       alignItems: 'center',
@@ -330,7 +311,7 @@ export const createStyles = (theme: Theme) =>
     radioButtonInner: {
       width: 10,
       height: 10,
-      borderRadius: 5,
+      borderRadius: theme.borderRadius.full,
       backgroundColor: theme.colors.primary.DEFAULT,
     },
   });

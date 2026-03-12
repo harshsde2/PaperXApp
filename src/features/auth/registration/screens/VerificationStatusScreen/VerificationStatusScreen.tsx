@@ -1,11 +1,13 @@
 import React, { useRef } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
+import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppDispatch } from '@store/hooks';
 import { updateUser } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
@@ -18,6 +20,7 @@ const VerificationStatusScreen = () => {
   const navigation = useNavigation<VerificationStatusScreenNavigationProp>();
   const route = useRoute<VerificationStatusScreenRouteProp>();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const dispatch = useAppDispatch();
   const hasProceededRef = useRef(false);
@@ -83,7 +86,10 @@ const VerificationStatusScreen = () => {
       scrollable
       backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={{
+        ...styles.scrollContent,
+        paddingBottom: theme.spacing[6] + insets.bottom,
+      }}
     >
       <View style={styles.container}>
         {/* Verification Status Card */}
@@ -179,40 +185,29 @@ const VerificationStatusScreen = () => {
           )}
         </Card>
 
-        {/* Action Buttons */}
-        <TouchableOpacity
-          style={styles.primaryButton}
+        {/* Action Button */}
+        <CustomButton
+          title="Proceed to Dashboard"
           onPress={handleProceedToDashboard}
-          activeOpacity={0.8}
-        >
-          <Text variant="buttonMedium" style={styles.primaryButtonText}>
-            Proceed to Dashboard
-          </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
-        </TouchableOpacity>
+          variant="gradient"
+          size="lg"
+          gradientColors={[
+            theme.colors.primary[400],
+            theme.colors.primary[600],
+            theme.colors.primary.DEFAULT,
+          ]}
+          gradientStart={{ x: 0, y: 0 }}
+          gradientEnd={{ x: 1, y: 1 }}
+          rightIcon={
+            <AppIcon.ArrowRight
+              width={20}
+              height={20}
+              color={theme.colors.text.inverse}
+            />
+          }
+          style={styles.primaryButton}
+        />
 
-        {/* <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleContactSupport}
-          activeOpacity={0.8}
-        >
-          <Text variant="buttonMedium" style={styles.secondaryButtonText}>
-            Contact Support
-          </Text>
-          <Text style={styles.supportIcon}>🎧</Text>
-        </TouchableOpacity> */}
-
-        {/* Security Footer */}
-        <View style={styles.securityFooter}>
-          <Text style={styles.lockIcon}>🔒</Text>
-          <Text variant="captionSmall" style={styles.securityText}>
-            Secured by 256-bit SSL Encryption
-          </Text>
-        </View>
       </View>
     </ScreenWrapper>
   );

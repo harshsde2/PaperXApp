@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, TouchableOpacity, TextInput, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import {
@@ -42,6 +42,10 @@ import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { LocationPicker } from '@shared/location';
 import type { Location } from '@shared/location/types';
+import { CustomButton } from '@shared/components/CustomButton';
+import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
+import { useKeyboard, useFloatingBottomPadding } from '@shared/hooks';
+import { Toast } from 'toastify-react-native';
 
 const MachineDealerRegistrationScreen = () => {
   const navigation = useNavigation<MachineDealerRegistrationScreenNavigationProp>();
@@ -124,6 +128,23 @@ const MachineDealerRegistrationScreen = () => {
     return `${firstThree} +${names.length - 3} more`;
   }, [preferredBrandIdsValue]);
 
+  const { isKeyboardVisible } = useKeyboard();
+  const floatingContainerPadding = useFloatingBottomPadding({ buttonHeight: 60 });
+
+  const onInvalid = useCallback(
+    (errors: Record<string, { message?: string }>) => {
+      const firstError = Object.values(errors)[0];
+      const message = firstError?.message || 'Please check the form and try again.';
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: message,
+        position: 'top',
+      });
+    },
+    []
+  );
+
   const handleLocationSelect = useCallback(
     (location: Location) => {
       setValue('location', location.address?.streetAddress || location.address?.formattedAddress || location.name || '', {
@@ -159,7 +180,7 @@ const MachineDealerRegistrationScreen = () => {
 
   const openMachineTypeSheet = useCallback(() => {
     if (!machineCategoryValue) {
-      Alert.alert('Select Category', 'Please select machine category first');
+      Toast.show({ type: 'error', text1: 'Select Category', text2: 'Please select machine category first', position: 'top' });
       return;
     }
     machineTypeSheetRef.current?.present();
@@ -224,12 +245,12 @@ const MachineDealerRegistrationScreen = () => {
 
   const onSubmit = (data: MachineDealerRegistrationFormData) => {
     if (!profileData) {
-      Alert.alert('Error', 'Profile data is missing. Please go back and try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Profile data is missing. Please go back and try again.', position: 'top' });
       return;
     }
 
     if (!data.location.trim() || data.latitude == null || data.longitude == null) {
-      Alert.alert('Error', 'Please select a business location on the map.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Please select a business location on the map.', position: 'top' });
       return;
     }
 
@@ -306,10 +327,12 @@ const MachineDealerRegistrationScreen = () => {
         }
       },
       onError: (error: any) => {
-        Alert.alert(
-          'Error',
-          error?.message || 'Failed to complete registration. Please try again.',
-        );
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error?.message || 'Failed to complete registration. Please try again.',
+          position: 'top',
+        });
       },
     });
   };
@@ -321,7 +344,7 @@ const MachineDealerRegistrationScreen = () => {
         scrollable
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ ...styles.scrollContent, paddingBottom: floatingContainerPadding }}
       >
         <View style={styles.container}>
           {hasPrefilledCompanyDetails && (profileData?.company_name || profileData?.gst_in) && (
@@ -503,7 +526,7 @@ const MachineDealerRegistrationScreen = () => {
                       <Text
                         variant="captionSmall"
                         style={{
-                          color: (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                          color: theme.colors.error.DEFAULT,
                           marginTop: 4,
                         }}
                       >
@@ -606,7 +629,7 @@ const MachineDealerRegistrationScreen = () => {
                       <Text
                         variant="captionSmall"
                         style={{
-                          color: (theme.colors.error as any)?.DEFAULT || '#FF3B30',
+                          color: theme.colors.error.DEFAULT,
                           marginTop: theme.spacing[1],
                         }}
                       >
@@ -687,32 +710,40 @@ const MachineDealerRegistrationScreen = () => {
             </View>
           </Card>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSubmit(onSubmit)}
-            activeOpacity={0.8}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color={theme.colors.text.inverse} />
-            ) : (
-              <>
-                <Text variant="buttonMedium" style={styles.buttonText}>
-                  Continue
-                </Text>
-                <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-              </>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.securityFooter}>
-            <Text style={styles.lockIcon}>🔒</Text>
-            <Text variant="captionSmall" style={styles.securityText}>
-              YOUR DATA IS ENCRYPTED & SECURE
-            </Text>
-          </View>
         </View>
       </ScreenWrapper>
+
+        {!isKeyboardVisible && (
+          <FloatingBottomContainer
+            backgroundColor={theme.colors.background.primary}
+            paddingHorizontal={theme.spacing[4]}
+            paddingVertical={theme.spacing[4]}
+            shadow
+          >
+            <CustomButton
+              title="Continue"
+              onPress={() => handleSubmit(onSubmit, onInvalid)()}
+              variant="gradient"
+              size="md"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              gradientColors={[
+                theme.colors.primary[400],
+                theme.colors.primary[600],
+                theme.colors.primary.DEFAULT,
+              ]}
+              gradientStart={{ x: 0, y: 0 }}
+              gradientEnd={{ x: 1, y: 1 }}
+              rightIcon={
+                <AppIcon.ArrowRight
+                  width={20}
+                  height={20}
+                  color={theme.colors.text.inverse}
+                />
+              }
+            />
+          </FloatingBottomContainer>
+        )}
 
       {/* Location Picker Modal */}
       <Modal

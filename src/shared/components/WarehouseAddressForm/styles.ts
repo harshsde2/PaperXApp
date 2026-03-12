@@ -4,8 +4,11 @@ import type { Theme } from '@theme/types';
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
+      flex: 1,
       padding: theme.spacing[4],
-      paddingBottom: theme.spacing[8],
+    },
+    scrollContent: {
+      flexGrow: 1,
     },
     header: {
       flexDirection: 'row',

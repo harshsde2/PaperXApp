@@ -1,15 +1,24 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
 import { useAppSelector } from '@store/hooks';
 import { useGetProfile, useNotificationUnreadCount } from '@services/api';
 import { Text } from '@shared/components/Text';
-import { WalletBadge } from '@shared/components/WalletBadge';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import { styles } from '../styles';
 import { useNavigationHelpers } from '@navigation/helpers';
+
+const getInitials = (name: string): string => {
+  const trimmed = name.trim();
+  if (!trimmed) return '?';
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+};
 
 export const DashboardHeader: React.FC = () => {
   const navigation = useNavigationHelpers();
@@ -20,8 +29,10 @@ export const DashboardHeader: React.FC = () => {
   const theme = useTheme();
   const primaryRole = profileData?.primary_role || user?.primaryRole || 'dealer';
   const companyName = profileData?.company_name || 'Your Company';
+  console.log('companyName', JSON.stringify(profileData, null, 2));
   const isVerified = !!profileData?.udyam_verified_at;
-  const logoUrl = profileData?.avatar;
+  const avatarUrl = profileData?.avatar;
+  const initials = getInitials(companyName);
   const unreadCount = unreadData?.unread_count ?? 0;
 
   const handleNotificationPress = () => {
@@ -32,13 +43,8 @@ export const DashboardHeader: React.FC = () => {
     navigation.navigate(SCREENS.MAIN.PROFILE);
   };
 
-  const handleWalletPress = () => {
-    navigation.navigate(SCREENS.WALLET.MAIN);
-  };
-
   const renderHeaderActions = () => (
     <View style={styles.headerActions}>
-      <WalletBadge onPress={handleWalletPress} />
       <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationButtonContainer}>
         <AppIcon.Notification width={20} height={20} color={theme.colors.text.primary} />
         {unreadCount > 0 && (
@@ -52,20 +58,46 @@ export const DashboardHeader: React.FC = () => {
     </View>
   );
 
+  const renderAvatarWithInitials = (
+    size: number = 40,
+    showOnlineDot: boolean = false
+  ) => (
+    <View style={{ position: 'relative', marginRight: 12 }}>
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: theme.colors.primary[50] }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: theme.colors.primary[100],
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text
+            variant="h5"
+            fontWeight="bold"
+            style={{ color: theme.colors.primary.DEFAULT, fontSize: size * 0.4 }}
+          >
+            {initials}
+          </Text>
+        </View>
+      )}
+      {showOnlineDot && <View style={styles.onlineStatusDot} />}
+    </View>
+  );
+
   const renderBrandHeader = () => (
     <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
       <View style={styles.dashboardHeaderContent}>
-        <View style={styles.dashboardHeaderLeft}>
-          {/* Logo */}
-          <View style={styles.brandLogoContainer}>
-            {logoUrl ? (
-              <View style={styles.brandLogoImage} />
-            ) : (
-              <View style={styles.brandLogoPlaceholder}>
-                <AppIcon.Organization width={24} height={24} />
-              </View>
-            )}
-          </View>
+        <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
+          {renderAvatarWithInitials(40)}
           
           {/* Company Info */}
           <View style={styles.brandInfoContainer}>
@@ -83,7 +115,7 @@ export const DashboardHeader: React.FC = () => {
               </View>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {renderHeaderActions()}
       </View>
@@ -94,24 +126,13 @@ export const DashboardHeader: React.FC = () => {
     <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
       <View style={styles.dashboardHeaderContent}>
         <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
-          {/* Avatar */}
-          <View style={styles.dealerAvatarContainer}>
-            <View style={styles.dealerAvatar}>
-              <AppIcon.Person width={30} height={30} />
-            </View>
-            <View style={styles.onlineStatusDot} />
-          </View>
+          {renderAvatarWithInitials(40, true)}
           
           {/* Company Info */}
           <View style={styles.dealerInfoContainer}>
             <Text variant="h6" size={14} fontWeight='extrabold' color={theme.colors.black}  numberOfLines={1}>
               {companyName}
             </Text>
-            <View style={styles.roleBadgeContainer}>
-              <Text variant="captionSmall" size={10} fontWeight="semibold" color={theme.colors.primary.DEFAULT}>
-                {primaryRole.toUpperCase()}
-              </Text>
-            </View>
           </View>
         </TouchableOpacity>
 
@@ -123,13 +144,8 @@ export const DashboardHeader: React.FC = () => {
   const renderMachineDealerHeader = () => (
     <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
       <View style={styles.dashboardHeaderContent}>
-        <View style={styles.dashboardHeaderLeft}>
-          {/* Avatar */}
-          <View style={styles.machineDealerAvatarContainer}>
-            <View style={styles.machineDealerAvatar}>
-              <AppIcon.MachineDealer width={40} height={40} />
-            </View>
-          </View>
+        <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
+          {renderAvatarWithInitials(40)}
           
           {/* Title and Subtitle */}
           <View style={styles.machineDealerInfoContainer}>
@@ -140,7 +156,7 @@ export const DashboardHeader: React.FC = () => {
               Dashboard
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {renderHeaderActions()}
       </View>
@@ -150,14 +166,8 @@ export const DashboardHeader: React.FC = () => {
   const renderConverterHeader = () => (
     <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
       <View style={styles.dashboardHeaderContent}>
-        <View style={styles.dashboardHeaderLeft}>
-          {/* Avatar */}
-          <View style={styles.converterAvatarContainer}>
-            <View style={styles.converterAvatar}>
-              <AppIcon.Converter width={40} height={40} />
-            </View>
-            <View style={styles.onlineStatusDot} />
-          </View>
+        <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
+          {renderAvatarWithInitials(40, true)}
           
           {/* Welcome Message */}
           <View style={styles.converterInfoContainer}>
@@ -168,7 +178,7 @@ export const DashboardHeader: React.FC = () => {
               {companyName}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {renderHeaderActions()}
       </View>

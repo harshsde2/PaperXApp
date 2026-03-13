@@ -26,7 +26,7 @@ export const CURRENT_ENV: Environment =
  * - Set DEV_API_HOST to your machine's LAN IP (e.g. 10.0.0.5) when needed
  * - Keep it empty to use automatic detection
  */
-const DEV_API_HOST = '';
+const DEV_API_HOST = '192.168.29.149';
 
 const getMetroHost = (): string | null => {
   const scriptURL = (NativeModules as { SourceCode?: { scriptURL?: string } })?.SourceCode?.scriptURL;

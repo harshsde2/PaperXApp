@@ -19,6 +19,10 @@ const formatScreenTitle = (routeName: string): string => {
     Signup: 'Sign Up',
     OTPVerification: 'Verify Identity',
     MillBrandDetails: 'Mills Associated Details',
+    'Ready to Dispatch': 'Ready to Dispatch',
+    'Add Ready to Dispatch Product': 'Add Ready to Dispatch Product',
+    'My Ready to Dispatch Products': 'My Ready to Dispatch Products',
+    'Ready to Dispatch Order History': 'Ready to Dispatch Order History',
   };
 
 
@@ -67,13 +71,13 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
       mainName = 'Post to Sell';
     }
   } else if(route?.name === SCREENS.CONVERTER_RTD.LISTING) {
-    mainName = 'ReadyToDispatch';
+    mainName = 'Ready to Dispatch';
   } else if(route?.name === SCREENS.CONVERTER_RTD.ADD_PRODUCT) {
-    mainName = 'AddReadyProduct';
+    mainName = 'Add Ready to Dispatch Product';
   } else if(route?.name === SCREENS.CONVERTER_RTD.MY_PRODUCTS) {
-    mainName = 'MyProducts';
+    mainName = 'My Ready to Dispatch Products';
   } else if(route?.name === SCREENS.CONVERTER_RTD.ORDER_HISTORY) {
-    mainName = 'OrderHistory';
+    mainName = 'Ready to Dispatch Order History';
   }
 
   const displayTitle = titleProp ?? (options as any)?.title ?? (mainName ? formatScreenTitle(mainName) : '');

@@ -435,7 +435,7 @@ const MainNavigator = () => {
         component={BrandRTDMarketplaceScreen}
         options={{
           headerShown: true,
-          title: 'RTD Marketplace',
+          title: 'Ready to Dispatch Marketplace',
           animation: 'slide_from_right',
         }}
       />
@@ -471,7 +471,7 @@ const MainNavigator = () => {
         component={BrandRTDMyOrdersScreen}
         options={{
           headerShown: true,
-          title: 'My RTD Orders',
+          title: 'My Ready to Dispatch Orders',
           animation: 'slide_from_right',
         }}
       />

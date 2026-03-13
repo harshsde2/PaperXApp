@@ -140,9 +140,9 @@ export const ConverterRTDListingScreen: React.FC = () => {
         {recentProducts.length === 0 ? (
           <EmptyState
             icon={<AppIcon.Market width={32} height={32} color={theme.colors.primary.DEFAULT} />}
-            title="No RTD products yet"
-            description="Tap Add Ready Product to list one."
-            action={{ label: 'Add Ready Product', onPress: handleAddReadyProduct }}
+            title="No Ready to Dispatch products yet"
+            description="Tap Add Ready to Dispatch Product to list one."
+            action={{ label: 'Add Ready to Dispatch Product', onPress: handleAddReadyProduct }}
           />
         ) : (
           recentProducts.map((product: RtdProduct) => {

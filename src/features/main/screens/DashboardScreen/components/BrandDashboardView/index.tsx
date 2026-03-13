@@ -318,7 +318,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
             activeOpacity={0.85}
           >
             <Text fontWeight="bold" style={[styles.actionCardButtonText, styles.actionCardButtonTextSuccess]}>
-              Explore RTD
+              Explore Ready to Dispatch
             </Text>
           </TouchableOpacity>
         </View>
@@ -352,12 +352,12 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
         </View>
       </View>
 
-      {/* ── My RTD Orders ── */}
+      {/* ── My Ready to Dispatch Orders ── */}
       {activeRtdOrders.length > 0 && (
         <View style={styles.recentSection}>
           <View style={styles.recentHeader}>
             <Text fontWeight="extrabold" style={styles.recentTitle}>
-              My RTD Orders
+              My Ready to Dispatch Orders
             </Text>
             <TouchableOpacity onPress={handleViewAllOrders}>
               <Text fontWeight="bold" style={styles.viewAllLink}>View All</Text>
@@ -381,7 +381,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
                 </View>
                 <View style={styles.activityInfo}>
                   <Text fontWeight="bold" style={styles.activityTitle}>
-                    {order.product?.product_name ?? 'RTD Order'}
+                    {order.product?.product_name ?? 'Ready to Dispatch Order'}
                   </Text>
                   <Text style={styles.activityTime}>
                     Qty: {order.quantity} · ₹{order.total_amount}
@@ -517,11 +517,11 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
               No active orders
             </Text>
             <Text style={styles.emptyActivityDesc}>
-              You don't have any RTD orders at the moment. Browse ready-to-dispatch products to place an order.
+              You don't have any Ready to Dispatch orders at the moment. Browse ready-to-dispatch products to place an order.
             </Text>
             {/* <View style={styles.emptyActivityButtonContainer}> */}
               <CustomButton
-                title="Browse RTD"
+                title="Browse Ready to Dispatch"
                 onPress={handleExploreRTD}
                 variant="gradient"
                 size="sm"
@@ -548,7 +548,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
                 </View>
                 <View style={styles.activityInfo}>
                   <Text fontWeight="bold" style={styles.activityTitle}>
-                    {order.product?.product_name ?? 'RTD Order'}
+                    {order.product?.product_name ?? 'Ready to Dispatch Order'}
                   </Text>
                   <Text style={styles.activityTime}>
                     Qty: {order.quantity} · ₹{order.total_amount}

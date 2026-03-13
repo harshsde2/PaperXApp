@@ -265,7 +265,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
                 <AppIcon.Inquiries width={36} height={36} color={theme.colors.text.inverse} />
               </View>
               <Text fontWeight={'bold'} style={styles.quickActionLabel}>Post Requirement</Text>
-              <Text style={styles.quickActionSubtext}>Share demand to match with suppliers</Text>
+              <Text style={styles.quickActionSubtext}>To Buy and sell for various requirements</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -295,17 +295,17 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
               <View style={styles.quickActionIcon}>
                 <AppIcon.Market width={36} height={36} color={theme.colors.text.inverse} />
               </View>
-              <Text fontWeight={'bold'} style={styles.quickActionLabel}>List RTD Product</Text>
+              <Text fontWeight={'bold'} style={styles.quickActionLabel}>List Ready to Dispatch Product</Text>
               <Text style={styles.quickActionSubtext}>Publish ready stock for faster deals</Text>
             </View>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* RTD Snapshot */}
+      {/* Ready to Dispatch Snapshot */}
       <View style={styles.section}>
         <View style={styles.rtdHeader}>
-          <Text style={styles.sectionTitle}>RTD Snapshot</Text>
+          <Text style={styles.sectionTitle}>Ready to Dispatch</Text>
           <TouchableOpacity onPress={handleRTDDetails}>
             <Text style={styles.detailsLink}>Details</Text>
           </TouchableOpacity>

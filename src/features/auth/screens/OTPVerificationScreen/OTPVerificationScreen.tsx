@@ -166,12 +166,12 @@ const OTPVerificationScreen = () => {
             return;
           }
 
-          // Case 1: First-time user, no company details yet -> go to Company Details screen
+          // Case 1: First-time user, no company details yet -> go to Role Selection screen
           if (!hasCompanyDetails) {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
-                routes: [{ name: SCREENS.AUTH.COMPANY_DETAILS }],
+                routes: [{ name: SCREENS.AUTH.ROLE_SELECTION }],
               })
             );
             return;

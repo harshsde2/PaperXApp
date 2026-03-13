@@ -83,6 +83,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   buttonContainer: {
     width: '100%',
     paddingHorizontal: theme.spacing[5],
+    marginBottom: theme.spacing[6],
   },
   footer: {
     alignItems: 'center',

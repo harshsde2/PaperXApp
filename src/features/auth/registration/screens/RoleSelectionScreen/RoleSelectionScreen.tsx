@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
-import { Card } from '@shared/components/Card';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
-import {
-  RoleSelectionScreenNavigationProp,
-  RoleSelectionScreenRouteProp,
-} from './@types';
+import { RoleSelectionScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
-import { useUpdateProfile } from '@services/api';
-import { getFirstRegistrationScreen } from '@navigation/helpers';
 import { ROLES } from '@utils/constants';
 
 type PrimaryRole = 'dealer' | 'converter' | 'brand' | 'machineDealer';
@@ -22,22 +16,8 @@ type Geography = 'local' | 'state' | 'panIndia';
 
 const RoleSelectionScreen = () => {
   const navigation = useNavigation<RoleSelectionScreenNavigationProp>();
-  const route = useRoute<RoleSelectionScreenRouteProp>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const updateProfileMutation = useUpdateProfile();
-
-  // Get data from previous screen
-  const {
-    companyName,
-    gstIn,
-    state,
-    city,
-    udyamCertificateNumber,
-    udyamCertificateBase64,
-    udyamCertificateName,
-    udyamCertificateType,
-  } = route.params || {};
 
   const [primaryRole, setPrimaryRole] = useState<PrimaryRole>(
     ROLES.DEALER as PrimaryRole,
@@ -92,62 +72,13 @@ const RoleSelectionScreen = () => {
     }
   };
 
-  const handleContinue = async () => {
-    try {
-      // Prepare update profile data
-      const updateData: any = {
-        company_name: companyName,
-        gst_in: gstIn,
-        state: state,
-        city: city,
-        primary_role: primaryRole,
-        secondary_role: secondaryRole || undefined,
-        has_secondary_role: hasSecondaryRole ? 1 : 0,
-        operation_area: geography,
-      };
-
-      // Add UDYAM certificate number if provided
-      if (udyamCertificateNumber) {
-        updateData.udyam_certificate_number = udyamCertificateNumber;
-      }
-
-      // Add UDYAM certificate if provided (as base64)
-      if (udyamCertificateBase64) {
-        // updateData.udyam_certificate = udyamCertificateBase64;
-        updateData.udyam_certificate_name = udyamCertificateName;
-        updateData.udyam_certificate_type = udyamCertificateType;
-      }
-
-      // Call API to update profile
-      const response = await updateProfileMutation.mutateAsync(updateData);
-
-      // Get the first registration screen for the selected role
-      // primaryRole is already a valid UserRole value (matches ROLES constants)
-      const firstScreen = getFirstRegistrationScreen(
-        primaryRole as (typeof ROLES)[keyof typeof ROLES],
-      );
-
-      if (firstScreen && firstScreen !== SCREENS.AUTH.VERIFICATION_STATUS) {
-        // Navigate to role-specific registration flow
-        // Pass profile data so it can be used at the end of registration
-        // Type assertion needed because firstScreen is a dynamic string
-        (navigation.navigate as any)(firstScreen, {
-          profileData: response,
-        } as any);
-      } else {
-        // Role has no specific registration screens, go directly to verification
-        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
-          profileData: response,
-        } as any);
-      }
-    } catch (error: any) {
-      console.error('Update profile error:', error);
-      Alert.alert(
-        'Registration Failed',
-        error?.message || 'Failed to update profile. Please try again.',
-        [{ text: 'OK' }],
-      );
-    }
+  const handleContinue = () => {
+    navigation.navigate(SCREENS.AUTH.COMPANY_DETAILS, {
+      primaryRole,
+      secondaryRole: secondaryRole || undefined,
+      hasSecondaryRole: hasSecondaryRole ? 1 : 0,
+      geography,
+    });
   };
 
   const renderRoleGrid = (
@@ -333,8 +264,6 @@ const RoleSelectionScreen = () => {
           variant="gradient"
           size="md"
           fullWidth
-          loading={updateProfileMutation.isPending}
-          disabled={updateProfileMutation.isPending}
           gradientColors={[
             theme.colors.primary[400],
             theme.colors.primary[600],

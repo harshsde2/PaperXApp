@@ -9,7 +9,7 @@ import {
   InteractionManager,
 } from 'react-native';
 import { Toast } from 'toastify-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import RNFS from 'react-native-fs';
 import { State, City, ICity } from 'country-state-city';
@@ -32,11 +32,14 @@ import { useForm, FormInput, validationRules } from '@shared/forms';
 import { types } from '@react-native-documents/picker';
 import {
   CompanyDetailsScreenNavigationProp,
+  CompanyDetailsScreenRouteProp,
   CompanyDetailsFormData,
   SelectedFile,
 } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
+import { useUpdateProfile } from '@services/api';
+import { getFirstRegistrationScreen } from '@navigation/helpers';
 
 const INDIA_COUNTRY_CODE = 'IN';
 const INDIAN_STATES = State.getStatesOfCountry(INDIA_COUNTRY_CODE);
@@ -58,7 +61,11 @@ const getCitiesForState = (stateIsoCode: string): ICity[] => {
 
 const CompanyDetailsScreen = () => {
   const navigation = useNavigation<CompanyDetailsScreenNavigationProp>();
+  const route = useRoute<CompanyDetailsScreenRouteProp>();
   const theme = useTheme();
+  const updateProfileMutation = useUpdateProfile();
+
+  const { primaryRole, secondaryRole, hasSecondaryRole, geography } = route.params || {};
   const styles = createStyles(theme);
   const stateSheetRef = useRef<BottomSheetModal>(null);
   const citySheetRef = useRef<BottomSheetModal>(null);
@@ -144,17 +151,60 @@ const CompanyDetailsScreen = () => {
     []
   );
 
-  const onSubmit = (data: CompanyDetailsFormData) => {
-    navigation.navigate(SCREENS.AUTH.ROLE_SELECTION, {
-      companyName: data.companyName.trim(),
-      gstIn: data.gstin.trim() || undefined,
-      state: data.state.trim() || undefined,
-      city: data.city.trim() || undefined,
-      udyamCertificateNumber: data.udyamCertificateNumber?.trim() || undefined,
-      udyamCertificateBase64: selectedFile?.base64,
-      udyamCertificateName: selectedFile?.name,
-      udyamCertificateType: selectedFile?.type,
-    });
+  const onSubmit = async (data: CompanyDetailsFormData) => {
+    if (!primaryRole) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Flow',
+        text2: 'Please complete role selection first.',
+        position: 'top',
+      });
+      navigation.navigate(SCREENS.AUTH.ROLE_SELECTION);
+      return;
+    }
+
+    try {
+      // API expects "local" | "state" | "pan india" (lowercase with space)
+      const operationArea =
+        geography === 'panIndia' ? 'pan india' : geography || undefined;
+
+      const updateData: Record<string, unknown> = {
+        company_name: data.companyName.trim(),
+        gst_in: data.gstin.trim() || undefined,
+        state: data.state.trim() || undefined,
+        city: data.city.trim() || undefined,
+        primary_role: primaryRole,
+        secondary_role: secondaryRole || undefined,
+        has_secondary_role: hasSecondaryRole ?? 0,
+        operation_area: operationArea,
+      };
+
+      if (data.udyamCertificateNumber?.trim()) {
+        updateData.udyam_certificate_number = data.udyamCertificateNumber.trim();
+      }
+      if (selectedFile?.base64) {
+        updateData.udyam_certificate_name = selectedFile?.name;
+        updateData.udyam_certificate_type = selectedFile?.type;
+      }
+
+      const response = await updateProfileMutation.mutateAsync(updateData as any);
+      const firstScreen = getFirstRegistrationScreen(primaryRole as any);
+
+      if (firstScreen && firstScreen !== SCREENS.AUTH.VERIFICATION_STATUS) {
+        (navigation.navigate as any)(firstScreen, { profileData: response } as any);
+      } else {
+        navigation.navigate(SCREENS.AUTH.VERIFICATION_STATUS, {
+          profileData: response,
+        } as any);
+      }
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      Alert.alert(
+        'Registration Failed',
+        error?.message || 'Failed to update profile. Please try again.',
+        [{ text: 'OK' }],
+      );
+    }
   };
 
   const convertFileToBase64 = async (uri: string): Promise<string> => {
@@ -514,6 +564,8 @@ const CompanyDetailsScreen = () => {
             variant="gradient"
             size="md"
             fullWidth
+            loading={updateProfileMutation.isPending}
+            disabled={updateProfileMutation.isPending}
             gradientColors={[
               theme.colors.primary[400],
               theme.colors.primary[600],

@@ -479,6 +479,9 @@ const ConverterRegistrationScreen = () => {
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                 Select Converter Types
               </Text>
+              <Text variant="captionSmall" style={styles.multiSelectLabel}>
+                Multi-select
+              </Text>
             </View>
             <DropdownButton
               value={getDisplayText(watchedValues.converter_type_ids || [], referenceData?.converter_types || [])}
@@ -538,6 +541,9 @@ const ConverterRegistrationScreen = () => {
                     <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                       Select Products
                     </Text>
+                    <Text variant="captionSmall" style={styles.multiSelectLabel}>
+                      Multi-select
+                    </Text>
                   </View>
                   <DropdownButton
                     value={getDisplayText(watchedValues.finished_product_ids || [], referenceData?.finished_products || [])}
@@ -577,6 +583,9 @@ const ConverterRegistrationScreen = () => {
                     <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                       Select Machines
                     </Text>
+                    <Text variant="captionSmall" style={styles.multiSelectLabel}>
+                      Multi-select
+                    </Text>
                   </View>
                   <DropdownButton
                     value={getDisplayText(watchedValues.machine_ids || [], referenceData?.machines || [])}
@@ -610,9 +619,14 @@ const ConverterRegistrationScreen = () => {
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                 Scrap Types
               </Text>
-              <Text variant="captionSmall" style={styles.optionalLabel}>
-                (Optional)
-              </Text>
+              <View style={styles.labelBadgesRow}>
+                <Text variant="captionSmall" style={styles.multiSelectLabel}>
+                  Multi-select
+                </Text>
+                <Text variant="captionSmall" style={styles.optionalLabel}>
+                  (Optional)
+                </Text>
+              </View>
             </View>
             <DropdownButton
               value={getDisplayText(watchedValues.scrap_type_ids || [], referenceData?.scrap_types || [])}
@@ -725,6 +739,9 @@ const ConverterRegistrationScreen = () => {
                   <View style={styles.labelRow}>
                     <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                       Select Materials
+                    </Text>
+                    <Text variant="captionSmall" style={styles.multiSelectLabel}>
+                      Multi-select
                     </Text>
                   </View>
                   <DropdownButton

@@ -54,11 +54,11 @@ const CONVERTER_OPTIONS: PostRequirementOptionConfig[] = [
     title: 'Post to Give Jobwork',
     description: 'Outsourcing to complete an order',
   },
-  {
-    id: 'post-regular-product-design',
-    title: 'Post Regular Product/Design',
-    description: 'Ready to Dispatch section',
-  },
+  // {
+  //   id: 'post-regular-product-design',
+  //   title: 'Post Regular Product/Design',
+  //   description: 'Ready to Dispatch section',
+  // },
 ];
 
 const MACHINE_DEALER_OPTIONS: PostRequirementOptionConfig[] = [

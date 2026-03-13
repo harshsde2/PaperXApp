@@ -40,17 +40,13 @@ export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
   OTPVerification: { mobile: string; purpose: 'login' | 'signup' };
-  CompanyDetails: undefined;
-  RoleSelection: {
-    companyName?: string;
-    gstIn?: string;
-    state?: string;
-    city?: string;
-    udyamCertificateNumber?: string;
-    udyamCertificateBase64?: string;
-    udyamCertificateName?: string;
-    udyamCertificateType?: string;
+  CompanyDetails: {
+    primaryRole: string;
+    secondaryRole?: string | null;
+    hasSecondaryRole: number;
+    geography: 'local' | 'state' | 'panIndia';
   };
+  RoleSelection: undefined;
   VerificationStatus: DealerRegistrationScreenParams &
     RegistrationScreenParams & {
       machineDealerRegistrationData?: any;

@@ -58,6 +58,14 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   optionalLabel: {
     color: theme.colors.text.tertiary,
   },
+  multiSelectLabel: {
+    color: theme.colors.primary.DEFAULT,
+  },
+  labelBadgesRow: {
+    flexDirection: 'row',
+    gap: theme.spacing[2],
+    alignItems: 'center',
+  },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border.primary,

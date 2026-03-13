@@ -16,7 +16,7 @@ export interface UpdateProfileRequest {
   city?: string;
   primary_role?: string;
   secondary_role?: string;
-  operation_area?: 'local' | 'state' | 'panIndia';
+  operation_area?: 'local' | 'state' | 'pan india';
   has_secondary_role?: number;
   udyam_certificate?: string;
   udyam_certificate_name?: string;

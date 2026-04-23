@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
-  ActivityIndicator,
   Alert,
   RefreshControl,
 } from 'react-native';
@@ -24,6 +23,8 @@ import { OrderTimeline } from '../../components/OrderTimeline';
 import { OrderActionButtons } from '../../components/OrderActionButtons';
 import { DispatchProofModal } from '../../components/DispatchProofModal';
 import { ContactDetailsCard } from '@shared/components/ContactDetailsCard';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { DetailSkeleton } from '@shared/components/skeletons';
 import type { RTDOrderDetailScreenProps, CountdownState } from './@types';
 import { STATUS_LABELS, STATUS_DESCRIPTIONS } from './@types';
 import { createStyles } from './styles';
@@ -59,6 +60,7 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
   const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
   const [countdown, setCountdown] = useState<CountdownState | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
+  const showSkeleton = useSkeleton(!order && !isError);
 
 
   // Countdown timer for REQUESTED state
@@ -253,11 +255,14 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
         </View>
       );
     }
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-      </View>
-    );
+    if (showSkeleton) {
+      return (
+        <View style={styles.loadingContainer}>
+          <DetailSkeleton />
+        </View>
+      );
+    }
+    return null;
   }
 
   return (

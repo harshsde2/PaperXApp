@@ -1,6 +1,5 @@
-import React, { useCallback } from 'react';
-import { View, ActivityIndicator, BackHandler } from 'react-native';
-import { useAppSelector } from '@store/hooks';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, BackHandler } from 'react-native';
 import { useGetProfile, useGetDashboard } from '@services/api';
 import type { DashboardRole } from '@services/api';
 import { useActiveRole } from '@shared/hooks/useActiveRole';
@@ -12,11 +11,14 @@ import { ConverterDashboardView } from './components/ConverterDashboardView';
 import { BrandDashboardView } from './components/BrandDashboardView';
 import { MachineDealerDashboardView } from './components/MachineDealerDashboardView';
 import { DashboardHeader } from './components/DashboardHeader';
+import { DashboardHeaderHeightContext } from './DashboardHeaderHeightContext';
 import { styles } from './styles';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTheme } from '@theme/index';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { DashboardSkeleton } from '@shared/components/skeletons';
 
 const DashboardScreen = () => {
-  const { user, token } = useAppSelector((state) => state.auth);
   const {
     data: profileData,
     isLoading: isProfileLoading,
@@ -24,11 +26,12 @@ const DashboardScreen = () => {
     isRefetching: isProfileRefetching,
     refetch: refetchProfile,
   } = useGetProfile();
+  const theme = useTheme();
 
   // Get active role from Redux (supports role switching)
   const activeRole = useActiveRole() as DashboardRole;
 
-  console.log('activeRole', JSON.stringify({ user, token }, null, 2));
+  const [dashboardHeaderHeight, setDashboardHeaderHeight] = useState(100);
 
   // Fetch dashboard data based on active role
   const {
@@ -40,6 +43,7 @@ const DashboardScreen = () => {
   } = useGetDashboard({ role: activeRole });
 
   const isLoading = isProfileLoading || isDashboardLoading;
+  const showSkeleton = useSkeleton(isLoading);
   const isError = isProfileError || isDashboardError;
   const isRefreshing = isProfileRefetching || isDashboardRefetching;
 
@@ -87,15 +91,43 @@ const DashboardScreen = () => {
     }, [])
   );
 
+  const gradientColors = useMemo(
+    () => [
+      theme.colors.primary[50],
+      theme.colors.primary[100],
+      theme.colors.primary[100],
+      theme.colors.primary[200],
+      theme.colors.primary[200],
+      theme.colors.primary[100],
+      theme.colors.primary[100],
+      theme.colors.primary[50],
+      theme.colors.primary[50],
+      theme.colors.primary[200],
+      theme.colors.primary[200],
+      theme.colors.primary[300],
+      theme.colors.primary[300],
+      theme.colors.primary[300],
+      theme.colors.primary[400],
+      theme.colors.primary[400],
+      theme.colors.primary[300],
+      theme.colors.primary[300],
+      theme.colors.primary[200],
+      theme.colors.primary[100],
+      theme.colors.white,
+      theme.colors.white,
+      theme.colors.white,
+      theme.colors.white,
+    ],
+    [theme.colors]
+  );
+
+
   // Loading state
-  if (isLoading) {
+  if (showSkeleton) {
     return (
       <ScreenWrapper backgroundColor="#F9FAFB" safeAreaEdges={[]}>
-        <DashboardHeader />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={styles.loadingText}>Loading dashboard...</Text>
-        </View>
+        <DashboardHeader onLayoutHeight={setDashboardHeaderHeight} />
+        <DashboardSkeleton />
       </ScreenWrapper>
     );
   }
@@ -175,16 +207,25 @@ const DashboardScreen = () => {
     }
   };
 
+
+
   return (
-    // <ScreenWrapper
-    //   backgroundColor="#F9FAFB"
-    //   safeAreaEdges={[]}
-    // >
-    <View style={{ flex: 1 }}>
-      <DashboardHeader />
-      {renderRoleDashboard()}
-    </View>
-    // </ScreenWrapper>
+    <DashboardHeaderHeightContext.Provider value={dashboardHeaderHeight}>
+      <ScreenWrapper
+        safeArea={true} // Use false to let gradient cover status bar
+        gradient="linear"
+        safeAreaEdges={[]}
+        gradientColors={gradientColors}
+        gradientStart={{ x: 1, y: 0 }}
+        gradientEnd={{ x: 0, y: 1 }}
+        statusBarStyle="dark-content"
+      >
+        <View style={styles.dashboardWrapper}>
+          <DashboardHeader onLayoutHeight={setDashboardHeaderHeight} />
+          {renderRoleDashboard()}
+        </View>
+      </ScreenWrapper>
+    </DashboardHeaderHeightContext.Provider>
   );
 };
 

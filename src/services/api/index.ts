@@ -31,6 +31,25 @@ export type {
 export { ERROR_CODES } from './types';
 
 // ============================================
+// MARKET INSIGHTS API
+// ============================================
+
+export {
+  fetchTodayMarketInsight,
+  fetchMarketInsightByDate,
+  fetchMarketInsightsHistory,
+  useGetTodayMarketInsight,
+  useGetMarketInsightByDate,
+  useGetMarketInsightsHistory,
+} from './marketInsightsApi';
+export type {
+  MarketSentiment,
+  MarketInsightArticle,
+  MarketInsight,
+  MarketInsightsHistoryResponse,
+} from './marketInsightsApi';
+
+// ============================================
 // NOTIFICATION API (Unified for all roles)
 // ============================================
 

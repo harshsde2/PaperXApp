@@ -14,6 +14,8 @@ import type {
   MachineSnapshotData,
   TransformedSession,
 } from './@types';
+import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
+import { useDashboardHeaderHeight } from '../../DashboardHeaderHeightContext';
 import { createStyles } from './styles';
 
 const defaultSnapshotData: MachineSnapshotData = {
@@ -29,6 +31,16 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const tabBarInset = useTabBarContentBottomInset();
+  const headerInset = useDashboardHeaderHeight();
+  const scrollContentContainerStyle = useMemo(
+    () => [
+      styles.contentContainer,
+      { paddingTop: headerInset },
+      tabBarInset > 0 ? { paddingBottom: theme.spacing[6] + tabBarInset } : null,
+    ],
+    [styles.contentContainer, headerInset, tabBarInset, theme.spacing],
+  );
   const navigation = useNavigation<any>();
   const { data: wallet } = useGetWalletBalance();
   const {
@@ -184,7 +196,7 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={scrollContentContainerStyle}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl

@@ -5,7 +5,7 @@
   "scripts": {
     "postinstall": "patch-package",
     "android": "react-native run-android",
-    "ios": "react-native run-ios --simulator=\"iPhone 17 \"",
+    "ios": "react-native run-ios --simulator=\"iPhone 17 Pro\"",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
@@ -15,6 +15,7 @@
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.8",
     "@notifee/react-native": "^9.1.8",
+    "@react-native-community/blur": "^4.4.1",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-native-documents/picker": "^12.0.0",
     "@react-native-firebase/app": "^23.8.6",
@@ -36,6 +37,7 @@
     "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "^2.30.0",
     "react-native-image-picker": "^8.2.1",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-maps": "^1.26.20",
     "react-native-mmkv": "^4.1.0",
     "react-native-nitro-modules": "^0.32.0",

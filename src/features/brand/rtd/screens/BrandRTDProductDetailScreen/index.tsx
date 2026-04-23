@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Image } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
@@ -11,6 +11,8 @@ import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
 import { ProductSpecsGrid } from '../../components/ProductSpecsGrid';
 import { QuantityPricingCard } from '../../components/QuantityPricingCard';
 import { EscrowBanner } from '../../components/EscrowBanner';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { DetailSkeleton } from '@shared/components/skeletons';
 import type { RtdPriceSlab } from '@services/api/rtdApi/@types';
 import type { BrandRTDProductDetailScreenProps } from './@types';
 import { createStyles } from './styles';
@@ -37,6 +39,7 @@ export const BrandRTDProductDetailScreen: React.FC<
     data: product,
     isLoading,
   } = useGetRtdProductDetail(productId, { enabled: !!productId });
+  const showSkeleton = useSkeleton(isLoading || !product);
 
   const { data: rtdOrders } = useGetBrandRtdOrders();
   const existingOrder = useMemo(
@@ -74,12 +77,15 @@ export const BrandRTDProductDetailScreen: React.FC<
     });
   }, [navigation, productId, effectiveQuantity, hasActiveOrder, existingOrder]);
 
-  if (isLoading || !product) {
+  if (showSkeleton) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+        <DetailSkeleton />
       </View>
     );
+  }
+  if (!product) {
+    return null;
   }
 
   return (

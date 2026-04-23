@@ -9,14 +9,12 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Controller } from 'react-hook-form';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
@@ -286,7 +284,7 @@ const PostJobworkFindScreen: React.FC = () => {
       let sample_image: string | null = data.sample_image ?? null;
       if (data.sample_available && sampleImageFile) {
         try {
-          sample_image = await uploadImage.mutateAsync(sampleImageFile);
+          sample_image = await uploadImage.mutateAsync({ file: sampleImageFile });
         } catch (e) {
           Alert.alert('Upload Error', 'Failed to upload sample image. Please try again.');
           return;
@@ -345,16 +343,7 @@ const PostJobworkFindScreen: React.FC = () => {
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
 
   if (isLoadingReference) {
-    return (
-      <ScreenWrapper backgroundColor={theme.colors.background.secondary}>
-        <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-          <Text variant="bodyMedium" style={{ marginTop: theme.spacing[2] }}>
-            Loading form data...
-          </Text>
-        </View>
-      </ScreenWrapper>
-    );
+    return null;
   }
 
   return (
@@ -364,7 +353,10 @@ const PostJobworkFindScreen: React.FC = () => {
         scrollable
         safeAreaEdges={[]}
       >
-        <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+        <Animated.View
+          style={[styles.container, { paddingBottom: bottomPadding }]}
+          entering={FadeIn.duration(300)}
+        >
           <Text variant="h3" fontWeight="bold" style={styles.title}>
             Post to Find Jobwork
           </Text>
@@ -564,7 +556,7 @@ const PostJobworkFindScreen: React.FC = () => {
               )}
             </View>
           </View>
-        </View>
+        </Animated.View>
       </ScreenWrapper>
 
       <FloatingBottomContainer>
@@ -585,7 +577,7 @@ const PostJobworkFindScreen: React.FC = () => {
       </FloatingBottomContainer>
 
       {/* Jobwork Type Bottom Sheet (converter types + Other) */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={jobworkTypeSheetRef}
         snapPoints={['50%', '75%']}
         enablePanDownToClose
@@ -632,10 +624,10 @@ const PostJobworkFindScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Machinery Bottom Sheet */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={machinerySheetRef}
         snapPoints={['60%', '90%']}
         enablePanDownToClose
@@ -658,10 +650,10 @@ const PostJobworkFindScreen: React.FC = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Timeline Bottom Sheet */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={timelineSheetRef}
         snapPoints={['50%', '80%']}
         index={1}
@@ -691,7 +683,7 @@ const PostJobworkFindScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Location Picker Modal */}
       <Modal

@@ -2,11 +2,8 @@ import React, { useState, useCallback, useRef } from 'react';
 import { View, TouchableOpacity, InteractionManager } from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -285,7 +282,7 @@ const MillBrandDetailsScreen = () => {
         />
       </FloatingBottomContainer>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={brandSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -303,7 +300,7 @@ const MillBrandDetailsScreen = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
       </View>
     </BottomSheetModalProvider>
   );

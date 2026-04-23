@@ -6,10 +6,10 @@ export const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.background.secondary,
+      // backgroundColor: theme.colors.background.secondary,
     },
     content: {
-      paddingHorizontal: theme.spacing[4],
+      // paddingHorizontal: theme.spacing[4],
       paddingBottom: theme.spacing[24],
     },
     statsScroll: {
@@ -24,11 +24,9 @@ export const createStyles = (theme: Theme) =>
       minWidth: 130,
       flex: 1,
       minHeight: 100,
-      borderRadius: theme.borderRadius.card.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.border.primary,
-      backgroundColor: theme.colors.surface.primary,
-      padding: theme.spacing[4],
+    },
+    statCardInner: {
+      flex: 1,
       justifyContent: 'space-between',
     },
     statLabel: {
@@ -62,6 +60,34 @@ export const createStyles = (theme: Theme) =>
     },
     statSubTextWarning: {
       color: theme.colors.warning.DEFAULT,
+    },
+    actionCardsRow: {
+      flexDirection: 'row',
+      gap: theme.spacing[3],
+      marginTop: theme.spacing[6],
+    },
+    actionCardTouchable: {
+      flex: 1,
+      minHeight: 120,
+      overflow: 'hidden',
+    },
+    actionCard: {
+      flex: 1,
+      minHeight: 120,
+    },
+    actionCardInner: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    actionCardIcon: {
+      marginBottom: theme.spacing[2],
+    },
+    actionCardTitle: {
+      fontSize: 18,
+      fontWeight: fontWeightForPlatform('700'),
+      color: theme.colors.text.inverse,
+      textAlign: 'center',
     },
     sectionHeader: {
       flexDirection: 'row',

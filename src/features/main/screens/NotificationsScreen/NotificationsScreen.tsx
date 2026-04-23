@@ -5,6 +5,8 @@ import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useTheme } from '@theme/index';
 import { useNavigationHelpers } from '@navigation/helpers/useNavigationHelpers';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ListItemSkeleton } from '@shared/components/skeletons';
 import {
   useFlattenedNotificationFeed,
   useNotificationMarkAllRead,
@@ -106,14 +108,12 @@ const NotificationsScreen: React.FC = () => {
   }, [feedQuery.isFetchingNextPage, styles.footerLoading, theme.colors.primary.DEFAULT]);
 
   const isInitialLoading = feedQuery.isLoading && notificationItems.length === 0;
+  const showSkeleton = useSkeleton(isInitialLoading);
 
-  if (isInitialLoading) {
+  if (showSkeleton) {
     return (
-      <View style={styles.emptyWrap}>
-        <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-        <Text variant="bodyMedium" style={styles.emptySubtitle}>
-          Loading notifications...
-        </Text>
+      <View style={[styles.container, { paddingHorizontal: theme.spacing[4], paddingTop: insets.top + theme.spacing[3] }]}>
+        <ListItemSkeleton count={7} />
       </View>
     );
   }

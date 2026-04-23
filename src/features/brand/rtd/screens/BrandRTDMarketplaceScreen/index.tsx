@@ -2,12 +2,15 @@ import React, { useState, useCallback, useMemo, useRef, useLayoutEffect } from '
 import { View, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { AppIcon } from '@assets/svgs';
 import { useGetRtdCatalogInfinite, useGetBrandRtdOrders } from '@services/api/brandRtdApi';
 import { SCREENS } from '@navigation/constants';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { Skeleton } from '@shared/components/Skeleton';
 import { RTDProductCard } from '../../components/RTDProductCard';
 import { MarketplaceFilterSheet } from '../../components/MarketplaceFilterSheet';
 import type { RtdProduct, RtdLeadTime, GetRtdCatalogParams } from '@services/api/rtdApi/@types';
@@ -124,6 +127,7 @@ export const BrandRTDMarketplaceScreen: React.FC<
     refetch,
     isRefetching,
   } = useGetRtdCatalogInfinite(apiParams);
+  const showSkeleton = useSkeleton(isLoading);
 
   const products = useMemo(
     () => data?.pages.flatMap((p) => p.data) ?? [],
@@ -176,10 +180,26 @@ export const BrandRTDMarketplaceScreen: React.FC<
   );
 
   const renderEmpty = useCallback(() => {
-    if (isLoading) {
+    if (showSkeleton) {
       return (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+        <View style={styles.skeletonContainer}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <View key={`marketplace-skeleton-${index}`} style={styles.skeletonCard}>
+              <Skeleton height={140} width="100%" borderRadius={theme.borderRadius.md} />
+              <View style={styles.skeletonBody}>
+                <View style={styles.skeletonTitleRow}>
+                  <Skeleton height={16} width="65%" />
+                  <Skeleton height={24} width={72} borderRadius={theme.borderRadius.full} />
+                </View>
+                <Skeleton height={12} width="45%" />
+                <Skeleton height={12} width="78%" />
+                <View style={styles.skeletonFooterRow}>
+                  <Skeleton height={14} width="28%" />
+                  <Skeleton height={34} width={112} borderRadius={theme.borderRadius.lg} />
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
       );
     }
@@ -193,7 +213,7 @@ export const BrandRTDMarketplaceScreen: React.FC<
         </Text>
       </View>
     );
-  }, [isLoading, styles, theme]);
+  }, [showSkeleton, styles, theme.borderRadius]);
 
   const renderFooter = useCallback(() => {
     if (!isFetchingNextPage) return null;
@@ -228,7 +248,7 @@ export const BrandRTDMarketplaceScreen: React.FC<
           }
         />
 
-        <BottomSheetModal
+        <GorhomBottomSheetModal
           ref={filterSheetRef}
           snapPoints={FILTER_SNAP_POINTS}
           enablePanDownToClose
@@ -241,7 +261,7 @@ export const BrandRTDMarketplaceScreen: React.FC<
             onApply={handleApplyAdvancedFilters}
             onReset={handleResetAdvancedFilters}
           />
-        </BottomSheetModal>
+        </GorhomBottomSheetModal>
       </View>
     </BottomSheetModalProvider>
   );

@@ -11,11 +11,8 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
@@ -1624,7 +1621,7 @@ const PostToBuyScreen = () => {
             </TouchableOpacity>
           </FloatingBottomContainer>
 
-          <BottomSheetModal
+          <GorhomBottomSheetModal
             ref={materialsSheetRef}
             snapPoints={['70%', '95%']}
             enablePanDownToClose
@@ -1649,7 +1646,7 @@ const PostToBuyScreen = () => {
               theme={theme}
               ListComponent={BottomSheetFlatList}
             />
-          </BottomSheetModal>
+          </GorhomBottomSheetModal>
         </>
       </View>
     </BottomSheetModalProvider>

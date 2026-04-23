@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useEffect, useCallback, useState } from 'react';
-import { View, TouchableOpacity, ActivityIndicator, RefreshControl, Image, LayoutChangeEvent } from 'react-native';
+import { View, TouchableOpacity, RefreshControl, Image, LayoutChangeEvent } from 'react-native';
 import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
@@ -20,6 +20,8 @@ import { AppIcon } from '@assets/svgs';
 import { ROLES } from '@utils/constants';
 import { UserRole } from '@shared/types';
 import { SCREENS } from '@navigation/constants';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ProfileSkeleton } from '@shared/components/skeletons';
 
 const getInitials = (name: string): string => {
   const trimmed = name.trim();
@@ -43,6 +45,7 @@ const ProfileScreen = () => {
   
   // Fetch user profile from API
   const { data: profileData, isLoading, isError, refetch, isRefetching } = useGetProfile();
+  const showSkeleton = useSkeleton(isLoading);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -214,13 +217,10 @@ const ProfileScreen = () => {
   }, [navigation]);
 
   // Loading state
-  if (isLoading) {
+  if (showSkeleton) {
     return (
       <ScreenWrapper backgroundColor={theme.colors.background.secondary} safeAreaEdges={[]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
+        <ProfileSkeleton />
       </ScreenWrapper>
     );
   }

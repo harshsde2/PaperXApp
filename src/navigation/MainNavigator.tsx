@@ -46,6 +46,8 @@ import { SCREENS } from './constants';
 import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
 import NotificationsScreen from '@features/main/screens/NotificationsScreen/NotificationsScreen';
 import RegistrationDetailsScreen from '@features/main/screens/RegistrationDetailsScreen/RegistrationDetailsScreen';
+import ArticleDetailScreen from '@features/main/screens/MarketScreen/components/ArticleDetailScreen';
+import type { MarketInsightArticle } from '@services/api';
 
 export type MainStackParamList = {
   MainTabs: undefined;
@@ -55,6 +57,7 @@ export type MainStackParamList = {
   PostBrandRequirement: undefined;
   Requirements: undefined;
   MarketScreen: undefined;
+  ArticleDetail: { article: MarketInsightArticle };
   PaymentConfirmation: {
     listingDetails: {
       id?: string;
@@ -197,6 +200,14 @@ const MainNavigator = () => {
         component={MarketScreen}
         options={{
           headerShown: true,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.ARTICLE_DETAIL}
+        component={ArticleDetailScreen}
+        options={{
+          headerShown: false,
           animation: 'slide_from_right',
         }}
       />

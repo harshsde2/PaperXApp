@@ -9,16 +9,48 @@ export const createStyles = (theme: Theme) =>
       backgroundColor: theme.colors.background.secondary,
     },
     listContent: {
+      flex: 1,
       paddingHorizontal: theme.spacing[4],
       paddingBottom: theme.spacing[24],
       paddingTop: theme.spacing[4],
       gap: theme.spacing[4],
     },
     emptyContainer: {
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: theme.spacing[16],
       gap: theme.spacing[3],
+    },
+    skeletonContainer: {
+      width: '100%',
+      gap: theme.spacing[4],
+      paddingBottom: theme.spacing[8],
+    },
+    skeletonCard: {
+      width: '100%',
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor:
+        theme.mode === 'dark' ? theme.colors.surface.secondary : theme.colors.surface.primary,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      padding: theme.spacing[3],
+      gap: theme.spacing[3],
+    },
+    skeletonBody: {
+      gap: theme.spacing[2],
+    },
+    skeletonTitleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+    },
+    skeletonFooterRow: {
+      marginTop: theme.spacing[1],
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
     emptyText: {
       fontSize: 16,

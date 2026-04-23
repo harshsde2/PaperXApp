@@ -1,7 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useMemo, useContext, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity, Platform, LayoutChangeEvent } from 'react-native';
+import { BlurView } from '@react-native-community/blur';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
-import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import {
+  createBottomTabNavigator,
+  BottomTabBarProps,
+  BottomTabBarHeightCallbackContext,
+} from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
@@ -13,7 +18,8 @@ import { Text } from '@shared/components/Text';
 import { useGetChatList } from '@services/api';
 import type { ChatListItem } from '@services/api';
 import { useTheme } from '@theme/index';
-import { SCREENS, TAB_CONFIGS, UserRole } from './constants';
+import { getColorWithOpacity } from '@theme/utils/themeHelpers';
+import { SCREENS, TAB_CONFIGS } from './constants';
 
 // Import Screens
 import DashboardScreen from '@features/main/screens/DashboardScreen/DashboardScreen';
@@ -83,6 +89,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
   const theme = useTheme();
   const styles = useMemo(() => createTabBarStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const onTabBarHeightChange = useContext(BottomTabBarHeightCallbackContext);
   const stackNavigation = useNavigation<any>();
   const messagesUnreadCount = useAppSelector((s: RootState) => s.ui.messagesUnreadCount);
 
@@ -90,9 +97,24 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
   const activeRole = useActiveRole();
   const tabConfig = TAB_CONFIGS[activeRole] || TAB_CONFIGS.dealer;
 
+  const blurFallbackColors = useMemo(
+    () => ({
+      iosReducedTransparency: getColorWithOpacity(theme.colors.white, 52),
+      androidFallback: getColorWithOpacity(theme.colors.white, 52),
+    }),
+    [theme.colors.white],
+  );
+
   const handlePostPress = () => {
     stackNavigation.navigate(SCREENS.MAIN.POST);
   };
+
+  const handleTabBarLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      onTabBarHeightChange?.(e.nativeEvent.layout.height);
+    },
+    [onTabBarHeightChange],
+  );
 
   // Split tabs into left and right sides for Post button in center
   const totalTabs = state.routes.length;
@@ -101,7 +123,43 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
   const rightTabs = state.routes.slice(middleIndex);
 
   return (
-    <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom || 12 }]}>
+    <View
+      style={[styles.tabBarOuter, { paddingBottom: insets.bottom || 12 }]}
+      onLayout={handleTabBarLayout}
+    >
+      {Platform.OS === 'ios' ? (
+        <>
+          <BlurView
+            style={StyleSheet.absoluteFill}
+            blurType={'light'}
+            blurAmount={6}
+            reducedTransparencyFallbackColor={blurFallbackColors.iosReducedTransparency}
+            pointerEvents="none"
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: getColorWithOpacity(theme.colors.white, 4) },
+            ]}
+          />
+        </>
+      ) : (
+        <>
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: blurFallbackColors.androidFallback }]}
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: getColorWithOpacity(theme.colors.white, 3) },
+            ]}
+          />
+        </>
+      )}
+      <View style={styles.tabBarRow}>
       {/* Left side tabs */}
       {leftTabs.map((route) => {
         const { options } = descriptors[route.key];
@@ -252,26 +310,36 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
           </TouchableOpacity>
         );
       })}
+      </View>
     </View>
   );
 };
 
 const createTabBarStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    tabBarContainer: {
-      flexDirection: 'row',
-      backgroundColor: theme.colors.surface.primary,
+    tabBarOuter: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'transparent',
+      overflow: 'hidden',
       paddingTop: 12,
       paddingHorizontal: 8,
       borderTopWidth: 1,
-      borderTopColor: theme.colors.border.primary,
+      borderTopColor: getColorWithOpacity(theme.colors.border.primary, 50),
       shadowColor: theme.colors.black,
       shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.05,
-      shadowRadius: 12,
-      elevation: 8,
+      shadowOpacity: 0.03,
+      shadowRadius: 10,
+      elevation: 12,
+      zIndex: 100,
+    },
+    tabBarRow: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+      zIndex: 1,
     },
     tabItem: {
       flex: 1,
@@ -333,11 +401,12 @@ const createTabBarStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: 'center',
       marginHorizontal: 4,
       marginTop: -24,
-      shadowColor: theme.colors.primary.DEFAULT,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
+      /** Primary light–tinted shadow (matches light variant), soft glow above blur */
+      shadowColor: theme.colors.primary[800],
+      shadowOffset: { width: 0, height: 18 },
+      shadowOpacity: 0.85,
+      shadowRadius: 16,
+      elevation: 16,
       zIndex: 10,
     },
     postButtonInner: {
@@ -384,6 +453,15 @@ const BottomTabNavigator: React.FC = () => {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        /** Scene draws full height under the tab bar so BlurView can sample real content */
+        sceneStyle: { backgroundColor: 'transparent' },
+        /** Used by getTabBarHeight for initial layout; custom bar still reports real height via onLayout */
+        tabBarStyle: {
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+        },
       }}
     >
       {tabConfig.map((tab) => (

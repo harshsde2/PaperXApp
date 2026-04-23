@@ -33,6 +33,7 @@ export const SCREENS = {
     SETTINGS: 'Settings',
     INQUIRIES: 'Inquiries',
     MARKET_INSIGHT: 'MarketScreen',
+    ARTICLE_DETAIL: 'ArticleDetail',
     CAPACITY: 'Capacity',
     SESSIONS: 'Sessions',
     PROFILE: 'Profile',

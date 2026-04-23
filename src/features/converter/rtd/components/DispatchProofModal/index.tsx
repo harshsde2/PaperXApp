@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { useTheme } from '@theme/index';
 import { pickImageFromLibrary } from '@shared/utils/imagePicker';
 import type { PickedImage } from '@shared/utils/imagePicker';
@@ -95,7 +96,7 @@ export const DispatchProofModal: React.FC<DispatchProofModalProps> = ({
     if (isSubmitDisabled || !selectedFile) return;
 
     try {
-      const filePath = await uploadImage.mutateAsync(selectedFile);
+      const filePath = await uploadImage.mutateAsync({ file: selectedFile, purpose: 'dispatch' });
 
       await dispatchMutation.mutateAsync({
         id: orderId,
@@ -297,7 +298,7 @@ export const DispatchProofModal: React.FC<DispatchProofModalProps> = ({
             />
           </ScrollView>
 
-          <BottomSheetModal
+          <GorhomBottomSheetModal
             ref={courierSheetRef}
             snapPoints={snapPoints}
             enablePanDownToClose
@@ -321,7 +322,7 @@ export const DispatchProofModal: React.FC<DispatchProofModalProps> = ({
                 </TouchableOpacity>
               )}
             />
-          </BottomSheetModal>
+          </GorhomBottomSheetModal>
         </View>
       </BottomSheetModalProvider>
       </View>

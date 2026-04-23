@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Provider } from 'react-redux';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,8 +11,11 @@ import { ThemeProvider } from './src/theme';
 import ToastManager, { Toast } from 'toastify-react-native';
 import { ToastBanner } from '@shared/components/Toast';
 import { ToastListener } from '@shared/components/ToastListener';
+import AnimatedSplash from '@shared/components/AnimatedSplash';
 
 function App() {
+  const [splashVisible, setSplashVisible] = useState(true);
+
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
@@ -64,6 +67,11 @@ function App() {
                 />
                 <ToastListener />
                 <AppNavigator />
+                {splashVisible && (
+                  <AnimatedSplash
+                    onAnimationEnd={() => setSplashVisible(false)}
+                  />
+                )}
               </SafeAreaProvider>
             </BottomSheetProvider>
           </ThemeProvider>

@@ -28,6 +28,8 @@ import {
 } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { WalletSkeleton } from '@shared/components/skeletons';
 import { createStyles, DARK_THEME } from './styles';
 import { PaymentMethodOption } from './@types';
 
@@ -94,6 +96,7 @@ const CreditPacksScreen = () => {
     refetch: refetchPacks,
   } = useGetCreditPacks();
   const { mutate: purchaseCredits, isPending: purchasing } = usePurchaseCredits();
+  const showSkeleton = useSkeleton(packsLoading);
 
   // console.log('creditPacks', JSON.stringify(creditPacks, null, 2));
 
@@ -211,13 +214,12 @@ const CreditPacksScreen = () => {
     [styles]
   );
 
-  if (packsLoading) {
+  if (showSkeleton) {
     return (
       <ScreenWrapper safeAreaEdges={['top']} backgroundColor={DARK_THEME.background}>
         <StatusBar barStyle="light-content" backgroundColor={DARK_THEME.background} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={DARK_THEME.tiers.growth.primary} />
-          <Text style={styles.loadingText}>Loading credit packs...</Text>
+          <WalletSkeleton transactionCount={4} />
         </View>
       </ScreenWrapper>
     );

@@ -18,7 +18,11 @@ import { Alert } from 'react-native';
 import type { Theme } from '@theme/types';
 import type { RecentInquiry, RtdOrderStatus } from '@services/api';
 import type { BrandDashboardViewProps } from './@types';
+import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
+import { useDashboardHeaderHeight } from '../../DashboardHeaderHeightContext';
 import { createStyles } from './styles';
+import DashboardCardWrapper from '@shared/components/DashboardCardWrapper';
+import GlassyWrapper from '@shared/components/GlassyWrapper';
 
 const ACTIVE_ORDER_STATUSES: RtdOrderStatus[] = [
   'REQUESTED', 'ACCEPTED', 'PAID', 'IN_PRODUCTION', 'DISPATCHED',
@@ -82,13 +86,23 @@ function getStatusBadge(
 }
 
 export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
-  profileData,
+  profileData: _profileData,
   dashboardData: apiData,
   onRefresh,
   refreshing = false,
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const tabBarInset = useTabBarContentBottomInset();
+  const headerInset = useDashboardHeaderHeight();
+  const scrollContentContainerStyle = useMemo(
+    () => [
+      styles.contentContainer,
+      { paddingTop: headerInset },
+      tabBarInset > 0 ? { paddingBottom: theme.spacing[6] + tabBarInset } : null,
+    ],
+    [styles.contentContainer, headerInset, tabBarInset, theme.spacing],
+  );
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<'inquiries' | 'orders'>('inquiries');
 
@@ -132,7 +146,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
   );
 
   const { data: rtdOrders } = useGetBrandRtdOrders();
-  const { mutate: fetchSessionByInquiry, isLoading: isFetchingSession } = useFetchSessionByInquiry();
+  const { mutate: fetchSessionByInquiry, isPending: isFetchingSession } = useFetchSessionByInquiry();
 
   const activeRtdOrders = useMemo(
     () => (rtdOrders ?? []).filter((o) => ACTIVE_ORDER_STATUSES.includes(o.status)).slice(0, 3),
@@ -179,7 +193,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={scrollContentContainerStyle}
       showsVerticalScrollIndicator={false}
       refreshControl={
         onRefresh ? (
@@ -194,21 +208,33 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
     >
       {/* ── Notification Banner ── */}
       {dashboardData.newProposals > 0 && (
-        <TouchableOpacity style={styles.notificationBanner} activeOpacity={0.8}>
-          <View style={styles.notificationContent}>
-            <Text fontWeight="bold" style={styles.notificationTitle}>
-              You have {dashboardData.newProposals} new supplier proposal
-              {dashboardData.newProposals > 1 ? 's' : ''}
-            </Text>
-            <Text style={styles.notificationSubtitle}>
-              Review and compare matches now
-            </Text>
-          </View>
-          <AppIcon.ChevronRight
-            width={20}
-            height={20}
-            color={theme.colors.primary.DEFAULT}
-          />
+        <TouchableOpacity style={styles.notificationBannerTouchable} activeOpacity={0.8}>
+          <GlassyWrapper
+            borderRadius={theme.borderRadius.card.lg}
+            blurAmount={22}
+            blurType="light"
+            overlayOpacity={0.1}
+            padding={theme.spacing[4]}
+            borderWidth={1}
+            showGlossyHighlight={false}
+            style={styles.notificationBanner}
+            contentContainerStyle={styles.notificationBannerInner}
+          >
+            <View style={styles.notificationContent}>
+              <Text fontWeight="bold" style={styles.notificationTitle}>
+                You have {dashboardData.newProposals} new supplier proposal
+                {dashboardData.newProposals > 1 ? 's' : ''}
+              </Text>
+              <Text style={styles.notificationSubtitle}>
+                Review and compare matches now
+              </Text>
+            </View>
+            <AppIcon.ChevronRight
+              width={20}
+              height={20}
+              color={theme.colors.primary.DEFAULT}
+            />
+          </GlassyWrapper>
         </TouchableOpacity>
       )}
 
@@ -324,251 +350,344 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
         </View>
       </TouchableOpacity>
 
+
+
+      {/* ── Recent Activity ── */}
+      <DashboardCardWrapper style={styles.recentSectionWrapper} marginBottom={0}>
       {/* ── Stats Row ── */}
       <View style={styles.statsSection}>
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>ACTIVE</Text>
-            <Text fontWeight="extrabold" style={styles.statValue}>
-              {dashboardData.activeInquiries}
-            </Text>
-            <Text style={styles.statCategory}>Inquiries</Text>
+          <View style={styles.statCardTouchable}>
+            <GlassyWrapper
+              borderRadius={theme.borderRadius.card.lg}
+              blurAmount={22}
+              blurType="light"
+              overlayOpacity={0.1}
+              padding={theme.spacing[3]}
+              borderWidth={1}
+              showGlossyHighlight={false}
+              style={styles.statCard}
+              contentContainerStyle={styles.statCardInner}
+            >
+              <Text style={styles.statLabel}>ACTIVE</Text>
+              <Text fontWeight="extrabold" style={styles.statValue}>
+                {dashboardData.activeInquiries}
+              </Text>
+              <Text style={styles.statCategory}>Inquiries</Text>
+            </GlassyWrapper>
           </View>
-          <View style={styles.statCard}>
-            <View style={styles.statDot} />
-            <Text style={styles.statLabel}>NEW</Text>
-            <Text fontWeight="extrabold" style={[styles.statValue, styles.statValueHighlight]}>
-              {dashboardData.newProposals}
-            </Text>
-            <Text style={styles.statCategory}>Proposals</Text>
+          <View style={styles.statCardTouchable}>
+            <GlassyWrapper
+              borderRadius={theme.borderRadius.card.lg}
+              blurAmount={22}
+              blurType="light"
+              overlayOpacity={0.1}
+              padding={theme.spacing[3]}
+              borderWidth={1}
+              showGlossyHighlight={false}
+              style={styles.statCard}
+              contentContainerStyle={styles.statCardInner}
+            >
+              <View style={styles.statDot} />
+              <Text style={styles.statLabel}>NEW</Text>
+              <Text fontWeight="extrabold" style={[styles.statValue, styles.statValueHighlight]}>
+                {dashboardData.newProposals}
+              </Text>
+              <Text style={styles.statCategory}>Proposals</Text>
+            </GlassyWrapper>
           </View>
-          <TouchableOpacity style={styles.statCard} onPress={handleViewAllOrders} activeOpacity={0.7}>
-            <Text style={styles.statLabel}>ACTIVE</Text>
-            <Text fontWeight="extrabold" style={styles.statValue}>
-              {activeOrderCount}
-            </Text>
-            <Text style={styles.statCategory}>Orders</Text>
+          <TouchableOpacity style={styles.statCardTouchable} onPress={handleViewAllOrders} activeOpacity={0.7}>
+            <GlassyWrapper
+              borderRadius={theme.borderRadius.card.lg}
+              blurAmount={22}
+              blurType="light"
+              overlayOpacity={0.1}
+              padding={theme.spacing[3]}
+              borderWidth={1}
+              showGlossyHighlight={false}
+              style={styles.statCard}
+              contentContainerStyle={styles.statCardInner}
+            >
+              <Text style={styles.statLabel}>ACTIVE</Text>
+              <Text fontWeight="extrabold" style={styles.statValue}>
+                {activeOrderCount}
+              </Text>
+              <Text style={styles.statCategory}>Orders</Text>
+            </GlassyWrapper>
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* ── My Ready to Dispatch Orders ── */}
-      {activeRtdOrders.length > 0 && (
+        {/* ── My Ready to Dispatch Orders ── */}
+        {activeRtdOrders.length > 0 && (
+          <View style={styles.recentSection}>
+            <View style={styles.recentHeader}>
+              <Text fontWeight="extrabold" style={styles.recentTitle}>
+                My Ready to Dispatch Orders
+              </Text>
+              <TouchableOpacity onPress={handleViewAllOrders}>
+                <Text fontWeight="bold" style={styles.viewAllLink}>View All</Text>
+              </TouchableOpacity>
+            </View>
+            {activeRtdOrders.map((order) => {
+              const color = ORDER_STATUS_COLORS[order.status] ?? '#94a3b8';
+              return (
+                <TouchableOpacity
+                  key={order.id}
+                  style={styles.activityItemTouchable}
+                  activeOpacity={0.7}
+                  onPress={() => handleOrderPress(order.id)}
+                >
+                  <GlassyWrapper
+                    borderRadius={theme.borderRadius.card.lg}
+                    blurAmount={22}
+                    blurType="light"
+                    overlayOpacity={0.1}
+                    padding={theme.spacing[4]}
+                    borderWidth={1}
+                    showGlossyHighlight={false}
+                    style={styles.activityItemGlassy}
+                    contentContainerStyle={styles.activityItemInner}
+                  >
+                    <View style={styles.activityIconWrap}>
+                      <AppIcon.Market
+                        width={20}
+                        height={20}
+                        color={theme.colors.text.secondary}
+                      />
+                    </View>
+                    <View style={styles.activityInfo}>
+                      <Text fontWeight="bold" style={styles.activityTitle}>
+                        {order.product?.product_name ?? 'Ready to Dispatch Order'}
+                      </Text>
+                      <Text style={styles.activityTime}>
+                        Qty: {order.quantity} · ₹{order.total_amount}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.activityBadge,
+                        { borderColor: color, backgroundColor: `${color}15` },
+                      ]}
+                    >
+                      <Text style={[styles.activityBadgeText, { color }]}>
+                        {order.status}
+                      </Text>
+                    </View>
+                  </GlassyWrapper>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
         <View style={styles.recentSection}>
           <View style={styles.recentHeader}>
             <Text fontWeight="extrabold" style={styles.recentTitle}>
-              My Ready to Dispatch Orders
+              Recent Activity
             </Text>
-            <TouchableOpacity onPress={handleViewAllOrders}>
+            <TouchableOpacity>
               <Text fontWeight="bold" style={styles.viewAllLink}>View All</Text>
             </TouchableOpacity>
           </View>
-          {activeRtdOrders.map((order) => {
-            const color = ORDER_STATUS_COLORS[order.status] ?? '#94a3b8';
-            return (
-              <TouchableOpacity
-                key={order.id}
-                style={styles.activityItem}
-                activeOpacity={0.7}
-                onPress={() => handleOrderPress(order.id)}
+
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'inquiries' && styles.tabActive]}
+              onPress={() => setActiveTab('inquiries')}
+            >
+              <Text
+                fontWeight="semibold"
+                style={[styles.tabText, activeTab === 'inquiries' && styles.tabTextActive]}
               >
-                <View style={styles.activityIconWrap}>
-                  <AppIcon.Market
-                    width={20}
-                    height={20}
-                    color={theme.colors.text.secondary}
+                Inquiries
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'orders' && styles.tabActive]}
+              onPress={() => setActiveTab('orders')}
+            >
+              <Text
+                fontWeight="semibold"
+                style={[styles.tabText, activeTab === 'orders' && styles.tabTextActive]}
+              >
+                Orders
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {activeTab === 'inquiries' ? (
+            dashboardData.recentInquiries.length === 0 ? (
+              <GlassyWrapper
+                borderRadius={theme.borderRadius.card.lg}
+                blurAmount={22}
+                blurType="light"
+                overlayOpacity={0.1}
+                padding={theme.spacing[6]}
+                borderWidth={2}
+                borderStyle="dashed"
+                borderColor={theme.colors.border.primary}
+                showGlossyHighlight={false}
+                style={styles.emptyActivityGlassy}
+                contentContainerStyle={styles.emptyActivityGlassyInner}
+              >
+                <View style={styles.emptyActivityIconWrap}>
+                  <AppIcon.Inquiries
+                    width={32}
+                    height={32}
+                    color={theme.colors.primary.DEFAULT}
                   />
                 </View>
-                <View style={styles.activityInfo}>
-                  <Text fontWeight="bold" style={styles.activityTitle}>
-                    {order.product?.product_name ?? 'Ready to Dispatch Order'}
-                  </Text>
-                  <Text style={styles.activityTime}>
-                    Qty: {order.quantity} · ₹{order.total_amount}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.activityBadge,
-                    { borderColor: color, backgroundColor: `${color}15` },
-                  ]}
-                >
-                  <Text style={[styles.activityBadgeText, { color }]}>
-                    {order.status}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {/* ── Recent Activity ── */}
-      <View style={styles.recentSection}>
-        <View style={styles.recentHeader}>
-          <Text fontWeight="extrabold" style={styles.recentTitle}>
-            Recent Activity
-          </Text>
-          <TouchableOpacity>
-            <Text fontWeight="bold" style={styles.viewAllLink}>View All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'inquiries' && styles.tabActive]}
-            onPress={() => setActiveTab('inquiries')}
-          >
-            <Text
-              fontWeight="semibold"
-              style={[styles.tabText, activeTab === 'inquiries' && styles.tabTextActive]}
+                <Text fontWeight="bold" style={styles.emptyActivityTitle}>
+                  No recent inquiries
+                </Text>
+                <Text style={styles.emptyActivityDesc}>
+                  You don't have any inquiries at the moment. Post a new requirement to get started.
+                </Text>
+                <CustomButton
+                  title="Post New Requirement"
+                  onPress={handlePostRequirement}
+                  variant="gradient"
+                  size="sm"
+                  textStyle={styles.emptyActivityButtonText}
+                />
+              </GlassyWrapper>
+            ) : (
+              dashboardData.recentInquiries.map((inquiry) => {
+                const badge = getStatusBadge(inquiry.status, theme);
+                return (
+                  <TouchableOpacity
+                    key={inquiry.id}
+                    style={styles.activityItemTouchable}
+                    activeOpacity={0.7}
+                    onPress={() => handleInquiryPress(inquiry.id)}
+                    disabled={isFetchingSession}
+                  >
+                    <GlassyWrapper
+                      borderRadius={theme.borderRadius.card.lg}
+                      blurAmount={22}
+                      blurType="light"
+                      overlayOpacity={0.1}
+                      padding={theme.spacing[4]}
+                      borderWidth={1}
+                      showGlossyHighlight={false}
+                      style={styles.activityItemGlassy}
+                      contentContainerStyle={styles.activityItemInner}
+                    >
+                      <View style={styles.activityIconWrap}>
+                        <AppIcon.Inquiries
+                          width={20}
+                          height={20}
+                          color={theme.colors.text.secondary}
+                        />
+                      </View>
+                      <View style={styles.activityInfo}>
+                        <Text fontWeight="bold" style={styles.activityTitle}>
+                          {inquiry.title}
+                        </Text>
+                        <Text style={styles.activityTime}>Updated {inquiry.time}</Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.activityBadge,
+                          { borderColor: badge.borderColor, backgroundColor: badge.bg },
+                        ]}
+                      >
+                        <Text style={[styles.activityBadgeText, { color: badge.color }]}>
+                          {badge.label}
+                        </Text>
+                      </View>
+                    </GlassyWrapper>
+                  </TouchableOpacity>
+                );
+              })
+            )
+          ) : activeRtdOrders.length === 0 ? (
+            <GlassyWrapper
+              borderRadius={theme.borderRadius.card.lg}
+              blurAmount={22}
+              blurType="light"
+              overlayOpacity={0.1}
+              padding={theme.spacing[6]}
+              borderWidth={2}
+              borderStyle="dashed"
+              borderColor={theme.colors.border.primary}
+              showGlossyHighlight={false}
+              style={styles.emptyActivityGlassy}
+              contentContainerStyle={styles.emptyActivityGlassyInner}
             >
-              Inquiries
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'orders' && styles.tabActive]}
-            onPress={() => setActiveTab('orders')}
-          >
-            <Text
-              fontWeight="semibold"
-              style={[styles.tabText, activeTab === 'orders' && styles.tabTextActive]}
-            >
-              Orders
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {activeTab === 'inquiries' ? (
-          dashboardData.recentInquiries.length === 0 ? (
-            <View style={styles.emptyActivityCard}>
               <View style={styles.emptyActivityIconWrap}>
-                <AppIcon.Inquiries
+                <AppIcon.Market
                   width={32}
                   height={32}
                   color={theme.colors.primary.DEFAULT}
                 />
               </View>
               <Text fontWeight="bold" style={styles.emptyActivityTitle}>
-                No recent inquiries
+                No active orders
               </Text>
               <Text style={styles.emptyActivityDesc}>
-                You don't have any inquiries at the moment. Post a new requirement to get started.
+                You don't have any Ready to Dispatch orders at the moment. Browse ready-to-dispatch products to place an order.
               </Text>
-              {/* <View style={styles.emptyActivityButtonContainer}> */}
-                <CustomButton
-                  title="Post New Requirement"
-                  onPress={handlePostRequirement}
-                  variant="gradient"
-                  size="sm"
-                  style={{ }}
-                  textStyle={{ fontWeight: '600' }}
-                />
-              {/* </View> */}
-            </View>
-          ) : (
-            dashboardData.recentInquiries.map((inquiry) => {
-              const badge = getStatusBadge(inquiry.status, theme);
-              return (
-                <TouchableOpacity
-                  key={inquiry.id}
-                  style={styles.activityItem}
-                  activeOpacity={0.7}
-                  onPress={() => handleInquiryPress(inquiry.id)}
-                  disabled={isFetchingSession}
-                >
-                  <View style={styles.activityIconWrap}>
-                    <AppIcon.Inquiries
-                      width={20}
-                      height={20}
-                      color={theme.colors.text.secondary}
-                    />
-                  </View>
-                  <View style={styles.activityInfo}>
-                    <Text fontWeight="bold" style={styles.activityTitle}>
-                      {inquiry.title}
-                    </Text>
-                    <Text style={styles.activityTime}>Updated {inquiry.time}</Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.activityBadge,
-                      { borderColor: badge.borderColor, backgroundColor: badge.bg },
-                    ]}
-                  >
-                    <Text style={[styles.activityBadgeText, { color: badge.color }]}>
-                      {badge.label}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )
-        ) : activeRtdOrders.length === 0 ? (
-          <View style={styles.emptyActivityCard}>
-            <View style={styles.emptyActivityIconWrap}>
-              <AppIcon.Market
-                width={32}
-                height={32}
-                color={theme.colors.primary.DEFAULT}
-              />
-            </View>
-            <Text fontWeight="bold" style={styles.emptyActivityTitle}>
-              No active orders
-            </Text>
-            <Text style={styles.emptyActivityDesc}>
-              You don't have any Ready to Dispatch orders at the moment. Browse ready-to-dispatch products to place an order.
-            </Text>
-            {/* <View style={styles.emptyActivityButtonContainer}> */}
               <CustomButton
                 title="Browse Ready to Dispatch"
                 onPress={handleExploreRTD}
                 variant="gradient"
                 size="sm"
-                textStyle={{ fontWeight: '600' }}
+                textStyle={styles.emptyActivityButtonText}
               />
-            {/* </View> */}
-          </View>
-        ) : (
-          activeRtdOrders.map((order) => {
-            const color = ORDER_STATUS_COLORS[order.status] ?? '#94a3b8';
-            return (
-              <TouchableOpacity
-                key={order.id}
-                style={styles.activityItem}
-                activeOpacity={0.7}
-                onPress={() => handleOrderPress(order.id)}
-              >
-                <View style={styles.activityIconWrap}>
-                  <AppIcon.Market
-                    width={20}
-                    height={20}
-                    color={theme.colors.text.secondary}
-                  />
-                </View>
-                <View style={styles.activityInfo}>
-                  <Text fontWeight="bold" style={styles.activityTitle}>
-                    {order.product?.product_name ?? 'Ready to Dispatch Order'}
-                  </Text>
-                  <Text style={styles.activityTime}>
-                    Qty: {order.quantity} · ₹{order.total_amount}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.activityBadge,
-                    { borderColor: color, backgroundColor: `${color}15` },
-                  ]}
+            </GlassyWrapper>
+          ) : (
+            activeRtdOrders.map((order) => {
+              const color = ORDER_STATUS_COLORS[order.status] ?? '#94a3b8';
+              return (
+                <TouchableOpacity
+                  key={order.id}
+                  style={styles.activityItemTouchable}
+                  activeOpacity={0.7}
+                  onPress={() => handleOrderPress(order.id)}
                 >
-                  <Text style={[styles.activityBadgeText, { color }]}>
-                    {order.status}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
-      </View>
+                  <GlassyWrapper
+                    borderRadius={theme.borderRadius.card.lg}
+                    blurAmount={22}
+                    blurType="light"
+                    overlayOpacity={0.1}
+                    padding={theme.spacing[4]}
+                    borderWidth={1}
+                    showGlossyHighlight={false}
+                    style={styles.activityItemGlassy}
+                    contentContainerStyle={styles.activityItemInner}
+                  >
+                    <View style={styles.activityIconWrap}>
+                      <AppIcon.Market
+                        width={20}
+                        height={20}
+                        color={theme.colors.text.secondary}
+                      />
+                    </View>
+                    <View style={styles.activityInfo}>
+                      <Text fontWeight="bold" style={styles.activityTitle}>
+                        {order.product?.product_name ?? 'Ready to Dispatch Order'}
+                      </Text>
+                      <Text style={styles.activityTime}>
+                        Qty: {order.quantity} · ₹{order.total_amount}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.activityBadge,
+                        { borderColor: color, backgroundColor: `${color}15` },
+                      ]}
+                    >
+                      <Text style={[styles.activityBadgeText, { color }]}>
+                        {order.status}
+                      </Text>
+                    </View>
+                  </GlassyWrapper>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
+      </DashboardCardWrapper>
     </ScrollView>
   );
 };

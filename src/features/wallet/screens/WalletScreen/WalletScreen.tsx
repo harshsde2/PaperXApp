@@ -8,7 +8,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +19,8 @@ import { TransactionItem } from '@shared/components/TransactionItem';
 import { AppIcon } from '@assets/svgs';
 import { useGetWalletBalance, useGetTransactions } from '@services/api';
 import { SCREENS } from '@navigation/constants';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ListItemSkeleton, WalletSkeleton } from '@shared/components/skeletons';
 import { createStyles } from './styles';
 
 const CARD_HEIGHT = 200;
@@ -43,6 +44,7 @@ const WalletScreen = () => {
   } = useGetTransactions({ per_page: 5 });
 
   const [refreshing, setRefreshing] = React.useState(false);
+  const showWalletSkeleton = useSkeleton(walletLoading);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -81,19 +83,11 @@ const WalletScreen = () => {
     return { totalAdded, totalDeducted };
   }, [transactions]);
 
-  if (walletLoading) {
+  if (showWalletSkeleton) {
     return (
       <ScreenWrapper safeAreaEdges={['top']} backgroundColor={theme.colors.background.secondary}>
         <View style={styles.loadingContainer}>
-          <View style={styles.loadingCard}>
-            <AppIcon.Wallet width={48} height={48} color={theme.colors.primary.DEFAULT} />
-            <ActivityIndicator
-              size="large"
-              color={theme.colors.primary.DEFAULT}
-              style={{ marginTop: 16 }}
-            />
-            <Text style={styles.loadingText}>Loading your wallet...</Text>
-          </View>
+          <WalletSkeleton transactionCount={5} />
         </View>
       </ScreenWrapper>
     );
@@ -259,7 +253,7 @@ const WalletScreen = () => {
           <View style={styles.transactionsCard}>
             {transactionsLoading ? (
               <View style={styles.emptyContainer}>
-                <ActivityIndicator color={theme.colors.primary.DEFAULT} size="large" />
+                <ListItemSkeleton count={3} />
               </View>
             ) : transactions.length > 0 ? (
               transactions.map((transaction, index) => (

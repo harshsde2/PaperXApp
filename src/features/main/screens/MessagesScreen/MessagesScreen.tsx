@@ -4,7 +4,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
 } from 'react-native';
@@ -18,6 +17,8 @@ import { AppIcon } from '@assets/svgs';
 import { useGetChatList } from '@services/api';
 import type { ChatListItem } from '@services/api';
 import { SCREENS } from '@navigation/constants';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ListItemSkeleton } from '@shared/components/skeletons';
 
 interface MessageRow {
   id: string;
@@ -50,6 +51,7 @@ const MessagesScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { data: chatList = [], isLoading, isRefetching, refetch } = useGetChatList();
+  const showSkeleton = useSkeleton(isLoading);
 
   const messages: MessageRow[] = useMemo(() => {
     return (chatList as ChatListItem[]).map((item, index) => ({
@@ -128,11 +130,10 @@ const MessagesScreen: React.FC = () => {
     [handlePressItem]
   );
 
-  if (isLoading) {
+  if (showSkeleton) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color="#4F46E5" />
-        <Text style={styles.loadingText}>Loading conversations...</Text>
+      <View style={[styles.container, { paddingTop: insets.top, paddingHorizontal: 20, paddingVertical: 12 }]}>
+        <ListItemSkeleton count={7} />
       </View>
     );
   }

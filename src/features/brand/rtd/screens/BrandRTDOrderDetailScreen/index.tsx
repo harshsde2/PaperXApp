@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
-  ActivityIndicator,
   Alert,
   TouchableOpacity,
   Clipboard,
@@ -25,6 +24,8 @@ import { BrandOrderSummaryCard } from '../../components/BrandOrderSummaryCard';
 import { OrderCountdownTimer } from '../../components/OrderCountdownTimer';
 import { TrackingInfoCard } from '../../components/TrackingInfoCard';
 import { ContactDetailsCard } from '@shared/components/ContactDetailsCard';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { DetailSkeleton } from '@shared/components/skeletons';
 import type { BrandRTDOrderDetailScreenProps } from './@types';
 import { createStyles } from './styles';
 
@@ -120,6 +121,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
     () => STATUS_META[activeOrder?.status ?? 'REQUESTED'],
     [activeOrder?.status],
   );
+  const showSkeleton = useSkeleton(!activeOrder);
 
   const handlePay = useCallback(() => {
     if (!activeOrder) return;
@@ -194,10 +196,15 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   }, [activeOrder?.tracking_number]);
 
   if (!activeOrder) {
+    if (showSkeleton) {
+      return (
+        <View style={styles.loadingContainer}>
+          <DetailSkeleton />
+        </View>
+      );
+    }
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-      </View>
+      <View style={styles.loadingContainer} />
     );
   }
 

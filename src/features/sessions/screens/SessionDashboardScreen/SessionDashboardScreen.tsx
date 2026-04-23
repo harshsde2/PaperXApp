@@ -8,7 +8,6 @@ import {
   View,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,6 +24,8 @@ import { SessionTabBar } from '../../components/SessionTabBar';
 import { SessionCard } from '../../components/SessionCard';
 import { SessionDashboardScreenRouteProp } from './@types';
 import { useActiveRole } from '@shared/hooks/useActiveRole';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { Skeleton } from '@shared/components/Skeleton';
 import { createStyles } from './styles';
 
 const SessionDashboardScreen = () => {
@@ -55,6 +56,7 @@ const SessionDashboardScreen = () => {
 
   const sessions = sessionsResponse?.data || [];
   const isLoading = isApiLoading;
+  const showSkeleton = useSkeleton(isLoading);
   const refreshing = isRefetching;
 
   // Transform API data to frontend Session type
@@ -287,9 +289,56 @@ const SessionDashboardScreen = () => {
       </View>
 
       {/* Content */}
-      {isLoading ? (
+      {showSkeleton ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+          <View style={{ gap: theme.spacing[3] }}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <View
+                key={`session-skeleton-${index}`}
+                style={{
+                  width: '100%',
+                  borderRadius: theme.borderRadius.lg,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border.primary,
+                  backgroundColor: theme.colors.surface.primary,
+                  padding: theme.spacing[3],
+                  gap: theme.spacing[2],
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: theme.spacing[1],
+                  }}
+                >
+                  <Skeleton height={12} width={86} borderRadius={12} />
+                  <Skeleton height={20} width={64} borderRadius={theme.borderRadius.full} />
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing[3] }}>
+                  <Skeleton width={44} height={44} borderRadius={22} />
+                  <View style={{ flex: 1, gap: theme.spacing[2] }}>
+                    <Skeleton height={15} width="74%" />
+                    <Skeleton height={12} width="58%" />
+                  </View>
+                  <Skeleton width={34} height={34} borderRadius={17} />
+                </View>
+                <View
+                  style={{
+                    marginTop: theme.spacing[1],
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Skeleton height={11} width="42%" />
+                  <Skeleton height={11} width={46} />
+                </View>
+                <Skeleton height={4} width="100%" borderRadius={3} />
+              </View>
+            ))}
+          </View>
         </View>
       ) : (
         <FlatList

@@ -41,6 +41,14 @@ export const queryKeys = {
     profile: () => [...queryKeys.user.all, 'profile'] as const,
   },
 
+  // Market Insights
+  insights: {
+    all: ['insights'] as const,
+    today: () => [...queryKeys.insights.all, 'today'] as const,
+    history: (days: number = 7) => [...queryKeys.insights.all, 'history', days] as const,
+    byDate: (date: string) => [...queryKeys.insights.all, 'date', date] as const,
+  },
+
   // Reference Data
   reference: {
     all: ['reference'] as const,

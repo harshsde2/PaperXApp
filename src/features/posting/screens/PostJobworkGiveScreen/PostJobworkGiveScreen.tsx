@@ -11,11 +11,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Controller } from 'react-hook-form';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -730,7 +727,7 @@ const PostJobworkGiveScreen: React.FC = () => {
       </FloatingBottomContainer>
 
       {/* Jobwork Type Bottom Sheet */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={jobworkTypeSheetRef}
         snapPoints={['50%', '75%']}
         enablePanDownToClose
@@ -777,10 +774,10 @@ const PostJobworkGiveScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Timeline Bottom Sheet */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={timelineSheetRef}
         snapPoints={['50%', '80%']}
         index={1}
@@ -810,10 +807,10 @@ const PostJobworkGiveScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Raw Material Bottom Sheet */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={rawMaterialSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -875,10 +872,10 @@ const PostJobworkGiveScreen: React.FC = () => {
             }
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Size unit sheet */}
-      <BottomSheetModal ref={sizeUnitSheetRef} snapPoints={['40%']} enablePanDownToClose>
+      <GorhomBottomSheetModal ref={sizeUnitSheetRef} snapPoints={['40%']} enablePanDownToClose>
         <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4] }}>
           <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[4] }}>
             Select size unit
@@ -899,10 +896,10 @@ const PostJobworkGiveScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Thickness unit sheet */}
-      <BottomSheetModal ref={thicknessUnitSheetRef} snapPoints={['50%']} enablePanDownToClose>
+      <GorhomBottomSheetModal ref={thicknessUnitSheetRef} snapPoints={['50%']} enablePanDownToClose>
         <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4] }}>
           <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[4] }}>
             Select thickness unit
@@ -923,10 +920,10 @@ const PostJobworkGiveScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Finish sheet */}
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={finishSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -943,7 +940,7 @@ const PostJobworkGiveScreen: React.FC = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       {/* Location Dropdown */}
       {showLocationDropdown && (

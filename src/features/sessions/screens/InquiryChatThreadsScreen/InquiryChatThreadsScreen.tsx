@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, TouchableOpacity, View } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -12,6 +12,8 @@ import {
   type ChatThreadListItem,
 } from '@services/api';
 import { useMarkStructuredThreadRead } from '@services/api/sessionApi/sessionApi';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ListItemSkeleton } from '@shared/components/skeletons';
 import { createStyles } from './styles';
 import { getThreadLastOpenedAt, markThreadOpenedNow } from '../../utils/threadReadState';
 
@@ -53,6 +55,7 @@ export default function InquiryChatThreadsScreen() {
   const { data, isLoading, refetch, isRefetching } = useGetInquiryChatThreads(inquiryId, {
     enabled: inquiryId > 0,
   });
+  const showSkeleton = useSkeleton(isLoading);
   const markStructuredThreadRead = useMarkStructuredThreadRead();
 
   useFocusEffect(
@@ -141,11 +144,11 @@ export default function InquiryChatThreadsScreen() {
     );
   };
 
-  if (isLoading) {
+  if (showSkeleton) {
     return (
       <ScreenWrapper>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+          <ListItemSkeleton count={6} />
         </View>
       </ScreenWrapper>
     );

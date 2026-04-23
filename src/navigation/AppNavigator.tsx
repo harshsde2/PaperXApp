@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import BootSplash from 'react-native-bootsplash';
 import { useAppSelector } from '@store/hooks';
 import { useAppDispatch } from '@store/hooks';
 import { setCredentials } from '@store/slices/authSlice';
@@ -104,14 +103,7 @@ const AppNavigator = () => {
     initializeAuth();
   }, [dispatch]);
 
-  // Hide native BootSplash when app is ready to display
-  useEffect(() => {
-    if (!isLoading) {
-      BootSplash.hide({ fade: true });
-    }
-  }, [isLoading]);
-
-  // Show nothing while checking auth state
+  // Show nothing while checking auth state (AnimatedSplash overlay covers this)
   if (isLoading) {
     return null; // Or you can return a loading screen here
   }

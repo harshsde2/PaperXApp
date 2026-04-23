@@ -12,13 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import {
-  BottomSheetFlatList,
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetTextInput,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetFlatList, BottomSheetModal, BottomSheetModalProvider, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { useTheme } from '@theme/index';
 import { AppIcon } from '@assets/svgs';
 import { Card } from '@shared/components/Card';
@@ -47,6 +44,7 @@ import {
 } from '@services/api';
 import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import { SCREENS } from '@navigation/constants';
+import { resolveMediaUrl } from '@shared/utils/resolveMediaUrl';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { DeliveryLocationSheetContent } from '../../components/DeliveryLocationSheetContent';
@@ -188,6 +186,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     fetchNextPage: fetchNextMaterialsPage,
   } = useGetMaterialsInfinite(20);
   const { data: finishesData } = useGetMaterialFinishesInfinite(50);
+  const isFormReady = !isEdit || !isLoadingProduct;
 
   const profileLocations = useMemo(
     () => normalizePostingLocationsFromProfile(profileData as any),
@@ -411,7 +410,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     let imagePath: string | null = form.image_path;
     if (form.image) {
       try {
-        imagePath = await uploadImage.mutateAsync(form.image);
+        imagePath = await uploadImage.mutateAsync({ file: form.image });
       } catch (error: any) {
         Alert.alert('Error', error?.response?.data?.message ?? error?.message ?? 'Image upload failed');
         return;
@@ -475,7 +474,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       let imagePath: string | null = form.image_path;
       if (form.image) {
         try {
-          imagePath = await uploadImage.mutateAsync(form.image);
+          imagePath = await uploadImage.mutateAsync({ file: form.image });
         } catch (error: any) {
           Alert.alert('Error', error?.response?.data?.message ?? error?.message ?? 'Image upload failed');
           return;
@@ -527,6 +526,10 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     performCreateProduct();
   }, [performCreateProduct]);
 
+  if (!isFormReady) {
+    return null;
+  }
+
   return (
     <BottomSheetModalProvider>
       <KeyboardAvoidingView
@@ -534,6 +537,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
+        <Animated.View style={styles.container} entering={FadeIn.duration(300)}>
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Card style={styles.card}>
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Product Details</Text>
@@ -557,7 +561,13 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             </View>
             <View style={styles.fieldContainer}>
               <Text variant="captionMedium" style={styles.label}>Product Image</Text>
-              <ImagePicker value={form.image} onChange={handleImageChange} previewUri={form.image_path} placeholderText="Add product photo" showCamera />
+              <ImagePicker
+                value={form.image}
+                onChange={handleImageChange}
+                previewUri={resolveMediaUrl(form.image_path)}
+                placeholderText="Add product photo"
+                showCamera
+              />
             </View>
           </Card>
 
@@ -695,16 +705,10 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           </Card>
 
           <View style={styles.submitButtonContainer}>
-            {isLoadingProduct ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-                <Text variant="bodyMedium" style={styles.loadingText}>Loading product...</Text>
-              </View>
-            ) : (
-              <CustomButton title={isEdit ? 'Update Product' : 'List Product'} variant="gradient" onPress={handleSubmit} loading={uploadImage.isPending || createProduct.isPending || updateProduct.isPending} fullWidth />
-            )}
+            <CustomButton title={isEdit ? 'Update Product' : 'List Product'} variant="gradient" onPress={handleSubmit} loading={uploadImage.isPending || createProduct.isPending || updateProduct.isPending} fullWidth />
           </View>
         </ScrollView>
+        </Animated.View>
 
         <RtdListingPackModal
           visible={showPackModal}
@@ -731,7 +735,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         />
       </KeyboardAvoidingView>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={categorySheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -760,9 +764,9 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={materialSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -809,9 +813,9 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             }
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal ref={finishSheetRef} snapPoints={['70%', '95%']} enablePanDownToClose onDismiss={() => setFinishSearch('')}>
+      <GorhomBottomSheetModal ref={finishSheetRef} snapPoints={['70%', '95%']} enablePanDownToClose onDismiss={() => setFinishSearch('')}>
         <MultiSelectBottomSheetContent
           title="Select Grade / Finish / Certifications"
           searchQuery={finishSearch}
@@ -823,11 +827,11 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={brandingSheetRef}
-        snapPoints={['60%', '80%']}
+        snapPoints={['80%']}
         enablePanDownToClose
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
@@ -855,9 +859,9 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             )}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal ref={deliveryLocationSheetRef} snapPoints={['50%', '85%']} enablePanDownToClose>
+      <GorhomBottomSheetModal ref={deliveryLocationSheetRef} snapPoints={['50%', '85%']} enablePanDownToClose>
         <DeliveryLocationSheetContent
           userLocations={userLocations}
           selectedLocationId={form.location_id}
@@ -870,7 +874,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
       <Modal visible={showLocationPicker} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setShowLocationPicker(false)}>
         <LocationPicker

@@ -14,3 +14,5 @@ gem 'bigdecimal'
 gem 'logger'
 gem 'benchmark'
 gem 'mutex_m'
+# Ruby 3.4+ moved encoding helpers out of stdlib; CocoaPods pulls kconv via nkf.
+gem 'nkf'

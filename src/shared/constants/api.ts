@@ -6,6 +6,13 @@
 
 const API_VERSION = '/api/v1';
 
+// Market Insights Endpoints (Public)
+export const INSIGHTS_ENDPOINTS = {
+  TODAY: `${API_VERSION}/insights/today`,
+  HISTORY: (days: number = 7) => `${API_VERSION}/insights/history?days=${days}`,
+  BY_DATE: (date: string) => `${API_VERSION}/insights/${date}`,
+} as const;
+
 // Dashboard Endpoints (Unified for all roles)
 export const DASHBOARD_ENDPOINTS = {
   DASHBOARD: (role?: string) => `${API_VERSION}/dashboard${role ? `?role=${role}` : ''}`,

@@ -1,13 +1,11 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, InteractionManager, ScrollView, Modal, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import { State, City, ICity } from 'country-state-city';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -369,16 +367,7 @@ const ConverterRegistrationScreen = () => {
   };
 
   if (isLoadingReference || isLoadingMaterials) {
-    return (
-      <ScreenWrapper backgroundColor={theme.colors.background.secondary}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-          <Text variant="bodyMedium" style={styles.loadingText}>
-            Loading form data...
-          </Text>
-        </View>
-      </ScreenWrapper>
-    );
+    return null;
   }
 
   const capacityUnitValue = watch('capacity_unit');
@@ -393,7 +382,7 @@ const ConverterRegistrationScreen = () => {
       safeAreaEdges={[]}
       contentContainerStyle={{ ...styles.scrollContent, paddingBottom: floatingContainerPadding }}
     >
-      <View style={styles.container}>
+      <Animated.View style={styles.container} entering={FadeIn.duration(300)}>
         {hasPrefilledCompanyDetails && (profileData?.company_name || profileData?.gst_in || profileData?.state || profileData?.city) && (
           <Card style={styles.card}>
             <View style={styles.sectionHeader}>
@@ -981,7 +970,7 @@ const ConverterRegistrationScreen = () => {
           />
         </Modal>
 
-      </View>
+      </Animated.View>
     </ScreenWrapper>
 
         {!isKeyboardVisible && (
@@ -1016,7 +1005,7 @@ const ConverterRegistrationScreen = () => {
           </FloatingBottomContainer>
         )}
 
-        <BottomSheetModal
+        <GorhomBottomSheetModal
           ref={stateSheetRef}
           snapPoints={['70%', '95%']}
           enablePanDownToClose
@@ -1030,9 +1019,9 @@ const ConverterRegistrationScreen = () => {
             theme={theme}
             ListComponent={BottomSheetFlatList}
           />
-        </BottomSheetModal>
+        </GorhomBottomSheetModal>
 
-        <BottomSheetModal
+        <GorhomBottomSheetModal
           ref={citySheetRef}
           snapPoints={['70%', '95%']}
           enablePanDownToClose
@@ -1045,10 +1034,10 @@ const ConverterRegistrationScreen = () => {
             theme={theme}
             ListComponent={BottomSheetFlatList}
           />
-        </BottomSheetModal>
+        </GorhomBottomSheetModal>
 
         {multiSelectConfig && (
-          <BottomSheetModal
+          <GorhomBottomSheetModal
             ref={multiSelectSheetRef}
             snapPoints={['70%', '95%']}
             enablePanDownToClose
@@ -1082,10 +1071,10 @@ const ConverterRegistrationScreen = () => {
               theme={theme}
               ListComponent={BottomSheetFlatList}
             />
-          </BottomSheetModal>
+          </GorhomBottomSheetModal>
         )}
 
-        <BottomSheetModal
+        <GorhomBottomSheetModal
           ref={capacityUnitSheetRef}
           snapPoints={['65%', '80%']}
           enablePanDownToClose
@@ -1136,7 +1125,7 @@ const ConverterRegistrationScreen = () => {
               )}
             />
           </View>
-        </BottomSheetModal>
+        </GorhomBottomSheetModal>
       </View>
     </BottomSheetModalProvider>
   );

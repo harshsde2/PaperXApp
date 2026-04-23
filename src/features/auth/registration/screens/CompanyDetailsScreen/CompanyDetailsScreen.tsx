@@ -13,11 +13,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
 import RNFS from 'react-native-fs';
 import { State, City, ICity } from 'country-state-city';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -584,7 +581,7 @@ const CompanyDetailsScreen = () => {
         </View>
       </ScreenWrapper>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={stateSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -598,9 +595,9 @@ const CompanyDetailsScreen = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={citySheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -613,7 +610,7 @@ const CompanyDetailsScreen = () => {
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
     </View>
     </BottomSheetModalProvider>
   );

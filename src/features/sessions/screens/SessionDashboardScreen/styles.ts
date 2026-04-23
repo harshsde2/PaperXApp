@@ -114,7 +114,41 @@ export const createStyles = (theme: Theme) =>
     // Loading
     loadingContainer: {
       flex: 1,
-      justifyContent: 'center',
+      paddingHorizontal: theme.spacing[4],
+      paddingTop: theme.spacing[4],
+      paddingBottom: theme.spacing[8],
+    },
+    loadingContent: {
+      gap: theme.spacing[3],
+    },
+    skeletonCard: {
+      width: '100%',
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      backgroundColor: theme.colors.surface.primary,
+      padding: theme.spacing[3],
+      gap: theme.spacing[2],
+    },
+    skeletonHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing[1],
+    },
+    skeletonMainRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[3],
+    },
+    skeletonTextBlock: {
+      flex: 1,
+      gap: theme.spacing[2],
+    },
+    skeletonProgressMeta: {
+      marginTop: theme.spacing[1],
+      flexDirection: 'row',
+      justifyContent: 'space-between',
       alignItems: 'center',
     },
 

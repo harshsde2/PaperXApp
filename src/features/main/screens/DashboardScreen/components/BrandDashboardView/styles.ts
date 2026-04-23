@@ -14,21 +14,23 @@ export const createStyles = (theme: Theme) =>
     },
     contentContainer: {
       paddingBottom: theme.spacing[6],
-      backgroundColor: theme.colors.background.secondary,
+      // backgroundColor: theme.colors.background.secondary,
     },
 
     /* ── Notification Banner ── */
+    notificationBannerTouchable: {
+      marginHorizontal: theme.spacing[5],
+      marginTop: theme.spacing[4],
+      overflow: 'hidden',
+    },
     notificationBanner: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginHorizontal: theme.spacing[5],
-      marginTop: theme.spacing[4],
-      paddingVertical: theme.spacing[4],
-      paddingHorizontal: theme.spacing[4],
-      backgroundColor: theme.colors.primary[50],
       borderRadius: theme.borderRadius.card.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.primary[100],
+    },
+    notificationBannerInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     notificationContent: {
       flex: 1,
@@ -128,14 +130,18 @@ export const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       gap: theme.spacing[3],
     },
+    statCardTouchable: {
+      flex: 1,
+      overflow: 'hidden',
+    },
     statCard: {
       flex: 1,
-      backgroundColor: theme.colors.surface.primary,
+      minHeight: 112,
       borderRadius: theme.borderRadius.card.lg,
-      paddingVertical: theme.spacing[4],
-      paddingHorizontal: theme.spacing[3],
-      borderWidth: 1,
-      borderColor: theme.colors.border.primary,
+    },
+    statCardInner: {
+      flex: 1,
+      justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
     },
@@ -176,6 +182,11 @@ export const createStyles = (theme: Theme) =>
       marginTop: theme.spacing[6],
       paddingHorizontal: theme.spacing[5],
     },
+    recentSectionWrapper: {
+      marginTop: theme.spacing[6],
+      marginBottom: 0,
+      paddingHorizontal: 0,
+    },
     recentHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -215,15 +226,16 @@ export const createStyles = (theme: Theme) =>
     },
 
     /* ── Activity List Items ── */
-    activityItem: {
+    activityItemTouchable: {
+      marginBottom: theme.spacing[3],
+      overflow: 'hidden',
+    },
+    activityItemGlassy: {
+      borderRadius: theme.borderRadius.card.lg,
+    },
+    activityItemInner: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.colors.surface.primary,
-      borderRadius: theme.borderRadius.card.lg,
-      padding: theme.spacing[4],
-      marginBottom: theme.spacing[3],
-      borderWidth: 1,
-      borderColor: theme.colors.border.primary,
     },
     activityIconWrap: {
       width: 40,
@@ -260,15 +272,13 @@ export const createStyles = (theme: Theme) =>
     },
 
     /* ── Empty state (Recent Activity) ── */
-    emptyActivityCard: {
-      backgroundColor: theme.colors.surface.primary,
+    emptyActivityGlassy: {
       borderRadius: theme.borderRadius.card.lg,
-      padding: theme.spacing[6],
-      alignItems: 'center',
-      borderWidth: 2,
-      borderStyle: 'dashed',
-      borderColor: theme.colors.border.primary,
       marginTop: theme.spacing[2],
+    },
+    emptyActivityGlassyInner: {
+      alignItems: 'center',
+      justifyContent: 'flex-start',
     },
     emptyActivityIconWrap: {
       width: 64,
@@ -293,5 +303,8 @@ export const createStyles = (theme: Theme) =>
     emptyActivityButtonContainer: {
       marginTop: theme.spacing[2],
       alignSelf: 'flex-start',
+    },
+    emptyActivityButtonText: {
+      fontWeight: fontWeightForPlatform('600'),
     },
   });

@@ -6,7 +6,6 @@ import {
   Image,
   TextInput,
   Switch,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useTheme } from '@theme/index';
@@ -24,6 +23,8 @@ import type { RtdProduct } from '@services/api';
 import { SCREENS } from '@navigation/constants';
 import type { ProductTab } from './@types';
 import { createStyles } from './styles';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ListItemSkeleton } from '@shared/components/skeletons';
 
 const TABS: { key: ProductTab; label: string }[] = [
   { key: 'active', label: 'Active' },
@@ -54,6 +55,7 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
     refetch,
     isRefetching,
   } = useGetConverterRtdProducts({ status: statusFilter });
+  const showSkeleton = useSkeleton(isLoading);
 
   const updateProduct = useUpdateRtdProduct();
   const pauseProduct = usePauseRtdProduct();
@@ -214,10 +216,10 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
   );
 
   const renderEmpty = useCallback(() => {
-    if (isLoading) {
+    if (showSkeleton) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
+          <ListItemSkeleton count={6} />
         </View>
       );
     }
@@ -232,7 +234,7 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
         </Text>
       </View>
     );
-  }, [isLoading, activeTab, styles, theme]);
+  }, [showSkeleton, activeTab, styles]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

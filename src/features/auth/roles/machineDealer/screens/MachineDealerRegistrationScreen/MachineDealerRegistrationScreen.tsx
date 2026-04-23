@@ -1,12 +1,10 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, TextInput, ActivityIndicator, Modal } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
@@ -346,7 +344,7 @@ const MachineDealerRegistrationScreen = () => {
         safeAreaEdges={[]}
         contentContainerStyle={{ ...styles.scrollContent, paddingBottom: floatingContainerPadding }}
       >
-        <View style={styles.container}>
+        <Animated.View style={styles.container} entering={FadeIn.duration(300)}>
           {hasPrefilledCompanyDetails && (profileData?.company_name || profileData?.gst_in) && (
             <Card style={styles.card}>
               <View style={styles.sectionHeader}>
@@ -710,7 +708,7 @@ const MachineDealerRegistrationScreen = () => {
             </View>
           </Card>
 
-        </View>
+        </Animated.View>
       </ScreenWrapper>
 
         {!isKeyboardVisible && (
@@ -773,7 +771,7 @@ const MachineDealerRegistrationScreen = () => {
         />
       </Modal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={machineCategorySheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -789,9 +787,9 @@ const MachineDealerRegistrationScreen = () => {
             contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={machineTypeSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -822,9 +820,9 @@ const MachineDealerRegistrationScreen = () => {
             }
           />
         </View>
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={preferredBrandsSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -854,7 +852,7 @@ const MachineDealerRegistrationScreen = () => {
           placeholder="Search brands"
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
       </View>
     </BottomSheetModalProvider>
   );

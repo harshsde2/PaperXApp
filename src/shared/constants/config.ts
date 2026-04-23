@@ -12,9 +12,13 @@ export const ENV = {
 
 export type Environment = typeof ENV[keyof typeof ENV];
 
-// Get environment from process.env or default to development
-export const CURRENT_ENV: Environment =
-  (process.env.NODE_ENV as Environment) || ENV.DEVELOPMENT;
+/**
+ * Release builds (__DEV__ false) use staging/production URLs from API_BASE_URLS,
+ * not Metro-derived localhost/LAN. In dev, NODE_ENV is usually "development".
+ */
+export const CURRENT_ENV: Environment = __DEV__
+  ? ((process.env.NODE_ENV as Environment) || ENV.DEVELOPMENT)
+  : ((process.env.NODE_ENV as Environment) || ENV.PRODUCTION);
 
 /**
  * DEVELOPMENT API URL CONFIGURATION
@@ -26,7 +30,7 @@ export const CURRENT_ENV: Environment =
  * - Set DEV_API_HOST to your machine's LAN IP (e.g. 10.0.0.5) when needed
  * - Keep it empty to use automatic detection
  */
-const DEV_API_HOST = '192.168.29.149';
+const DEV_API_HOST = '';
 
 const getMetroHost = (): string | null => {
   const scriptURL = (NativeModules as { SourceCode?: { scriptURL?: string } })?.SourceCode?.scriptURL;
@@ -62,12 +66,18 @@ const getDevelopmentApiUrl = (): string => {
   return 'http://localhost:8000';
 };
 
+/**
+ * Hosted API (HTTPS). Used for staging and release builds.
+ * Change this when the production API domain changes.
+ */
+const SERVER_API_BASE_URL = 'https://paperx.safewayrssi.com';
+
 // API Base URLs
 export const API_BASE_URLS = {
   [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
-  // [ENV.DEVELOPMENT]: 'https://paperx.safewayrssi.com', // Uncomment to use staging server
-  [ENV.STAGING]: 'https://paperx.safewayrssi.com',
-  [ENV.PRODUCTION]: 'https://paperx.safewayrssi.com',
+  // [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
+  [ENV.STAGING]: SERVER_API_BASE_URL,
+  [ENV.PRODUCTION]: SERVER_API_BASE_URL,
 } as const;
 
 // WebSocket URLs
@@ -119,4 +129,4 @@ export const APP_NAME = 'PaperX';
 // ============================================
 // Set to true to use dummy data instead of real API
 // This allows demonstrating the full user flow without backend
-export const USE_DUMMY_DATA = true; // Toggle this for demo mode
+export const USE_DUMMY_DATA = false;

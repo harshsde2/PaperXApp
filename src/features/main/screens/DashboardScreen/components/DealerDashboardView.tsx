@@ -13,6 +13,8 @@ import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import type { DealerDashboardData } from '@services/api';
 import { SCREENS } from '@navigation/constants';
+import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
+import { useDashboardHeaderHeight } from '../DashboardHeaderHeightContext';
 import { createStyles } from './DealerDashboardView/styles';
 
 const { width } = Dimensions.get('window');
@@ -33,6 +35,17 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
   const navigation = useNavigation<any>();
   const theme = useTheme();
   const styles = createStyles(theme);
+  const tabBarInset = useTabBarContentBottomInset();
+  const headerInset = useDashboardHeaderHeight();
+
+  const scrollContentContainerStyle = useMemo(
+    () => [
+      styles.contentContainer,
+      { paddingTop: headerInset },
+      tabBarInset > 0 ? { paddingBottom: theme.spacing[6] + tabBarInset } : null,
+    ],
+    [styles.contentContainer, headerInset, tabBarInset, theme.spacing],
+  );
 
   const companyName = profileData?.company_name || 'Your Company';
 
@@ -93,7 +106,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={scrollContentContainerStyle}
       showsVerticalScrollIndicator={false}
       refreshControl={
         onRefresh ? (

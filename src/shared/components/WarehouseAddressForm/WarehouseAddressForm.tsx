@@ -2,11 +2,8 @@ import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { View, Alert, InteractionManager, ScrollView } from 'react-native';
 import { Controller } from 'react-hook-form';
 import { State, City, ICity } from 'country-state-city';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetFlatList,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { FormInput } from '@shared/forms';
@@ -283,7 +280,7 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
         </View>
       </ScrollView>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={stateSheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -297,9 +294,9 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
 
-      <BottomSheetModal
+      <GorhomBottomSheetModal
         ref={citySheetRef}
         snapPoints={['70%', '95%']}
         enablePanDownToClose
@@ -312,7 +309,7 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
           theme={theme}
           ListComponent={BottomSheetFlatList}
         />
-      </BottomSheetModal>
+      </GorhomBottomSheetModal>
     </BottomSheetModalProvider>
   );
 };

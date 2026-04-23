@@ -178,9 +178,27 @@ export const styles = StyleSheet.create({
     marginRight: 8,
   },
 
-  // Dashboard Header - New Reusable Component
+  // Dashboard Header - glass root (blur layers sit behind glassHeaderContent)
+  glassHeaderRoot: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  /** Overlay scroll so content can pass under the blur */
+  glassHeaderFloating: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    elevation: 24,
+  },
+  glassHeaderContent: {
+    zIndex: 1,
+  },
+  // Legacy alias — prefer glassHeaderRoot + blur in DashboardHeader
   dashboardHeaderContainer: {
-    backgroundColor: '#FFFFFF',
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     borderBottomWidth: 1,

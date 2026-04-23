@@ -17,6 +17,8 @@ import { useTheme } from '@theme/index';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { TransactionItem } from '@shared/components/TransactionItem';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { ListItemSkeleton } from '@shared/components/skeletons';
 import { AppIcon } from '@assets/svgs';
 import {
   useGetWalletBalance,
@@ -62,6 +64,7 @@ const TransactionHistoryScreen = () => {
     if (!transactionsData?.pages) return [];
     return transactionsData.pages.flatMap((page) => page.transactions);
   }, [transactionsData?.pages]);
+  const showSkeleton = useSkeleton(isLoading && !transactionsData);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -122,12 +125,11 @@ const TransactionHistoryScreen = () => {
     []
   );
 
-  if (isLoading && !transactionsData) {
+  if (showSkeleton) {
     return (
       <ScreenWrapper safeAreaEdges={['top']} backgroundColor={theme.colors.background.secondary}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-          <Text style={styles.loadingText}>Loading transactions...</Text>
+          <ListItemSkeleton count={7} />
         </View>
       </ScreenWrapper>
     );

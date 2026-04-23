@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, ScrollView, StyleSheet, ViewStyle, StatusBar, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Canvas, RadialGradient, Rect, vec, LinearGradient } from '@shopify/react-native-skia';
 import { useTheme } from '@theme/index';
 import { IScreenWrapperProps } from './@types';
@@ -34,8 +35,19 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
   const theme = useTheme();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const tabBarBottomInset = React.useContext(BottomTabBarHeightContext) ?? 0;
   const screenHeight = height + insets.top;
+  /** Extend Skia gradient under floating tab bar so blur samples matching colors */
+  const linearGradientHeight =
+    tabBarBottomInset > 0 ? screenHeight + tabBarBottomInset : screenHeight;
+  const radialGradientHeight =
+    tabBarBottomInset > 0 ? height + tabBarBottomInset : height;
   const resolvedBackgroundColor = backgroundColor || theme.colors.background.primary;
+
+  const tabBarPaddingStyle = useMemo(
+    () => (tabBarBottomInset > 0 ? { paddingBottom: tabBarBottomInset } : {}),
+    [tabBarBottomInset],
+  );
 
   const resolvedPadding = useMemo(() => {
     if (typeof padding === 'number') {
@@ -80,7 +92,7 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
     if (gradient === 'linear') {
       return (
         <Canvas style={[StyleSheet.absoluteFill]}>
-          <Rect x={0} y={0} width={width} height={screenHeight}>
+          <Rect x={0} y={0} width={width} height={linearGradientHeight}>
             <LinearGradient
               start={vec(gradientStart.x * width, gradientStart.y * height)}
               end={vec(gradientEnd.x * width, gradientEnd.y * height)}
@@ -106,7 +118,7 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
 
       return (
         <Canvas style={StyleSheet.absoluteFill}>
-          <Rect x={0} y={0} width={width} height={height}>
+          <Rect x={0} y={0} width={width} height={radialGradientHeight}>
             <RadialGradient
               c={vec(centerX, centerY)}
               r={radius}
@@ -125,7 +137,12 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
       return (
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={[paddingStyle, contentStyle, contentContainerStyle]}
+          contentContainerStyle={[
+            paddingStyle,
+            contentStyle,
+            contentContainerStyle,
+            tabBarPaddingStyle,
+          ]}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           {...scrollViewProps}

@@ -14,7 +14,7 @@ export const createStyles = (theme: Theme) =>
     },
     contentContainer: {
       paddingBottom: theme.spacing[6],
-      backgroundColor: theme.colors.background.secondary,
+      // backgroundColor: theme.colors.background.secondary,
     },
     creditsBar: {
       flexDirection: 'row',
@@ -77,25 +77,25 @@ export const createStyles = (theme: Theme) =>
       gap: theme.spacing[3],
       marginBottom: theme.spacing[2],
     },
-    quickActionCard: {
+    quickActionTouchable: {
       flex: 1,
-      borderRadius: theme.borderRadius.card.lg,
-      padding: theme.spacing[5],
       minHeight: 120,
-      justifyContent: 'center',
-      alignItems: 'center',
       overflow: 'hidden',
     },
-    quickActionCardWrapper: {
-      backgroundColor: 'transparent',
+    quickActionGlassy: {
+      flex: 1,
+      minHeight: 120,
     },
-    quickActionGradientCanvas: {
-      ...StyleSheet.absoluteFillObject,
+    quickActionGlassyInner: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     quickActionContent: {
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 1,
+      padding: theme.spacing[3],
     },
     quickActionIconBg: {
       position: 'absolute',
@@ -134,15 +134,19 @@ export const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       gap: theme.spacing[3],
     },
-    rtdCard: {
+    rtdCardTouchable: {
       flex: 1,
       minHeight: 100,
-      backgroundColor: theme.colors.surface.primary,
-      borderRadius: theme.borderRadius.card.lg,
-      padding: theme.spacing[4],
-      borderWidth: 1,
-      borderColor: theme.colors.border.primary,
+      overflow: 'hidden',
+    },
+    rtdGlassyCard: {
+      flex: 1,
+      minHeight: 100,
+    },
+    rtdGlassyCardInner: {
+      flex: 1,
       justifyContent: 'space-between',
+      alignItems: 'stretch',
     },
     rtdCardLabel: {
       ...getCaptionStyle(theme, 'medium'),
@@ -172,15 +176,12 @@ export const createStyles = (theme: Theme) =>
       marginTop: theme.spacing[6],
       paddingHorizontal: theme.spacing[5],
     },
-    emptySessionsCard: {
-      backgroundColor: theme.colors.surface.primary,
-      borderRadius: theme.borderRadius.card.lg,
-      padding: theme.spacing[6],
-      alignItems: 'center',
-      borderWidth: 2,
-      borderStyle: 'dashed',
-      borderColor: theme.colors.border.primary,
+    emptySessionsGlassy: {
       marginTop: theme.spacing[2],
+    },
+    emptySessionsGlassyInner: {
+      alignItems: 'center',
+      justifyContent: 'flex-start',
     },
     emptySessionsIconWrap: {
       width: 64,

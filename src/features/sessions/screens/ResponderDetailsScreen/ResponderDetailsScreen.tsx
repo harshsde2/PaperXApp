@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
+import { useSkeleton } from '@shared/hooks/useSkeleton';
+import { DetailSkeleton } from '@shared/components/skeletons';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import {
@@ -201,13 +203,12 @@ export default function ResponderDetailsScreen() {
   }, [navigation, inquiryId, posterLabel, openStructuredThread]);
 
   const isLoading = isLoadingSession || isLoadingResponder;
+  const showSkeleton = useSkeleton(isLoading && !responderDetail && !sessionDetail);
   const isInterestFlowLoading = expressInterest.isPending || isRefreshingAfterInterest;
-  if (isLoading && !responderDetail && !sessionDetail) {
+  if (showSkeleton) {
     return (
       <ScreenWrapper>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-        </View>
+        <DetailSkeleton />
       </ScreenWrapper>
     );
   }

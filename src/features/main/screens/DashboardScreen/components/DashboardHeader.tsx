@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, TouchableOpacity, Image } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, TouchableOpacity, Image, Platform, StyleSheet, LayoutChangeEvent } from 'react-native';
+import { BlurView } from '@react-native-community/blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
+import { getColorWithOpacity } from '@theme/utils/themeHelpers';
 import { useAppSelector } from '@store/hooks';
 import { useGetProfile, useNotificationUnreadCount } from '@services/api';
 import { Text } from '@shared/components/Text';
@@ -20,7 +22,12 @@ const getInitials = (name: string): string => {
   return trimmed.slice(0, 2).toUpperCase();
 };
 
-export const DashboardHeader: React.FC = () => {
+export type DashboardHeaderProps = {
+  /** Reports total header height so scroll content can use matching paddingTop while scrolling under the blur */
+  onLayoutHeight?: (height: number) => void;
+};
+
+export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onLayoutHeight }) => {
   const navigation = useNavigationHelpers();
   const insets = useSafeAreaInsets();
   const { user } = useAppSelector((state) => state.auth);
@@ -29,11 +36,67 @@ export const DashboardHeader: React.FC = () => {
   const theme = useTheme();
   const primaryRole = profileData?.primary_role || user?.primaryRole || 'dealer';
   const companyName = profileData?.company_name || 'Your Company';
-  console.log('companyName', JSON.stringify(profileData, null, 2));
   const isVerified = !!profileData?.udyam_verified_at;
   const avatarUrl = profileData?.avatar;
   const initials = getInitials(companyName);
   const unreadCount = unreadData?.unread_count ?? 0;
+
+  const blurFallbackColors = useMemo(
+    () => ({
+      iosReducedTransparency: getColorWithOpacity(theme.colors.white, 52),
+      androidFallback: getColorWithOpacity(theme.colors.white, 52),
+    }),
+    [theme.colors.white],
+  );
+
+  const renderGlassBackground = () =>
+    Platform.OS === 'ios' ? (
+      <>
+        <BlurView
+          style={StyleSheet.absoluteFill}
+          blurType="light"
+          blurAmount={6}
+          reducedTransparencyFallbackColor={blurFallbackColors.iosReducedTransparency}
+          pointerEvents="none"
+        />
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: getColorWithOpacity(theme.colors.white, 4) },
+          ]}
+        />
+      </>
+    ) : (
+      <>
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: blurFallbackColors.androidFallback }]}
+        />
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: getColorWithOpacity(theme.colors.white, 3) },
+          ]}
+        />
+      </>
+    );
+
+  const handleHeaderLayout = (e: LayoutChangeEvent) => {
+    onLayoutHeight?.(e.nativeEvent.layout.height);
+  };
+
+  const wrapFloatingHeader = (contentRow: React.ReactNode) => (
+    <View
+      style={[styles.glassHeaderRoot, styles.glassHeaderFloating]}
+      onLayout={handleHeaderLayout}
+      collapsable={false}
+    >
+      {renderGlassBackground()}
+      {contentRow}
+    </View>
+  );
 
   const handleNotificationPress = () => {
     navigation.navigate(SCREENS.MAIN.NOTIFICATIONS);
@@ -93,9 +156,9 @@ export const DashboardHeader: React.FC = () => {
     </View>
   );
 
-  const renderBrandHeader = () => (
-    <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
-      <View style={styles.dashboardHeaderContent}>
+  const renderBrandHeader = () =>
+    wrapFloatingHeader(
+      <View style={[styles.dashboardHeaderContent, styles.glassHeaderContent, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
           {renderAvatarWithInitials(40)}
           
@@ -119,12 +182,11 @@ export const DashboardHeader: React.FC = () => {
 
         {renderHeaderActions()}
       </View>
-    </View>
-  );
+    );
 
-  const renderDealerHeader = () => (
-    <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
-      <View style={styles.dashboardHeaderContent}>
+  const renderDealerHeader = () =>
+    wrapFloatingHeader(
+      <View style={[styles.dashboardHeaderContent, styles.glassHeaderContent, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
           {renderAvatarWithInitials(40, true)}
           
@@ -138,12 +200,11 @@ export const DashboardHeader: React.FC = () => {
 
         {renderHeaderActions()}
       </View>
-    </View>
-  );
+    );
 
-  const renderMachineDealerHeader = () => (
-    <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
-      <View style={styles.dashboardHeaderContent}>
+  const renderMachineDealerHeader = () =>
+    wrapFloatingHeader(
+      <View style={[styles.dashboardHeaderContent, styles.glassHeaderContent, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
           {renderAvatarWithInitials(40)}
           
@@ -160,12 +221,11 @@ export const DashboardHeader: React.FC = () => {
 
         {renderHeaderActions()}
       </View>
-    </View>
-  );
+    );
 
-  const renderConverterHeader = () => (
-    <View style={[styles.dashboardHeaderContainer, { paddingTop: insets.top + 12 }]}>
-      <View style={styles.dashboardHeaderContent}>
+  const renderConverterHeader = () =>
+    wrapFloatingHeader(
+      <View style={[styles.dashboardHeaderContent, styles.glassHeaderContent, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleProfilePress} style={styles.dashboardHeaderLeft}>
           {renderAvatarWithInitials(40, true)}
           
@@ -182,8 +242,7 @@ export const DashboardHeader: React.FC = () => {
 
         {renderHeaderActions()}
       </View>
-    </View>
-  );
+    );
 
   // Render header based on role
   const role = primaryRole.toLowerCase();

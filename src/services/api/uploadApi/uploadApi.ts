@@ -11,24 +11,35 @@ import { API_BASE_URL } from '@shared/constants/config';
 import { storageService } from '@services/storage/storageService';
 import type { PickedImage } from '@shared/utils/imagePicker';
 
-function extractPath(json: any): string {
-  const data = json?.data;
-  const path = data?.path ?? data?.url ?? json?.path ?? json?.url;
-  if (typeof path !== 'string' || !path) {
-    throw new Error('Upload response missing path or url');
+export type UploadImageVariables = {
+  file: PickedImage;
+  /** Use 'dispatch' for RTD dispatch proof uploads (stored under uploads/rtd/dispatch/). */
+  purpose?: 'dispatch';
+};
+
+function extractPath(json: unknown): string {
+  const j = json as Record<string, unknown> | null;
+  const data = j?.data as Record<string, unknown> | undefined;
+  const path = (typeof data?.path === 'string' && data.path) || (typeof j?.path === 'string' && j.path);
+  if (!path) {
+    throw new Error('Upload response missing path');
   }
   return path;
 }
 
 export const useUploadImage = () => {
   return useMutation({
-    mutationFn: async (file: PickedImage): Promise<string> => {
+    mutationFn: async (variables: UploadImageVariables): Promise<string> => {
+      const { file, purpose } = variables;
       const formData = new FormData();
       formData.append('file', {
         uri: file.uri,
         type: file.type,
         name: file.name,
       } as any);
+      if (purpose === 'dispatch') {
+        formData.append('purpose', 'dispatch');
+      }
 
       const token = storageService.getAuthToken();
       const url = `${API_BASE_URL}${UPLOAD_ENDPOINTS.SINGLE}`;

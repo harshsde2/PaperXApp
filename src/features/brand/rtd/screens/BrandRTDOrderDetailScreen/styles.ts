@@ -10,8 +10,6 @@ export const createStyles = (theme: Theme) =>
     },
     loadingContainer: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     scrollContent: {
       paddingBottom: theme.spacing[8],

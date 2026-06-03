@@ -47,7 +47,7 @@ const CONVERTER_OPTIONS: PostRequirementOptionConfig[] = [
   {
     id: 'post-to-find-jobwork',
     title: 'Post to Find Jobwork/Outsourcing',
-    description: 'Textile, full machine capacity or during off-season',
+    description: 'Full machine capacity or during off-season',
   },
   {
     id: 'post-to-give-jobwork',

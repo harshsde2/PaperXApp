@@ -273,6 +273,19 @@ export interface ConfirmRtdPaymentPayload {
   transaction_id?: string;
 }
 
+/** Brand RTD order checkout — create Razorpay order (same shape as wallet for checkout UI). */
+export interface CreateBrandRtdRazorpayOrderResponse {
+  key_id: string;
+  razorpay_order_id: string;
+  amount: number;
+  currency: string;
+  receipt: string;
+  order: {
+    id: number;
+    total_amount: string;
+  };
+}
+
 // ============================================
 // RTD LISTING PACKS (Converter pay to list)
 // ============================================

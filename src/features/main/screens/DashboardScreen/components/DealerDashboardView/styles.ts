@@ -14,10 +14,9 @@ export const createStyles = (theme: Theme) =>
     },
     contentContainer: {
       paddingBottom: theme.spacing[6],
-      backgroundColor: theme.colors.background.secondary,
+      // Keep transparent so DashboardScreen wrapper gradient is visible.
     },
     titleSection: {
-      backgroundColor: theme.colors.surface.primary,
       paddingHorizontal: theme.spacing[5],
       paddingTop: theme.spacing[5],
       paddingBottom: theme.spacing[4],
@@ -38,7 +37,6 @@ export const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacing[5],
       paddingVertical: theme.spacing[4],
       gap: theme.spacing[3],
-      backgroundColor: theme.colors.surface.primary,
     },
     statCard: {
       flex: 1,
@@ -109,7 +107,6 @@ export const createStyles = (theme: Theme) =>
     section: {
       paddingHorizontal: theme.spacing[5],
       paddingVertical: theme.spacing[4],
-      backgroundColor: theme.colors.surface.primary,
       marginTop: theme.spacing[2],
     },
     sectionTitle: {
@@ -189,7 +186,6 @@ export const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacing[5],
       paddingVertical: theme.spacing[4],
       gap: theme.spacing[3],
-      backgroundColor: theme.colors.surface.primary,
       marginTop: theme.spacing[2],
     },
     additionalCard: {

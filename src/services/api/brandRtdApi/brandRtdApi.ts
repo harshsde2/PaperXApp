@@ -21,7 +21,9 @@ import type {
   GetRtdOrdersResponse,
   RequestRtdOrderPayload,
   ConfirmRtdPaymentPayload,
+  CreateBrandRtdRazorpayOrderResponse,
 } from '../rtdApi/@types';
+import type { VerifyRazorpayPaymentRequest } from '../walletApi/@types';
 
 const extractData = <T>(response: any): T => {
   if (response?.data && typeof response.data === 'object' && 'data' in response.data) {
@@ -205,6 +207,38 @@ export const useConfirmRtdPayment = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.brandRtd.orders() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.brandRtd.orderDetail(variables.order_id),
+      });
+    },
+  });
+};
+
+export const useCreateBrandRtdRazorpayOrder = () => {
+  return useMutation({
+    mutationFn: async (orderId: number): Promise<CreateBrandRtdRazorpayOrderResponse> => {
+      const response = await api.post(RTD_ENDPOINTS.ORDER_RAZORPAY_CREATE(orderId));
+      return extractData<CreateBrandRtdRazorpayOrderResponse>(response);
+    },
+  });
+};
+
+export type VerifyBrandRtdRazorpayPaymentVariables = { orderId: number } & VerifyRazorpayPaymentRequest;
+
+export const useVerifyBrandRtdRazorpayPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: VerifyBrandRtdRazorpayPaymentVariables): Promise<RtdOrder> => {
+      const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = vars;
+      const response = await api.post(RTD_ENDPOINTS.ORDER_RAZORPAY_VERIFY(orderId), {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+      });
+      return extractData<RtdOrder>(response);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.brandRtd.orders() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.brandRtd.orderDetail(variables.orderId),
       });
     },
   });

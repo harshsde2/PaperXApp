@@ -7,11 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>PaperXApp</string>
+	<string>Zupply</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -37,6 +39,10 @@
 	<string>PaperX needs access to your location to show your warehouse locations on the map and help you find nearby suppliers.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>PaperX needs access to your location to show your warehouse locations on the map and help you find nearby suppliers.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zupply needs access to your photo library so you can attach product photos, sample images, and dispatch proof photos to your posts and orders.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Zupply needs access to the camera so you can take photos for products, samples, or dispatch proof when posting.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

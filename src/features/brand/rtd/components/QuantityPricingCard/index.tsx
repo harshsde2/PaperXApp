@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useMemo } from 'react';
-import { View, Pressable } from 'react-native';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Pressable, TextInput, type TextStyle } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
@@ -23,10 +23,45 @@ function getPlatformFeePercent(subtotal: number): number {
   return PLATFORM_FEE_SLABS[PLATFORM_FEE_SLABS.length - 1].percent;
 }
 
+const DEFAULT_MAX_ORDER_QTY = 9_999_999;
+
+function clampOrderQuantity(value: number, moq: number, maxCapacity?: number): number {
+  const max = maxCapacity ?? DEFAULT_MAX_ORDER_QTY;
+  const int = Number.isFinite(value) ? Math.trunc(value) : moq;
+  return Math.max(moq, Math.min(max, int));
+}
+
 export const QuantityPricingCard = memo<QuantityPricingCardProps>(
   function QuantityPricingCard({ product, quantity, onQuantityChange, priceSlab, sellerGstRegistered = true }) {
     const theme = useTheme();
     const styles = createStyles(theme);
+
+    const maxOrderQty = useMemo(
+      () => product.max_capacity ?? DEFAULT_MAX_ORDER_QTY,
+      [product.max_capacity],
+    );
+
+    const [draft, setDraft] = useState(String(quantity));
+
+    useEffect(() => {
+      setDraft(String(quantity));
+    }, [quantity]);
+
+    const commitDraft = useCallback(() => {
+      const digitsOnly = draft.replace(/\D/g, '');
+      const parsed = digitsOnly === '' ? product.moq : parseInt(digitsOnly, 10);
+      const next = clampOrderQuantity(
+        Number.isNaN(parsed) ? product.moq : parsed,
+        product.moq,
+        product.max_capacity,
+      );
+      onQuantityChange(next);
+      setDraft(String(next));
+    }, [draft, product.moq, product.max_capacity, onQuantityChange]);
+
+    const handleQuantityTextChange = useCallback((text: string) => {
+      setDraft(text.replace(/\D/g, ''));
+    }, []);
 
     const handleDecrement = useCallback(() => {
       if (quantity > product.moq) {
@@ -35,8 +70,9 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
     }, [quantity, product.moq, onQuantityChange]);
 
     const handleIncrement = useCallback(() => {
+      if (quantity >= maxOrderQty) return;
       onQuantityChange(quantity + 1);
-    }, [quantity, onQuantityChange]);
+    }, [quantity, maxOrderQty, onQuantityChange]);
 
     const pricing = useMemo(() => {
       const pricePerUnit = priceSlab
@@ -72,13 +108,25 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
             </Text>
           </Pressable>
 
-          <Text variant="h4" fontWeight="bold" style={styles.quantityValue}>
-            {quantity}
-          </Text>
+          <View style={styles.quantityInputOuter}>
+            <TextInput
+              value={draft}
+              onChangeText={handleQuantityTextChange}
+              onBlur={commitDraft}
+              onSubmitEditing={commitDraft}
+              keyboardType="number-pad"
+              returnKeyType="done"
+              selectTextOnFocus
+              placeholder={String(product.moq)}
+              placeholderTextColor={theme.colors.text.placeholder}
+              style={styles.quantityInput as TextStyle}
+            />
+          </View>
 
           <Pressable
             onPress={handleIncrement}
             style={styles.quantityButton}
+            disabled={quantity >= maxOrderQty}
           >
             <Text variant="bodyLarge" fontWeight="semibold" style={styles.quantityButtonText}>
               +

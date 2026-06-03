@@ -95,7 +95,7 @@ const WalletScreen = () => {
 
   if (walletError) {
     return (
-      <ScreenWrapper safeAreaEdges={['top']} backgroundColor={theme.colors.background.secondary}>
+      <ScreenWrapper safeAreaEdges={[]} backgroundColor={theme.colors.background.secondary}>
         <View style={styles.errorContainer}>
           <View style={styles.errorCard}>
             <View style={styles.errorIconWrapper}>
@@ -115,7 +115,7 @@ const WalletScreen = () => {
   }
 
   return (
-    <ScreenWrapper safeAreaEdges={['top']} backgroundColor={theme.colors.background.secondary}>
+    <ScreenWrapper safeAreaEdges={[]} backgroundColor={theme.colors.background.secondary}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}

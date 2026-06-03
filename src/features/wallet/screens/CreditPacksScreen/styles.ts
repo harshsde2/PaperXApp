@@ -452,6 +452,19 @@ export const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacing[5],
       paddingTop: theme.spacing[8],
     },
+    razorpayHintBox: {
+      marginTop: theme.spacing[3],
+      padding: theme.spacing[4],
+      borderRadius: 16,
+      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    razorpayHintText: {
+      fontSize: 13,
+      lineHeight: 20,
+      color: DARK_THEME.text.muted,
+    },
     paymentMethodsRow: {
       flexDirection: 'row',
       gap: theme.spacing[3],

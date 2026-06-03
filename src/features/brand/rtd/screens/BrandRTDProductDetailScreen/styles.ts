@@ -2,6 +2,10 @@ import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
+/** Padding below scroll content so the last section clears the sticky footer + home indicator. */
+export const getScrollFooterPadding = (theme: Theme) =>
+  theme.spacing[3] * 2 + 56 + theme.spacing[4];
+
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
@@ -10,11 +14,12 @@ export const createStyles = (theme: Theme) =>
     },
     loadingContainer: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
+    },
+    scrollView: {
+      flex: 1,
     },
     scrollContent: {
-      paddingBottom: theme.spacing[4],
+      flexGrow: 1,
     },
 
     // Image

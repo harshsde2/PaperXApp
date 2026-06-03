@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { BottomSheetFlatList, BottomSheetModal, BottomSheetModalProvider, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { useTheme } from '@theme/index';
@@ -34,12 +34,14 @@ import {
   useGetProfile,
   useGetRtdProductDetail,
   useGetRtdEntitlement,
+  useGetWalletBalance,
   useUpdateRtdProduct,
   useUploadImage,
   type CreateRtdProductRequest,
   type Material,
   type MaterialFinish,
   type RtdLeadTime,
+  type RtdListingPackItem,
   type RtdProduct,
 } from '@services/api';
 import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
@@ -52,6 +54,7 @@ import { PriceSlabInput } from '../../components/PriceSlabInput';
 import type { PriceSlabRow } from '../../components/PriceSlabInput';
 import { ProductListingSuccessModal } from '../../components/ProductListingSuccessModal';
 import { RtdListingPackModal } from '../../components/RtdListingPackModal';
+import { InsufficientCreditsModal } from '@shared/components/InsufficientCreditsModal';
 import type { FormData, FormErrors, SavedLocation } from './@types';
 import {
   BRANDING_METHOD_OPTIONS,
@@ -152,6 +155,8 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPackModal, setShowPackModal] = useState(false);
+  const [insufficientCreditsModalVisible, setInsufficientCreditsModalVisible] = useState(false);
+  const [listingPackRequiredCredits, setListingPackRequiredCredits] = useState(0);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showSizeUnitPicker, setShowSizeUnitPicker] = useState(false);
   const [showThicknessUnitPicker, setShowThicknessUnitPicker] = useState(false);
@@ -161,6 +166,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const [brandingSearch, setBrandingSearch] = useState('');
   const [customMaterialName, setCustomMaterialName] = useState('');
 
+  const resumePackModalAfterCreditsRef = useRef(false);
   const categorySheetRef = useRef<BottomSheetModal>(null);
   const materialSheetRef = useRef<BottomSheetModal>(null);
   const finishSheetRef = useRef<BottomSheetModal>(null);
@@ -172,6 +178,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const hasEntitlement = Boolean(
     entitlementData?.entitlement && (entitlementData.entitlement.remaining_slots ?? 0) > 0
   );
+  const { data: wallet, isLoading: walletBalanceLoading, refetch: refetchWallet } = useGetWalletBalance();
   const updateProduct = useUpdateRtdProduct();
   const uploadImage = useUploadImage();
   const { mutateAsync: createMaterial, isPending: isCreatingMaterial } = useCreateMaterial();
@@ -526,6 +533,34 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     performCreateProduct();
   }, [performCreateProduct]);
 
+  const navigateToBuyWalletCredits = useCallback(() => {
+    resumePackModalAfterCreditsRef.current = true;
+    setInsufficientCreditsModalVisible(false);
+    setShowPackModal(false);
+    navigation.navigate(SCREENS.WALLET.CREDIT_PACKS as never, {
+      returnTo: {
+        name: SCREENS.CONVERTER_RTD.ADD_PRODUCT,
+        params: isEdit && productId ? { productId } : {},
+      },
+    } as never);
+  }, [navigation, isEdit, productId]);
+
+  const handleInsufficientBalanceForPack = useCallback((pack: RtdListingPackItem) => {
+    setShowPackModal(false);
+    setListingPackRequiredCredits(pack.price);
+    setInsufficientCreditsModalVisible(true);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (resumePackModalAfterCreditsRef.current) {
+        resumePackModalAfterCreditsRef.current = false;
+        setShowPackModal(true);
+        void refetchWallet();
+      }
+    }, [refetchWallet]),
+  );
+
   if (!isFormReady) {
     return null;
   }
@@ -714,10 +749,19 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           visible={showPackModal}
           onClose={() => setShowPackModal(false)}
           onPurchaseSuccess={handlePackPurchaseSuccess}
-          onAddCredits={() => {
-            setShowPackModal(false);
-            navigation.navigate(SCREENS.WALLET.MAIN as never);
-          }}
+          walletBalance={wallet?.balance ?? 0}
+          walletBalanceLoading={walletBalanceLoading}
+          onInsufficientBalanceForPack={handleInsufficientBalanceForPack}
+          onBuyWalletCredits={navigateToBuyWalletCredits}
+        />
+        <InsufficientCreditsModal
+          visible={insufficientCreditsModalVisible}
+          currentBalance={wallet?.balance ?? 0}
+          requiredCredits={listingPackRequiredCredits}
+          title="Not enough credits"
+          message={`This listing pack costs ${listingPackRequiredCredits} credits. Add credits to your wallet, then you can buy the pack here.`}
+          onClose={() => setInsufficientCreditsModalVisible(false)}
+          onBuyCredits={navigateToBuyWalletCredits}
         />
         <ProductListingSuccessModal
           visible={showSuccessModal}

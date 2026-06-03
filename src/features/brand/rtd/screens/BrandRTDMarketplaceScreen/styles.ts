@@ -8,12 +8,17 @@ export const createStyles = (theme: Theme) =>
       flex: 1,
       backgroundColor: theme.colors.background.secondary,
     },
-    listContent: {
+    list: {
       flex: 1,
+    },
+    listContent: {
       paddingHorizontal: theme.spacing[4],
       paddingBottom: theme.spacing[24],
       paddingTop: theme.spacing[4],
       gap: theme.spacing[4],
+    },
+    listContentFillWhenEmpty: {
+      flexGrow: 1,
     },
     emptyContainer: {
       flex: 1,

@@ -23,14 +23,11 @@ export const CURRENT_ENV: Environment = __DEV__
 /**
  * DEVELOPMENT API URL CONFIGURATION
  *
- * Auto-detect host IP from Metro's scriptURL in dev mode.
- * This avoids hardcoding a Wi-Fi IP that can change frequently.
- *
- * Optional manual override:
- * - Set DEV_API_HOST to your machine's LAN IP (e.g. 10.0.0.5) when needed
- * - Keep it empty to use automatic detection
+ * Set to your Mac Wi‑Fi IP so simulator + physical iPhone use the same local API.
+ *   ipconfig getifaddr en0
+ * Update when your network IP changes. Leave empty only for simulator-only dev.
  */
-const DEV_API_HOST = '';
+const DEV_API_HOST = '192.168.29.149';
 
 const getMetroHost = (): string | null => {
   const scriptURL = (NativeModules as { SourceCode?: { scriptURL?: string } })?.SourceCode?.scriptURL;
@@ -41,22 +38,18 @@ const getMetroHost = (): string | null => {
 };
 
 const getDevelopmentApiUrl = (): string => {
-  // Manual override for special networking setups
   if (DEV_API_HOST.trim()) {
     return `http://${DEV_API_HOST.trim()}:8000`;
   }
 
-  // Auto-detect host from Metro bundler URL in development
   const metroHost = getMetroHost();
   if (metroHost) {
-    // Android emulator uses 10.0.2.2 instead of localhost
     if (Platform.OS === 'android' && (metroHost === 'localhost' || metroHost === '127.0.0.1')) {
       return 'http://10.0.2.2:8000';
     }
     return `http://${metroHost}:8000`;
   }
 
-  // Fallback when Metro host is unavailable
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:8000';
   } else if (Platform.OS === 'ios') {
@@ -130,3 +123,12 @@ export const APP_NAME = 'PaperX';
 // Set to true to use dummy data instead of real API
 // This allows demonstrating the full user flow without backend
 export const USE_DUMMY_DATA = false;
+
+/**
+ * When Google Maps is not used, APIs still require numeric lat/lng.
+ * Coordinates are placeholders only; the structured address fields are authoritative.
+ */
+export const LOCATION_FALLBACK_COORDINATES = {
+  latitude: 28.6139,
+  longitude: 77.209,
+} as const;

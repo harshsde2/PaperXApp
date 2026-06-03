@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
@@ -15,7 +16,7 @@ import { useSkeleton } from '@shared/hooks/useSkeleton';
 import { DetailSkeleton } from '@shared/components/skeletons';
 import type { RtdPriceSlab } from '@services/api/rtdApi/@types';
 import type { BrandRTDProductDetailScreenProps } from './@types';
-import { createStyles } from './styles';
+import { createStyles, getScrollFooterPadding } from './styles';
 
 const findMatchingSlab = (
   slabs: RtdPriceSlab[] | undefined,
@@ -34,6 +35,17 @@ export const BrandRTDProductDetailScreen: React.FC<
   const { productId } = route.params;
   const theme = useTheme();
   const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+
+  const scrollContentStyle = useMemo(
+    () => [
+      styles.scrollContent,
+      {
+        paddingBottom: getScrollFooterPadding(theme) + insets.bottom,
+      },
+    ],
+    [styles.scrollContent, theme, insets.bottom],
+  );
 
   const {
     data: product,
@@ -91,8 +103,9 @@ export const BrandRTDProductDetailScreen: React.FC<
   return (
     <View style={styles.container}>
       <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={scrollContentStyle}
       >
         <View style={styles.imageContainer}>
           {product.image_path ? (

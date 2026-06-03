@@ -3,8 +3,6 @@
  * All TypeScript types, interfaces, and enums for wallet API
  */
 
-import { PaginationMeta } from '../types';
-
 // ============================================
 // ENUMS & CONSTANTS
 // ============================================
@@ -110,6 +108,47 @@ export type PurchaseCreditsRequest =
   | PurchaseCreditsCustomRequest;
 
 export interface PurchaseCreditsResponse {
+  transaction_id: string;
+  credits_added: number;
+  new_balance: number;
+  amount_paid: number;
+}
+
+// ============================================
+// RAZORPAY WALLET PAYMENTS
+// ============================================
+
+export interface CreateRazorpayOrderRequest {
+  credit_pack_id: number;
+}
+
+export interface CreateRazorpayExactCreditsOrderRequest {
+  credits: number;
+}
+
+export interface RazorpayOrderPackSummary {
+  id: number;
+  name: string;
+  credits: number;
+  total_price: number;
+}
+
+export interface CreateRazorpayOrderResponse {
+  key_id: string;
+  razorpay_order_id: string;
+  amount: number;
+  currency: string;
+  receipt: string;
+  pack: RazorpayOrderPackSummary;
+}
+
+export interface VerifyRazorpayPaymentRequest {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export interface VerifyRazorpayPaymentResponse {
   transaction_id: string;
   credits_added: number;
   new_balance: number;

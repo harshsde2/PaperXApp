@@ -118,7 +118,15 @@ export interface FinishedProduct {
 export interface ScrapType {
   id: number;
   name: string;
+  category?: string;
   description?: string;
+}
+
+export interface ConverterMachine {
+  id: number;
+  name: string;
+  type?: string | null;
+  description?: string | null;
 }
 
 // ============================================
@@ -129,10 +137,7 @@ export interface ConverterReferenceDataResponse {
   converter_types: ConverterType[];
   finished_products: FinishedProduct[];
   scrap_types: ScrapType[];
-  machines: Array<{
-    id: number;
-    name: string;
-  }>;
+  machines: ConverterMachine[];
 }
 
 // ============================================

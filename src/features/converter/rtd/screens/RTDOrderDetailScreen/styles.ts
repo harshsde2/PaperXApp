@@ -13,8 +13,6 @@ export const createStyles = (theme: Theme) =>
     },
     loadingContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     errorContainer: {
       flex: 1,

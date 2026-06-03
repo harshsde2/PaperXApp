@@ -48,3 +48,6 @@ export const POSTING_COSTS = {
   URGENCY_BOOST: 20,
   VAT_PERCENTAGE: 20,
 } as const;
+
+/** Display-only estimate for direct pay copy; server uses `WALLET_INR_PER_CREDIT`. */
+export const DIRECT_PAY_INR_PER_CREDIT = 1 as const;

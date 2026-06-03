@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -7,20 +7,17 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  InteractionManager,
   Pressable,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Controller } from 'react-hook-form';
-import { State, City, ICity } from 'country-state-city';
-import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { StateSelectionContent } from '@shared/components/StateSelectionContent';
-import { CitySelectionContent } from '@shared/components/CitySelectionContent';
+import { StructuredAddressFormModal } from '@shared/components/StructuredAddressFormModal';
+import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
@@ -41,26 +38,7 @@ import {
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import { LocationPicker } from '@shared/location';
-import type { Location } from '@shared/location/types';
-
-const INDIA_COUNTRY_CODE = 'IN';
-const INDIAN_STATES = State.getStatesOfCountry(INDIA_COUNTRY_CODE);
-
-const STATE_NAME_TO_ISO: Record<string, string> = {};
-INDIAN_STATES.forEach((s) => {
-  STATE_NAME_TO_ISO[s.name] = s.isoCode;
-});
-
-const CITIES_CACHE: Record<string, ICity[]> = {};
-
-const getCitiesForState = (stateIsoCode: string): ICity[] => {
-  if (!stateIsoCode) return [];
-  if (!CITIES_CACHE[stateIsoCode]) {
-    CITIES_CACHE[stateIsoCode] = City.getCitiesOfState(INDIA_COUNTRY_CODE, stateIsoCode);
-  }
-  return CITIES_CACHE[stateIsoCode];
-};
+import { LOCATION_FALLBACK_COORDINATES } from '@shared/constants/config';
 
 // Mapping from brand type string IDs to numeric IDs for API
 // This should match your backend brand type IDs
@@ -578,14 +556,13 @@ const BrandRegistrationScreen = () => {
   const route = useRoute<RouteProp<AuthStackParamList, 'BrandRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const stateSheetRef = useRef<BottomSheetModal>(null);
-  const citySheetRef = useRef<BottomSheetModal>(null);
-
   // Get profileData from route params
   const { profileData } = route.params || {};
 
+  const headerHeight = useHeaderHeight();
+
   // Keyboard visibility hook
-  const { isKeyboardVisible } = useKeyboard();
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   // API mutation hook
   const { mutate: completeBrandProfile, isPending: isSubmitting } =
@@ -601,12 +578,26 @@ const BrandRegistrationScreen = () => {
     additionalContentHeight: 20, // Footer note text height
   });
 
+  const keyboardScrollExtraPadding = theme.spacing[2];
+  const scrollContentPaddingBottom = useMemo(
+    () =>
+      floatingContainerPadding +
+      (isKeyboardVisible ? keyboardHeight + keyboardScrollExtraPadding : 0),
+    [
+      floatingContainerPadding,
+      isKeyboardVisible,
+      keyboardHeight,
+      keyboardScrollExtraPadding,
+    ],
+  );
+
   // Form handling
   const {
     control,
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { errors, isValid },
   } = useForm<BrandRegistrationFormData>({
     defaultValues: {
@@ -642,9 +633,6 @@ const BrandRegistrationScreen = () => {
   const longitudeValue = watch('longitude');
   const brandTypesValue = watch('brandTypes');
 
-  const selectedStateIso = STATE_NAME_TO_ISO[stateValue] || '';
-  const [stateSearchQuery, setStateSearchQuery] = useState('');
-
   // Local state for brand types selection
   const [selectedBrandTypes, setSelectedBrandTypes] = useState<Set<string>>(
     new Set(),
@@ -654,8 +642,9 @@ const BrandRegistrationScreen = () => {
   const [showBrandTypeModal, setShowBrandTypeModal] = useState(false);
   const [brandTypeSearchQuery, setBrandTypeSearchQuery] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [showManualLocationEntry, setShowManualLocationEntry] = useState(false);
+  const [showBrandAddressModal, setShowBrandAddressModal] = useState(false);
+  const [brandAddressMapSeed, setBrandAddressMapSeed] =
+    useState<WarehouseFormMapData | null>(null);
 
   // Sync selectedBrandTypes with form value
   useEffect(() => {
@@ -710,87 +699,57 @@ const BrandRegistrationScreen = () => {
     return isValidEmail(emailValue);
   }, [emailValue]);
 
-  // Handle state selection
-  const handleStateSelect = useCallback(
-    (stateName: string) => {
-      stateSheetRef.current?.dismiss();
-      InteractionManager.runAfterInteractions(() => {
-        setValue('state', stateName);
-        setValue('city', '');
-        setStateSearchQuery('');
-      });
-    },
-    [setValue]
-  );
+  const openBrandAddressModal = useCallback(() => {
+    const v = getValues();
+    setBrandAddressMapSeed({
+      address: v.address || '',
+      city: v.city || '',
+      state: v.state || '',
+      pincode: '',
+      latitude: LOCATION_FALLBACK_COORDINATES.latitude,
+      longitude: LOCATION_FALLBACK_COORDINATES.longitude,
+    });
+    setShowBrandAddressModal(true);
+  }, [getValues]);
 
-  // Handle city selection
-  const handleCitySelect = useCallback(
-    (cityName: string) => {
-      citySheetRef.current?.dismiss();
-      InteractionManager.runAfterInteractions(() => {
-        setValue('city', cityName);
-      });
-    },
-    [setValue]
-  );
-
-  // Open state selector
-  const openStateSelector = useCallback(() => {
-    setStateSearchQuery('');
-    stateSheetRef.current?.present();
+  const closeBrandAddressModal = useCallback(() => {
+    setShowBrandAddressModal(false);
+    setBrandAddressMapSeed(null);
   }, []);
 
-  // Open city selector
-  const openCitySelector = useCallback(() => {
-    if (!stateValue) {
+  const handleBrandStructuredAddressSubmit = useCallback(
+    (data: {
+      name: string;
+      flatHouseNo: string;
+      streetLandmark: string;
+      locality: string;
+      state: string;
+      city: string;
+      pincode: string;
+      latitude: number;
+      longitude: number;
+    }) => {
+      const streetBlock = [data.flatHouseNo, data.streetLandmark, data.locality]
+        .filter(Boolean)
+        .join(', ');
+      setValue('state', data.state, { shouldValidate: true });
+      setValue('city', data.city, { shouldValidate: true });
+      setValue('address', streetBlock, { shouldValidate: true });
+      const fullLoc = [streetBlock, data.city, data.state, data.pincode]
+        .filter(Boolean)
+        .join(', ');
+      setValue('location', fullLoc, { shouldValidate: true });
+      setValue('latitude', data.latitude, { shouldValidate: true });
+      setValue('longitude', data.longitude, { shouldValidate: true });
+      closeBrandAddressModal();
       dispatch(
         showToast({
-          message: 'Please select a state first',
-          type: 'error',
-        })
-      );
-      return;
-    }
-    citySheetRef.current?.present();
-  }, [stateValue, dispatch]);
-
-  // Handle location selection from LocationPicker
-  const handleLocationSelect = useCallback(
-    (location: Location) => {
-      // Always update state and city from the selected location (map selection overrides prefilled values)
-      if (location.address?.state) {
-        setValue('state', location.address.state, { shouldValidate: true });
-      }
-      if (location.address?.city) {
-        setValue('city', location.address.city, { shouldValidate: true });
-      }
-      // Set address field with street address or locality details
-      const addressText = location.address?.streetAddress ||
-        location.address?.formattedAddress?.split(',')[0] ||
-        '';
-      if (addressText) {
-        setValue('address', addressText, { shouldValidate: true });
-      }
-      // Set location field with full formatted address
-      setValue('location', location.address?.formattedAddress || location.address?.streetAddress || location.name || '', {
-        shouldValidate: true,
-      });
-      setValue('latitude', location.latitude, {
-        shouldValidate: true,
-      });
-      setValue('longitude', location.longitude, {
-        shouldValidate: true,
-      });
-      setShowLocationPicker(false);
-
-      dispatch(
-        showToast({
-          message: 'Location selected successfully!',
+          message: 'Business address saved',
           type: 'success',
         }),
       );
     },
-    [setValue, dispatch],
+    [setValue, closeBrandAddressModal, dispatch],
   );
 
   const isFormValid = useMemo(() => {
@@ -803,10 +762,8 @@ const BrandRegistrationScreen = () => {
     const stateValid = stateValue?.trim().length > 0;
     const cityValid = cityValue?.trim().length > 0;
     const locationValid = locationValue?.trim().length > 0;
-    // Coordinates are required if location was selected from map, optional if manually entered
-    const coordinatesValid = showManualLocationEntry
-      ? true
-      : latitudeValue !== undefined && longitudeValue !== undefined;
+    const coordinatesValid =
+      latitudeValue !== undefined && longitudeValue !== undefined;
 
     const valid =
       companyNameValid &&
@@ -831,7 +788,6 @@ const BrandRegistrationScreen = () => {
         city: cityValid,
         location: locationValid,
         coordinates: coordinatesValid,
-        manualEntry: showManualLocationEntry,
         overall: valid,
       });
     }
@@ -849,7 +805,6 @@ const BrandRegistrationScreen = () => {
     locationValue,
     latitudeValue,
     longitudeValue,
-    showManualLocationEntry,
   ]);
 
   // Filtered brand types based on search
@@ -938,8 +893,14 @@ const BrandRegistrationScreen = () => {
         city: cityValue?.trim() || profileData?.city || '',
         address: addressValue?.trim() || undefined,
         location: locationValue?.trim() || profileData?.location || '',
-        latitude: latitudeValue || profileData?.latitude || 28.6139,
-        longitude: longitudeValue || profileData?.longitude || 77.209,
+        latitude:
+          latitudeValue ??
+          profileData?.latitude ??
+          LOCATION_FALLBACK_COORDINATES.latitude,
+        longitude:
+          longitudeValue ??
+          profileData?.longitude ??
+          LOCATION_FALLBACK_COORDINATES.longitude,
         brand_type_ids: brandTypeIds,
       };
 
@@ -1072,8 +1033,6 @@ const BrandRegistrationScreen = () => {
     ],
   );
 
-  const citiesForState = getCitiesForState(selectedStateIso);
-
   const onInvalid = useCallback(
     (errors: Record<string, { message?: string }>) => {
       const firstError = Object.values(errors)[0];
@@ -1089,13 +1048,12 @@ const BrandRegistrationScreen = () => {
   );
 
   return (
-    <BottomSheetModalProvider>
-      <View style={{ flex: 1 }}>
+    <View style={styles.screenRoot}>
         <>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={styles.keyboardAvoiding}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
         enabled={Platform.OS === 'ios'}
       >
         <ScreenWrapper
@@ -1103,7 +1061,7 @@ const BrandRegistrationScreen = () => {
           backgroundColor={theme.colors.background.secondary}
           safeAreaEdges={[]}
           contentContainerStyle={{
-            paddingBottom: floatingContainerPadding,
+            paddingBottom: scrollContentPaddingBottom,
           }}
           scrollViewProps={{
             keyboardShouldPersistTaps: 'handled',
@@ -1512,200 +1470,40 @@ const BrandRegistrationScreen = () => {
                 />
               </View>
 
-              {/* State */}
+              {/* Business address — same structured form as other roles */}
               <View style={styles.inputContainer}>
                 <Text
                   variant="bodyMedium"
                   fontWeight="medium"
                   style={styles.label}
                 >
-                  State
+                  Business address
                 </Text>
-                <Controller
-                  control={control}
-                  name="state"
-                  rules={validationRules.required('Please select a state') as any}
-                  render={({ field: { value }, fieldState: { error } }) => (
-                    <>
-                      <DropdownButton
-                        value={value}
-                        placeholder="Select State"
-                        onPress={openStateSelector}
-                        disabled={hasPrefilledCompanyDetails}
-                      />
-                    </>
-                  )}
-                />
-              </View>
-
-              {/* City */}
-              <View style={styles.inputContainer}>
                 <Text
-                  variant="bodyMedium"
-                  fontWeight="medium"
-                  style={styles.label}
+                  variant="bodySmall"
+                  style={{ color: theme.colors.text.secondary, marginBottom: theme.spacing[2] }}
                 >
-                  City
+                  State, city, street lines, and pincode (same format as warehouse registration).
                 </Text>
-                <Controller
-                  control={control}
-                  name="city"
-                  rules={validationRules.required('Please select a city') as any}
-                  render={({ field: { value }, fieldState: { error } }) => (
-                    <>
-                      <DropdownButton
-                        value={value}
-                        placeholder={stateValue ? 'Select City' : 'Select State first'}
-                        onPress={openCitySelector}
-                        disabled={hasPrefilledCompanyDetails || !stateValue}
-                      />
-                    </>
-                  )}
-                />
-              </View>
-
-              {/* Address */}
-              <View style={styles.inputContainer}>
-                <Text
-                  variant="bodyMedium"
-                  fontWeight="medium"
-                  style={styles.label}
-                >
-                  Address
-                </Text>
-                <Controller
-                  control={control}
-                  name="address"
-                  render={({
-                    field: { onChange, onBlur, value },
-                    fieldState: { error },
-                  }) => (
-                    <>
-                      <View
-                        style={[
-                          styles.inputWrapper,
-                          focusedInput === 'address' && styles.inputWrapperFocused,
-                        ]}
-                      >
-                        <View style={styles.inputIconLeft}>
-                          <AppIcon.Location
-                            width={20}
-                            height={20}
-                            color={theme.colors.text.tertiary}
-                          />
-                        </View>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Enter address or locality"
-                          placeholderTextColor={theme.colors.text.tertiary}
-                          value={value}
-                          onChangeText={onChange}
-                          onFocus={() => setFocusedInput('address')}
-                          onBlur={() => {
-                            onBlur();
-                            setFocusedInput(null);
-                          }}
-                          multiline
-                          numberOfLines={2}
-                        />
-                      </View>
-                    </>
-                  )}
-                />
-              </View>
-
-              {/* Location */}
-              <View style={styles.inputContainer}>
-                <Text
-                  variant="bodyMedium"
-                  fontWeight="medium"
-                  style={styles.label}
-                >
-                  Location
-                </Text>
-                <Controller
-                  control={control}
-                  name="location"
-                  rules={validationRules.required('Please select or enter location') as any}
-                  render={({ field: { value }, fieldState: { error } }) => (
-                    <>
-                      <View
-                        style={[
-                          styles.inputWrapper,
-                          focusedInput === 'location' &&
-                          styles.inputWrapperFocused,
-                        ]}
-                      >
-                        <View style={styles.inputIconLeft}>
-                          <AppIcon.Location
-                            width={20}
-                            height={20}
-                            color={theme.colors.text.tertiary}
-                          />
-                        </View>
-                        {showManualLocationEntry ? (
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Enter location manually"
-                            placeholderTextColor={theme.colors.text.tertiary}
-                            value={value}
-                            onChangeText={(text) => {
-                              setValue('location', text, { shouldValidate: true });
-                            }}
-                            onFocus={() => setFocusedInput('location')}
-                            onBlur={() => {
-                              setFocusedInput(null);
-                            }}
-                          />
-                        ) : (
-                          <TouchableOpacity
-                            style={{ flex: 1, justifyContent: 'center' }}
-                            onPress={() => setShowLocationPicker(true)}
-                            activeOpacity={0.7}
-                          >
-                            <Text
-                              variant="bodyMedium"
-                              style={[
-                                !value
-                                  ? { color: theme.colors.text.tertiary }
-                                  : { color: theme.colors.text.primary },
-                              ]}
-                            >
-                              {value || 'Select location on map'}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                        <View style={styles.inputIconRight}>
-                          <TouchableOpacity
-                            onPress={() => {
-                              setShowManualLocationEntry(!showManualLocationEntry);
-                              if (!showManualLocationEntry) {
-                                setValue('location', '', { shouldValidate: true });
-                                setValue('latitude', undefined, { shouldValidate: true });
-                                setValue('longitude', undefined, { shouldValidate: true });
-                              }
-                            }}
-                            activeOpacity={0.7}
-                          >
-                            <AppIcon.Search
-                              width={20}
-                              height={20}
-                              color={theme.colors.text.tertiary}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                      {!showManualLocationEntry && (
-                        <CustomButton
-                          title={value ? 'Change Location on Map' : 'Select Location on Map'}
-                          onPress={() => setShowLocationPicker(true)}
-                          variant="primary"
-                          size="md"
-                          style={styles.mapLocationButton}
-                        />
-                      )}
-                    </>
-                  )}
+                {stateValue || cityValue || addressValue || locationValue ? (
+                  <Text variant="bodyMedium" style={{ marginBottom: theme.spacing[3] }}>
+                    {[
+                      [addressValue, cityValue, stateValue].filter(Boolean).join(', '),
+                      locationValue,
+                    ]
+                      .filter(Boolean)
+                      .join('\n')}
+                  </Text>
+                ) : (
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary, marginBottom: theme.spacing[3] }}>
+                    No address entered yet
+                  </Text>
+                )}
+                <CustomButton
+                  title={locationValue ? 'Edit business address' : 'Enter business address'}
+                  onPress={openBrandAddressModal}
+                  variant="primary"
+                  size="md"
                 />
               </View>
             </View>
@@ -1831,33 +1629,6 @@ const BrandRegistrationScreen = () => {
             </Pressable>
           </Modal>
 
-          {/* Location Picker Modal */}
-          <Modal
-            visible={showLocationPicker}
-            animationType="slide"
-            presentationStyle="fullScreen"
-            onRequestClose={() => setShowLocationPicker(false)}
-          >
-            <LocationPicker
-              initialLocation={
-                latitudeValue && longitudeValue
-                  ? {
-                    latitude: latitudeValue,
-                    longitude: longitudeValue,
-                    address: {
-                      formattedAddress: locationValue || '',
-                      streetAddress: locationValue || '',
-                    },
-                  }
-                  : undefined
-              }
-              onLocationSelect={handleLocationSelect}
-              onCancel={() => setShowLocationPicker(false)}
-              allowMapTap={true}
-              confirmButtonText="Confirm Location"
-              title="Select Location"
-            />
-          </Modal>
         </ScreenWrapper>
       </KeyboardAvoidingView>
 
@@ -1902,38 +1673,20 @@ const BrandRegistrationScreen = () => {
         </FloatingBottomContainer>
       )}
         </>
-        <GorhomBottomSheetModal
-          ref={stateSheetRef}
-          snapPoints={['70%', '95%']}
-          enablePanDownToClose
-          onDismiss={() => setStateSearchQuery('')}
-        >
-          <StateSelectionContent
-            searchQuery={stateSearchQuery}
-            onSearchChange={setStateSearchQuery}
-            selectedState={stateValue}
-            onSelect={handleStateSelect}
-            theme={theme}
-            ListComponent={BottomSheetFlatList}
+        {brandAddressMapSeed && (
+          <StructuredAddressFormModal
+            visible={showBrandAddressModal}
+            title="Business address"
+            onDismiss={closeBrandAddressModal}
+            mapData={brandAddressMapSeed}
+            existingLocation={null}
+            coordinatesOverride={LOCATION_FALLBACK_COORDINATES}
+            showNameField={false}
+            onSubmit={handleBrandStructuredAddressSubmit}
+            submitLabel="Save address"
           />
-        </GorhomBottomSheetModal>
-
-        <GorhomBottomSheetModal
-          ref={citySheetRef}
-          snapPoints={['70%', '95%']}
-          enablePanDownToClose
-        >
-          <CitySelectionContent
-            selectedCity={cityValue}
-            selectedStateName={stateValue}
-            cities={citiesForState}
-            onSelect={handleCitySelect}
-            theme={theme}
-            ListComponent={BottomSheetFlatList}
-          />
-        </GorhomBottomSheetModal>
+        )}
       </View>
-    </BottomSheetModalProvider>
   );
 };
 

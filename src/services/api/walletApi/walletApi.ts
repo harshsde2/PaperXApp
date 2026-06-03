@@ -25,6 +25,12 @@ import type {
   // Purchase
   PurchaseCreditsRequest,
   PurchaseCreditsResponse,
+  // Razorpay
+  CreateRazorpayOrderRequest,
+  CreateRazorpayOrderResponse,
+  CreateRazorpayExactCreditsOrderRequest,
+  VerifyRazorpayPaymentRequest,
+  VerifyRazorpayPaymentResponse,
   // Add
   AddCreditsRequest,
   AddCreditsResponse,
@@ -113,30 +119,84 @@ export const useCalculateCredits = () => {
 };
 
 // ============================================
-// PURCHASE CREDITS
+// PURCHASE CREDITS (deprecated — do not use)
 // ============================================
+//
+// Backend returns 410 for POST /wallet/purchase unless APP_FAKE_PAYMENTS=true.
+// Buy Credits uses Razorpay: useCreateRazorpayOrder + checkout + useVerifyRazorpayPayment
+// (see CreditPacksScreen). This hook remains only so old bundles fail loudly instead of 410.
 
 export const usePurchaseCredits = () => {
+  return useMutation({
+    mutationFn: async (_data: PurchaseCreditsRequest): Promise<PurchaseCreditsResponse> => {
+      throw new Error(
+        'This build uses Razorpay for credit packs, not POST /wallet/purchase. Fully quit the app, run `npx react-native start --reset-cache`, then rebuild and try again.'
+      );
+    },
+  });
+};
+
+// ============================================
+// RAZORPAY — CREATE ORDER
+// ============================================
+
+export const useCreateRazorpayOrder = () => {
+  return useMutation({
+    mutationFn: async (
+      data: CreateRazorpayOrderRequest
+    ): Promise<CreateRazorpayOrderResponse> => {
+      const response = await api.post<CreateRazorpayOrderResponse>(
+        WALLET_ENDPOINTS.RAZORPAY_ORDER,
+        data
+      );
+      return extractData<CreateRazorpayOrderResponse>(response);
+    },
+    onError: (error: Error) => {
+      console.error('Create Razorpay order error:', error);
+    },
+  });
+};
+
+export const useCreateRazorpayExactCreditsOrder = () => {
+  return useMutation({
+    mutationFn: async (
+      data: CreateRazorpayExactCreditsOrderRequest
+    ): Promise<CreateRazorpayOrderResponse> => {
+      const response = await api.post<CreateRazorpayOrderResponse>(
+        WALLET_ENDPOINTS.RAZORPAY_EXACT_CREDITS_ORDER,
+        data
+      );
+      return extractData<CreateRazorpayOrderResponse>(response);
+    },
+    onError: (error: Error) => {
+      console.error('Create Razorpay exact-credits order error:', error);
+    },
+  });
+};
+
+// ============================================
+// RAZORPAY — VERIFY PAYMENT
+// ============================================
+
+export const useVerifyRazorpayPayment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (
-      data: PurchaseCreditsRequest
-    ): Promise<PurchaseCreditsResponse> => {
-      const response = await api.post<PurchaseCreditsResponse>(
-        WALLET_ENDPOINTS.PURCHASE,
+      data: VerifyRazorpayPaymentRequest
+    ): Promise<VerifyRazorpayPaymentResponse> => {
+      const response = await api.post<VerifyRazorpayPaymentResponse>(
+        WALLET_ENDPOINTS.RAZORPAY_VERIFY,
         data
       );
-      return extractData<PurchaseCreditsResponse>(response);
+      return extractData<VerifyRazorpayPaymentResponse>(response);
     },
     onSuccess: () => {
-      // Invalidate wallet balance to refresh
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.balance() });
-      // Invalidate transactions to show new purchase
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactions() });
     },
     onError: (error: Error) => {
-      console.error('Purchase credits error:', error);
+      console.error('Verify Razorpay payment error:', error);
     },
   });
 };

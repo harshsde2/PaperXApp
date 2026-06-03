@@ -3,52 +3,38 @@ import { View, TouchableOpacity, ActivityIndicator, InteractionManager, ScrollVi
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
-import { State, City, ICity } from 'country-state-city';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { Card } from '@shared/components/Card';
 import { DropdownButton } from '@shared/components/DropdownButton';
-import { StateSelectionContent } from '@shared/components/StateSelectionContent';
-import { CitySelectionContent } from '@shared/components/CitySelectionContent';
+import { StructuredAddressFormModal } from '@shared/components/StructuredAddressFormModal';
+import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
 import MultiSelectBottomSheetContent from '@shared/components/MultiSelectBottomSheetContent';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
 import { useForm, FormInput, validationRules } from '@shared/forms';
-import { useGetConverterReferenceData, useCompleteConverterProfile } from '@services/api/converterApi/converterApi';
-import { useGetMaterials } from '@services/api/referenceApi/referenceApi';
+import {
+  useGetConverterReferenceData,
+  useCompleteConverterProfile,
+  useCreateFinishedProduct,
+  useCreateMachine,
+  useCreateScrapType,
+} from '@services/api/converterApi/converterApi';
+import { useGetMaterials, useCreateMaterial } from '@services/api/referenceApi/referenceApi';
 import type { UpdateProfileResponse } from '@services/api';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
 import { ROLES } from '@utils/constants';
-import { LocationPicker } from '@shared/location';
-import type { Location } from '@shared/location/types';
+import { LOCATION_FALLBACK_COORDINATES } from '@shared/constants/config';
 import { ConverterRegistrationFormData } from './@types';
 import { createStyles } from './styles';
 import { Toast } from 'toastify-react-native';
 import { CustomButton } from '@shared/components/CustomButton';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { useKeyboard, useFloatingBottomPadding } from '@shared/hooks';
-
-const INDIA_COUNTRY_CODE = 'IN';
-const INDIAN_STATES = State.getStatesOfCountry(INDIA_COUNTRY_CODE);
-
-const STATE_NAME_TO_ISO: Record<string, string> = {};
-INDIAN_STATES.forEach((s) => {
-  STATE_NAME_TO_ISO[s.name] = s.isoCode;
-});
-
-const CITIES_CACHE: Record<string, ICity[]> = {};
-
-const getCitiesForState = (stateIsoCode: string): ICity[] => {
-  if (!stateIsoCode) return [];
-  if (!CITIES_CACHE[stateIsoCode]) {
-    CITIES_CACHE[stateIsoCode] = City.getCitiesOfState(INDIA_COUNTRY_CODE, stateIsoCode);
-  }
-  return CITIES_CACHE[stateIsoCode];
-};
 
 type MultiSelectConfig = {
   fieldName: keyof ConverterRegistrationFormData;
@@ -58,19 +44,104 @@ type MultiSelectConfig = {
   searchKey: string;
 };
 
+type CustomField = 'raw_material_ids' | 'finished_product_ids' | 'machine_ids' | 'scrap_type_ids';
+
 const ConverterRegistrationScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<AuthStackParamList, 'ConverterRegistration'>>();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const stateSheetRef = useRef<BottomSheetModal>(null);
-  const citySheetRef = useRef<BottomSheetModal>(null);
   const multiSelectSheetRef = useRef<BottomSheetModal>(null);
   const capacityUnitSheetRef = useRef<BottomSheetModal>(null);
   const [multiSelectConfig, setMultiSelectConfig] = useState<MultiSelectConfig | null>(null);
   const { data: referenceData, isLoading: isLoadingReference } = useGetConverterReferenceData();
   const { data: materials, isLoading: isLoadingMaterials } = useGetMaterials();
   const { mutate: completeProfile, isPending: isSubmitting } = useCompleteConverterProfile();
+  const { mutateAsync: createMaterial, isPending: isCreatingMaterial } = useCreateMaterial();
+  const { mutateAsync: createFinishedProduct, isPending: isCreatingFP } = useCreateFinishedProduct();
+  const { mutateAsync: createMachine, isPending: isCreatingMachine } = useCreateMachine();
+  const { mutateAsync: createScrapType, isPending: isCreatingScrap } = useCreateScrapType();
+
+  const [customEntry, setCustomEntry] = useState<{
+    field: CustomField;
+    title: string;
+    itemLabel: string;
+  } | null>(null);
+  const [customEntryName, setCustomEntryName] = useState('');
+  const [customEntrySecondary, setCustomEntrySecondary] = useState<string>('');
+  const [customEntrySecondaryOther, setCustomEntrySecondaryOther] = useState<string>('');
+  const [customEntryDescription, setCustomEntryDescription] = useState<string>('');
+  const isCreatingCustom = isCreatingMaterial || isCreatingFP || isCreatingMachine || isCreatingScrap;
+
+  const openCustomEntry = useCallback(
+    (entry: { field: CustomField; title: string; itemLabel: string }) => {
+      setCustomEntryName('');
+      setCustomEntrySecondary('');
+      setCustomEntrySecondaryOther('');
+      setCustomEntryDescription('');
+      setCustomEntry(entry);
+    },
+    []
+  );
+
+  const closeCustomEntry = useCallback(() => {
+    setCustomEntry(null);
+    setCustomEntryName('');
+    setCustomEntrySecondary('');
+    setCustomEntrySecondaryOther('');
+    setCustomEntryDescription('');
+  }, []);
+
+  const customEntryConfig = useMemo(() => {
+    if (!customEntry) return null;
+
+    const dedupe = (values: Array<string | null | undefined>): string[] => {
+      const seen = new Set<string>();
+      const out: string[] = [];
+      for (const value of values) {
+        const trimmed = (value || '').toString().trim();
+        if (!trimmed) continue;
+        const key = trimmed.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(trimmed);
+      }
+      return out.sort((a, b) => a.localeCompare(b));
+    };
+
+    switch (customEntry.field) {
+      case 'machine_ids':
+        return {
+          secondaryKind: 'type' as const,
+          secondaryLabel: 'Type',
+          existingOptions: dedupe((referenceData?.machines || []).map((m: any) => m?.type)),
+          showDescription: true,
+        };
+      case 'finished_product_ids':
+        return {
+          secondaryKind: 'category' as const,
+          secondaryLabel: 'Category',
+          existingOptions: dedupe((referenceData?.finished_products || []).map((p: any) => p?.category)),
+          showDescription: true,
+        };
+      case 'scrap_type_ids':
+        return {
+          secondaryKind: 'category' as const,
+          secondaryLabel: 'Category',
+          existingOptions: dedupe((referenceData?.scrap_types || []).map((s: any) => s?.category)),
+          showDescription: true,
+        };
+      case 'raw_material_ids':
+        return {
+          secondaryKind: 'category' as const,
+          secondaryLabel: 'Category',
+          existingOptions: dedupe((materials || []).map((m: any) => m?.category)),
+          showDescription: false,
+        };
+      default:
+        return null;
+    }
+  }, [customEntry, referenceData, materials]);
 
   console.log('materials', JSON.stringify(materials, null, 2));
 
@@ -80,11 +151,10 @@ const ConverterRegistrationScreen = () => {
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const searchQueriesRef = useRef<Record<string, string>>({});
   
-  // State/City selection state
-  const [stateSearchQuery, setStateSearchQuery] = useState('');
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [showManualLocationEntry, setShowManualLocationEntry] = useState(false);
-  
+  const [showFactoryAddressModal, setShowFactoryAddressModal] = useState(false);
+  const [factoryAddressMapSeed, setFactoryAddressMapSeed] =
+    useState<WarehouseFormMapData | null>(null);
+
   // Keep ref in sync with state
   React.useEffect(() => {
     searchQueriesRef.current = searchQueries;
@@ -114,9 +184,8 @@ const ConverterRegistrationScreen = () => {
   const watchedValues = watch();
   const factoryStateValue = watch('factory_state');
   const factoryCityValue = watch('factory_city');
+  const factoryAddressValue = watch('factory_address');
   const factoryLocationValue = watch('factory_location');
-  const factoryLatitudeValue = watch('factory_latitude');
-  const factoryLongitudeValue = watch('factory_longitude');
 
   const hasPrefilledCompanyDetails = !!profileData?.company_name;
 
@@ -131,77 +200,51 @@ const ConverterRegistrationScreen = () => {
     }
   }, [profileData, setValue]);
 
-  const selectedStateIso = STATE_NAME_TO_ISO[factoryStateValue] || '';
+  const openFactoryAddressModal = useCallback(() => {
+    const v = getValues();
+    setFactoryAddressMapSeed({
+      address: v.factory_address || '',
+      city: v.factory_city || '',
+      state: v.factory_state || '',
+      pincode: '',
+      latitude: LOCATION_FALLBACK_COORDINATES.latitude,
+      longitude: LOCATION_FALLBACK_COORDINATES.longitude,
+    });
+    setShowFactoryAddressModal(true);
+  }, [getValues]);
 
-  // Handle state selection
-  const handleStateSelect = useCallback(
-    (stateName: string) => {
-      stateSheetRef.current?.dismiss();
-      InteractionManager.runAfterInteractions(() => {
-        setValue('factory_state', stateName);
-        setValue('factory_city', '');
-        setStateSearchQuery('');
-      });
-    },
-    [setValue]
-  );
-
-  // Handle city selection
-  const handleCitySelect = useCallback(
-    (cityName: string) => {
-      citySheetRef.current?.dismiss();
-      InteractionManager.runAfterInteractions(() => {
-        setValue('factory_city', cityName);
-      });
-    },
-    [setValue]
-  );
-
-  // Open state selector
-  const openStateSelector = useCallback(() => {
-    setStateSearchQuery('');
-    stateSheetRef.current?.present();
+  const closeFactoryAddressModal = useCallback(() => {
+    setShowFactoryAddressModal(false);
+    setFactoryAddressMapSeed(null);
   }, []);
 
-  // Open city selector
-  const openCitySelector = useCallback(() => {
-    if (!factoryStateValue) {
-      Toast.show({ type: 'error', text1: 'Select State', text2: 'Please select a state first', position: 'top' });
-      return;
-    }
-    citySheetRef.current?.present();
-  }, [factoryStateValue]);
-
-  // Handle location selection from LocationPicker
-  const handleLocationSelect = useCallback(
-    (location: Location) => {
-      // Always update state and city from the selected location (map selection overrides prefilled values)
-      if (location.address?.state) {
-        setValue('factory_state', location.address.state, { shouldValidate: true });
-      }
-      if (location.address?.city) {
-        setValue('factory_city', location.address.city, { shouldValidate: true });
-      }
-      // Set address field with street address or locality details
-      const addressText = location.address?.streetAddress || 
-                         location.address?.formattedAddress?.split(',')[0] || 
-                         '';
-      if (addressText) {
-        setValue('factory_address', addressText, { shouldValidate: true });
-      }
-      // Set location field with full formatted address
-      setValue('factory_location', location.address?.formattedAddress || location.address?.streetAddress || location.name || '', {
-        shouldValidate: true,
-      });
-      setValue('factory_latitude', location.latitude, {
-        shouldValidate: true,
-      });
-      setValue('factory_longitude', location.longitude, {
-        shouldValidate: true,
-      });
-      setShowLocationPicker(false);
+  const handleFactoryStructuredAddressSubmit = useCallback(
+    (data: {
+      name: string;
+      flatHouseNo: string;
+      streetLandmark: string;
+      locality: string;
+      state: string;
+      city: string;
+      pincode: string;
+      latitude: number;
+      longitude: number;
+    }) => {
+      const streetBlock = [data.flatHouseNo, data.streetLandmark, data.locality]
+        .filter(Boolean)
+        .join(', ');
+      setValue('factory_address', streetBlock, { shouldValidate: true });
+      setValue('factory_state', data.state, { shouldValidate: true });
+      setValue('factory_city', data.city, { shouldValidate: true });
+      const fullLoc = [streetBlock, data.city, data.state, data.pincode]
+        .filter(Boolean)
+        .join(', ');
+      setValue('factory_location', fullLoc, { shouldValidate: true });
+      setValue('factory_latitude', data.latitude, { shouldValidate: true });
+      setValue('factory_longitude', data.longitude, { shouldValidate: true });
+      closeFactoryAddressModal();
     },
-    [setValue],
+    [setValue, closeFactoryAddressModal],
   );
 
   const getDisplayText = useCallback((ids: number[], items: Array<{ id: number; name: string }>): string => {
@@ -240,6 +283,87 @@ const ConverterRegistrationScreen = () => {
     },
     [setValue, getValues]
   );
+
+  const handleAddCustom = useCallback(async () => {
+    if (!customEntry) return;
+
+    const name = customEntryName.trim();
+    if (!name) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: `Please enter a ${customEntry.itemLabel} name`,
+        position: 'top',
+      });
+      return;
+    }
+
+    const secondary =
+      customEntrySecondary === '__other__'
+        ? customEntrySecondaryOther.trim()
+        : customEntrySecondary.trim();
+    const description = customEntryDescription.trim();
+
+    try {
+      const created =
+        customEntry.field === 'raw_material_ids'
+          ? await createMaterial({ name, category: secondary || undefined })
+          : customEntry.field === 'finished_product_ids'
+          ? await createFinishedProduct({
+              name,
+              category: secondary || null,
+              description: description || null,
+            })
+          : customEntry.field === 'machine_ids'
+          ? await createMachine({
+              name,
+              type: secondary || null,
+              description: description || null,
+            })
+          : await createScrapType({
+              name,
+              category: secondary || null,
+              description: description || null,
+            });
+
+      if (created?.id) {
+        const currentIds = (getValues(customEntry.field) as number[]) || [];
+        if (!currentIds.includes(created.id)) {
+          setValue(customEntry.field, [...currentIds, created.id], { shouldValidate: true });
+        }
+        closeCustomEntry();
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: `${customEntry.itemLabel} added successfully`,
+          position: 'top',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: `Failed to add ${customEntry.itemLabel}`,
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || `Failed to add ${customEntry.itemLabel}`;
+      Toast.show({ type: 'error', text1: 'Error', text2: msg, position: 'top' });
+    }
+  }, [
+    customEntry,
+    customEntryName,
+    customEntrySecondary,
+    customEntrySecondaryOther,
+    customEntryDescription,
+    createMaterial,
+    createFinishedProduct,
+    createMachine,
+    createScrapType,
+    getValues,
+    setValue,
+    closeCustomEntry,
+  ]);
 
   const { isKeyboardVisible } = useKeyboard();
   const floatingContainerPadding = useFloatingBottomPadding({
@@ -292,9 +416,13 @@ const ConverterRegistrationScreen = () => {
       return;
     }
 
-    // Coordinates are required if location was selected from map, optional if manually entered
-    if (!showManualLocationEntry && (data.factory_latitude === 0 || data.factory_longitude === 0)) {
-      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please select factory location', position: 'top' });
+    if (data.factory_latitude === 0 || data.factory_longitude === 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Please enter factory address using the address form',
+        position: 'top',
+      });
       return;
     }
 
@@ -371,7 +499,6 @@ const ConverterRegistrationScreen = () => {
   }
 
   const capacityUnitValue = watch('capacity_unit');
-  const citiesForState = getCitiesForState(selectedStateIso);
 
   return (
     <BottomSheetModalProvider>
@@ -544,6 +671,20 @@ const ConverterRegistrationScreen = () => {
                       watchedValues.finished_product_ids || []
                     )}
                   />
+                  <TouchableOpacity
+                    onPress={() => openCustomEntry({
+                      field: 'finished_product_ids',
+                      title: 'Add Custom Finished Product',
+                      itemLabel: 'finished product',
+                    })}
+                    activeOpacity={0.7}
+                    style={styles.addCustomLinkRow}
+                  >
+                    <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
+                    <Text variant="captionSmall" style={styles.addCustomLinkText}>
+                      Can't find your finished product? Tap to add a custom one
+                    </Text>
+                  </TouchableOpacity>
                 </>
               )}
             />
@@ -586,6 +727,20 @@ const ConverterRegistrationScreen = () => {
                       watchedValues.machine_ids || []
                     )}
                   />
+                  <TouchableOpacity
+                    onPress={() => openCustomEntry({
+                      field: 'machine_ids',
+                      title: 'Add Custom Machine',
+                      itemLabel: 'machine',
+                    })}
+                    activeOpacity={0.7}
+                    style={styles.addCustomLinkRow}
+                  >
+                    <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
+                    <Text variant="captionSmall" style={styles.addCustomLinkText}>
+                      Can't find your machine? Tap to add a custom one
+                    </Text>
+                  </TouchableOpacity>
                 </>
               )}
             />
@@ -630,6 +785,20 @@ const ConverterRegistrationScreen = () => {
             <Text variant="captionSmall" style={styles.helperText}>
               Select types of scrap you generate during production
             </Text>
+            <TouchableOpacity
+              onPress={() => openCustomEntry({
+                field: 'scrap_type_ids',
+                title: 'Add Custom Scrap Type',
+                itemLabel: 'scrap type',
+              })}
+              activeOpacity={0.7}
+              style={styles.addCustomLinkRow}
+            >
+              <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
+              <Text variant="captionSmall" style={styles.addCustomLinkText}>
+                Can't find your scrap type? Tap to add a custom one
+              </Text>
+            </TouchableOpacity>
           </View>
         </Card>
 
@@ -746,228 +915,219 @@ const ConverterRegistrationScreen = () => {
                       watchedValues.raw_material_ids || []
                     )}
                   />
+                  <TouchableOpacity
+                    onPress={() => openCustomEntry({
+                      field: 'raw_material_ids',
+                      title: 'Add Custom Material',
+                      itemLabel: 'material',
+                    })}
+                    activeOpacity={0.7}
+                    style={styles.addCustomLinkRow}
+                  >
+                    <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
+                    <Text variant="captionSmall" style={styles.addCustomLinkText}>
+                      Can't find your material? Tap to add a custom one
+                    </Text>
+                  </TouchableOpacity>
                 </>
               )}
             />
           </View>
         </Card>
 
-        {/* Factory Address Card */}
+        {/* Factory Address — same structured form as other roles (no map) */}
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconContainer}>
               <AppIcon.Location width={20} height={20} color={theme.colors.primary.DEFAULT} />
             </View>
             <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
-              Factory Address
+              Factory address
             </Text>
           </View>
-
-          {/* State */}
-          <View style={styles.formGroup}>
-            <Controller
-              control={control}
-              name="factory_state"
-              rules={validationRules.required('Please select a state') as any}
-              render={({ field: { value }, fieldState: { error } }) => (
-                <>
-                  <View style={styles.labelRow}>
-                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                      State
-                    </Text>
-                  </View>
-                  <DropdownButton
-                    value={value}
-                    placeholder="Select State"
-                    onPress={openStateSelector}
-                    disabled={hasPrefilledCompanyDetails}
-                  />
-                </>
-              )}
-            />
-          </View>
-
-          {/* City */}
-          <View style={styles.formGroup}>
-            <Controller
-              control={control}
-              name="factory_city"
-              rules={validationRules.required('Please select a city') as any}
-              render={({ field: { value }, fieldState: { error } }) => (
-                <>
-                  <View style={styles.labelRow}>
-                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                      City
-                    </Text>
-                  </View>
-                  <DropdownButton
-                    value={value}
-                    placeholder={factoryStateValue ? 'Select City' : 'Select State first'}
-                    onPress={openCitySelector}
-                    disabled={hasPrefilledCompanyDetails || !factoryStateValue}
-                  />
-                </>
-              )}
-            />
-          </View>
-
-          {/* Address */}
-          <View style={styles.formGroup}>
-            <Controller
-              control={control}
-              name="factory_address"
-              rules={validationRules.required('Please enter factory address') as any}
-              render={({ field: { value, onChange }, fieldState: { error } }) => (
-                <>
-                  <View style={styles.labelRow}>
-                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                      Address
-                    </Text>
-                  </View>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIconLeft}>
-                      <AppIcon.Location
-                        width={20}
-                        height={20}
-                        color={theme.colors.text.tertiary}
-                      />
-                    </View>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter address or locality"
-                      placeholderTextColor={theme.colors.text.tertiary}
-                      value={value}
-                      onChangeText={onChange}
-                      multiline
-                      numberOfLines={2}
-                    />
-                  </View>
-                </>
-              )}
-            />
-          </View>
-
-          {/* Location */}
-          <View style={styles.formGroup}>
-            <Controller
-              control={control}
-              name="factory_location"
-              rules={validationRules.required('Please select or enter location') as any}
-              render={({ field: { value }, fieldState: { error } }) => (
-                <>
-                  <View style={styles.labelRow}>
-                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                      Location
-                    </Text>
-                  </View>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIconLeft}>
-                      <AppIcon.Location
-                        width={20}
-                        height={20}
-                        color={theme.colors.text.tertiary}
-                      />
-                    </View>
-                    {showManualLocationEntry ? (
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter location manually"
-                        placeholderTextColor={theme.colors.text.tertiary}
-                        value={value}
-                        onChangeText={(text) => {
-                          setValue('factory_location', text, { shouldValidate: true });
-                        }}
-                      />
-                    ) : (
-                      <TouchableOpacity
-                        style={{ flex: 1, justifyContent: 'center' }}
-                        onPress={() => setShowLocationPicker(true)}
-                        activeOpacity={0.7}
-                      >
-                        <Text
-                          variant="bodyMedium"
-                          style={[
-                            !value
-                              ? { color: theme.colors.text.tertiary }
-                              : { color: theme.colors.text.primary },
-                          ]}
-                        >
-                          {value || 'Select location on map'}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    <View style={styles.inputIconRight}>
-                      <TouchableOpacity
-                        onPress={() => {
-                          setShowManualLocationEntry(!showManualLocationEntry);
-                          if (!showManualLocationEntry) {
-                            setValue('factory_location', '', { shouldValidate: true });
-                            setValue('factory_latitude', 0, { shouldValidate: true });
-                            setValue('factory_longitude', 0, { shouldValidate: true });
-                          }
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <AppIcon.Search
-                          width={20}
-                          height={20}
-                          color={theme.colors.text.tertiary}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  {!showManualLocationEntry && (
-                    <TouchableOpacity
-                      onPress={() => setShowLocationPicker(true)}
-                      style={{
-                        marginTop: theme.spacing[2],
-                        padding: theme.spacing[2],
-                        backgroundColor: theme.colors.primary.DEFAULT,
-                        borderRadius: 8,
-                        alignItems: 'center',
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <Text
-                        variant="bodyMedium"
-                        style={{ color: theme.colors.text.inverse }}
-                      >
-                        {value ? 'Change Location on Map' : 'Select Location on Map'}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </>
-              )}
-            />
-          </View>
+          <Text variant="bodySmall" style={{ color: theme.colors.text.secondary, marginBottom: theme.spacing[3] }}>
+            Enter your full address in the form. This is the same format used for warehouses and other registrations.
+          </Text>
+          {factoryStateValue || factoryCityValue || factoryAddressValue ? (
+            <Text variant="bodyMedium" style={{ marginBottom: theme.spacing[3] }}>
+              {[factoryAddressValue, factoryCityValue, factoryStateValue].filter(Boolean).join(', ')}
+              {factoryLocationValue ? `\n${factoryLocationValue}` : ''}
+            </Text>
+          ) : (
+            <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary, marginBottom: theme.spacing[3] }}>
+              No address entered yet
+            </Text>
+          )}
+          <CustomButton
+            title={factoryAddressValue ? 'Edit factory address' : 'Enter factory address'}
+            onPress={openFactoryAddressModal}
+            variant="primary"
+            size="md"
+          />
         </Card>
 
-        {/* Location Picker Modal */}
+        {/* Add Custom Entry Modal */}
         <Modal
-          visible={showLocationPicker}
-          animationType="slide"
-          presentationStyle="fullScreen"
-          onRequestClose={() => setShowLocationPicker(false)}
+          visible={!!customEntry}
+          transparent
+          animationType="fade"
+          onRequestClose={closeCustomEntry}
         >
-          <LocationPicker
-            initialLocation={
-              factoryLatitudeValue && factoryLongitudeValue
-                ? {
-                    latitude: factoryLatitudeValue,
-                    longitude: factoryLongitudeValue,
-                    address: {
-                      formattedAddress: factoryLocationValue || '',
-                      streetAddress: factoryLocationValue || '',
-                    },
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+              <View style={styles.modalCard}>
+              <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+                {customEntry?.title ?? ''}
+              </Text>
+
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                style={styles.customEntryScroll}
+              >
+                <Text variant="captionSmall" style={styles.customEntryFieldLabel}>
+                  Name
+                </Text>
+                <TextInput
+                  style={styles.customMaterialInput}
+                  placeholder={`Enter ${customEntry?.itemLabel ?? ''} name`}
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={customEntryName}
+                  onChangeText={setCustomEntryName}
+                  editable={!isCreatingCustom}
+                  autoFocus
+                />
+
+                {customEntryConfig && (
+                  <>
+                    <Text variant="captionSmall" style={styles.customEntryFieldLabel}>
+                      {customEntryConfig.secondaryLabel}
+                      <Text variant="captionSmall" style={styles.customEntryOptionalHint}>
+                        {'  (optional)'}
+                      </Text>
+                    </Text>
+                    <View style={styles.customEntryChipsRow}>
+                      {customEntryConfig.existingOptions.map((option) => {
+                        const selected = customEntrySecondary === option;
+                        return (
+                          <TouchableOpacity
+                            key={option}
+                            disabled={isCreatingCustom}
+                            onPress={() => {
+                              setCustomEntrySecondary(selected ? '' : option);
+                              setCustomEntrySecondaryOther('');
+                            }}
+                            activeOpacity={0.7}
+                            style={[
+                              styles.customEntryChip,
+                              selected && styles.customEntryChipSelected,
+                            ]}
+                          >
+                            <Text
+                              variant="captionSmall"
+                              style={[
+                                styles.customEntryChipText,
+                                selected && styles.customEntryChipTextSelected,
+                              ]}
+                            >
+                              {option}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                      <TouchableOpacity
+                        disabled={isCreatingCustom}
+                        onPress={() => {
+                          setCustomEntrySecondary(
+                            customEntrySecondary === '__other__' ? '' : '__other__'
+                          );
+                        }}
+                        activeOpacity={0.7}
+                        style={[
+                          styles.customEntryChip,
+                          customEntrySecondary === '__other__' && styles.customEntryChipSelected,
+                        ]}
+                      >
+                        <Text
+                          variant="captionSmall"
+                          style={[
+                            styles.customEntryChipText,
+                            customEntrySecondary === '__other__' && styles.customEntryChipTextSelected,
+                          ]}
+                        >
+                          Other
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {customEntrySecondary === '__other__' && (
+                      <TextInput
+                        style={styles.customMaterialInput}
+                        placeholder={`Enter custom ${customEntryConfig.secondaryLabel.toLowerCase()}`}
+                        placeholderTextColor={theme.colors.text.tertiary}
+                        value={customEntrySecondaryOther}
+                        onChangeText={setCustomEntrySecondaryOther}
+                        editable={!isCreatingCustom}
+                      />
+                    )}
+
+                    {customEntryConfig.showDescription && (
+                      <>
+                        <Text variant="captionSmall" style={styles.customEntryFieldLabel}>
+                          Description
+                          <Text variant="captionSmall" style={styles.customEntryOptionalHint}>
+                            {'  (optional)'}
+                          </Text>
+                        </Text>
+                        <TextInput
+                          style={[styles.customMaterialInput, styles.customEntryDescriptionInput]}
+                          placeholder="Add a short description"
+                          placeholderTextColor={theme.colors.text.tertiary}
+                          value={customEntryDescription}
+                          onChangeText={setCustomEntryDescription}
+                          editable={!isCreatingCustom}
+                          multiline
+                          numberOfLines={3}
+                        />
+                      </>
+                    )}
+                  </>
+                )}
+              </ScrollView>
+
+              <View style={styles.modalActions}>
+                <CustomButton
+                  title="Cancel"
+                  onPress={closeCustomEntry}
+                  variant="outline"
+                  size="md"
+                  style={styles.modalCancelButton}
+                />
+                <CustomButton
+                  title="Add"
+                  onPress={handleAddCustom}
+                  variant="gradient"
+                  size="md"
+                  loading={isCreatingCustom}
+                  disabled={
+                    isCreatingCustom ||
+                    !customEntryName.trim() ||
+                    (customEntrySecondary === '__other__' && !customEntrySecondaryOther.trim())
                   }
-                : undefined
-            }
-            onLocationSelect={handleLocationSelect}
-            onCancel={() => setShowLocationPicker(false)}
-            allowMapTap={true}
-            confirmButtonText="Confirm Location"
-            title="Select Factory Location"
-          />
+                  gradientColors={[
+                    theme.colors.primary[400],
+                    theme.colors.primary.DEFAULT,
+                  ]}
+                  gradientStart={{ x: 0, y: 0 }}
+                  gradientEnd={{ x: 1, y: 1 }}
+                  style={styles.addMaterialButton}
+                />
+              </View>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
         </Modal>
 
       </Animated.View>
@@ -1005,36 +1165,19 @@ const ConverterRegistrationScreen = () => {
           </FloatingBottomContainer>
         )}
 
-        <GorhomBottomSheetModal
-          ref={stateSheetRef}
-          snapPoints={['70%', '95%']}
-          enablePanDownToClose
-          onDismiss={() => setStateSearchQuery('')}
-        >
-          <StateSelectionContent
-            searchQuery={stateSearchQuery}
-            onSearchChange={setStateSearchQuery}
-            selectedState={factoryStateValue}
-            onSelect={handleStateSelect}
-            theme={theme}
-            ListComponent={BottomSheetFlatList}
+        {factoryAddressMapSeed && (
+          <StructuredAddressFormModal
+            visible={showFactoryAddressModal}
+            title="Factory address"
+            onDismiss={closeFactoryAddressModal}
+            mapData={factoryAddressMapSeed}
+            existingLocation={null}
+            coordinatesOverride={LOCATION_FALLBACK_COORDINATES}
+            showNameField={false}
+            onSubmit={handleFactoryStructuredAddressSubmit}
+            submitLabel="Save address"
           />
-        </GorhomBottomSheetModal>
-
-        <GorhomBottomSheetModal
-          ref={citySheetRef}
-          snapPoints={['70%', '95%']}
-          enablePanDownToClose
-        >
-          <CitySelectionContent
-            selectedCity={factoryCityValue}
-            selectedStateName={factoryStateValue}
-            cities={citiesForState}
-            onSelect={handleCitySelect}
-            theme={theme}
-            ListComponent={BottomSheetFlatList}
-          />
-        </GorhomBottomSheetModal>
+        )}
 
         {multiSelectConfig && (
           <GorhomBottomSheetModal

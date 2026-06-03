@@ -226,14 +226,23 @@ export const BrandRTDMarketplaceScreen: React.FC<
     );
   }, [isFetchingNextPage, theme]);
 
+  const listContentStyle = useMemo(
+    () => [
+      styles.listContent,
+      products.length === 0 ? styles.listContentFillWhenEmpty : null,
+    ],
+    [styles.listContent, styles.listContentFillWhenEmpty, products.length],
+  );
+
   return (
     <BottomSheetModalProvider>
       <View style={styles.container}>
         <FlatList
+          style={styles.list}
           data={products}
           renderItem={renderItem}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={listContentStyle}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmpty}
           ListFooterComponent={renderFooter}

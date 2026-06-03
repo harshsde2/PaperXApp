@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { View, useWindowDimensions, StyleSheet } from 'react-native';
+import {
+  View,
+  useWindowDimensions,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Controller } from 'react-hook-form';
 import { Text } from '@shared/components/Text';
 import { OtpInput, OtpInputRef } from 'react-native-otp-entry';
@@ -32,6 +40,7 @@ const OTPVerificationScreen = () => {
   const { mobile, purpose } = route.params;
   const theme = useTheme();
   const styles = createStyles(theme);
+  const headerHeight = useHeaderHeight();
   const { width, height } = useWindowDimensions();
 
   const [timeLeft, setTimeLeft] = useState(120);
@@ -338,9 +347,8 @@ const OTPVerificationScreen = () => {
 
   return (
     <ScreenWrapper
-      scrollable
       safeArea={true}
-      safeAreaEdges={['top']}
+      safeAreaEdges={[]}
       gradient="linear"
       gradientColors={gradientColors}
       gradientStart={{ x: 1, y: 0 }}
@@ -348,95 +356,107 @@ const OTPVerificationScreen = () => {
       // backgroundElement={GridBackground}
       statusBarStyle="dark-content"
       paddingHorizontal={theme.spacing[4]}
-      contentContainerStyle={styles.scrollContent}
     >
-      <View style={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+      >
+        <View style={styles.kavInner}>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.content}>
+              <View style={styles.shieldContainer}>
+                <View style={styles.shieldIconWrapper}>
+                  <AppIcon.Security
+                    width={50}
+                    height={50}
+                    color={theme.colors.primary.DEFAULT}
+                  />
+                </View>
+              </View>
 
-        <View style={styles.shieldContainer}>
-          <View style={styles.shieldIconWrapper}>
-            <AppIcon.Security
-              width={50}
-              height={50}
-              color={theme.colors.primary.DEFAULT}
+              <Text variant="h1" style={styles.codeTitle}>
+                Enter Authentication Code
+              </Text>
+              <Text variant="bodyMedium" style={styles.subtitle}>
+                Please enter the 6-digit code sent to your mobile device ending in{' '}
+                <Text style={styles.boldText}>{lastTwoDigits}</Text>.
+              </Text>
+              <View style={styles.otpInputContainer}>
+                <Controller
+                  control={control}
+                  name="otp"
+                  rules={{
+                    required: 'Please enter the OTP',
+                    minLength: {
+                      value: 6,
+                      message: 'OTP must be 6 digits',
+                    },
+                    maxLength: {
+                      value: 6,
+                      message: 'OTP must be 6 digits',
+                    },
+                    pattern: {
+                      value: /^[0-9]{6}$/,
+                      message: 'Please enter a valid 6-digit OTP',
+                    },
+                  }}
+                  render={() => (
+                    <OtpInput
+                      ref={otpInputRef}
+                      numberOfDigits={6}
+                      onTextChange={(text: string) => {
+                        setValue('otp', text, { shouldValidate: true });
+                      }}
+                      onFilled={(code: string) => {
+                        handleOTPComplete(code);
+                      }}
+                      focusColor={theme.colors.primary.DEFAULT}
+                      theme={{
+                        containerStyle: styles.otpContainer,
+                        pinCodeContainerStyle: styles.otpBox,
+                        pinCodeTextStyle: styles.otpText,
+                        focusedPinCodeContainerStyle: styles.otpBoxFocused,
+                      }}
+                    />
+                  )}
+                />
+              </View>
+              <View style={styles.timerContainer}>
+                <Text variant="captionMedium" style={styles.timerText}>
+                  Code expires in{' '}
+                  <Text style={styles.boldText}>{formatTime(timeLeft)}</Text>
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+          <View style={styles.footer}>
+            <CustomButton
+              title="Verify & Proceed"
+              onPress={handleSubmit(onSubmit, onInvalid)}
+              variant="gradient"
+              fullWidth
+              size="md"
+              loading={isVerifyingOTP}
+              disabled={isVerifyingOTP || isSendingOTP}
+              gradientColors={[
+                theme.colors.primary[400],
+                theme.colors.primary[600],
+                theme.colors.primary.DEFAULT,
+              ]}
+              gradientStart={{ x: 0, y: 0 }}
+              gradientEnd={{ x: 1, y: 1 }}
+              rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
             />
           </View>
         </View>
-
-        <Text variant="h1" style={styles.codeTitle}>
-          Enter Authentication Code
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          Please enter the 6-digit code sent to your mobile device ending in{' '}
-          <Text style={styles.boldText}>{lastTwoDigits}</Text>.
-        </Text>
-        <View style={styles.otpInputContainer}>
-          <Controller
-            control={control}
-            name="otp"
-            rules={{
-              required: 'Please enter the OTP',
-              minLength: {
-                value: 6,
-                message: 'OTP must be 6 digits',
-              },
-              maxLength: {
-                value: 6,
-                message: 'OTP must be 6 digits',
-              },
-              pattern: {
-                value: /^[0-9]{6}$/,
-                message: 'Please enter a valid 6-digit OTP',
-              },
-            }}
-            render={() => (
-              <OtpInput
-                ref={otpInputRef}
-                numberOfDigits={6}
-                onTextChange={(text: string) => {
-                  setValue('otp', text, { shouldValidate: true });
-                }}
-                onFilled={(code: string) => {
-                  handleOTPComplete(code);
-                }}
-                focusColor={theme.colors.primary.DEFAULT}
-                theme={{
-                  containerStyle: styles.otpContainer,
-                  pinCodeContainerStyle: styles.otpBox,
-                  pinCodeTextStyle: styles.otpText,
-                  focusedPinCodeContainerStyle: styles.otpBoxFocused,
-                }}
-              />
-            )}
-          />
-
-        </View>
-        <View style={styles.timerContainer}>
-          <Text variant="captionMedium" style={styles.timerText}>
-            Code expires in{' '}
-            <Text style={styles.boldText}>{formatTime(timeLeft)}</Text>
-          </Text>
-        </View>
-
-      </View>
-      <View style={styles.footer}>
-        <CustomButton
-          title="Verify & Proceed"
-          onPress={handleSubmit(onSubmit, onInvalid)}
-          variant="gradient"
-          fullWidth
-          size="md"
-          loading={isVerifyingOTP}
-          disabled={isVerifyingOTP || isSendingOTP}
-          gradientColors={[
-            theme.colors.primary[400],
-            theme.colors.primary[600],
-            theme.colors.primary.DEFAULT,
-          ]}
-          gradientStart={{ x: 0, y: 0 }}
-          gradientEnd={{ x: 1, y: 1 }}
-          rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
-        />
-      </View>
+      </KeyboardAvoidingView>
 
 
     </ScreenWrapper>

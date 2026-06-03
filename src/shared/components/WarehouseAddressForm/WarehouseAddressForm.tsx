@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { View, Alert, InteractionManager, ScrollView } from 'react-native';
+import { View, Alert, InteractionManager, ScrollView, Platform } from 'react-native';
 import { Controller } from 'react-hook-form';
 import { State, City, ICity } from 'country-state-city';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
@@ -15,6 +15,7 @@ import { useTheme } from '@theme/index';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
 import { validatePincode } from '@shared/location';
+import { useKeyboard } from '@shared/hooks';
 import type { WarehouseFormData, WarehouseAddressFormProps } from './@types';
 import { createStyles } from './styles';
 
@@ -42,12 +43,15 @@ const getCitiesForState = (stateIsoCode: string): ICity[] => {
 export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
   mapData,
   existingLocation,
+  coordinatesOverride,
+  showNameField = true,
   onSubmit,
   onCancel,
   submitLabel = 'Add Location',
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { keyboardHeight } = useKeyboard();
   const styles = createStyles(theme);
   const stateSheetRef = useRef<BottomSheetModal>(null);
   const citySheetRef = useRef<BottomSheetModal>(null);
@@ -126,31 +130,48 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
         return;
       }
 
-      onSubmit({
-        ...data,
+      const coords = coordinatesOverride ?? {
         latitude: mapData.latitude,
         longitude: mapData.longitude,
+      };
+      onSubmit({
+        ...data,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       });
     },
-    [mapData, onSubmit]
+    [mapData, coordinatesOverride, onSubmit]
   );
+
+  const scrollBottomPadding =
+    theme.spacing[10] + insets.bottom + keyboardHeight;
 
   return (
     <BottomSheetModalProvider>
+      <View style={styles.flexFill}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: theme.spacing[8] + insets.bottom }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: scrollBottomPadding },
+        ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior={
+          Platform.OS === 'ios' ? 'automatic' : 'never'
+        }
       >
-        <FormInput
-          name="name"
-          control={control}
-          label="Warehouse Name"
-          helperText="Optional - e.g. Main Warehouse, North Hub"
-          placeholder="e.g. Main Warehouse, North Hub"
-          containerStyle={styles.formGroup}
-        />
+        {showNameField && (
+          <FormInput
+            name="name"
+            control={control}
+            label="Location name"
+            helperText="Optional — e.g. Main warehouse, North hub"
+            placeholder="e.g. Main warehouse"
+            containerStyle={styles.formGroup}
+          />
+        )}
 
         <FormInput
           name="flatHouseNo"
@@ -279,6 +300,7 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
           />
         </View>
       </ScrollView>
+      </View>
 
       <GorhomBottomSheetModal
         ref={stateSheetRef}

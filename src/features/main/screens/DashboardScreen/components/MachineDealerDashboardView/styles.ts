@@ -14,7 +14,7 @@ export const createStyles = (theme: Theme) =>
     },
     contentContainer: {
       paddingBottom: theme.spacing[6],
-      backgroundColor: theme.colors.background.secondary,
+      // Keep transparent so DashboardScreen wrapper gradient is visible.
     },
     creditsBar: {
       flexDirection: 'row',

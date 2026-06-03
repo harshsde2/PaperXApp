@@ -113,6 +113,11 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
   const hasAddress = form.deliveryAddress.trim().length > 0;
   const canSubmit = qty >= (product?.moq ?? 1) && qtyInSlab && hasAddress && !isSubmitting;
 
+  console.log('canSubmit', canSubmit);
+  console.log('qty', qty);
+  console.log('qtyInSlab', qtyInSlab);
+  console.log('hasAddress', hasAddress);
+  console.log('isSubmitting', isSubmitting);
   const handleSubmit = useCallback(() => {
     if (!product || isSubmitting) return;
     if (!form.deliveryAddress.trim()) {

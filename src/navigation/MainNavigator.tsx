@@ -98,7 +98,15 @@ export type MainStackParamList = {
   RegistrationDetails: undefined;
   // Wallet Screens
   WalletMain: undefined;
-  CreditPacks: undefined;
+  /** Optional return target after Razorpay credit purchase (e.g. RTD add product). */
+  CreditPacks:
+    | {
+        returnTo?: {
+          name: keyof MainStackParamList;
+          params?: object;
+        };
+      }
+    | undefined;
   TransactionHistory: undefined;
   AddCustomCredits: undefined;
   // Session Screens

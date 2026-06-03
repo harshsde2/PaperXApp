@@ -3,6 +3,9 @@ import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -134,5 +137,23 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.secondary,
     fontWeight: fontWeightForPlatform('400'),
     fontFamily: theme.fontFamily.regular,
+  },
+  keyboardAccessoryBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.border.primary,
+    backgroundColor: theme.colors.surface.primary,
+    paddingHorizontal: theme.spacing[4],
+    paddingVertical: theme.spacing[2],
+  },
+  keyboardAccessoryDone: {
+    fontSize: 17,
+    fontWeight: fontWeightForPlatform('600'),
+    color: theme.colors.primary.DEFAULT,
+    fontFamily: theme.fontFamily.medium,
+    paddingVertical: theme.spacing[1],
+    paddingHorizontal: theme.spacing[2],
   },
 });

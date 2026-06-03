@@ -2,6 +2,12 @@ import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
+  screenRoot: {
+    flex: 1,
+  },
+  keyboardAvoiding: {
+    flex: 1,
+  },
   scrollContent: {
     flex: 1,
   },

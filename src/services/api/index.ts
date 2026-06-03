@@ -367,6 +367,13 @@ export type {
   PurchaseCreditsCustomRequest,
   PurchaseCreditsRequest,
   PurchaseCreditsResponse,
+  // Razorpay
+  CreateRazorpayOrderRequest,
+  CreateRazorpayExactCreditsOrderRequest,
+  CreateRazorpayOrderResponse,
+  RazorpayOrderPackSummary,
+  VerifyRazorpayPaymentRequest,
+  VerifyRazorpayPaymentResponse,
   // Add
   AddCreditsRequest,
   AddCreditsResponse,
@@ -486,14 +493,18 @@ export {
   useRequestRtdOrder,
   useRequestRtdOrderWithLogo,
   useConfirmRtdPayment,
+  useCreateBrandRtdRazorpayOrder,
+  useVerifyBrandRtdRazorpayPayment,
   useRaiseRtdDispute,
   useCancelRtdOrder,
 } from './brandRtdApi';
+export type { VerifyBrandRtdRazorpayPaymentVariables } from './brandRtdApi';
 export type {
   GetRtdCatalogParams,
   GetRtdCatalogResponse,
   RequestRtdOrderPayload,
   ConfirmRtdPaymentPayload,
+  CreateBrandRtdRazorpayOrderResponse,
 } from './rtdApi/@types';
 
 // ============================================

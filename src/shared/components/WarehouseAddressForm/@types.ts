@@ -25,6 +25,10 @@ export interface WarehouseAddressFormProps {
     name?: string;
     address?: string;
   } | null;
+  /** When set (e.g. no map), submitted coordinates use this instead of mapData lat/lng */
+  coordinatesOverride?: { latitude: number; longitude: number };
+  /** When false, hides the optional location name field */
+  showNameField?: boolean;
   onSubmit: (data: WarehouseFormData & { latitude: number; longitude: number }) => void;
   onCancel: () => void;
   submitLabel?: string;

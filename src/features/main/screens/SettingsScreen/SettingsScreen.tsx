@@ -60,28 +60,28 @@ const SettingsScreen: React.FC = () => {
   };
 
   const settingsSections = [
-    ...(themeContext
-      ? [
-          {
-            title: 'Appearance',
-            items: PALETTE_OPTIONS.map((p) => ({
-                id: `palette-${p.id}`,
-                icon: (
-                  <View
-                    style={[
-                      styles.paletteSwatch,
-                      { backgroundColor: themePalettes[p.id].blue500 },
-                    ]}
-                  />
-                ),
-                title: p.label,
-                type: 'navigation' as const,
-                onPress: () => themeContext.setPalette(p.id),
-                isSelected: themeContext.paletteId === p.id,
-              })),
-          },
-        ]
-      : []),
+    // ...(themeContext
+    //   ? [
+    //       {
+    //         title: 'Appearance',
+    //         items: PALETTE_OPTIONS.map((p) => ({
+    //             id: `palette-${p.id}`,
+    //             icon: (
+    //               <View
+    //                 style={[
+    //                   styles.paletteSwatch,
+    //                   { backgroundColor: themePalettes[p.id].blue500 },
+    //                 ]}
+    //               />
+    //             ),
+    //             title: p.label,
+    //             type: 'navigation' as const,
+    //             onPress: () => themeContext.setPalette(p.id),
+    //             isSelected: themeContext.paletteId === p.id,
+    //           })),
+    //       },
+    //     ]
+    //   : []),
     {
       title: 'Account',
       items: [

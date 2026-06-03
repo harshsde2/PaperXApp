@@ -3,13 +3,22 @@ import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
-  content: {
+  keyboardAvoidingContainer: {
     flex: 1,
+  },
+  kavInner: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
     padding: theme.spacing[4],
     paddingTop: theme.spacing[6],
   },
   scrollContent: {
-    paddingBottom: 120,
+    flexGrow: 1,
+    paddingBottom: theme.spacing[4],
   },
   otpInputContainer: {
     width: '100%',
@@ -131,6 +140,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
+    marginTop: theme.spacing[4],
+    paddingBottom: theme.spacing[8],
   },
   footerText: {
     fontSize: 14,

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -14,11 +14,21 @@ import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
 import {
   useGetBrandRtdOrderDetail,
-  useConfirmRtdPayment,
+  useCreateBrandRtdRazorpayOrder,
+  useVerifyBrandRtdRazorpayPayment,
   useRaiseRtdDispute,
   useCancelRtdOrder,
 } from '@services/api/brandRtdApi';
 import type { RtdOrderStatus } from '@services/api';
+import type { VerifyRazorpayPaymentRequest } from '@services/api/walletApi/@types';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
+import {
+  openRazorpayForBrandRtdOrder,
+  formatPurchaseError,
+  isRazorpaySdkError,
+  isRazorpayUserCancellation,
+} from '@features/wallet/screens/CreditPacksScreen/razorpayCheckout';
 import { BrandOrderTimeline } from '../../components/BrandOrderTimeline';
 import { BrandOrderSummaryCard } from '../../components/BrandOrderSummaryCard';
 import { OrderCountdownTimer } from '../../components/OrderCountdownTimer';
@@ -113,9 +123,16 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
     refetch,
   } = useGetBrandRtdOrderDetail(orderId);
 
-  const confirmPayment = useConfirmRtdPayment();
+  const createRtdRzpOrder = useCreateBrandRtdRazorpayOrder();
+  const verifyRtdRzpPayment = useVerifyBrandRtdRazorpayPayment();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const pendingVerifyRef = useRef<VerifyRazorpayPaymentRequest | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
   const raiseDispute = useRaiseRtdDispute();
   const cancelOrder = useCancelRtdOrder();
+
+  const paying = checkoutBusy || createRtdRzpOrder.isPending || verifyRtdRzpPayment.isPending;
 
   const meta = useMemo(
     () => STATUS_META[activeOrder?.status ?? 'REQUESTED'],
@@ -123,24 +140,94 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   );
   const showSkeleton = useSkeleton(!activeOrder);
 
+  const showVerifyRetry = useCallback(
+    (message: string, orderId: number) => {
+      const body = pendingVerifyRef.current;
+      if (!body) {
+        Alert.alert('Payment', message);
+        return;
+      }
+      Alert.alert('Confirm payment', message, [
+        { text: 'Cancel', style: 'cancel', onPress: () => {} },
+        {
+          text: 'Retry',
+          onPress: async () => {
+            try {
+              await verifyRtdRzpPayment.mutateAsync({ orderId, ...body });
+              pendingVerifyRef.current = null;
+              dispatch(showToast({ message: 'Payment successful', type: 'success' }));
+              await refetch();
+            } catch (e) {
+              Alert.alert('Still could not confirm', formatPurchaseError(e));
+            }
+          },
+        },
+      ]);
+    },
+    [dispatch, refetch, verifyRtdRzpPayment]
+  );
+
+  const runRtdRazorpayCheckout = useCallback(
+    async (orderId: number) => {
+      pendingVerifyRef.current = null;
+      try {
+        const rzOrder = await createRtdRzpOrder.mutateAsync(orderId);
+        setCheckoutBusy(true);
+        const prefillName = user?.company_name?.trim() || undefined;
+        const checkoutResult = await openRazorpayForBrandRtdOrder(rzOrder, {
+          contact: user?.mobile,
+          name: prefillName,
+        });
+        pendingVerifyRef.current = checkoutResult;
+        await verifyRtdRzpPayment.mutateAsync({
+          orderId,
+          ...checkoutResult,
+        });
+        pendingVerifyRef.current = null;
+        dispatch(showToast({ message: 'Payment successful', type: 'success' }));
+        await refetch();
+      } catch (err) {
+        if (isRazorpayUserCancellation(err)) {
+          return;
+        }
+        if (isRazorpaySdkError(err)) {
+          Alert.alert('Payment', formatPurchaseError(err));
+          return;
+        }
+        const msg = formatPurchaseError(err);
+        if (pendingVerifyRef.current) {
+          showVerifyRetry(
+            `${msg}\n\nIf you completed payment in Razorpay, tap Retry to confirm with the server.`,
+            orderId
+          );
+        } else {
+          Alert.alert('Payment failed', msg);
+        }
+      } finally {
+        setCheckoutBusy(false);
+      }
+    },
+    [createRtdRzpOrder, dispatch, refetch, showVerifyRetry, user, verifyRtdRzpPayment]
+  );
+
   const handlePay = useCallback(() => {
     if (!activeOrder) return;
-    Alert.alert('Confirm Payment', 'Proceed to pay for this order?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Pay Now',
-        onPress: () =>
-          confirmPayment.mutate(
-            { order_id: activeOrder.id },
-            {
-              onSuccess: () => refetch(),
-              onError: (err) =>
-                Alert.alert('Error', err?.message ?? 'Payment failed'),
-            },
-          ),
-      },
-    ]);
-  }, [activeOrder, confirmPayment, refetch]);
+    const orderId = activeOrder.id;
+    const total = activeOrder.total_amount;
+    Alert.alert(
+      'Confirm payment',
+      `Pay ₹${total} for this order via Razorpay? You will complete checkout in a secure window.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Pay now',
+          onPress: () => {
+            void runRtdRazorpayCheckout(orderId);
+          },
+        },
+      ]
+    );
+  }, [activeOrder, runRtdRazorpayCheckout]);
 
   const handleRaiseDispute = useCallback(() => {
     if (!activeOrder) return;
@@ -544,11 +631,11 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
         {status === 'ACCEPTED' && (
           <>
             <CustomButton
-              title={confirmPayment.isPending ? 'Processing...' : 'Proceed to Payment'}
+              title={paying ? 'Processing...' : `Pay ₹${activeOrder.total_amount}`}
               onPress={handlePay}
               variant="gradient"
               size="lg"
-              disabled={confirmPayment.isPending}
+              disabled={paying}
             />
             <View style={styles.footerGap} />
             <TouchableOpacity

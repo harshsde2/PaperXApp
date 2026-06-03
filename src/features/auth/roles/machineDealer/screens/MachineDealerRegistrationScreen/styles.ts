@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
+import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -140,5 +141,95 @@ export const createStyles = (theme: Theme) =>
     securityText: {
       color: theme.colors.text.tertiary,
       letterSpacing: 0.5,
+    },
+    addCustomLinkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[1],
+      marginTop: theme.spacing[2],
+      alignSelf: 'flex-start',
+    },
+    addCustomLinkText: {
+      color: theme.colors.primary.DEFAULT,
+      textDecorationLine: 'underline',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: theme.colors.background.overlay,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing[4],
+    },
+    modalCard: {
+      backgroundColor: theme.colors.background.primary,
+      borderRadius: theme.borderRadius.xl,
+      paddingTop: theme.spacing[5],
+      paddingBottom: theme.spacing[6],
+      paddingHorizontal: theme.spacing[5],
+      gap: theme.spacing[3],
+    },
+    modalTitle: {
+      color: theme.colors.text.primary,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: theme.spacing[3],
+    },
+    modalCancelButton: {
+      minWidth: 96,
+    },
+    addMachineButton: {
+      minWidth: 96,
+    },
+    customMachineInput: {
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing[3],
+      fontSize: 16,
+      backgroundColor: theme.colors.surface.primary,
+      color: theme.colors.text.primary,
+      fontFamily: theme.fontFamily.regular,
+    },
+    customEntryScroll: {
+      maxHeight: 360,
+    },
+    customEntryFieldLabel: {
+      color: theme.colors.text.secondary,
+      marginTop: theme.spacing[2],
+      marginBottom: theme.spacing[1],
+    },
+    customEntryOptionalHint: {
+      color: theme.colors.text.tertiary,
+    },
+    customEntryChipsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing[2],
+      marginBottom: theme.spacing[2],
+    },
+    customEntryChip: {
+      paddingVertical: theme.spacing[2],
+      paddingHorizontal: theme.spacing[3],
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      backgroundColor: theme.colors.surface.primary,
+    },
+    customEntryChipSelected: {
+      borderColor: theme.colors.primary.DEFAULT,
+      backgroundColor: theme.colors.primary[50],
+    },
+    customEntryChipText: {
+      color: theme.colors.text.primary,
+    },
+    customEntryChipTextSelected: {
+      color: theme.colors.primary.DEFAULT,
+      fontWeight: fontWeightForPlatform('600'),
+    },
+    customEntryDescriptionInput: {
+      minHeight: 80,
+      textAlignVertical: 'top',
     },
   });

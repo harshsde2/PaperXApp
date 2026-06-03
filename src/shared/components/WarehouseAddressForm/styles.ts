@@ -3,6 +3,9 @@ import type { Theme } from '@theme/types';
 
 export const createStyles = (theme: Theme) =>
   StyleSheet.create({
+    flexFill: {
+      flex: 1,
+    },
     container: {
       flex: 1,
       padding: theme.spacing[4],

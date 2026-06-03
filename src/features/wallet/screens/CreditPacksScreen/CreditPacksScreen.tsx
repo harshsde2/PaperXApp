@@ -3,7 +3,7 @@
  * Premium credit pack purchase experience with rich gradient backgrounds
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -22,26 +22,26 @@ import { AppIcon } from '@assets/svgs';
 import {
   useGetWalletBalance,
   useGetCreditPacks,
-  usePurchaseCredits,
+  useCreateRazorpayOrder,
+  useVerifyRazorpayPayment,
   CreditPack,
-  PaymentMethod,
 } from '@services/api';
-import { useAppDispatch } from '@store/hooks';
+import type { VerifyRazorpayPaymentRequest } from '@services/api/walletApi/@types';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { useSkeleton } from '@shared/hooks/useSkeleton';
 import { WalletSkeleton } from '@shared/components/skeletons';
 import { createStyles, DARK_THEME } from './styles';
-import { PaymentMethodOption } from './@types';
+import {
+  formatPurchaseError,
+  isRazorpaySdkError,
+  isRazorpayUserCancellation,
+  openRazorpayForWalletOrder,
+} from './razorpayCheckout';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type PackTier = 'starter' | 'growth' | 'business' | 'enterprise';
-
-const PAYMENT_METHODS: PaymentMethodOption[] = [
-  { id: 'upi', name: 'UPI', icon: '📱', value: 'UPI' },
-  { id: 'netbanking', name: 'Net Banking', icon: '🏦', value: 'NET_BANKING' },
-  { id: 'cards', name: 'Cards', icon: '💳', value: 'CARDS' },
-];
 
 // Get tier based on pack slug or index
 const getPackTier = (pack: CreditPack, index: number): PackTier => {
@@ -86,6 +86,7 @@ const CreditPacksScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
 
   const { data: wallet } = useGetWalletBalance();
   const {
@@ -95,22 +96,118 @@ const CreditPacksScreen = () => {
     error: packsErrorMessage,
     refetch: refetchPacks,
   } = useGetCreditPacks();
-  const { mutate: purchaseCredits, isPending: purchasing } = usePurchaseCredits();
+  const { mutateAsync: createRazorpayOrder, isPending: creatingOrder } = useCreateRazorpayOrder();
+  const { mutateAsync: verifyRazorpayPayment, isPending: verifyingPayment } =
+    useVerifyRazorpayPayment();
   const showSkeleton = useSkeleton(packsLoading);
 
-  // console.log('creditPacks', JSON.stringify(creditPacks, null, 2));
-
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<PaymentMethod>('UPI');
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const pendingVerifyRef = useRef<VerifyRazorpayPaymentRequest | null>(null);
+
+  const purchasing = creatingOrder || verifyingPayment || checkoutBusy;
+
+  /** Resume flows push CreditPacks on top of the caller; pop preserves that screen's state (e.g. RTD draft form). */
+  const navigateAfterSuccessfulPurchase = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  useEffect(() => {
+    if (__DEV__) {
+      // If you still see POST /wallet/purchase in logs, Metro is serving an old bundle — reset cache and rebuild.
+      console.log('[CreditPacksScreen] wallet pay flow: razorpay (create order + checkout + verify)');
+    }
+  }, []);
 
   const handlePackSelect = useCallback((pack: CreditPack) => {
     setSelectedPack(pack);
   }, []);
 
-  const handlePaymentMethodSelect = useCallback((method: PaymentMethod) => {
-    setSelectedPaymentMethod(method);
-  }, []);
+  const showVerifyRetry = useCallback(
+    (message: string) => {
+      const body = pendingVerifyRef.current;
+      if (!body) {
+        Alert.alert('Payment', message);
+        return;
+      }
+      Alert.alert('Confirm payment', message, [
+        { text: 'Cancel', style: 'cancel', onPress: () => {} },
+        {
+          text: 'Retry',
+          onPress: async () => {
+            try {
+              const res = await verifyRazorpayPayment(body);
+              pendingVerifyRef.current = null;
+              dispatch(
+                showToast({
+                  message: `Successfully purchased ${res.credits_added} credits!`,
+                  type: 'success',
+                })
+              );
+              navigateAfterSuccessfulPurchase();
+            } catch (e) {
+              Alert.alert('Still could not confirm', formatPurchaseError(e));
+            }
+          },
+        },
+      ]);
+    },
+    [dispatch, navigateAfterSuccessfulPurchase, verifyRazorpayPayment]
+  );
+
+  const runRazorpayPurchase = useCallback(async () => {
+    if (!selectedPack) {
+      return;
+    }
+    pendingVerifyRef.current = null;
+    try {
+      const order = await createRazorpayOrder({
+        credit_pack_id: selectedPack.id,
+      });
+      setCheckoutBusy(true);
+      const prefillName = user?.company_name?.trim() || undefined;
+      const checkoutResult = await openRazorpayForWalletOrder(order, {
+        contact: user?.mobile,
+        name: prefillName,
+      });
+      pendingVerifyRef.current = checkoutResult;
+      const response = await verifyRazorpayPayment(checkoutResult);
+      pendingVerifyRef.current = null;
+      dispatch(
+        showToast({
+          message: `Successfully purchased ${response.credits_added} credits!`,
+          type: 'success',
+        })
+      );
+      navigateAfterSuccessfulPurchase();
+    } catch (err) {
+      if (isRazorpayUserCancellation(err)) {
+        return;
+      }
+      if (isRazorpaySdkError(err)) {
+        Alert.alert('Payment', formatPurchaseError(err));
+        return;
+      }
+      const msg = formatPurchaseError(err);
+      if (pendingVerifyRef.current) {
+        showVerifyRetry(
+          `${msg}\n\nIf you completed payment in Razorpay, tap Retry to confirm with the server.`
+        );
+      } else {
+        Alert.alert('Purchase Failed', msg);
+      }
+    } finally {
+      setCheckoutBusy(false);
+    }
+  }, [
+    selectedPack,
+    user,
+    createRazorpayOrder,
+    verifyRazorpayPayment,
+    dispatch,
+    navigateAfterSuccessfulPurchase,
+    showVerifyRetry,
+  ]);
 
   const handlePurchase = useCallback(() => {
     if (!selectedPack) {
@@ -126,35 +223,12 @@ const CreditPacksScreen = () => {
         {
           text: 'Confirm & Pay',
           onPress: () => {
-            purchaseCredits(
-              {
-                credit_pack_id: selectedPack.id,
-                payment_method: selectedPaymentMethod,
-              },
-              {
-                onSuccess: (response) => {
-                  dispatch(
-                    showToast({
-                      message: `Successfully purchased ${response.credits_added} credits!`,
-                      type: 'success',
-                    })
-                  );
-                  navigation.goBack();
-                },
-                onError: (error: any) => {
-                  const errorMessage =
-                    error?.response?.data?.message ||
-                    error?.message ||
-                    'Failed to purchase credits. Please try again.';
-                  Alert.alert('Purchase Failed', errorMessage);
-                },
-              }
-            );
+            runRazorpayPurchase().catch(() => {});
           },
         },
       ]
     );
-  }, [selectedPack, selectedPaymentMethod, purchaseCredits, dispatch, navigation]);
+  }, [selectedPack, runRazorpayPurchase]);
 
   const formatPrice = (price: number): string => {
     return price.toLocaleString('en-IN');
@@ -262,7 +336,7 @@ const CreditPacksScreen = () => {
   const cardWidth = SCREEN_WIDTH - CARD_PADDING;
 
   return (
-    <ScreenWrapper safeAreaEdges={['top']} backgroundColor={DARK_THEME.background}>
+    <ScreenWrapper safeAreaEdges={[]} backgroundColor={DARK_THEME.background}>
       <StatusBar barStyle="light-content" backgroundColor={DARK_THEME.background} />
       <ScrollView
         style={styles.container}
@@ -433,59 +507,12 @@ const CreditPacksScreen = () => {
         {selectedPack && (
           <>
             <View style={styles.paymentSection}>
-              <Text style={styles.sectionLabel}>Payment Method</Text>
-              <View style={styles.paymentMethodsRow}>
-                {PAYMENT_METHODS.map((method) => {
-                  const isMethodSelected = selectedPaymentMethod === method.value;
-                  return (
-                    <TouchableOpacity
-                      key={method.id}
-                      style={styles.paymentMethodWrapper}
-                      onPress={() => handlePaymentMethodSelect(method.value)}
-                      activeOpacity={0.85}
-                      disabled={purchasing}
-                    >
-                      {/* Gradient Background */}
-                      <Canvas style={styles.paymentGradientCanvas}>
-                        <RoundedRect x={0} y={0} width={(cardWidth - 24) / 3} height={100} r={16}>
-                          <LinearGradient
-                            start={vec(0, 0)}
-                            end={vec((cardWidth - 24) / 3, 100)}
-                            colors={
-                              isMethodSelected
-                                ? ['#1A1500', '#2D2200', '#1A1500']
-                                : ['#13131A', '#1A1A24', '#13131A']
-                            }
-                          />
-                        </RoundedRect>
-                      </Canvas>
-                      <View
-                        style={[
-                          styles.paymentBorderOverlay,
-                          isMethodSelected && styles.paymentBorderSelected,
-                        ]}
-                      />
-                      <View style={styles.paymentMethodContent}>
-                        <View
-                          style={[
-                            styles.paymentMethodIconWrapper,
-                            isMethodSelected && styles.paymentMethodIconWrapperSelected,
-                          ]}
-                        >
-                          <Text style={styles.paymentMethodIcon}>{method.icon}</Text>
-                        </View>
-                        <Text
-                          style={[
-                            styles.paymentMethodName,
-                            isMethodSelected && styles.paymentMethodNameSelected,
-                          ]}
-                        >
-                          {method.name}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+              <Text style={styles.sectionLabel}>Payment</Text>
+              <View style={styles.razorpayHintBox}>
+                <Text style={styles.razorpayHintText}>
+                  You will complete UPI, card, or net banking in the secure Razorpay checkout
+                  window. Your card or UPI details are never stored on this device.
+                </Text>
               </View>
             </View>
 

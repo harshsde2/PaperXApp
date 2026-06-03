@@ -1,9 +1,16 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import type { Theme } from '@theme/types';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 
-export const createStyles = (theme: Theme) =>
-  StyleSheet.create({
+export const createStyles = (theme: Theme) => {
+  const h4 = theme.typography.heading.h4;
+  /** Match ± buttons */
+  const quantityInputHeight = 40;
+  /** Shorter than outer so the field can vertically center inside the pill (Android expands TextInput otherwise). */
+  const quantityInputInnerHeight =
+    typeof h4.fontSize === 'number' ? Math.ceil(h4.fontSize * 1.35) : 28;
+
+  return StyleSheet.create({
     card: {
       backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.card.lg,
@@ -31,11 +38,33 @@ export const createStyles = (theme: Theme) =>
       color: theme.colors.text.primary,
       fontWeight: fontWeightForPlatform('600'),
     },
-    quantityValue: {
+    quantityInputOuter: {
+      height: quantityInputHeight,
+      minWidth: 64,
+      maxWidth: 120,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing[2],
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.button.md,
+      backgroundColor: theme.colors.surface.secondary,
+    },
+    quantityInput: {
+      width: '100%',
+      height: quantityInputInnerHeight,
+      lineHeight: quantityInputInnerHeight,
+      margin: 0,
+      paddingVertical: 0,
+      paddingHorizontal: 0,
+      borderWidth: 0,
+      backgroundColor: 'transparent',
+      fontSize: h4.fontSize,
       color: theme.colors.text.primary,
-      fontWeight: fontWeightForPlatform('700'),
-      minWidth: 48,
       textAlign: 'center',
+      fontFamily: theme.fontFamily.bold,
+      ...(Platform.OS === 'android'
+        ? { textAlignVertical: 'center' as const, includeFontPadding: false }
+        : {}),
     },
     separator: {
       height: 1,
@@ -101,3 +130,4 @@ export const createStyles = (theme: Theme) =>
       fontSize: 11,
     },
   });
+};

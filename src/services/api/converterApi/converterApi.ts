@@ -18,6 +18,7 @@ import type {
 } from './@types';
 import type { PostRequirementRequest, PostRequirementResponse } from '../dealerApi/@types';
 import type { PostMachineRequest } from '../machineDealerApi/@types';
+import type { Machine } from '../referenceApi/@types';
 import type {
   JobworkPostResponse,
   PostJobworkFindPayload,
@@ -201,6 +202,63 @@ export const useGetConverterReferenceData = () => {
       };
     },
     staleTime: 1000 * 60 * 30, // 30 minutes - reference data doesn't change often
+  });
+};
+
+export const useCreateFinishedProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { name: string; category?: string | null; description?: string | null }): Promise<FinishedProduct> => {
+      const payload: Record<string, string> = { name: params.name.trim() };
+      if (params.category && params.category.trim()) payload.category = params.category.trim();
+      if (params.description && params.description.trim()) payload.description = params.description.trim();
+      const response = await api.post(REFERENCE_ENDPOINTS.FINISHED_PRODUCTS, payload);
+      const responseData = response.data as any;
+      return responseData?.data ?? responseData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['converter-reference-data'] });
+      queryClient.invalidateQueries({ queryKey: ['finished-products'] });
+    },
+  });
+};
+
+export const useCreateMachine = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { name: string; type?: string | null; description?: string | null }): Promise<Machine> => {
+      const payload: Record<string, string> = { name: params.name.trim() };
+      if (params.type && params.type.trim()) payload.type = params.type.trim();
+      if (params.description && params.description.trim()) payload.description = params.description.trim();
+      const response = await api.post(REFERENCE_ENDPOINTS.MACHINES, payload);
+      const responseData = response.data as any;
+      return responseData?.data ?? responseData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['converter-reference-data'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reference.machines() });
+    },
+  });
+};
+
+export const useCreateScrapType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { name: string; category?: string | null; description?: string | null }): Promise<ScrapType> => {
+      const payload: Record<string, string> = { name: params.name.trim() };
+      if (params.category && params.category.trim()) payload.category = params.category.trim();
+      if (params.description && params.description.trim()) payload.description = params.description.trim();
+      const response = await api.post(REFERENCE_ENDPOINTS.SCRAP_TYPES, payload);
+      const responseData = response.data as any;
+      return responseData?.data ?? responseData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['converter-reference-data'] });
+      queryClient.invalidateQueries({ queryKey: ['scrap-types'] });
+    },
   });
 };
 

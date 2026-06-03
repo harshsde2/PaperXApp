@@ -23,7 +23,10 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
   visible,
   onClose,
   onPurchaseSuccess,
-  onAddCredits,
+  walletBalance,
+  walletBalanceLoading = false,
+  onInsufficientBalanceForPack,
+  onBuyWalletCredits,
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -33,6 +36,14 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
 
   const handleBuy = useCallback(
     async (pack: RtdListingPackItem) => {
+      if (walletBalanceLoading) {
+        return;
+      }
+      if (walletBalance < pack.price) {
+        onInsufficientBalanceForPack?.(pack);
+        return;
+      }
+
       setPurchasingPackSlug(pack.slug);
       try {
         await purchaseMutation.mutateAsync({ pack_slug: pack.slug });
@@ -49,17 +60,31 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
           typeof message === 'string' &&
           (message.toLowerCase().includes('insufficient') ||
             message.toLowerCase().includes('balance'));
-        if (isInsufficientBalance && onAddCredits) {
+        if (isInsufficientBalance && onBuyWalletCredits) {
           Alert.alert('Purchase failed', message, [
             { text: 'OK' },
-            { text: 'Add credits', onPress: () => { onClose(); onAddCredits(); } },
+            {
+              text: 'Add credits',
+              onPress: () => {
+                onClose();
+                onBuyWalletCredits();
+              },
+            },
           ]);
         } else {
           Alert.alert('Purchase failed', message);
         }
       }
     },
-    [purchaseMutation, onClose, onPurchaseSuccess, onAddCredits]
+    [
+      walletBalance,
+      walletBalanceLoading,
+      onInsufficientBalanceForPack,
+      purchaseMutation,
+      onClose,
+      onPurchaseSuccess,
+      onBuyWalletCredits,
+    ]
   );
 
   if (!visible) return null;
@@ -108,7 +133,8 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
                     )}
                     <Text style={styles.packName}>{pack.name}</Text>
                     <Text style={styles.packMeta}>
-                      {pack.product_limit} product{pack.product_limit !== 1 ? 's' : ''} · {pack.validity_days} days validity
+                      {pack.product_limit} product{pack.product_limit !== 1 ? 's' : ''} ·{' '}
+                      {pack.validity_days} days validity
                     </Text>
                     <View style={styles.packPriceRow}>
                       <Text style={styles.packPrice}>{pack.price} Credits</Text>
@@ -118,7 +144,7 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
                         variant="gradient"
                         size="sm"
                         loading={purchasingPackSlug === pack.slug}
-                        disabled={purchaseMutation.isPending}
+                        disabled={purchaseMutation.isPending || walletBalanceLoading}
                         style={styles.buyButton}
                       />
                     </View>

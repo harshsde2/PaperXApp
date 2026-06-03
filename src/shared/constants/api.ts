@@ -208,6 +208,9 @@ export const WALLET_ENDPOINTS = {
   CREDIT_PACKS: `${API_VERSION}/wallet/credit-packs`,
   CALCULATE: `${API_VERSION}/wallet/calculate`,
   PURCHASE: `${API_VERSION}/wallet/purchase`,
+  RAZORPAY_ORDER: `${API_VERSION}/wallet/payments/razorpay/order`,
+  RAZORPAY_EXACT_CREDITS_ORDER: `${API_VERSION}/wallet/payments/razorpay/exact-credits-order`,
+  RAZORPAY_VERIFY: `${API_VERSION}/wallet/payments/razorpay/verify`,
   ADD: `${API_VERSION}/wallet/add`,
   TRANSACTIONS: `${API_VERSION}/wallet/transactions`,
   DEDUCT: `${API_VERSION}/wallet/deduct`,
@@ -265,6 +268,10 @@ export const RTD_ENDPOINTS = {
   ORDER_ACCEPT: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/accept`,
   ORDER_DECLINE: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/decline`,
   ORDER_CONFIRM_PAYMENT: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/confirm-payment`,
+  ORDER_RAZORPAY_CREATE: (id: number | string) =>
+    `${API_VERSION}/rtd/orders/${id}/payments/razorpay/order`,
+  ORDER_RAZORPAY_VERIFY: (id: number | string) =>
+    `${API_VERSION}/rtd/orders/${id}/payments/razorpay/verify`,
   ORDER_IN_PRODUCTION: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/in-production`,
   ORDER_DISPATCH: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/dispatch`,
   ORDER_DISPUTE: (id: number | string) => `${API_VERSION}/rtd/orders/${id}/dispute`,

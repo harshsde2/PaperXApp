@@ -3,7 +3,7 @@
  * Shows listing details, wallet balance, cost breakdown for posting requirement
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -22,6 +22,8 @@ import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import {
   useGetWalletBalance,
+  useCreateRazorpayExactCreditsOrder,
+  useVerifyRazorpayPayment,
   useDeductCredits,
   usePostDealerRequirement,
   usePostBrandRequirement,
@@ -31,7 +33,15 @@ import {
   usePostConverterJobworkFind,
   usePostConverterJobworkGive,
 } from '@services/api';
-import { useAppSelector } from '@store/hooks';
+import type { VerifyRazorpayPaymentRequest } from '@services/api';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
+import {
+  formatPurchaseError,
+  isRazorpaySdkError,
+  isRazorpayUserCancellation,
+  openRazorpayForWalletOrder,
+} from '@features/wallet/screens/CreditPacksScreen/razorpayCheckout';
 import { SCREENS } from '@navigation/constants';
 import { queryKeys } from '@services/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -39,10 +49,21 @@ import { createStyles } from './styles';
 import {
   PaymentConfirmationScreenRouteProp,
   POSTING_COSTS,
+  DIRECT_PAY_INR_PER_CREDIT,
   ListingDetails,
 } from './@types';
 
 const CARD_HEIGHT = 200;
+
+function getDeadlineDate(urgency?: string): string {
+  const today = new Date();
+  if (urgency?.toLowerCase().includes('urgent')) {
+    today.setDate(today.getDate() + 2);
+  } else {
+    today.setDate(today.getDate() + 5);
+  }
+  return today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 // Requirement type definitions
 type RequirementType =
@@ -60,18 +81,23 @@ const PaymentConfirmationScreen = () => {
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
   const { listingDetails, formData, requirementType = 'dealer' } = route.params || {};
   const typedRequirementType = requirementType as RequirementType;
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const pendingVerifyRef = useRef<VerifyRazorpayPaymentRequest | null>(null);
 
   const {
     data: wallet,
     isLoading: walletLoading,
     refetch: refetchWallet,
   } = useGetWalletBalance();
+
+  const { mutateAsync: createExactCreditsOrder } = useCreateRazorpayExactCreditsOrder();
+  const { mutateAsync: verifyRazorpayPayment } = useVerifyRazorpayPayment();
 
   const { mutate: deductCredits } = useDeductCredits();
   const { mutate: postDealerRequirement } = usePostDealerRequirement();
@@ -105,6 +131,11 @@ const PaymentConfirmationScreen = () => {
   // Helper function to invalidate queries based on requirement type
   const invalidateQueriesByRequirementType = useCallback(
     (type: RequirementType) => {
+      const invalidateConverter = () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+      };
+
       const invalidationMap: Record<RequirementType, () => void> = {
         dealer: () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.dealer.all });
@@ -114,10 +145,9 @@ const PaymentConfirmationScreen = () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.brand.all });
           queryClient.invalidateQueries({ queryKey: queryKeys.brand.dashboard() });
         },
-        converter: () => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
-          queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
-        },
+        converter: invalidateConverter,
+        'converter-jobwork-find': invalidateConverter,
+        'converter-jobwork-give': invalidateConverter,
         machineDealer: () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.machineDealer.all });
           queryClient.invalidateQueries({ queryKey: queryKeys.machineDealer.dashboard() });
@@ -203,24 +233,232 @@ const PaymentConfirmationScreen = () => {
     navigation.navigate(SCREENS.WALLET.CREDIT_PACKS);
   }, [navigation]);
 
+  const runPostRequirementFlow = useCallback(() => {
+    (postRequirement as (data: any, opts?: { onSuccess?: (r: any) => void; onError?: (e: any) => void }) => void)(
+      effectiveFormData,
+      {
+        onSuccess: (response: any) => {
+          const inquiryId =
+            response?.inquiry_id ??
+            response?.id ??
+            response?.data?.inquiry_id ??
+            response?.data?.id ??
+            `INQ-${Date.now()}`;
+          const referenceId = typeof inquiryId === 'string' ? inquiryId : String(inquiryId);
+
+          if (typedRequirementType === 'machineDealer' && user?.primary_role === 'converter') {
+            queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
+          } else {
+            invalidateQueriesByRequirementType(typedRequirementType);
+          }
+
+          deductCredits(
+            {
+              credits: costBreakdown.total,
+              description: 'Requirement Posted',
+              transaction_type: 'REQUIREMENT_POSTED',
+              reference_id: referenceId,
+              reference_type: 'inquiry',
+              metadata: {
+                material: listingDetails?.materialName,
+                quantity: listingDetails?.quantity,
+              },
+            },
+            {
+              onSuccess: () => {
+                setIsProcessing(false);
+                navigateToMatchmakingSuccess(
+                  {
+                    id: referenceId,
+                    materialName: listingDetails?.materialName || 'Requirement',
+                    quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
+                    deadline: getDeadlineDate(listingDetails?.urgency),
+                  },
+                  costBreakdown.total
+                );
+              },
+              onError: () => {
+                setIsProcessing(false);
+                navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
+                  requirementDetails: {
+                    id: referenceId,
+                    materialName: listingDetails?.materialName || 'Requirement',
+                    quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
+                    deadline: getDeadlineDate(listingDetails?.urgency),
+                  },
+                  creditsDeducted: costBreakdown.total,
+                });
+              },
+            }
+          );
+        },
+        onError: (error: any) => {
+          setIsProcessing(false);
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.message ||
+            'Failed to post requirement. Please try again.';
+          Alert.alert('Error', errorMessage);
+        },
+      }
+    );
+  }, [
+    postRequirement,
+    effectiveFormData,
+    typedRequirementType,
+    user?.primary_role,
+    queryClient,
+    invalidateQueriesByRequirementType,
+    deductCredits,
+    costBreakdown.total,
+    listingDetails,
+    navigateToMatchmakingSuccess,
+    navigation,
+  ]);
+
+  const showVerifyRetry = useCallback(
+    (message: string) => {
+      const body = pendingVerifyRef.current;
+      if (!body) {
+        Alert.alert('Payment', message);
+        setIsProcessing(false);
+        return;
+      }
+      Alert.alert('Confirm payment', message, [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => {
+            setIsProcessing(false);
+          },
+        },
+        {
+          text: 'Retry',
+          onPress: () => {
+            void (async () => {
+              try {
+                const res = await verifyRazorpayPayment(body);
+                pendingVerifyRef.current = null;
+                dispatch(
+                  showToast({
+                    message: `Successfully purchased ${res.credits_added} credits!`,
+                    type: 'success',
+                  })
+                );
+                const { data } = await refetchWallet();
+                if ((data?.balance ?? 0) < costBreakdown.total) {
+                  setIsProcessing(false);
+                  Alert.alert(
+                    'Could not post yet',
+                    'Your balance is still below the posting cost. Try Buy Credits or Pay & Post.'
+                  );
+                  return;
+                }
+                runPostRequirementFlow();
+              } catch (e) {
+                setIsProcessing(false);
+                Alert.alert('Still could not confirm', formatPurchaseError(e));
+              }
+            })();
+          },
+        },
+      ]);
+    },
+    [
+      verifyRazorpayPayment,
+      dispatch,
+      refetchWallet,
+      costBreakdown.total,
+      runPostRequirementFlow,
+    ]
+  );
+
+  const runDirectRazorpayAndPost = useCallback(async () => {
+      pendingVerifyRef.current = null;
+      setIsProcessing(true);
+      try {
+        const order = await createExactCreditsOrder({ credits: costBreakdown.total });
+        const prefillName = user?.company_name?.trim() || undefined;
+        const checkoutResult = await openRazorpayForWalletOrder(order, {
+          contact: user?.mobile,
+          name: prefillName,
+        });
+        pendingVerifyRef.current = checkoutResult;
+        await verifyRazorpayPayment(checkoutResult);
+        pendingVerifyRef.current = null;
+      } catch (err) {
+        if (isRazorpayUserCancellation(err)) {
+          setIsProcessing(false);
+          return;
+        }
+        if (isRazorpaySdkError(err)) {
+          setIsProcessing(false);
+          Alert.alert('Payment', formatPurchaseError(err));
+          return;
+        }
+        const msg = formatPurchaseError(err);
+        if (pendingVerifyRef.current) {
+          showVerifyRetry(
+            `${msg}\n\nIf you completed payment in Razorpay, tap Retry to confirm with the server.`
+          );
+        } else {
+          setIsProcessing(false);
+          Alert.alert('Payment Failed', msg);
+        }
+        return;
+      }
+
+      try {
+        const { data } = await refetchWallet();
+        if ((data?.balance ?? 0) < costBreakdown.total) {
+          setIsProcessing(false);
+          Alert.alert(
+            'Could not post yet',
+            'Payment may still be processing. Try Pay & Post or Buy Credits.'
+          );
+          return;
+        }
+        runPostRequirementFlow();
+      } catch {
+        setIsProcessing(false);
+        Alert.alert('Error', 'Could not refresh wallet. Try Pay & Post.');
+      }
+    },
+    [
+      createExactCreditsOrder,
+      verifyRazorpayPayment,
+      user,
+      showVerifyRetry,
+      refetchWallet,
+      costBreakdown.total,
+      runPostRequirementFlow,
+    ]
+  );
+
   const handleDirectPay = useCallback(() => {
-    Alert.alert('Payment Unavailable', 'Payment gateway not found');
-  }, []);
+    if (isProcessing || walletLoading) {
+      return;
+    }
+
+    const credits = costBreakdown.total;
+    const estimatedInr = credits * DIRECT_PAY_INR_PER_CREDIT;
+    Alert.alert(
+      'Pay & post',
+      `Pay about ₹${estimatedInr.toLocaleString('en-IN')} for ${credits} credits (estimate at ${DIRECT_PAY_INR_PER_CREDIT} INR per credit). Razorpay shows the final amount from the server. After payment we post your requirement and deduct ${credits} credits from your wallet.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Pay now',
+          onPress: () => {
+            void runDirectRazorpayAndPost();
+          },
+        },
+      ]
+    );
+  }, [isProcessing, walletLoading, costBreakdown.total, runDirectRazorpayAndPost]);
 
   const handlePayAndPost = useCallback(() => {
-
-    // navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
-    //   requirementDetails: {
-    //     id:`#${Math.floor(Math.random() * 9000) + 1000}`,
-    //     materialName: listingDetails?.materialName || 'Material',
-    //     quantity: `${listingDetails?.quantity}${listingDetails?.quantityUnit || 'kg'}`,
-    //     deadline: getDeadlineDate(listingDetails?.urgency),
-    //   },
-    //   creditsDeducted: costBreakdown.total,
-    // });
-
-    // return; // TODO: Remove this after testing
-
     if (!hasEnoughCredits) {
       Alert.alert(
         'Insufficient Credits',
@@ -234,98 +472,8 @@ const PaymentConfirmationScreen = () => {
     }
 
     setIsProcessing(true);
-
-    // First post the requirement (formData shape depends on requirementType: dealer/brand/converter/machineDealer)
-    (postRequirement as (data: any, opts?: { onSuccess?: (r: any) => void; onError?: (e: any) => void }) => void)(effectiveFormData, {
-      onSuccess: (response: any) => {
-        console.log('response', JSON.stringify(response, null, 2));
-        // Handle dealer (inquiry_id), brand (id), machine dealer (inquiry_id/id) response formats
-        const inquiryId = response?.inquiry_id ?? response?.id ?? response?.data?.inquiry_id ?? response?.data?.id ?? `INQ-${Date.now()}`;
-        const referenceId = typeof inquiryId === 'string' ? inquiryId : String(inquiryId);
-
-        // Invalidate queries: converter machine post invalidates converter; machine dealer invalidates machine dealer
-        if (typedRequirementType === 'machineDealer' && user?.primary_role === 'converter') {
-          queryClient.invalidateQueries({ queryKey: queryKeys.converter.all });
-          queryClient.invalidateQueries({ queryKey: queryKeys.converter.dashboard() });
-        } else {
-          invalidateQueriesByRequirementType(typedRequirementType);
-        }
-
-        // Then deduct credits (backend requires reference_id to be a string)
-        deductCredits(
-          {
-            credits: costBreakdown.total,
-            description: 'Requirement Posted',
-            transaction_type: 'REQUIREMENT_POSTED',
-            reference_id: referenceId,
-            reference_type: 'inquiry',
-            metadata: {
-              material: listingDetails?.materialName,
-              quantity: listingDetails?.quantity,
-            },
-          },
-          {
-            onSuccess: () => {
-              setIsProcessing(false);
-              // Navigate to success screen
-              navigateToMatchmakingSuccess(
-                {
-                  id: referenceId,
-                  materialName: listingDetails?.materialName || 'Requirement',
-                  quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
-                  deadline: getDeadlineDate(listingDetails?.urgency),
-                },
-                costBreakdown.total
-              );
-            },
-            onError: (error: any) => {
-              setIsProcessing(false);
-              console.log('error', JSON.stringify(error, null, 2));
-              // Still navigate to success since requirement was posted
-              navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
-                requirementDetails: {
-                  id: referenceId,
-                  materialName: listingDetails?.materialName || 'Requirement',
-                  quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
-                  deadline: getDeadlineDate(listingDetails?.urgency),
-                },
-                creditsDeducted: costBreakdown.total,
-              });
-            },
-          }
-        );
-      },
-      onError: (error: any) => {
-        console.log('error', JSON.stringify(error.response, null, 2));
-        setIsProcessing(false);
-        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to post requirement. Please try again.';
-        Alert.alert('Error', errorMessage);
-      },
-    });
-  }, [
-    hasEnoughCredits,
-    costBreakdown.total,
-    effectiveFormData,
-    listingDetails,
-    navigation,
-    postRequirement,
-    deductCredits,
-    handleBuyCredits,
-    invalidateQueriesByRequirementType,
-    typedRequirementType,
-    user?.primary_role,
-    queryClient,
-  ]);
-
-  const getDeadlineDate = (urgency?: string) => {
-    const today = new Date();
-    if (urgency?.toLowerCase().includes('urgent')) {
-      today.setDate(today.getDate() + 2);
-    } else {
-      today.setDate(today.getDate() + 5);
-    }
-    return today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+    runPostRequirementFlow();
+  }, [hasEnoughCredits, costBreakdown.total, handleBuyCredits, runPostRequirementFlow]);
 
   const handleCancel = useCallback(() => {
     navigation.goBack();
@@ -464,8 +612,12 @@ const PaymentConfirmationScreen = () => {
               Skip buying credits and pay this requirement instantly using card or UPI.
             </Text>
             <TouchableOpacity
-              style={styles.directPayButton}
+              style={[
+                styles.directPayButton,
+                (isProcessing || walletLoading) && styles.payButtonDisabled,
+              ]}
               onPress={handleDirectPay}
+              disabled={isProcessing || walletLoading}
               activeOpacity={0.8}
             >
               <Text style={styles.directPayButtonText}>Pay Directly</Text>

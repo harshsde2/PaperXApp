@@ -152,6 +152,9 @@ PODS:
     - SocketRocket
     - Yoga
   - PromisesObjC (2.4.0)
+  - razorpay-core-pod (1.0.6)
+  - razorpay-pod (1.5.3):
+    - razorpay-core-pod (= 1.0.6)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2217,6 +2220,35 @@ PODS:
     - React-Core
   - react-native-otp-verify (1.1.8):
     - React-Core
+  - react-native-razorpay (3.0.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - razorpay-pod
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - react-native-safe-area-context (5.6.2):
     - boost
     - DoubleConversion
@@ -3399,6 +3431,7 @@ DEPENDENCIES:
   - react-native-maps/Google (from `../node_modules/react-native-maps`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-otp-verify (from `../node_modules/react-native-otp-verify`)
+  - react-native-razorpay (from `../node_modules/react-native-razorpay`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -3463,6 +3496,8 @@ SPEC REPOS:
     - MMKVCore
     - nanopb
     - PromisesObjC
+    - razorpay-core-pod
+    - razorpay-pod
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -3573,6 +3608,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-otp-verify:
     :path: "../node_modules/react-native-otp-verify"
+  react-native-razorpay:
+    :path: "../node_modules/react-native-razorpay"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-skia:
@@ -3692,6 +3729,8 @@ SPEC CHECKSUMS:
   NitroMmkv: 8ed7ef6f41b91785fc580c975f68d6d675214767
   NitroModules: 107a9262c74fd84fa8e77ebd82a72980b6aa50b1
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  razorpay-core-pod: 6da5fb4ed280279d665507fdb50e213d793a5fe2
+  razorpay-pod: 4385cf844aa29389313b741e20c72fe668970d49
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: a41bbdd9af30bf2e5715796b313e44ec43eefff1
   RCTRequired: 7be34aabb0b77c3cefe644528df0fa0afad4e4d0
@@ -3735,6 +3774,7 @@ SPEC CHECKSUMS:
   react-native-maps: 48cbc77581f2ffc121a296f9abe071fe4a7ea4ee
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-otp-verify: 6d153f8a8e8392c6a51f9d94c090dc16d7c756b2
+  react-native-razorpay: 32fd7bcf366a277fa14a82305279e825258008db
   react-native-safe-area-context: c00143b4823773bba23f2f19f85663ae89ceb460
   react-native-skia: b60d0b9d9aea330baef956b7f015d0af2b42076d
   React-NativeModulesApple: a2c3d2cbec893956a5b3e4060322db2984fff75b

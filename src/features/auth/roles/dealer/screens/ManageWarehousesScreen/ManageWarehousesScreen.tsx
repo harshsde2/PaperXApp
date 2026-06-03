@@ -1,14 +1,6 @@
 import React, { useState, useLayoutEffect, useCallback } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Modal,
-  Alert,
-  Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, TouchableOpacity, Alert } from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -35,18 +27,30 @@ import type { UpdateProfileResponse } from '@services/api';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
 import { ROLES } from '@utils/constants';
 
-// Location module imports
-import {
-  LocationPicker,
-  Location,
-  MarkerData,
-  ZOOM_LEVELS,
-} from '@shared/location';
-import { WarehouseAddressForm } from '@shared/components/WarehouseAddressForm/WarehouseAddressForm';
+import { StructuredAddressFormModal } from '@shared/components/StructuredAddressFormModal';
 import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
+import { LOCATION_FALLBACK_COORDINATES } from '@shared/constants/config';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const buildEmptyMapData = (): WarehouseFormMapData => ({
+  address: '',
+  city: '',
+  state: '',
+  pincode: '',
+  latitude: LOCATION_FALLBACK_COORDINATES.latitude,
+  longitude: LOCATION_FALLBACK_COORDINATES.longitude,
+});
+
+const mapDataFromWarehouseLocation = (
+  loc: WarehouseLocation,
+): WarehouseFormMapData => ({
+  address: loc.address,
+  city: loc.city,
+  state: loc.state,
+  pincode: loc.zipCode || '',
+  latitude: LOCATION_FALLBACK_COORDINATES.latitude,
+  longitude: LOCATION_FALLBACK_COORDINATES.longitude,
+});
 
 const ManageWarehousesScreen = () => {
   const navigation = useNavigation<ManageWarehousesScreenNavigationProp>();
@@ -60,7 +64,6 @@ const ManageWarehousesScreen = () => {
   const [noWarehouse, setNoWarehouse] = useState(false);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
   const [pendingMapLocation, setPendingMapLocation] =
     useState<WarehouseFormMapData | null>(null);
@@ -275,25 +278,6 @@ const ManageWarehousesScreen = () => {
     });
   }, [navigation]);
 
-  // Map-first flow: LocationPicker confirm → store map data → open form for extra details
-  const handleLocationSelect = useCallback((location: Location) => {
-    const address =
-      location.address?.streetAddress ||
-      location.address?.formattedAddress ||
-      '';
-    const mapData: WarehouseFormMapData = {
-      address,
-      city: location.address?.city || '',
-      state: location.address?.state || '',
-      pincode: location.address?.pincode || '',
-      latitude: location.latitude,
-      longitude: location.longitude,
-    };
-    setPendingMapLocation(mapData);
-    setShowLocationPicker(false);
-    setShowWarehouseForm(true);
-  }, []);
-
   const handleWarehouseFormSubmit = useCallback(
     (data: {
       name: string;
@@ -306,8 +290,6 @@ const ManageWarehousesScreen = () => {
       latitude: number;
       longitude: number;
     }) => {
-      if (!pendingMapLocation) return;
-
       const fullAddress = [
         data.flatHouseNo,
         data.streetLandmark,
@@ -322,7 +304,7 @@ const ManageWarehousesScreen = () => {
       const warehouseLocation: WarehouseLocation = {
         id: editingLocation?.id || generateId(),
         name: data.name?.trim() || `Warehouse ${locations.length + 1}`,
-        address: fullAddress || pendingMapLocation.address,
+        address: fullAddress || pendingMapLocation?.address || '',
         city: data.city,
         state: data.state,
         zipCode: data.pincode,
@@ -371,7 +353,8 @@ const ManageWarehousesScreen = () => {
 
   const handleEdit = useCallback((location: WarehouseLocation) => {
     setEditingLocation(location);
-    setShowLocationPicker(true);
+    setPendingMapLocation(mapDataFromWarehouseLocation(location));
+    setShowWarehouseForm(true);
   }, []);
 
   const handleRemove = useCallback(
@@ -405,12 +388,8 @@ const ManageWarehousesScreen = () => {
 
   const handleAddLocation = useCallback(() => {
     setEditingLocation(null);
-    setShowLocationPicker(true);
-  }, []);
-
-  const handleSearchAddress = useCallback(() => {
-    setEditingLocation(null);
-    setShowLocationPicker(true);
+    setPendingMapLocation(buildEmptyMapData());
+    setShowWarehouseForm(true);
   }, []);
 
   const handleSetPrimary = useCallback((locationId: string) => {
@@ -429,18 +408,6 @@ const ManageWarehousesScreen = () => {
         : [...prev, locationId],
     );
   }, []);
-
-  // Convert locations to markers for overview map
-  const getMarkersFromLocations = (): MarkerData[] => {
-    return locations.map(loc => ({
-      id: loc.id,
-      latitude: loc.latitude,
-      longitude: loc.longitude,
-      title: loc.name,
-      description: `${loc.address}, ${loc.city}`,
-      isPrimary: loc.isPrimary,
-    }));
-  };
 
   return (
     <>
@@ -652,34 +619,6 @@ const ManageWarehousesScreen = () => {
                       )}
                     </View>
 
-                    {/* Larger Map View */}
-                    <View style={styles.mapContainer}>
-                      <MapView
-                        provider={PROVIDER_GOOGLE}
-                        style={styles.miniMap}
-                        initialRegion={{
-                          latitude: location.latitude,
-                          longitude: location.longitude,
-                          ...ZOOM_LEVELS.STREET,
-                        }}
-                        scrollEnabled={false}
-                        zoomEnabled={false}
-                        rotateEnabled={false}
-                        pitchEnabled={false}
-                      >
-                        <Marker
-                          coordinate={{
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                          }}
-                          pinColor={
-                            location.isPrimary
-                              ? theme.colors.primary.DEFAULT
-                              : theme.colors.secondary.DEFAULT
-                          }
-                        />
-                      </MapView>
-                    </View>
                   </>
                 )}
               </Card>
@@ -730,7 +669,7 @@ const ManageWarehousesScreen = () => {
                   variant="captionMedium"
                   style={styles.addLocationDescription}
                 >
-                  Search address or drop a pin on the map
+                  Enter address details in the form
                 </Text>
               </View>
             </TouchableOpacity>
@@ -739,23 +678,6 @@ const ManageWarehousesScreen = () => {
       </ScreenWrapper>
       {/* Footer */}
       <FloatingBottomContainer>
-        {!noWarehouse && (
-          <CustomButton
-            title="Search Address"
-            onPress={handleSearchAddress}
-            variant="outline"
-            size="md"
-            leftIcon={
-              <AppIcon.Search
-                width={18}
-                height={18}
-                color={theme.colors.primary.DEFAULT}
-              />
-            }
-            textStyle={{ color: theme.colors.primary.DEFAULT }}
-            style={styles.searchAddressButton}
-          />
-        )}
         <CustomButton
           title="Complete Registration"
           onPress={handleSave}
@@ -788,99 +710,32 @@ const ManageWarehousesScreen = () => {
         )}
       </FloatingBottomContainer>
 
-      {/* Location Picker Modal */}
-      <Modal
-        visible={showLocationPicker}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => {
-          setShowLocationPicker(false);
-          setEditingLocation(null);
-        }}
-      >
-        <LocationPicker
-          initialLocation={
-            editingLocation
-              ? {
-                  latitude: editingLocation.latitude,
-                  longitude: editingLocation.longitude,
-                  name: editingLocation.name,
-                  address: {
-                    formattedAddress: `${editingLocation.address}, ${editingLocation.city}, ${editingLocation.state} ${editingLocation.zipCode}`,
-                    streetAddress: editingLocation.address,
-                    city: editingLocation.city,
-                    state: editingLocation.state,
-                    pincode: editingLocation.zipCode,
-                  },
-                }
-              : undefined
-          }
-          existingMarkers={getMarkersFromLocations()}
-          onLocationSelect={handleLocationSelect}
-          onCancel={() => {
-            setShowLocationPicker(false);
-            setEditingLocation(null);
-          }}
-          showExistingMarkers={true}
-          allowMapTap={true}
-          confirmButtonText={
-            editingLocation ? 'Update Details' : 'Add Details'
-          }
+      {pendingMapLocation && (
+        <StructuredAddressFormModal
+          visible={showWarehouseForm}
           title={
             editingLocation
-              ? 'Edit Warehouse Location'
-              : 'Add Warehouse Location'
+              ? 'Edit warehouse address'
+              : 'Add warehouse address'
           }
+          onDismiss={handleWarehouseFormCancel}
+          mapData={pendingMapLocation}
+          existingLocation={
+            editingLocation
+              ? {
+                  id: editingLocation.id,
+                  isPrimary: editingLocation.isPrimary,
+                  name: editingLocation.name,
+                  address: editingLocation.address,
+                }
+              : null
+          }
+          coordinatesOverride={LOCATION_FALLBACK_COORDINATES}
+          showNameField
+          onSubmit={handleWarehouseFormSubmit}
+          submitLabel={editingLocation ? 'Save location' : 'Add location'}
         />
-      </Modal>
-
-      {/* Warehouse Address Form Modal - extra details after map selection */}
-      <Modal
-        visible={showWarehouseForm && !!pendingMapLocation}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleWarehouseFormCancel}
-      >
-        <SafeAreaView
-          style={[styles.warehouseModalContainer, { backgroundColor: theme.colors.background.secondary }]}
-        >
-          <View style={styles.formModalHeader}>
-            <Text variant="h5" fontWeight="semibold" style={styles.formModalTitle}>
-              {editingLocation ? 'Edit Warehouse Details' : 'Add Warehouse Details'}
-            </Text>
-            <TouchableOpacity
-              onPress={handleWarehouseFormCancel}
-              style={styles.formModalCloseButton}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              activeOpacity={0.7}
-            >
-              <AppIcon.Close
-                width={24}
-                height={24}
-                color={theme.colors.text.primary}
-              />
-            </TouchableOpacity>
-          </View>
-          {pendingMapLocation && (
-          <WarehouseAddressForm
-            mapData={pendingMapLocation}
-            existingLocation={
-              editingLocation
-                ? {
-                    id: editingLocation.id,
-                    isPrimary: editingLocation.isPrimary,
-                    name: editingLocation.name,
-                    address: editingLocation.address,
-                  }
-                : null
-            }
-            onSubmit={handleWarehouseFormSubmit}
-            onCancel={handleWarehouseFormCancel}
-            submitLabel={editingLocation ? 'Update Location' : 'Add Location'}
-          />
-          )}
-        </SafeAreaView>
-      </Modal>
+      )}
     </>
   );
 };

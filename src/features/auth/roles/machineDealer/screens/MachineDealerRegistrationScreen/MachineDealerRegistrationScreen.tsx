@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, TouchableOpacity, TextInput, ActivityIndicator, Modal } from 'react-native';
+import { View, TouchableOpacity, TextInput, ActivityIndicator, Modal, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
@@ -16,7 +16,7 @@ import type {
   Machine,
   UpdateProfileResponse,
 } from '@services/api';
-import { useCompleteMachineDealerProfile, useGetMachines } from '@services/api';
+import { useCompleteMachineDealerProfile, useGetMachines, useCreateMachine } from '@services/api';
 import { useAppDispatch } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import { getFirstRegistrationScreen } from '@navigation/helpers';
@@ -38,8 +38,9 @@ import {
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import { LocationPicker } from '@shared/location';
-import type { Location } from '@shared/location/types';
+import { StructuredAddressFormModal } from '@shared/components/StructuredAddressFormModal';
+import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
+import { LOCATION_FALLBACK_COORDINATES } from '@shared/constants/config';
 import { CustomButton } from '@shared/components/CustomButton';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { useKeyboard, useFloatingBottomPadding } from '@shared/hooks';
@@ -60,7 +61,7 @@ const MachineDealerRegistrationScreen = () => {
   const { mutate: completeMachineDealerProfile, isPending: isSubmitting } =
     useCompleteMachineDealerProfile();
 
-  const { control, handleSubmit, setValue, watch } = useForm<MachineDealerRegistrationFormData>({
+  const { control, handleSubmit, setValue, watch, getValues } = useForm<MachineDealerRegistrationFormData>({
     defaultValues: {
       contactPersonName: '',
       email: '',
@@ -90,13 +91,21 @@ const MachineDealerRegistrationScreen = () => {
     }
   }, [profileData, setValue]);
 
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showBusinessAddressModal, setShowBusinessAddressModal] = useState(false);
+  const [businessAddressMapSeed, setBusinessAddressMapSeed] =
+    useState<WarehouseFormMapData | null>(null);
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
+
+  const [customMachineModalVisible, setCustomMachineModalVisible] = useState(false);
+  const [customMachineName, setCustomMachineName] = useState('');
+  const [customMachineType, setCustomMachineType] = useState<string>('');
+  const [customMachineTypeOther, setCustomMachineTypeOther] = useState<string>('');
+  const [customMachineDescription, setCustomMachineDescription] = useState<string>('');
+
+  const { mutateAsync: createMachine, isPending: isCreatingMachine } = useCreateMachine();
 
   const cityValue = watch('city');
   const locationValue = watch('location');
-  const latitudeValue = watch('latitude');
-  const longitudeValue = watch('longitude');
   const machineCategoryValue = watch('machine_category');
   const machineIdValue = watch('machine_id');
   const preferredBrandIdsValue = watch('preferred_brand_ids');
@@ -143,33 +152,55 @@ const MachineDealerRegistrationScreen = () => {
     []
   );
 
-  const handleLocationSelect = useCallback(
-    (location: Location) => {
-      setValue('location', location.address?.streetAddress || location.address?.formattedAddress || location.name || '', {
-        shouldValidate: true,
-      });
-      // Always update city from the selected location (map selection overrides prefilled values)
-      if (location.address?.city) {
-        setValue('city', location.address.city, {
-          shouldValidate: true,
-        });
-      }
-      setValue('latitude', location.latitude, {
-        shouldValidate: true,
-      });
-      setValue('longitude', location.longitude, {
-        shouldValidate: true,
-      });
-      setShowLocationPicker(false);
-      
+  const openBusinessAddressModal = useCallback(() => {
+    const v = getValues();
+    setBusinessAddressMapSeed({
+      address: v.location || '',
+      city: v.city || '',
+      state: '',
+      pincode: '',
+      latitude: LOCATION_FALLBACK_COORDINATES.latitude,
+      longitude: LOCATION_FALLBACK_COORDINATES.longitude,
+    });
+    setShowBusinessAddressModal(true);
+  }, [getValues]);
+
+  const closeBusinessAddressModal = useCallback(() => {
+    setShowBusinessAddressModal(false);
+    setBusinessAddressMapSeed(null);
+  }, []);
+
+  const handleBusinessStructuredAddressSubmit = useCallback(
+    (data: {
+      name: string;
+      flatHouseNo: string;
+      streetLandmark: string;
+      locality: string;
+      state: string;
+      city: string;
+      pincode: string;
+      latitude: number;
+      longitude: number;
+    }) => {
+      const streetBlock = [data.flatHouseNo, data.streetLandmark, data.locality]
+        .filter(Boolean)
+        .join(', ');
+      const fullLoc = [streetBlock, data.city, data.state, data.pincode]
+        .filter(Boolean)
+        .join(', ');
+      setValue('city', data.city, { shouldValidate: true });
+      setValue('location', fullLoc || streetBlock, { shouldValidate: true });
+      setValue('latitude', data.latitude, { shouldValidate: true });
+      setValue('longitude', data.longitude, { shouldValidate: true });
+      closeBusinessAddressModal();
       dispatch(
         showToast({
-          message: 'Location selected successfully!',
+          message: 'Business address saved',
           type: 'success',
         }),
       );
     },
-    [setValue, dispatch],
+    [setValue, closeBusinessAddressModal, dispatch],
   );
 
   const openMachineCategorySheet = useCallback(() => {
@@ -187,6 +218,87 @@ const MachineDealerRegistrationScreen = () => {
   const openPreferredBrandsSheet = useCallback(() => {
     preferredBrandsSheetRef.current?.present();
   }, []);
+
+  const openCustomMachineModal = useCallback(() => {
+    setCustomMachineName('');
+    setCustomMachineType(machineCategoryValue ?? '');
+    setCustomMachineTypeOther('');
+    setCustomMachineDescription('');
+    setCustomMachineModalVisible(true);
+  }, [machineCategoryValue]);
+
+  const closeCustomMachineModal = useCallback(() => {
+    setCustomMachineModalVisible(false);
+    setCustomMachineName('');
+    setCustomMachineType('');
+    setCustomMachineTypeOther('');
+    setCustomMachineDescription('');
+  }, []);
+
+  const handleAddCustomMachine = useCallback(async () => {
+    const name = customMachineName.trim();
+    if (!name) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Please enter a machine name',
+        position: 'top',
+      });
+      return;
+    }
+
+    const resolvedType =
+      customMachineType === '__other__'
+        ? customMachineTypeOther.trim()
+        : customMachineType.trim();
+    const description = customMachineDescription.trim();
+
+    try {
+      const created = await createMachine({
+        name,
+        type: resolvedType || null,
+        description: description || null,
+      });
+
+      if (created?.id) {
+        if (resolvedType) {
+          if (machineCategoryValue !== resolvedType) {
+            setValue('machine_category', resolvedType as MachineCategoryType, {
+              shouldValidate: true,
+            });
+          }
+        }
+        setValue('machine_id', created.id, { shouldValidate: true });
+        closeCustomMachineModal();
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Machine added successfully',
+          position: 'top',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to add machine',
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message || error?.message || 'Failed to add machine';
+      Toast.show({ type: 'error', text1: 'Error', text2: msg, position: 'top' });
+    }
+  }, [
+    customMachineName,
+    customMachineType,
+    customMachineTypeOther,
+    customMachineDescription,
+    createMachine,
+    machineCategoryValue,
+    setValue,
+    closeCustomMachineModal,
+  ]);
 
   const handleMachineCategorySelect = useCallback(
     (value: MachineCategoryType) => {
@@ -247,8 +359,18 @@ const MachineDealerRegistrationScreen = () => {
       return;
     }
 
-    if (!data.location.trim() || data.latitude == null || data.longitude == null) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Please select a business location on the map.', position: 'top' });
+    if (
+      !data.city?.trim() ||
+      !data.location?.trim() ||
+      data.latitude == null ||
+      data.longitude == null
+    ) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter your business address using the address form.',
+        position: 'top',
+      });
       return;
     }
 
@@ -534,6 +656,16 @@ const MachineDealerRegistrationScreen = () => {
                   </>
                 )}
               />
+              <TouchableOpacity
+                onPress={openCustomMachineModal}
+                activeOpacity={0.7}
+                style={styles.addCustomLinkRow}
+              >
+                <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
+                <Text variant="captionSmall" style={styles.addCustomLinkText}>
+                  Can't find your machine? Tap to add a custom one
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Preferred Brands (optional, multi-select) */}
@@ -570,94 +702,24 @@ const MachineDealerRegistrationScreen = () => {
               </Text>
             </View>
 
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  City
-                </Text>
-              </View>
-              <FormInput
-                name="city"
-                control={control}
-                placeholder="e.g. Mumbai"
-                rules={validationRules.required('Please enter city') as any}
-                inputStyle={styles.input}
-                containerStyle={{ marginBottom: 0 }}
-                showLabel={false}
-                editable={!hasPrefilledCompanyDetails}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Location
-                </Text>
-              </View>
-              <Controller
-                control={control}
-                name="location"
-                rules={validationRules.required('Please select or enter location') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
-                  <>
-                    <TouchableOpacity
-                      style={[styles.input, styles.locationInput]}
-                      onPress={() => setShowLocationPicker(true)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.inputIconLeft}>
-                        <AppIcon.Location
-                          width={20}
-                          height={20}
-                          color={theme.colors.text.tertiary}
-                        />
-                      </View>
-                      <Text
-                        variant="bodyMedium"
-                        style={[
-                          !value
-                            ? { color: theme.colors.text.tertiary }
-                            : { color: theme.colors.text.primary },
-                        ]}
-                      >
-                        {value || 'Select location on map'}
-                      </Text>
-                    </TouchableOpacity>
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{
-                          color: theme.colors.error.DEFAULT,
-                          marginTop: theme.spacing[1],
-                        }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                    {value && (
-                      <TouchableOpacity
-                        onPress={() => setShowLocationPicker(true)}
-                        style={{
-                          marginTop: theme.spacing[2],
-                          padding: theme.spacing[2],
-                          backgroundColor: theme.colors.primary.DEFAULT,
-                          borderRadius: 8,
-                          alignItems: 'center',
-                        }}
-                        activeOpacity={0.8}
-                      >
-                        <Text
-                          variant="bodyMedium"
-                          style={{ color: theme.colors.text.inverse }}
-                        >
-                          Change Location on Map
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </>
-                )}
-              />
-            </View>
+            <Text variant="bodySmall" style={{ color: theme.colors.text.secondary, marginBottom: theme.spacing[3] }}>
+              Use the same address form as other registrations (state, city, street lines, pincode). Map is not required.
+            </Text>
+            {locationValue ? (
+              <Text variant="bodyMedium" style={{ marginBottom: theme.spacing[3] }}>
+                {[cityValue, locationValue].filter(Boolean).join('\n')}
+              </Text>
+            ) : (
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary, marginBottom: theme.spacing[3] }}>
+                No business address entered yet
+              </Text>
+            )}
+            <CustomButton
+              title={locationValue ? 'Edit business address' : 'Enter business address'}
+              onPress={openBusinessAddressModal}
+              variant="primary"
+              size="md"
+            />
           </Card>
 
           <Card style={styles.card}>
@@ -743,33 +805,175 @@ const MachineDealerRegistrationScreen = () => {
           </FloatingBottomContainer>
         )}
 
-      {/* Location Picker Modal */}
+      {/* Add Custom Machine Modal */}
       <Modal
-        visible={showLocationPicker}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setShowLocationPicker(false)}
+        visible={customMachineModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeCustomMachineModal}
       >
-        <LocationPicker
-          initialLocation={
-            latitudeValue && longitudeValue
-              ? {
-                  latitude: latitudeValue,
-                  longitude: longitudeValue,
-                  address: {
-                    formattedAddress: locationValue || '',
-                    streetAddress: locationValue || '',
-                  },
-                }
-              : undefined
-          }
-          onLocationSelect={handleLocationSelect}
-          onCancel={() => setShowLocationPicker(false)}
-          allowMapTap={true}
-          confirmButtonText="Confirm Location"
-          title="Select Location"
-        />
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <View style={styles.modalCard}>
+              <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+                Add Custom Machine
+              </Text>
+
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                style={styles.customEntryScroll}
+              >
+                <Text variant="captionSmall" style={styles.customEntryFieldLabel}>
+                  Name
+                </Text>
+                <TextInput
+                  style={styles.customMachineInput}
+                  placeholder="Enter machine name"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={customMachineName}
+                  onChangeText={setCustomMachineName}
+                  editable={!isCreatingMachine}
+                  autoFocus
+                />
+
+                <Text variant="captionSmall" style={styles.customEntryFieldLabel}>
+                  Type
+                  <Text variant="captionSmall" style={styles.customEntryOptionalHint}>
+                    {'  (optional)'}
+                  </Text>
+                </Text>
+                <View style={styles.customEntryChipsRow}>
+                  {MACHINE_CATEGORY_OPTIONS.map((option) => {
+                    const selected = customMachineType === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        disabled={isCreatingMachine}
+                        onPress={() => {
+                          setCustomMachineType(selected ? '' : option.value);
+                          setCustomMachineTypeOther('');
+                        }}
+                        activeOpacity={0.7}
+                        style={[
+                          styles.customEntryChip,
+                          selected && styles.customEntryChipSelected,
+                        ]}
+                      >
+                        <Text
+                          variant="captionSmall"
+                          style={[
+                            styles.customEntryChipText,
+                            selected && styles.customEntryChipTextSelected,
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  <TouchableOpacity
+                    disabled={isCreatingMachine}
+                    onPress={() => {
+                      setCustomMachineType(
+                        customMachineType === '__other__' ? '' : '__other__'
+                      );
+                    }}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.customEntryChip,
+                      customMachineType === '__other__' && styles.customEntryChipSelected,
+                    ]}
+                  >
+                    <Text
+                      variant="captionSmall"
+                      style={[
+                        styles.customEntryChipText,
+                        customMachineType === '__other__' && styles.customEntryChipTextSelected,
+                      ]}
+                    >
+                      Other
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {customMachineType === '__other__' && (
+                  <TextInput
+                    style={styles.customMachineInput}
+                    placeholder="Enter custom type"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    value={customMachineTypeOther}
+                    onChangeText={setCustomMachineTypeOther}
+                    editable={!isCreatingMachine}
+                  />
+                )}
+
+                <Text variant="captionSmall" style={styles.customEntryFieldLabel}>
+                  Description
+                  <Text variant="captionSmall" style={styles.customEntryOptionalHint}>
+                    {'  (optional)'}
+                  </Text>
+                </Text>
+                <TextInput
+                  style={[styles.customMachineInput, styles.customEntryDescriptionInput]}
+                  placeholder="Add a short description"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={customMachineDescription}
+                  onChangeText={setCustomMachineDescription}
+                  editable={!isCreatingMachine}
+                  multiline
+                  numberOfLines={3}
+                />
+              </ScrollView>
+
+              <View style={styles.modalActions}>
+                <CustomButton
+                  title="Cancel"
+                  onPress={closeCustomMachineModal}
+                  variant="outline"
+                  size="md"
+                  style={styles.modalCancelButton}
+                />
+                <CustomButton
+                  title="Add"
+                  onPress={handleAddCustomMachine}
+                  variant="gradient"
+                  size="md"
+                  loading={isCreatingMachine}
+                  disabled={
+                    isCreatingMachine ||
+                    !customMachineName.trim() ||
+                    (customMachineType === '__other__' && !customMachineTypeOther.trim())
+                  }
+                  gradientColors={[
+                    theme.colors.primary[400],
+                    theme.colors.primary.DEFAULT,
+                  ]}
+                  gradientStart={{ x: 0, y: 0 }}
+                  gradientEnd={{ x: 1, y: 1 }}
+                  style={styles.addMachineButton}
+                />
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
+
+      {businessAddressMapSeed && (
+        <StructuredAddressFormModal
+          visible={showBusinessAddressModal}
+          title="Business address"
+          onDismiss={closeBusinessAddressModal}
+          mapData={businessAddressMapSeed}
+          existingLocation={null}
+          coordinatesOverride={LOCATION_FALLBACK_COORDINATES}
+          showNameField={false}
+          onSubmit={handleBusinessStructuredAddressSubmit}
+          submitLabel="Save address"
+        />
+      )}
 
       <GorhomBottomSheetModal
         ref={machineCategorySheetRef}

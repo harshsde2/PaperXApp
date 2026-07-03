@@ -15,6 +15,7 @@ import {
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { useRoute, useIsFocused } from '@react-navigation/native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useTheme } from '@theme/index';
 import { useAppSelector } from '@store/hooks';
 import { useQueryClient } from '@tanstack/react-query';
@@ -75,6 +76,7 @@ export default function StructuredChatScreen() {
   const theme = useTheme();
   const queryClient = useQueryClient();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const headerHeight = useHeaderHeight();
 
   const threadId = Number(route.params?.threadId ?? 0);
   const inquiryId = Number(route.params?.inquiryId ?? 0);
@@ -357,7 +359,8 @@ export default function StructuredChatScreen() {
     <ScreenWrapper safeAreaEdges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.select({ ios: 'padding', android: undefined })}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
         <FlatList
           ref={listRef}

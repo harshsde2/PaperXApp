@@ -31,31 +31,28 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.text.tertiary,
     marginBottom: theme.spacing[4],
   },
-  roleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  roleList: {
     gap: theme.spacing[3],
   },
-  roleCard: {
-    width: '47%',
-    height: 150,
+  roleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[3],
     backgroundColor: theme.colors.surface.primary,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing[4],
-    alignItems: 'center',
-    justifyContent: 'space-around',
     borderWidth: 1,
     borderColor: theme.colors.border.primary,
-    position: 'relative',
   },
-  roleCardSelected: {
+  roleRowSelected: {
     borderColor: theme.colors.primary.DEFAULT,
     borderWidth: 2,
   },
+  roleTextColumn: {
+    flex: 1,
+  },
   checkmarkContainer: {
-    position: 'absolute',
-    top: theme.spacing[2],
-    right: theme.spacing[2],
+    marginLeft: theme.spacing[2],
   },
   roleIcon: {
     fontSize: 32,
@@ -63,7 +60,10 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   roleLabel: {
     color: theme.colors.text.primary,
-    textAlign: 'center',
+  },
+  roleDescriptor: {
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing[1],
   },
   roleLabelSelected: {
     color: theme.colors.primary.DEFAULT,

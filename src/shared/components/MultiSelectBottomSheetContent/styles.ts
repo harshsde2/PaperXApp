@@ -5,7 +5,6 @@ import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: theme.spacing[4],
   },
   title: {
     color: theme.colors.text.primary,
@@ -49,7 +48,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: theme.spacing[4],
+    // Extra bottom space so the last row clears the sticky "Done" footer (BottomSheetFooter overlays content).
+    paddingBottom: 96,
     flexGrow: 1,
   },
   item: {

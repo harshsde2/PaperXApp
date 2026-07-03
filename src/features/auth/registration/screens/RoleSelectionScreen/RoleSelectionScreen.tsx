@@ -29,25 +29,29 @@ const RoleSelectionScreen = () => {
   const primaryRoles = [
     {
       id: ROLES.DEALER as PrimaryRole,
-      label: 'Dealer / Distributor',
+      label: 'Dealer',
+      descriptor: 'Paper / Paperboard / Raw material dealer',
       icon: AppIcon.Dealer,
       isComplete: true,
     },
     {
       id: ROLES.CONVERTER as PrimaryRole,
-      label: 'Converter / Manufacturer',
+      label: 'Manufacturer',
+      descriptor: 'Manufacturer of finish goods',
       icon: AppIcon.Converter,
       isComplete: true,
     },
     {
       id: ROLES.BRAND as PrimaryRole,
       label: 'Brand',
+      descriptor: 'Individual or company requiring packaging',
       icon: AppIcon.Brand,
       isComplete: true,
     },
     {
       id: ROLES.MACHINE_DEALER as PrimaryRole,
       label: 'Machine Dealer',
+      descriptor: 'Paper / Printing / Packaging machine dealer',
       icon: AppIcon.MachineDealer,
       isComplete: true,
     },
@@ -86,26 +90,17 @@ const RoleSelectionScreen = () => {
     selectedRole: PrimaryRole | null,
     onSelect: (roleId: PrimaryRole) => void,
   ) => (
-    <View style={styles.roleGrid}>
+    <View style={styles.roleList}>
       {roles.map(role => {
         const isSelected = selectedRole === role.id;
         return (
           <TouchableOpacity
             key={role.id}
-            style={[styles.roleCard, isSelected && styles.roleCardSelected, !role.isComplete && styles.roleCardIncomplete]}
+            style={[styles.roleRow, isSelected && styles.roleRowSelected, !role.isComplete && styles.roleCardIncomplete]}
             onPress={() => onSelect(role.id)}
             activeOpacity={0.7}
             disabled={!role.isComplete}
           >
-            {isSelected && (
-              <View style={styles.checkmarkContainer}>
-                <AppIcon.TickCheckedBox
-                  width={20}
-                  height={20}
-                  fill={theme.colors.primary.DEFAULT}
-                />
-              </View>
-            )}
             {role.icon && (
               <role.icon
                 width={40}
@@ -117,17 +112,31 @@ const RoleSelectionScreen = () => {
                 }
               />
             )}
-            <Text
-              variant="h6"
-              fontWeight="semibold"
-              style={[styles.roleLabel, isSelected && styles.roleLabelSelected]}
-            >
-              {role.label}
-            </Text>
-            {!role.isComplete && (
-              <Text variant="bodySmall" size={8} style={styles.roleCompleteText}>
-                This role is not Available for now 
+            <View style={styles.roleTextColumn}>
+              <Text
+                variant="h6"
+                fontWeight="semibold"
+                style={[styles.roleLabel, isSelected && styles.roleLabelSelected]}
+              >
+                {role.label}
               </Text>
+              <Text variant="bodySmall" style={styles.roleDescriptor}>
+                {role.descriptor}
+              </Text>
+              {!role.isComplete && (
+                <Text variant="bodySmall" size={8} style={styles.roleCompleteText}>
+                  This role is not Available for now
+                </Text>
+              )}
+            </View>
+            {isSelected && (
+              <View style={styles.checkmarkContainer}>
+                <AppIcon.TickCheckedBox
+                  width={20}
+                  height={20}
+                  fill={theme.colors.primary.DEFAULT}
+                />
+              </View>
             )}
           </TouchableOpacity>
         );

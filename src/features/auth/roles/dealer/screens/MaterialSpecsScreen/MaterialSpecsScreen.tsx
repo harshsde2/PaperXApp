@@ -387,6 +387,7 @@ const MaterialSpecsScreen = () => {
   return (
     <>
       <ScreenWrapper
+        keyboardDoneBar
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
       >

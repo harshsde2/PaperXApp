@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Canvas, RadialGradient, Rect, vec, LinearGradient } from '@shopify/react-native-skia';
 import { useTheme } from '@theme/index';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { IScreenWrapperProps } from './@types';
 
 const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
@@ -30,6 +31,7 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
   flex = 1,
   loading = false,
   loadingComponent,
+  keyboardDoneBar = false,
   style,
 }) => {
   const theme = useTheme();
@@ -188,6 +190,7 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
           </View>
         )}
       </Wrapper>
+      {keyboardDoneBar && <KeyboardDoneBar />}
     </>
   );
 };

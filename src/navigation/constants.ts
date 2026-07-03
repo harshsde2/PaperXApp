@@ -48,6 +48,7 @@ export const SCREENS = {
     PAYMENT_CONFIRMATION: 'PaymentConfirmation',
     MATCHMAKING_SUCCESS: 'MatchmakingSuccess',
     NOTIFICATIONS: 'Notifications',
+    RESPONSES: 'Responses',
     REGISTRATION_DETAILS: 'RegistrationDetails',
   },
   WALLET: {

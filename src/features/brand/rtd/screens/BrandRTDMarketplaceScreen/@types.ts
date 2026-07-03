@@ -21,12 +21,17 @@ export interface MarketplaceFilterState {
   sort_dir?: 'asc' | 'desc';
 }
 
+export type MoqRange = '' | '0-50' | '50-500' | '500+';
+export type LocationScope = '' | 'city' | 'state' | 'pan_india';
+
 export interface AdvancedFilterState {
   delivery_geography: string;
   lead_time: string;
   min_price: string;
   max_price: string;
-  moq: string;
+  moq_range: MoqRange;
+  category: string;
+  location_scope: LocationScope;
   has_branding: 'yes' | 'no' | null;
 }
 
@@ -35,6 +40,8 @@ export const INITIAL_ADVANCED_FILTERS: AdvancedFilterState = {
   lead_time: '',
   min_price: '',
   max_price: '',
-  moq: '',
+  moq_range: '',
+  category: '',
+  location_scope: '',
   has_branding: null,
 };

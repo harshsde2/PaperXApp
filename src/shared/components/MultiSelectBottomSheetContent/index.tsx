@@ -20,7 +20,7 @@ export const MultiSelectBottomSheetContent = memo(({
   ListComponent = FlatList,
 }: MultiSelectBottomSheetContentProps) => {
   const styles = createStyles(theme);
-  
+
   // Manage local state for selections to update UI immediately
   const [localSelectedIds, setLocalSelectedIds] = useState<number[]>(initialSelectedIds || []);
   

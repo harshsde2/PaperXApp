@@ -104,6 +104,11 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
       BootSplash.hide({ fade: true });
     }, BOOT_SPLASH_HIDE_DELAY);
 
+    // Safety net: force-dismiss splash after max duration in case worklet callback never fires
+    const fallbackTimer = setTimeout(() => {
+      onAnimationEnd();
+    }, FADE_OUT_START + FADE_OUT_DURATION + 800);
+
     particleProgress.value = withDelay(
       PARTICLE_START_DELAY,
       withTiming(1, {
@@ -133,7 +138,10 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
       ),
     );
 
-    return () => clearTimeout(bootSplashTimer);
+    return () => {
+      clearTimeout(bootSplashTimer);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   const overlayAnimatedStyle = useAnimatedStyle(() => ({

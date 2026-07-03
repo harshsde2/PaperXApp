@@ -18,4 +18,8 @@ export type BrandSelectionContentProps = {
   onSelect: (brand: SelectedBrand) => void;
   theme: Theme;
   ListComponent?: ComponentType<any>;
+  /** Called to create + select a custom brand when the user can't find theirs. */
+  onAddCustom?: (name: string) => void;
+  /** Whether a custom brand is currently being created. */
+  isAddingCustom?: boolean;
 };

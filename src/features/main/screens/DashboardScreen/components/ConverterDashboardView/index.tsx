@@ -16,6 +16,7 @@ import { SCREENS } from '@navigation/constants';
 import type { ConverterDashboardViewProps, RTDSnapshotData, TransformedSession } from './@types';
 import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
 import { useDashboardHeaderHeight } from '../../DashboardHeaderHeightContext';
+import { ResponsesCard } from '../ResponsesCard';
 import { createStyles } from './styles';
 import DashboardCardWrapper from '@shared/components/DashboardCardWrapper';
 import GlassyWrapper from '@shared/components/GlassyWrapper';
@@ -221,6 +222,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
             onRefresh={onRefresh}
             tintColor={theme.colors.primary.DEFAULT}
             colors={[theme.colors.primary.DEFAULT]}
+            progressViewOffset={headerInset}
           />
         ) : undefined
       }
@@ -269,6 +271,9 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
         </>
       ) : (
         <>
+      {/* Responses to your posts (2-tap path to chat) */}
+      <ResponsesCard />
+
       {/* PaperX Credits */}
       {/* <View style={styles.creditsBar}>
         <View style={styles.creditsLeft}>

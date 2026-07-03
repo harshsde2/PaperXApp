@@ -59,9 +59,8 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
 
   const defaultValues: WarehouseFormData = {
     name: existingLocation?.name || '',
-    flatHouseNo: '',
-    streetLandmark: mapData.address || '',
-    locality: '',
+    location1: mapData.address || '',
+    location2: '',
     state: mapData.state || '',
     city: mapData.city || '',
     pincode: mapData.pincode || '',
@@ -77,7 +76,7 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
   const selectedStateIso = STATE_NAME_TO_ISO[selectedState] || '';
 
   useEffect(() => {
-    setValue('streetLandmark', mapData.address || '');
+    setValue('location1', mapData.address || '');
     setValue('state', mapData.state || '');
     setValue('city', mapData.city || '');
     setValue('pincode', mapData.pincode || '');
@@ -122,7 +121,8 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
 
   const onFormSubmit = useCallback(
     (data: WarehouseFormData) => {
-      if (!data.pincode || !validatePincode(data.pincode)) {
+      // Pincode is optional now; only validate the format if a value was entered.
+      if (data.pincode && !validatePincode(data.pincode)) {
         Alert.alert(
           'Invalid Pincode',
           'Please enter a valid 6-digit Indian pincode.'
@@ -174,26 +174,23 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
         )}
 
         <FormInput
-          name="flatHouseNo"
+          name="location1"
           control={control}
-          label="Flat / House No, Building"
-          placeholder="e.g. B-12, Tower A"
+          label="Location"
+          placeholder="Full address (building, street, area)"
+          rules={{
+            required: 'Location is required',
+            validate: (v) =>
+              (v || '').trim().length > 0 || 'Location is required',
+          }}
           containerStyle={styles.formGroup}
         />
 
         <FormInput
-          name="streetLandmark"
+          name="location2"
           control={control}
-          label="Street, Landmark"
-          placeholder="Street name or nearby landmark"
-          containerStyle={styles.formGroup}
-        />
-
-        <FormInput
-          name="locality"
-          control={control}
-          label="Locality / Area"
-          placeholder="e.g. Indiranagar, Sector 18"
+          label="Location 2 (optional)"
+          placeholder="Landmark, additional details"
           containerStyle={styles.formGroup}
         />
 
@@ -259,14 +256,13 @@ export const WarehouseAddressForm: React.FC<WarehouseAddressFormProps> = ({
         <FormInput
           name="pincode"
           control={control}
-          label="Pincode"
+          label="Pincode (optional)"
           placeholder="6-digit pincode"
           keyboardType="numeric"
           maxLength={6}
           rules={{
-            required: 'Pincode is required',
             validate: (v) =>
-              validatePincode(v || '') || 'Enter a valid 6-digit pincode',
+              !v || validatePincode(v) || 'Enter a valid 6-digit pincode',
           }}
           containerStyle={styles.formGroup}
         />

@@ -14,6 +14,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { AppIcon } from '@assets/svgs';
 import { useTheme, Theme } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
@@ -748,6 +749,8 @@ const MaterialsScreen = () => {
           />
         </View>
       </FloatingBottomContainer>
+
+      <KeyboardDoneBar />
     </>
   );
 };

@@ -114,6 +114,7 @@ const LoginScreen = () => {
 
   return (
     <ScreenWrapper
+      keyboardDoneBar
       safeArea={true} // Use false to let gradient cover status bar
       gradient="linear"
       safeAreaEdges={['bottom']}

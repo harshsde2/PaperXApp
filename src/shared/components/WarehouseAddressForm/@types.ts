@@ -1,8 +1,7 @@
 export interface WarehouseFormData {
   name: string;
-  flatHouseNo: string;
-  streetLandmark: string;
-  locality: string;
+  location1: string;
+  location2: string;
   state: string;
   city: string;
   pincode: string;

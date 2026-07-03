@@ -15,6 +15,7 @@ import type { DealerDashboardData } from '@services/api';
 import { SCREENS } from '@navigation/constants';
 import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
 import { useDashboardHeaderHeight } from '../DashboardHeaderHeightContext';
+import { ResponsesCard } from './ResponsesCard';
 import { createStyles } from './DealerDashboardView/styles';
 
 const { width } = Dimensions.get('window');
@@ -115,6 +116,7 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
             onRefresh={onRefresh}
             tintColor={theme.colors.primary.DEFAULT}
             colors={[theme.colors.primary.DEFAULT]}
+            progressViewOffset={headerInset}
           />
         ) : undefined
       }
@@ -125,7 +127,8 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
         <Text style={styles.subtitle}>Manage your opportunities and sessions.</Text>
       </View>
 
-   
+      {/* Responses to your posts (2-tap path to chat) */}
+      <ResponsesCard />
 
       {/* Stats Cards */}
       <View style={styles.statsContainer}>

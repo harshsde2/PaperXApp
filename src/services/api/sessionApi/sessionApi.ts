@@ -26,6 +26,7 @@ import type {
   GetMatchmakingResponsesParams,
   GetMatchmakingResponsesResponse,
   GetInquiryChatThreadsResponse,
+  GetAllChatThreadsResponse,
   OpenChatThreadResponse,
   ThreadMessagesResponse,
   GetThreadMessagesParams,
@@ -441,6 +442,20 @@ export const useDeclineInquiry = () => {
 // ============================================
 // STRUCTURED CHAT: THREADS + MESSAGES
 // ============================================
+
+export const useGetAllChatThreads = () => {
+  return useQuery({
+    queryKey: queryKeys.chat.structured.allThreads(),
+    queryFn: async (): Promise<GetAllChatThreadsResponse> => {
+      const response = await api.get<{ data: GetAllChatThreadsResponse }>(
+        CHAT_THREAD_ENDPOINTS.ALL,
+      );
+      return extractData<GetAllChatThreadsResponse>(response);
+    },
+    staleTime: 0,
+    gcTime: 0,
+  });
+};
 
 export const useGetInquiryChatThreads = (
   inquiryId: number | string,

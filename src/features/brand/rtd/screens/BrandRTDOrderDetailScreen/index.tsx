@@ -4,7 +4,6 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
-  Clipboard,
   RefreshControl,
 } from 'react-native';
 import { useTheme } from '@theme/index';
@@ -16,7 +15,6 @@ import {
   useGetBrandRtdOrderDetail,
   useCreateBrandRtdRazorpayOrder,
   useVerifyBrandRtdRazorpayPayment,
-  useRaiseRtdDispute,
   useCancelRtdOrder,
 } from '@services/api/brandRtdApi';
 import type { RtdOrderStatus } from '@services/api';
@@ -32,7 +30,6 @@ import {
 import { BrandOrderTimeline } from '../../components/BrandOrderTimeline';
 import { BrandOrderSummaryCard } from '../../components/BrandOrderSummaryCard';
 import { OrderCountdownTimer } from '../../components/OrderCountdownTimer';
-import { TrackingInfoCard } from '../../components/TrackingInfoCard';
 import { ContactDetailsCard } from '@shared/components/ContactDetailsCard';
 import { useSkeleton } from '@shared/hooks/useSkeleton';
 import { DetailSkeleton } from '@shared/components/skeletons';
@@ -54,10 +51,18 @@ const STATUS_META: Record<
   ACCEPTED: {
     label: 'Accepted',
     color: '#3b82f6',
-    progress: 0.35,
+    progress: 0.5,
     title: 'Converter confirmed availability',
     description:
-      'Please complete your payment to finalize the order and start the production process.',
+      'The converter accepted your request. Pay the platform fee to unlock their contact details and connect directly.',
+  },
+  CONNECTED: {
+    label: 'Connected',
+    color: '#10b981',
+    progress: 1,
+    title: "You're Connected!",
+    description:
+      'Platform fee paid. Contact the converter directly to arrange payment and delivery.',
   },
   PAID: {
     label: 'Paid',
@@ -129,7 +134,6 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   const user = useAppSelector((state) => state.auth.user);
   const pendingVerifyRef = useRef<VerifyRazorpayPaymentRequest | null>(null);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
-  const raiseDispute = useRaiseRtdDispute();
   const cancelOrder = useCancelRtdOrder();
 
   const paying = checkoutBusy || createRtdRzpOrder.isPending || verifyRtdRzpPayment.isPending;
@@ -216,7 +220,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
     const total = activeOrder.total_amount;
     Alert.alert(
       'Confirm payment',
-      `Pay ₹${total} for this order via Razorpay? You will complete checkout in a secure window.`,
+      `Pay platform fee of ₹${total} via Razorpay? You will complete checkout in a secure window.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -228,27 +232,6 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
       ]
     );
   }, [activeOrder, runRtdRazorpayCheckout]);
-
-  const handleRaiseDispute = useCallback(() => {
-    if (!activeOrder) return;
-    Alert.alert(
-      'Raise Dispute',
-      'Something wrong with your order? This will notify our support team.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Raise Dispute',
-          style: 'destructive',
-          onPress: () =>
-            raiseDispute.mutate(activeOrder.id, {
-              onSuccess: () => refetch(),
-              onError: (err) =>
-                Alert.alert('Error', err?.message ?? 'Failed to raise dispute'),
-            }),
-        },
-      ],
-    );
-  }, [activeOrder, raiseDispute, refetch]);
 
   const handleCancel = useCallback(() => {
     if (!activeOrder) return;
@@ -275,13 +258,6 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
     navigation.navigate(SCREENS.BRAND_RTD.MARKETPLACE as any);
   }, [navigation]);
 
-  const handleCopyTracking = useCallback(() => {
-    if (activeOrder?.tracking_number) {
-      Clipboard.setString(activeOrder.tracking_number);
-      Alert.alert('Copied', 'Tracking number copied to clipboard.');
-    }
-  }, [activeOrder?.tracking_number]);
-
   if (!activeOrder) {
     if (showSkeleton) {
       return (
@@ -296,7 +272,13 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   }
 
   const status = activeOrder.status;
-  const isTerminal = ['COMPLETED', 'CANCELLED', 'DISPUTED'].includes(status);
+  const isTerminal = ['CONNECTED', 'CANCELLED', 'DECLINED', 'EXPIRED', 'COMPLETED', 'DISPUTED'].includes(status);
+  const showConverterContact =
+    status === 'CONNECTED' ||
+    status === 'PAID' ||
+    status === 'IN_PRODUCTION' ||
+    status === 'DISPATCHED' ||
+    status === 'COMPLETED';
 
   return (
     <View style={styles.container}>
@@ -378,12 +360,8 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <Text style={styles.statusDescription}>{meta.description}</Text>
             </View>
 
-            {/* <View style={{ marginTop: theme.spacing[2], marginHorizontal: theme.spacing[4] }}>
-              <EscrowBanner description="Funds are held safely until your order is delivered." />
-            </View> */}
-
             <View style={styles.pricingCard}>
-              <Text style={styles.pricingHeader}>Full Order Summary</Text>
+              <Text style={styles.pricingHeader}>Platform Fee Summary</Text>
               <View style={styles.pricingProductRow}>
                 <View style={{ flex: 1 }}>
                   <Text fontWeight="bold" style={styles.pricingProductName}>
@@ -391,36 +369,26 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
                   </Text>
                   <Text style={styles.pricingRef}>Ref: #PX-{activeOrder.id}</Text>
                 </View>
-                <Text style={styles.pricingProductPrice}>
-                  ₹{activeOrder.subtotal}
-                </Text>
+                <Text style={styles.pricingProductPrice}>₹{activeOrder.subtotal}</Text>
               </View>
               <View style={styles.pricingRow}>
-                <Text style={styles.pricingLabel}>Quantity</Text>
-                <Text style={styles.pricingValue}>{activeOrder.quantity} Units</Text>
-              </View>
-              <View style={styles.pricingRow}>
-                <Text style={styles.pricingLabel}>Product value</Text>
-                <Text style={styles.pricingValue}>
-                  ₹{activeOrder.subtotal}
-                </Text>
+                <Text style={styles.pricingLabel}>Order value (pay direct to converter)</Text>
+                <Text style={styles.pricingValue}>₹{activeOrder.subtotal}</Text>
               </View>
               <View style={styles.pricingRow}>
                 <Text style={styles.pricingLabel}>Platform fee</Text>
-                <Text style={styles.pricingValue}>
-                  ₹{activeOrder.commission_amount}
-                </Text>
+                <Text style={styles.pricingValue}>₹{activeOrder.commission_amount}</Text>
               </View>
               {activeOrder.seller_gst_registered !== false && Number(activeOrder.gst_amount) > 0 && (
                 <View style={styles.pricingRow}>
-                  <Text style={styles.pricingLabel}>GST (18%)</Text>
+                  <Text style={styles.pricingLabel}>GST on platform fee (18%)</Text>
                   <Text style={styles.pricingValue}>₹{activeOrder.gst_amount}</Text>
                 </View>
               )}
               <View style={styles.pricingDivider} />
               <View style={styles.pricingTotalRow}>
                 <Text fontWeight="bold" style={styles.pricingTotalLabel}>
-                  Final Total
+                  You Pay to PaperX
                 </Text>
                 <Text fontWeight="bold" style={styles.pricingTotalValue}>
                   ₹{activeOrder.total_amount}
@@ -430,34 +398,24 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
 
             <View style={styles.facilitatorNote}>
               <Text style={styles.facilitatorText}>
-                Zupply acts as a payment collection facilitator on behalf of the seller.
-                Product amount is collected on behalf of the seller; platform fee is
-                charged by Zupply for its services. Zupply does not guarantee product
-                quality or delivery — the seller is solely responsible.
+                PaperX collects only its platform fee. Product payment and delivery are arranged
+                directly with the converter after you connect.
               </Text>
             </View>
           </>
         )}
 
-        {/* === PAID / IN_PRODUCTION === */}
-        {(status === 'PAID' || status === 'IN_PRODUCTION') && (
+        {(status === 'CONNECTED' ||
+          status === 'PAID' ||
+          status === 'IN_PRODUCTION' ||
+          status === 'DISPATCHED' ||
+          status === 'COMPLETED') && (
           <>
             <View style={styles.statusHeader}>
               <View style={styles.statusBadgeRow}>
                 <View style={[styles.statusBadge, { backgroundColor: meta.color }]}>
                   <Text style={styles.statusBadgeText}>{meta.label}</Text>
                 </View>
-                <Text style={styles.progressHint}>
-                  Order Progress: {Math.round(meta.progress * 100)}%
-                </Text>
-              </View>
-              <View style={styles.progressBarTrack}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${meta.progress * 100}%` },
-                  ]}
-                />
               </View>
               <Text fontWeight="bold" style={styles.statusTitle}>
                 {meta.title}
@@ -465,101 +423,17 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <Text style={styles.statusDescription}>{meta.description}</Text>
             </View>
 
-            {/* <View style={{ marginTop: theme.spacing[2], marginHorizontal: theme.spacing[4] }}>
-              <EscrowBanner />
-            </View> */}
-
             <BrandOrderSummaryCard order={activeOrder} />
 
-            <ContactDetailsCard
-              title="Converter Contact"
-              name={activeOrder.converter?.name}
-              companyName={activeOrder.converter?.company_name}
-              email={activeOrder.converter?.email}
-              phone={activeOrder.converter?.mobile}
-            />
-          </>
-        )}
-
-        {/* === DISPATCHED === */}
-        {status === 'DISPATCHED' && (
-          <>
-            <View style={styles.dispatchedCard}>
-              <View style={styles.dispatchedBadge}>
-                <Text style={styles.dispatchedBadgeText}>In Transit</Text>
-              </View>
-              <Text fontWeight="bold" style={styles.dispatchedTitle}>
-                Dispatched
-              </Text>
-              <Text style={styles.dispatchedDescription}>
-                Your order has left the facility and is currently being handled by the
-                courier partner.
-              </Text>
-            </View>
-
-            <View style={{ marginHorizontal: theme.spacing[4], marginTop: theme.spacing[2] }}>
-              <TrackingInfoCard
-                trackingNumber={activeOrder.tracking_number ?? null}
-                courierService={null}
-                onCopyTracking={
-                  activeOrder.tracking_number ? handleCopyTracking : undefined
-                }
+            {showConverterContact && (
+              <ContactDetailsCard
+                title="Converter Contact"
+                name={activeOrder.converter?.name}
+                companyName={activeOrder.converter?.company_name}
+                email={activeOrder.converter?.email}
+                phone={activeOrder.converter?.mobile}
               />
-            </View>
-
-            <BrandOrderSummaryCard order={activeOrder} />
-
-            <ContactDetailsCard
-              title="Converter Contact"
-              name={activeOrder.converter?.name}
-              companyName={activeOrder.converter?.company_name}
-              email={activeOrder.converter?.email}
-              phone={activeOrder.converter?.mobile}
-            />
-          </>
-        )}
-
-        {/* === COMPLETED === */}
-        {status === 'COMPLETED' && (
-          <>
-            <View style={styles.completedHero}>
-              <View style={styles.completedIconCircle}>
-                <Text style={styles.completedIconText}>✓</Text>
-              </View>
-              <View style={styles.completedBadge}>
-                <Text style={styles.completedBadgeText}>Completed</Text>
-              </View>
-              <Text fontWeight="bold" style={styles.completedTitle}>
-                Order Dispatched Successfully
-              </Text>
-              <Text style={styles.completedSubtitle}>
-                Your order has been dispatched by the converter.
-              </Text>
-            </View>
-
-            <View style={{ marginHorizontal: theme.spacing[4], marginTop: theme.spacing[2] }}>
-              <TrackingInfoCard
-                trackingNumber={activeOrder.tracking_number ?? null}
-                courierService={null}
-                onCopyTracking={
-                  activeOrder.tracking_number ? handleCopyTracking : undefined
-                }
-              />
-            </View>
-
-            <ContactDetailsCard
-              title="Converter Contact"
-              name={activeOrder.converter?.name}
-              companyName={activeOrder.converter?.company_name}
-              email={activeOrder.converter?.email}
-              phone={activeOrder.converter?.mobile}
-            />
-
-            <BrandOrderSummaryCard order={activeOrder} />
-
-            <View style={styles.section}>
-              <BrandOrderTimeline currentStatus={status} />
-            </View>
+            )}
           </>
         )}
 
@@ -631,7 +505,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
         {status === 'ACCEPTED' && (
           <>
             <CustomButton
-              title={paying ? 'Processing...' : `Pay ₹${activeOrder.total_amount}`}
+              title={paying ? 'Processing...' : `Pay Platform Fee — ₹${activeOrder.total_amount}`}
               onPress={handlePay}
               variant="gradient"
               size="lg"
@@ -651,39 +525,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
           </>
         )}
 
-        {status === 'DISPATCHED' && (
-          <CustomButton
-            title="Back to Dashboard"
-            onPress={handleBackToDashboard}
-            variant="gradient"
-            size="lg"
-          />
-        )}
-
-        {status === 'COMPLETED' && (
-          <>
-            <CustomButton
-              title="Back to Dashboard"
-              onPress={handleBackToDashboard}
-              variant="gradient"
-              size="lg"
-            />
-            <View style={styles.footerGap} />
-            {/* <TouchableOpacity
-              style={styles.dangerOutlineButton}
-              onPress={handleRaiseDispute}
-              activeOpacity={0.7}
-              disabled={raiseDispute.isPending}
-            >
-              <AppIcon.Warning width={16} height={16} color={theme.colors.error.DEFAULT} />
-              <Text style={styles.dangerOutlineButtonText}>
-                {raiseDispute.isPending ? 'Submitting...' : 'Raise Dispute'}
-              </Text>
-            </TouchableOpacity> */}
-          </>
-        )}
-
-        {status === 'DISPUTED' && (
+        {status === 'CONNECTED' && (
           <CustomButton
             title="Back to Dashboard"
             onPress={handleBackToDashboard}
@@ -707,7 +549,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               activeOpacity={0.7}
             >
               <Text fontWeight="bold" style={styles.outlineButtonText}>
-                Back to Marketplace
+                Back to List
               </Text>
             </TouchableOpacity>
           </>

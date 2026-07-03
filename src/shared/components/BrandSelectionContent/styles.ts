@@ -65,4 +65,20 @@ export const createStyles = (theme: Theme) =>
     retryText: {
       color: theme.colors.primary.DEFAULT,
     },
+    addCustomRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+      marginHorizontal: theme.spacing[4],
+      marginTop: theme.spacing[2],
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[3],
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.primary[200],
+      backgroundColor: theme.colors.primary[50],
+    },
+    addCustomText: {
+      color: theme.colors.primary.DEFAULT,
+    },
   });

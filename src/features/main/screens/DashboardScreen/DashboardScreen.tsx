@@ -1,7 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, BackHandler } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGetProfile, useGetDashboard } from '@services/api';
 import type { DashboardRole } from '@services/api';
+import { queryKeys } from '@services/api/queryClient';
 import { useActiveRole } from '@shared/hooks/useActiveRole';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -28,6 +30,8 @@ const DashboardScreen = () => {
   } = useGetProfile();
   const theme = useTheme();
 
+  const queryClient = useQueryClient();
+
   // Get active role from Redux (supports role switching)
   const activeRole = useActiveRole() as DashboardRole;
 
@@ -47,10 +51,14 @@ const DashboardScreen = () => {
   const isError = isProfileError || isDashboardError;
   const isRefreshing = isProfileRefetching || isDashboardRefetching;
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     refetchProfile();
     refetchDashboard();
-  };
+    // Invalidate shared caches so ResponsesCard + header badges update immediately
+    queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread() });
+    queryClient.invalidateQueries({ queryKey: queryKeys.chat.structured.allThreads() });
+  }, [refetchProfile, refetchDashboard, queryClient]);
 
   // Check profile completion status
   const hasEmail = !!profileData?.email;

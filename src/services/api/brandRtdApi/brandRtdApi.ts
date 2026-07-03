@@ -176,6 +176,8 @@ export const useRequestRtdOrderWithLogo = () => {
       const formData = new FormData();
       formData.append('product_id', String(data.product_id));
       formData.append('quantity', String(data.quantity));
+      formData.append('delivery_address', data.delivery_address);
+      if (data.order_notes) formData.append('order_notes', data.order_notes);
       if (data.logo) {
         formData.append('logo', data.logo);
       }
@@ -239,22 +241,6 @@ export const useVerifyBrandRtdRazorpayPayment = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.brandRtd.orders() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.brandRtd.orderDetail(variables.orderId),
-      });
-    },
-  });
-};
-
-export const useRaiseRtdDispute = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (orderId: number): Promise<RtdOrder> => {
-      const response = await api.post(RTD_ENDPOINTS.ORDER_DISPUTE(orderId));
-      return extractData<RtdOrder>(response);
-    },
-    onSuccess: (_data, orderId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.brandRtd.orders() });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.brandRtd.orderDetail(orderId),
       });
     },
   });

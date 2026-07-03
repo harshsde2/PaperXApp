@@ -67,8 +67,8 @@ const SERVER_API_BASE_URL = 'https://paperx.safewayrssi.com';
 
 // API Base URLs
 export const API_BASE_URLS = {
-  [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
-  // [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
+  // [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
+  [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
   [ENV.STAGING]: SERVER_API_BASE_URL,
   [ENV.PRODUCTION]: SERVER_API_BASE_URL,
 } as const;
@@ -82,6 +82,10 @@ export const WS_BASE_URLS = {
 
 export const API_BASE_URL = API_BASE_URLS[CURRENT_ENV];
 export const WS_BASE_URL = WS_BASE_URLS[CURRENT_ENV];
+
+if (__DEV__) {
+  console.log('[PaperX] API_BASE_URL =', API_BASE_URL);
+}
 
 // API Timeouts
 export const API_TIMEOUT = 30000; // 30 seconds

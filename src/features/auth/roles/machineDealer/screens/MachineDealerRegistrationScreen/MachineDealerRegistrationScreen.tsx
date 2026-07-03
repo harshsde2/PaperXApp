@@ -173,16 +173,15 @@ const MachineDealerRegistrationScreen = () => {
   const handleBusinessStructuredAddressSubmit = useCallback(
     (data: {
       name: string;
-      flatHouseNo: string;
-      streetLandmark: string;
-      locality: string;
+      location1: string;
+      location2: string;
       state: string;
       city: string;
       pincode: string;
       latitude: number;
       longitude: number;
     }) => {
-      const streetBlock = [data.flatHouseNo, data.streetLandmark, data.locality]
+      const streetBlock = [data.location1, data.location2]
         .filter(Boolean)
         .join(', ');
       const fullLoc = [streetBlock, data.city, data.state, data.pincode]
@@ -462,6 +461,7 @@ const MachineDealerRegistrationScreen = () => {
       <View style={{ flex: 1 }}>
       <ScreenWrapper
         scrollable
+        keyboardDoneBar
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
         contentContainerStyle={{ ...styles.scrollContent, paddingBottom: floatingContainerPadding }}
@@ -1028,6 +1028,7 @@ const MachineDealerRegistrationScreen = () => {
 
       <GorhomBottomSheetModal
         ref={preferredBrandsSheetRef}
+        doneFooter
         snapPoints={['70%', '95%']}
         enablePanDownToClose
         onDismiss={() => setBrandSearchQuery('')}

@@ -220,27 +220,27 @@ const SessionChatScreen = () => {
 
   return (
     <ScreenWrapper safeAreaEdges={[]} backgroundColor={theme.colors.background.primary}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <AppIcon.ArrowLeft width={22} height={22} color={theme.colors.text.primary} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>{partnerName || 'Partner'}</Text>
-            <Text style={styles.headerSubtitle}>{inquiryRef || 'Session Chat'}</Text>
-          </View>
-          <TouchableOpacity style={styles.infoButton} onPress={handleInfo}>
-            <AppIcon.Warning width={20} height={20} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
+        {/* Header inside KAV so offset calculation is correct */}
+        <View style={[styles.header, { paddingTop: insets.top }]}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+              <AppIcon.ArrowLeft width={22} height={22} color={theme.colors.text.primary} />
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>{partnerName || 'Partner'}</Text>
+              <Text style={styles.headerSubtitle}>{inquiryRef || 'Session Chat'}</Text>
+            </View>
+            <TouchableOpacity style={styles.infoButton} onPress={handleInfo}>
+              <AppIcon.Warning width={20} height={20} color={theme.colors.text.tertiary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Chat Messages */}
         <ScrollView
           ref={scrollViewRef}

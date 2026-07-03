@@ -21,6 +21,7 @@ import { createStyles } from './styles';
 const STATUS_COLORS: Record<string, string> = {
   REQUESTED: '#3b82f6',
   ACCEPTED: '#3b82f6',
+  CONNECTED: '#10b981',
   PAID: '#10b981',
   IN_PRODUCTION: '#f59e0b',
   DISPATCHED: '#3b82f6',
@@ -146,13 +147,13 @@ export const BrandRTDMyOrdersScreen: React.FC<BrandRTDMyOrdersScreenProps> = ({
               <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
             </View>
             <Text fontWeight="bold" style={styles.amountText}>
-              ₹{item.total_amount}
+              ₹{item.subtotal}
             </Text>
           </View>
 
-          {(showCountdown || item.status === 'DISPATCHED') && (
+          {showCountdown && (
             <View style={styles.cardFooter}>
-              {showCountdown && timeLabel ? (
+              {timeLabel ? (
                 <>
                   <Text style={styles.footerLabel}>
                     {item.status === 'REQUESTED'
@@ -167,13 +168,6 @@ export const BrandRTDMyOrdersScreen: React.FC<BrandRTDMyOrdersScreenProps> = ({
                     />
                     <Text style={styles.countdownText}>{timeLabel}</Text>
                   </View>
-                </>
-              ) : item.status === 'DISPATCHED' ? (
-                <>
-                  <Text style={styles.footerLabel}>In Transit</Text>
-                  <Text style={styles.countdownText}>
-                    {item.tracking_number ?? 'Track'}
-                  </Text>
                 </>
               ) : null}
             </View>
@@ -198,7 +192,7 @@ export const BrandRTDMyOrdersScreen: React.FC<BrandRTDMyOrdersScreenProps> = ({
           </Text>
           <Text style={styles.emptySubText}>
             {activeTab === 'active'
-              ? 'Browse the marketplace to place your first order.'
+              ? 'Browse the List of Products to place your first order.'
               : 'Completed and cancelled orders will appear here.'}
           </Text>
         </View>

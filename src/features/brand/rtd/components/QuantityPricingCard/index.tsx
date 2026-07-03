@@ -82,15 +82,15 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
       const platformFeePercent = getPlatformFeePercent(subtotal);
       const platformFee = Math.round(subtotal * (platformFeePercent / 100) * 100) / 100;
       const gst = sellerGstRegistered
-        ? Math.round((subtotal + platformFee) * GST_RATE * 100) / 100
+        ? Math.round(platformFee * GST_RATE * 100) / 100
         : 0;
-      const total = Math.round((subtotal + platformFee + gst) * 100) / 100;
+      const platformTotal = Math.round((platformFee + gst) * 100) / 100;
 
       return {
         subtotal: subtotal.toFixed(2),
         platformFee: platformFee.toFixed(2),
         gst: gst.toFixed(2),
-        total: total.toFixed(2),
+        platformTotal: platformTotal.toFixed(2),
         showGst: sellerGstRegistered,
       };
     }, [priceSlab, product.base_price, quantity, sellerGstRegistered]);
@@ -138,7 +138,7 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
 
         <View style={styles.pricingRow}>
           <Text variant="bodySmall" style={styles.pricingLabel}>
-            Product value (on behalf of seller)
+            Order value (pay direct to converter)
           </Text>
           <Text variant="bodySmall" style={styles.pricingValue}>
             ₹{pricing.subtotal}
@@ -157,7 +157,7 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
         {pricing.showGst && (
           <View style={styles.pricingRow}>
             <Text variant="bodySmall" style={styles.pricingLabel}>
-              GST (18%)
+              GST on platform fee (18%)
             </Text>
             <Text variant="bodySmall" style={styles.pricingValue}>
               ₹{pricing.gst}
@@ -167,15 +167,15 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
 
         <View style={styles.totalRow}>
           <Text variant="bodyMedium" fontWeight="bold" style={styles.totalLabel}>
-            Total Amount
+            You Pay to PaperX
           </Text>
           <Text variant="h5" fontWeight="extrabold" style={styles.totalValue}>
-            ₹{pricing.total}
+            ₹{pricing.platformTotal}
           </Text>
         </View>
 
         <Text variant="captionMedium" style={styles.facilitatorText}>
-          Zupply acts as a payment collection facilitator on behalf of the seller.
+          Product payment and delivery are arranged directly with the converter after connecting.
         </Text>
       </View>
     );

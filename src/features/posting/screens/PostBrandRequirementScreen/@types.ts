@@ -5,7 +5,6 @@
 import type {
   BrandRequirementType,
   BrandPackagingType,
-  BrandTimeline,
 } from '@services/api';
 
 export type LocationSource = 'saved' | 'manual';
@@ -26,7 +25,6 @@ export interface PostBrandRequirementFormData {
   requirement_type: BrandRequirementType;
   packaging_type?: BrandPackagingType;
   quantity_range: string;
-  timeline: BrandTimeline;
   description: string;
   location: string;
   city: string;

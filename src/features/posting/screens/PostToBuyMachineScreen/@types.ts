@@ -22,6 +22,7 @@ export interface PostToBuyMachineFormData {
   condition_preference: string[]; // multi-select: Brand New, Excellent, Working Condition, Any
   budget_min: number | undefined;
   budget_max: number | undefined;
+  machine_price_range: string;
   urgency: 'normal' | 'urgent';
   visibility: MachineVisibilityType;
   location: string;

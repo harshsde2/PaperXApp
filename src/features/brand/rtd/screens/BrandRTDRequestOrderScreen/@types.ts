@@ -10,7 +10,5 @@ export type BrandRTDRequestOrderScreenProps = StackScreenProps<
 
 export interface OrderFormState {
   quantity: string;
-  deliveryAddress: string;
-  orderNotes: string;
   logoFile: PickedImage | null;
 }

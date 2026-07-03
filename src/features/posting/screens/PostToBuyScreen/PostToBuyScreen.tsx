@@ -131,9 +131,9 @@ const URGENCY_OPTIONS = [
 ];
 
 const VISIBILITY_OPTIONS: { label: string; value: VisibilityType }[] = [
-  { label: 'Other Raw Material Dealers', value: 'dealers' },
+  { label: 'Paper / Paperboard / Raw material dealers', value: 'dealers' },
   { label: 'Converters', value: 'converters' },
-  { label: 'All (Raw Material Dealers, Converters)', value: 'all' },
+  { label: 'All (Paper / Paperboard / Raw material dealers, Converters)', value: 'all' },
 ];
 
 // Special option for manual location selection

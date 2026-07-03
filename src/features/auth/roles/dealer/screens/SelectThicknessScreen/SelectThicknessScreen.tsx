@@ -1,14 +1,21 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, Modal, Pressable } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+} from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
-import { Card } from '@shared/components/Card';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { DropdownButton } from '@shared/components/DropdownButton';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
+import { useKeyboard } from '@shared/hooks';
 import { SelectThicknessScreenNavigationProp, ThicknessUnit } from './@types';
 import { createStyles } from './styles';
 import { SCREENS } from '@navigation/constants';
@@ -24,6 +31,7 @@ const SelectThicknessScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const { isKeyboardVisible } = useKeyboard();
   const [isUnitModalVisible, setIsUnitModalVisible] = useState(false);
 
   // Get params from route
@@ -51,7 +59,6 @@ const SelectThicknessScreen = () => {
   const [unit, setUnit] = useState<ThicknessUnit>(primaryUnitFromApi || 'GSM');
   const [minValue, setMinValue] = useState<number | string>(150);
   const [maxValue, setMaxValue] = useState<number | string>(300);
-  const [selectedRanges, setSelectedRanges] = useState<Array<{ unit: ThicknessUnit; min: number; max: number; id: string }>>([]);
 
   useEffect(() => {
     if (primaryUnitFromApi) {
@@ -69,96 +76,52 @@ const SelectThicknessScreen = () => {
   }, []);
 
   const handleMinValueChange = (value: string) => {
-    // Allow empty string for clearing
     if (value === '') {
       setMinValue('');
       return;
     }
-    
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
-      // Allow any positive number, validation happens on add
       setMinValue(numValue);
     }
   };
 
   const handleMaxValueChange = (value: string) => {
-    // Allow empty string for clearing
     if (value === '') {
       setMaxValue('');
       return;
     }
-    
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
-      // Allow any positive number, validation happens on add
       setMaxValue(numValue);
     }
   };
 
-  const handleAddThickness = () => {
-    // Validate values
-    const minNum = typeof minValue === 'number' ? minValue : parseInt(String(minValue), 10);
-    const maxNum = typeof maxValue === 'number' ? maxValue : parseInt(String(maxValue), 10);
-
-    if (isNaN(minNum) || isNaN(maxNum)) {
-      return; // Don't add if values are invalid
-    }
-
-    if (minNum <= 0 || maxNum <= 0) {
-      return; // Don't add if values are not positive
-    }
-
-    if (minNum >= maxNum) {
-      return; // Don't add if min is greater than or equal to max
-    }
-
-    // Check if this range already exists
-    const isDuplicate = selectedRanges.some(
-      range => range.unit === unit && range.min === minNum && range.max === maxNum
-    );
-
-    if (isDuplicate) {
-      return; // Don't add duplicates
-    }
-
-    const newRange = {
-      unit,
-      min: minNum,
-      max: maxNum,
-      id: `${unit}-${minNum}-${maxNum}-${Date.now()}`,
-    };
-
-    setSelectedRanges(prev => [...prev, newRange]);
-    
-    // Reset to default values for next entry
-    setMinValue(150);
-    setMaxValue(300);
-  };
-
-  const handleRemoveRange = (id: string) => {
-    setSelectedRanges(prev => prev.filter(range => range.id !== id));
-  };
+  // Single thickness range validity
+  const minNum = typeof minValue === 'number' ? minValue : parseInt(String(minValue), 10);
+  const maxNum = typeof maxValue === 'number' ? maxValue : parseInt(String(maxValue), 10);
+  const isValid =
+    !isNaN(minNum) &&
+    !isNaN(maxNum) &&
+    minNum > 0 &&
+    maxNum > 0 &&
+    minNum < maxNum;
 
   const handleContinue = () => {
-    // Validation: Must have at least one thickness range
-    if (selectedRanges.length === 0) {
-      return; // Don't proceed if no ranges are selected
+    if (!isValid) {
+      return;
     }
-
     proceedWithThickness();
   };
 
   const proceedWithThickness = () => {
-    const thicknessRanges = selectedRanges.map(({ id, ...range }) => range);
+    // Downstream expects an array of ranges; we now capture exactly one.
+    const thicknessRanges = [{ unit, min: minNum, max: maxNum }];
 
     if (onThicknessSelected) {
       // If onSpecsSelected is provided, navigate to MaterialSpecsScreen after applying thickness
       if (onSpecsSelected) {
-        // First, call the thickness callback to store thickness ranges
         onThicknessSelected(thicknessRanges);
-        
-        // Then navigate to MaterialSpecsScreen for finish selection
         navigation.navigate(SCREENS.AUTH.MATERIAL_SPECS, {
           onSpecsSelected,
           onBrandDetailsSelected,
@@ -166,7 +129,7 @@ const SelectThicknessScreen = () => {
         });
         return;
       }
-      
+
       // Called from Materials screen via callback (without specs selection)
       onThicknessSelected(thicknessRanges);
       navigation.goBack();
@@ -189,6 +152,7 @@ const SelectThicknessScreen = () => {
           ...styles.scrollContent,
           paddingBottom: bottomPadding,
         }}
+        scrollViewProps={{ keyboardShouldPersistTaps: 'handled' }}
       >
         <View style={styles.container}>
           {/* Unit Dropdown */}
@@ -203,124 +167,71 @@ const SelectThicknessScreen = () => {
             />
           </View>
 
-          {/* Selected Ranges List */}
-          {selectedRanges.length > 0 && (
-            <View style={styles.selectedRangesContainer}>
-              <Text variant="bodyMedium" fontWeight="semibold" style={styles.selectedRangesTitle}>
-                Added Thickness Ranges ({selectedRanges.length})
-              </Text>
-              {selectedRanges.map((range) => (
-                <Card key={range.id} style={styles.rangeChip}>
-                  <View style={styles.rangeChipContent}>
-                    <View style={styles.rangeChipInfo}>
-                      <Text variant="bodyMedium" fontWeight="semibold" style={styles.rangeChipValue}>
-                        {range.min} - {range.max}
-                      </Text>
-                      <Text variant="bodySmall" style={styles.rangeChipUnit}>
-                        {range.unit}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveRange(range.id)}
-                      style={styles.removeButton}
-                      activeOpacity={0.7}
-                    >
-                      <AppIcon.Delete
-                        width={18}
-                        height={18}
-                        color={theme.colors.error.DEFAULT}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </Card>
-              ))}
-            </View>
-          )}
-
-          {/* Current Range Card */}
-          <Card style={styles.selectedRangeCard}>
-            <Text variant="captionMedium" fontWeight="semibold" style={styles.selectedRangeLabel}>
-              CURRENT RANGE
-            </Text>
-            <Text variant="h2" fontWeight="bold" style={styles.selectedRangeValue}>
-              {minValue || '--'} - {maxValue || '--'}{' '}
-              <Text style={styles.selectedRangeUnit}>{unit}</Text>
-            </Text>
-          </Card>
-
           {/* Min/Max Input Fields */}
           <View style={styles.inputsRow}>
-          <View style={styles.inputContainer}>
-            <Text variant="captionMedium" fontWeight="semibold" style={styles.inputLabel}>
-              MIN THICKNESS
-            </Text>
-            <View style={styles.inputField}>
-              <TextInput
-                value={minValue.toString()}
-                onChangeText={handleMinValueChange}
-                keyboardType="numeric"
-                placeholder="Enter min value"
-                placeholderTextColor={theme.colors.text.tertiary}
-                style={styles.inputValue}
-              />
-              <Text variant="bodySmall" style={styles.inputUnit}>
-                {unit}
+            <View style={styles.inputContainer}>
+              <Text variant="captionMedium" fontWeight="semibold" style={styles.inputLabel}>
+                MIN THICKNESS
               </Text>
+              <View style={styles.inputField}>
+                <TextInput
+                  value={minValue.toString()}
+                  onChangeText={handleMinValueChange}
+                  keyboardType="numeric"
+                  placeholder="Enter min value"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  style={styles.inputValue}
+                  autoCorrect={false}
+                  autoComplete="off"
+                  textContentType="none"
+                  importantForAutofill="no"
+                  spellCheck={false}
+                />
+                <Text variant="bodySmall" style={styles.inputUnit}>
+                  {unit}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text variant="captionMedium" fontWeight="semibold" style={styles.inputLabel}>
+                MAX THICKNESS
+              </Text>
+              <View style={styles.inputField}>
+                <TextInput
+                  value={maxValue.toString()}
+                  onChangeText={handleMaxValueChange}
+                  keyboardType="numeric"
+                  placeholder="Enter max value"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  style={styles.inputValue}
+                  autoCorrect={false}
+                  autoComplete="off"
+                  textContentType="none"
+                  importantForAutofill="no"
+                  spellCheck={false}
+                />
+                <Text variant="bodySmall" style={styles.inputUnit}>
+                  {unit}
+                </Text>
+              </View>
             </View>
           </View>
-
-          <View style={styles.inputContainer}>
-            <Text variant="captionMedium" fontWeight="semibold" style={styles.inputLabel}>
-              MAX THICKNESS
-            </Text>
-            <View style={styles.inputField}>
-              <TextInput
-                value={maxValue.toString()}
-                onChangeText={handleMaxValueChange}
-                keyboardType="numeric"
-                placeholder="Enter max value"
-                placeholderTextColor={theme.colors.text.tertiary}
-                style={styles.inputValue}
-              />
-              <Text variant="bodySmall" style={styles.inputUnit}>
-                {unit}
-              </Text>
-            </View>
-          </View>
-          </View>
-
-          {/* Info Box */}
-          {/* <View style={styles.infoBox}>
-          <View style={styles.infoIcon}>
-            <Text style={styles.infoIconText}>i</Text>
-          </View>
-            <Text variant="captionSmall" style={styles.infoText}>
-              Standard industry tolerance is +/- 5%. Switching units will automatically convert your
-              values.
-            </Text>
-          </View> */}
         </View>
       </ScreenWrapper>
 
-      {/* Floating Bottom Buttons */}
-      <FloatingBottomContainer>
-        <View style={styles.buttonRow}>
-          <CustomButton
-            title="Add Thickness"
-            onPress={handleAddThickness}
-            variant="outline"
-            size="md"
-            leftIcon={<AppIcon.PlusCircle width={18} height={18} color={theme.colors.primary.DEFAULT} />}
-            textStyle={{ color: theme.colors.primary.DEFAULT }}
-            style={styles.addButton}
-          />
+      {/* Keyboard "Done" bar — numeric keypad has no return/Done key */}
+      <KeyboardDoneBar />
+
+      {/* Floating Continue Button (hidden while typing) */}
+      {!isKeyboardVisible && (
+        <FloatingBottomContainer>
           <CustomButton
             title="Continue"
             onPress={handleContinue}
             variant="gradient"
             size="md"
-            fullWidth={false}
-            disabled={selectedRanges.length === 0}
+            disabled={!isValid}
             gradientColors={[
               theme.colors.primary[400],
               theme.colors.primary[600],
@@ -329,10 +240,9 @@ const SelectThicknessScreen = () => {
             gradientStart={{ x: 0, y: 0 }}
             gradientEnd={{ x: 1, y: 1 }}
             rightIcon={<AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />}
-            style={styles.continueButton}
           />
-        </View>
-      </FloatingBottomContainer>
+        </FloatingBottomContainer>
+      )}
 
       {/* Unit Selection Modal */}
       <Modal

@@ -20,6 +20,7 @@ import type { RecentInquiry, RtdOrderStatus } from '@services/api';
 import type { BrandDashboardViewProps } from './@types';
 import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
 import { useDashboardHeaderHeight } from '../../DashboardHeaderHeightContext';
+import { ResponsesCard } from '../ResponsesCard';
 import { createStyles } from './styles';
 import DashboardCardWrapper from '@shared/components/DashboardCardWrapper';
 import GlassyWrapper from '@shared/components/GlassyWrapper';
@@ -202,10 +203,14 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
             onRefresh={onRefresh}
             tintColor={theme.colors.primary.DEFAULT}
             colors={[theme.colors.primary.DEFAULT]}
+            progressViewOffset={headerInset}
           />
         ) : undefined
       }
     >
+      {/* Responses to your posts (2-tap path to chat) */}
+      <ResponsesCard />
+
       {/* ── Notification Banner ── */}
       {dashboardData.newProposals > 0 && (
         <TouchableOpacity style={styles.notificationBannerTouchable} activeOpacity={0.8}>
@@ -277,7 +282,7 @@ export const BrandDashboardView: React.FC<BrandDashboardViewProps> = ({
             Post New Requirement
           </Text>
           <Text style={styles.actionCardSubtitle}>
-            Get custom quotes from top verified global suppliers.
+            Get custom quotes from top global suppliers.
           </Text>
           <View style={styles.actionCardIconWrap}>
             <AppIcon.PlusCircle width={22} height={22} color={theme.colors.text.inverse} />

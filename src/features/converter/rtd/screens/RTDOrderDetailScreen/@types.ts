@@ -15,24 +15,31 @@ export interface CountdownState {
   expired: boolean;
 }
 
-export const STATUS_LABELS: Record<RtdOrderStatus, string> = {
+export const STATUS_LABELS: Partial<Record<RtdOrderStatus, string>> = {
   REQUESTED: 'New Order Request',
-  ACCEPTED: 'Waiting for Payment',
+  ACCEPTED: 'Waiting for Platform Fee',
+  CONNECTED: 'Brand Connected',
   PAID: 'Payment Received',
   IN_PRODUCTION: 'In Production',
   DISPATCHED: 'Dispatched',
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
   DISPUTED: 'Disputed',
+  DECLINED: 'Declined',
+  EXPIRED: 'Expired',
 };
 
-export const STATUS_DESCRIPTIONS: Record<RtdOrderStatus, string> = {
+export const STATUS_DESCRIPTIONS: Partial<Record<RtdOrderStatus, string>> = {
   REQUESTED: 'A brand has requested this order. Accept or decline before the deadline.',
-  ACCEPTED: 'You accepted this order. Waiting for the brand to complete payment.',
-  PAID: 'Payment has been received on your behalf. Start production and mark when ready.',
-  IN_PRODUCTION: 'Order is being produced. Dispatch when ready.',
-  DISPATCHED: 'Order has been dispatched and completed. Payout has been released.',
-  COMPLETED: 'Order dispatched and completed successfully. Payout has been released.',
+  ACCEPTED: 'You accepted this order. Waiting for the brand to pay the platform fee.',
+  CONNECTED:
+    'The brand has paid the platform fee. Contact them directly to arrange payment and delivery.',
+  PAID: 'Payment has been received. Contact the brand to coordinate offline.',
+  IN_PRODUCTION: 'Legacy order status.',
+  DISPATCHED: 'Legacy order status.',
+  COMPLETED: 'Legacy order status.',
   CANCELLED: 'This order was cancelled by the brand.',
-  DISPUTED: 'A dispute has been raised on this order. Payout is on hold.',
+  DISPUTED: 'Legacy dispute status.',
+  DECLINED: 'You declined this order request.',
+  EXPIRED: 'This order request expired before you responded.',
 };

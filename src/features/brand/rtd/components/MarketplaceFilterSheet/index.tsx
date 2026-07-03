@@ -1,15 +1,18 @@
-import React, { memo, useState, useCallback, useEffect } from 'react';
-import { View, TextInput, ScrollView, Pressable } from 'react-native';
+import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
+import { View, ScrollView, Pressable, TextInput } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
+import { AppIcon } from '@assets/svgs';
 import { PriceRangeSlider } from '@shared/components/PriceRangeSlider';
 import { useTheme } from '@theme/index';
+import { RTD_CATEGORY_OPTIONS } from '@features/converter/rtd/screens/ConverterRTDAddProductScreen/constants';
 import { INITIAL_ADVANCED_FILTERS } from '../../screens/BrandRTDMarketplaceScreen/@types';
-import type { AdvancedFilterState } from '../../screens/BrandRTDMarketplaceScreen/@types';
+import type { AdvancedFilterState, MoqRange, LocationScope } from '../../screens/BrandRTDMarketplaceScreen/@types';
 import type { MarketplaceFilterSheetProps, LeadTimeOption } from './@types';
 import { createStyles } from './styles';
 
 const LEAD_TIME_OPTIONS: LeadTimeOption[] = [
+  { value: 'SAME_DAY', label: 'Same Day' },
   { value: 'H24', label: 'Within 24 hours' },
   { value: 'H48', label: '24-48 hours' },
   { value: 'DAYS_3_5', label: '48-72 hours' },
@@ -20,23 +23,35 @@ const BRANDING_OPTIONS = [
   { value: 'no' as const, label: 'No' },
 ];
 
+const MOQ_RANGE_OPTIONS: { value: MoqRange; label: string }[] = [
+  { value: '0-50', label: '0 – 50' },
+  { value: '50-500', label: '50 – 500' },
+  { value: '500+', label: '500+' },
+];
+
+const LOCATION_SCOPE_OPTIONS: { value: LocationScope; label: string }[] = [
+  { value: 'city', label: 'Same City' },
+  { value: 'state', label: 'Same State' },
+  { value: 'pan_india', label: 'Pan India' },
+];
+
 export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
   function MarketplaceFilterSheet({ filters, onApply, onReset }) {
     const theme = useTheme();
     const styles = createStyles(theme);
 
     const [draft, setDraft] = useState<AdvancedFilterState>(filters);
+    const [categorySearch, setCategorySearch] = useState('');
 
     useEffect(() => {
       setDraft(filters);
     }, [filters]);
 
-    const updateField = useCallback(
-      <K extends keyof AdvancedFilterState>(key: K, value: AdvancedFilterState[K]) => {
-        setDraft((prev) => ({ ...prev, [key]: value }));
-      },
-      [],
-    );
+    const filteredCategories = useMemo(() => {
+      const q = categorySearch.trim().toLowerCase();
+      if (!q) return RTD_CATEGORY_OPTIONS;
+      return RTD_CATEGORY_OPTIONS.filter((c) => c.toLowerCase().includes(q));
+    }, [categorySearch]);
 
     const PRICE_MIN = 0;
     const PRICE_MAX = 1000;
@@ -94,12 +109,42 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
       [],
     );
 
+    const handleMoqRangePress = useCallback(
+      (value: MoqRange) => {
+        setDraft((prev) => ({
+          ...prev,
+          moq_range: prev.moq_range === value ? '' : value,
+        }));
+      },
+      [],
+    );
+
+    const handleCategorySelect = useCallback((value: string) => {
+      setDraft((prev) => ({ ...prev, category: prev.category === value ? '' : value }));
+      setCategorySearch('');
+    }, []);
+
+    const handleClearCategory = useCallback(() => {
+      setDraft((prev) => ({ ...prev, category: '' }));
+    }, []);
+
+    const handleLocationScopePress = useCallback(
+      (value: LocationScope) => {
+        setDraft((prev) => ({
+          ...prev,
+          location_scope: prev.location_scope === value ? '' : value,
+        }));
+      },
+      [],
+    );
+
     const handleApply = useCallback(() => {
       onApply(draft);
     }, [draft, onApply]);
 
     const handleReset = useCallback(() => {
       setDraft(INITIAL_ADVANCED_FILTERS);
+      setCategorySearch('');
       onReset();
     }, [onReset]);
 
@@ -124,7 +169,70 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
         >
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              Dispatch Time
+              Category
+            </Text>
+
+            {draft.category ? (
+              <Pressable style={styles.selectedCategoryChip} onPress={handleClearCategory}>
+                <Text variant="captionLarge" style={styles.selectedCategoryText} numberOfLines={1}>
+                  {draft.category}
+                </Text>
+                <AppIcon.Close width={14} height={14} color={theme.colors.primary.DEFAULT} />
+              </Pressable>
+            ) : null}
+
+            <TextInput
+              style={styles.categorySearchInput}
+              placeholder="Search category..."
+              placeholderTextColor={theme.colors.text.placeholder ?? theme.colors.text.tertiary}
+              value={categorySearch}
+              onChangeText={setCategorySearch}
+              returnKeyType="done"
+            />
+
+            {(categorySearch.length > 0 || !draft.category) && (
+              <ScrollView
+                style={styles.categoryDropdown}
+                nestedScrollEnabled
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator
+                bounces={false}
+              >
+                {filteredCategories.map((cat) => {
+                  const isActive = draft.category === cat;
+                  return (
+                    <Pressable
+                      key={cat}
+                      onPress={() => handleCategorySelect(cat)}
+                      style={[
+                        styles.categoryDropdownItem,
+                        isActive && styles.categoryDropdownItemActive,
+                      ]}
+                    >
+                      <Text
+                        variant="bodySmall"
+                        style={isActive ? styles.categoryDropdownTextActive : styles.categoryDropdownText}
+                        numberOfLines={1}
+                      >
+                        {cat}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+                {filteredCategories.length === 0 && (
+                  <View style={styles.categoryDropdownItem}>
+                    <Text variant="bodySmall" style={styles.categoryDropdownText}>
+                      No categories found
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="bodyMedium" style={styles.sectionLabel}>
+              Dispatch Time Set by Manufacturers
             </Text>
             <View style={styles.chipsRow}>
               {LEAD_TIME_OPTIONS.map((opt) => {
@@ -152,6 +260,64 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
 
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
+              Location
+            </Text>
+            <View style={styles.chipsRow}>
+              {LOCATION_SCOPE_OPTIONS.map((opt) => {
+                const isActive = draft.location_scope === opt.value;
+                return (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => handleLocationScopePress(opt.value)}
+                    style={[
+                      styles.chip,
+                      isActive ? styles.chipActive : styles.chipInactive,
+                    ]}
+                  >
+                    <Text
+                      variant="captionLarge"
+                      style={isActive ? styles.chipTextActive : styles.chipTextInactive}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="bodyMedium" style={styles.sectionLabel}>
+              Min. Order Quantity
+            </Text>
+            <View style={styles.chipsRow}>
+              {MOQ_RANGE_OPTIONS.map((opt) => {
+                const isActive = draft.moq_range === opt.value;
+                return (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => handleMoqRangePress(opt.value)}
+                    style={[
+                      styles.chip,
+                      styles.chipTab,
+                      isActive ? styles.chipActive : styles.chipInactive,
+                    ]}
+                  >
+                    <Text
+                      variant="captionLarge"
+                      fontWeight={isActive ? 'semibold' : 'regular'}
+                      style={isActive ? styles.chipTextActive : styles.chipTextInactive}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="bodyMedium" style={styles.sectionLabel}>
               Price per Piece (₹) 0 – 1000
             </Text>
             <PriceRangeSlider
@@ -161,20 +327,6 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
               onMaxChange={handleMaxPriceChange}
               rangeMin={0}
               rangeMax={1000}
-            />
-          </View>
-
-          <View style={styles.section}>
-            <Text variant="bodyMedium" style={styles.sectionLabel}>
-              Quantity
-            </Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="e.g. 500"
-              placeholderTextColor={theme.colors.text.tertiary}
-              value={draft.moq}
-              onChangeText={(text) => updateField('moq', text)}
-              keyboardType="numeric"
             />
           </View>
 

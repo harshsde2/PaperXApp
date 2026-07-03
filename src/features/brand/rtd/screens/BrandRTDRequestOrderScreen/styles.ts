@@ -239,6 +239,25 @@ export const createStyles = (theme: Theme) =>
       borderTopWidth: 1,
       borderTopColor: theme.colors.border.primary,
     },
+    footerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 4,
+    },
+    footerLabel: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+    },
+    footerValue: {
+      fontSize: 13,
+      color: theme.colors.text.primary,
+    },
+    footerDivider: {
+      height: 1,
+      backgroundColor: theme.colors.border.primary,
+      marginVertical: theme.spacing[2],
+    },
     footerTotalRow: {
       flexDirection: 'row',
       alignItems: 'center',

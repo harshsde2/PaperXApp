@@ -37,7 +37,7 @@ import { showToast } from '@store/slices/uiSlice';
 import { SCREENS } from '@navigation/constants';
 import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import { createStyles } from '../PostToBuyScreen/styles';
-import type { JobworkTimeline } from '@services/api/converterApi/@types';
+import type { JobworkTimeline, ConverterType } from '@services/api/converterApi/@types';
 
 type SavedLocation = {
   id: number;
@@ -54,15 +54,19 @@ type SavedLocation = {
 type SizeUnit = 'inches' | 'cm' | 'mm';
 type ThicknessUnit = 'GSM' | 'MM' | 'OUNCE' | 'BF' | 'MICRON';
 
+type Specification = {
+  id: string;
+  material_name: string;
+  size: string;
+  size_unit: SizeUnit;
+  thickness: string;
+  thickness_unit: ThicknessUnit;
+  finish_ids: number[];
+};
+
 type PostJobworkGiveFormData = {
   jobwork_type_id: number | null;
   jobwork_type_custom: string;
-  raw_materials?: string;
-  size?: string;
-  size_unit?: SizeUnit;
-  thickness?: string;
-  thickness_unit?: ThicknessUnit;
-  finish_ids: number[];
   quantity: number | undefined;
   quality_requirements?: string;
   timeline: JobworkTimeline;
@@ -93,6 +97,16 @@ const THICKNESS_UNIT_OPTIONS: { label: string; value: ThicknessUnit }[] = [
   { label: 'MICRON', value: 'MICRON' },
 ];
 
+const newSpec = (): Specification => ({
+  id: Math.random().toString(36).slice(2),
+  material_name: '',
+  size: '',
+  size_unit: 'inches',
+  thickness: '',
+  thickness_unit: 'GSM',
+  finish_ids: [],
+});
+
 const PostJobworkGiveScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const theme = useTheme();
@@ -115,17 +129,10 @@ const PostJobworkGiveScreen: React.FC = () => {
     handleSubmit,
     setValue,
     watch,
-    getValues,
   } = useForm<PostJobworkGiveFormData>({
     defaultValues: {
       jobwork_type_id: null,
       jobwork_type_custom: '',
-      raw_materials: '',
-      size: '',
-      size_unit: 'inches',
-      thickness: '',
-      thickness_unit: 'GSM',
-      finish_ids: [],
       quantity: undefined,
       quality_requirements: '',
       timeline: 'Normal',
@@ -138,6 +145,10 @@ const PostJobworkGiveScreen: React.FC = () => {
     },
     mode: 'onBlur',
   });
+
+  // Multi-specification state (outside RHF — dynamic arrays)
+  const [specifications, setSpecifications] = useState<Specification[]>([newSpec()]);
+  const [activeSpecIndex, setActiveSpecIndex] = useState(0);
 
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -193,45 +204,57 @@ const PostJobworkGiveScreen: React.FC = () => {
     );
   }, [allMaterials, materialSearch]);
 
-  const rawMaterialsValue = watch('raw_materials');
-  const sizeValue = watch('size');
-  const sizeUnitValue = watch('size_unit');
-  const thicknessValue = watch('thickness');
-  const thicknessUnitValue = watch('thickness_unit');
-  const finishIdsValue = watch('finish_ids') ?? [];
-
   const { data: finishesData } = useGetMaterialFinishesInfinite(50);
   const allFinishes = useMemo<MaterialFinish[]>(
     () => (finishesData?.pages ? finishesData.pages.flatMap((p) => p.finishes) : []),
     [finishesData?.pages],
   );
-  const selectedFinishesDisplay = useMemo(() => {
-    if (!finishIdsValue?.length) return '';
-    const names = finishIdsValue
-      .map((id) => allFinishes.find((f) => f.id === id)?.name)
-      .filter(Boolean)
-      .slice(0, 3);
-    if (finishIdsValue.length > 3) return `${names.join(', ')} +${finishIdsValue.length - 3} more`;
-    return names.join(', ');
-  }, [allFinishes, finishIdsValue]);
 
-  const toggleFinish = useCallback(
-    (id: number) => {
-      const current = getValues('finish_ids') ?? [];
-      const next = current.includes(id) ? current.filter((i) => i !== id) : [...current, id];
-      setValue('finish_ids', next, { shouldValidate: true });
+  // Per-spec helpers
+  const updateSpec = useCallback((index: number, patch: Partial<Specification>) => {
+    setSpecifications((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  }, []);
+
+  const addSpec = useCallback(() => {
+    setSpecifications((prev) => [...prev, newSpec()]);
+  }, []);
+
+  const removeSpec = useCallback((index: number) => {
+    setSpecifications((prev) => prev.filter((_, i) => i !== index));
+    setActiveSpecIndex((prev) => (prev >= index && prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const buildFinishDisplay = useCallback(
+    (finish_ids: number[]): string => {
+      if (!finish_ids?.length) return '';
+      const names = finish_ids
+        .map((id) => allFinishes.find((f) => f.id === id)?.name)
+        .filter(Boolean)
+        .slice(0, 3);
+      if (finish_ids.length > 3) return `${names.join(', ')} +${finish_ids.length - 3} more`;
+      return names.join(', ');
     },
-    [getValues, setValue],
+    [allFinishes],
   );
+
+  const toggleFinish = useCallback((id: number) => {
+    setSpecifications((prev) =>
+      prev.map((s, i) => {
+        if (i !== activeSpecIndex) return s;
+        const next = s.finish_ids.includes(id)
+          ? s.finish_ids.filter((f) => f !== id)
+          : [...s.finish_ids, id];
+        return { ...s, finish_ids: next };
+      }),
+    );
+  }, [activeSpecIndex]);
 
   const handleAddCustomMaterial = useCallback(() => {
     const name = customMaterialName.trim();
     if (!name) return;
-    const current = getValues('raw_materials') ?? '';
-    const next = current ? `${current}, ${name}` : name;
-    setValue('raw_materials', next, { shouldValidate: true });
+    updateSpec(activeSpecIndex, { material_name: name });
     setCustomMaterialName('');
-  }, [customMaterialName, getValues, setValue]);
+  }, [customMaterialName, activeSpecIndex, updateSpec]);
 
   const userLocations: SavedLocation[] = useMemo(() => {
     const profileLocations = normalizePostingLocationsFromProfile(profileData as any);
@@ -348,19 +371,38 @@ const PostJobworkGiveScreen: React.FC = () => {
         jobworkTypeName = ct?.name ?? 'Printing';
       }
 
-      const gradeFinish = (data.finish_ids ?? [])
-        .map((id) => allFinishes.find((f) => f.id === id)?.name)
+      const firstSpec = specifications[0] ?? newSpec();
+      const rawMaterials = specifications
+        .map((s) => s.material_name)
         .filter(Boolean)
-        .join(', ') || undefined;
+        .join(', ');
+
+      const allFinishIds = Array.from(new Set(specifications.flatMap((s) => s.finish_ids)));
+      const gradeFinish =
+        allFinishIds
+          .map((id) => allFinishes.find((f) => f.id === id)?.name)
+          .filter(Boolean)
+          .join(', ') || undefined;
 
       const apiPayload = {
         jobwork_type: jobworkTypeName,
-        raw_materials: data.raw_materials?.trim() || undefined,
-        size: data.size?.trim() || undefined,
-        size_unit: data.size_unit || undefined,
-        thickness: data.thickness?.trim() || undefined,
-        thickness_unit: data.thickness_unit || undefined,
+        raw_materials: rawMaterials || undefined,
+        size: firstSpec.size || undefined,
+        size_unit: firstSpec.size ? firstSpec.size_unit : undefined,
+        thickness: firstSpec.thickness || undefined,
+        thickness_unit: firstSpec.thickness ? firstSpec.thickness_unit : undefined,
         grade_finish: gradeFinish,
+        specifications: specifications.map((s) => ({
+          material: s.material_name,
+          size: s.size,
+          size_unit: s.size_unit,
+          thickness: s.thickness,
+          thickness_unit: s.thickness_unit,
+          finish: s.finish_ids
+            .map((id) => allFinishes.find((f) => f.id === id)?.name)
+            .filter(Boolean)
+            .join(', '),
+        })),
         quantity: data.quantity,
         quality_requirements: data.quality_requirements?.trim() || undefined,
         timeline: data.timeline,
@@ -377,7 +419,7 @@ const PostJobworkGiveScreen: React.FC = () => {
         title: `${jobworkTypeName} Jobwork – Give ${data.quantity} pcs`,
         referenceNumber: refNumber,
         grade: data.quality_requirements?.trim() || 'Standard',
-        materialName: jobworkTypeName,
+        materialName: rawMaterials || jobworkTypeName,
         quantity: String(data.quantity),
         quantityUnit: 'pieces',
         urgency: urgencyLabel,
@@ -395,11 +437,153 @@ const PostJobworkGiveScreen: React.FC = () => {
         requirementType: 'converter-jobwork-give',
       });
     },
-    [navigation, converterTypes, allFinishes],
+    [navigation, converterTypes, allFinishes, specifications],
   );
 
   const buttonHeight = 60;
   const bottomPadding = buttonHeight + theme.spacing[4] * 2 + insets.bottom;
+
+  const activeSpec = specifications[activeSpecIndex];
+
+  const renderSpecCard = (spec: Specification, index: number) => (
+    <View
+      key={spec.id}
+      style={[
+        styles.card,
+        {
+          marginBottom: index < specifications.length - 1 ? theme.spacing[3] : 0,
+          borderWidth: 1,
+          borderColor: theme.colors.border.primary,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing[3],
+        },
+      ]}
+    >
+      {/* Spec card header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing[3] }}>
+        <Text variant="bodyMedium" fontWeight="semibold" style={{ color: theme.colors.text.primary }}>
+          Specification {index + 1}
+        </Text>
+        {specifications.length > 1 && (
+          <TouchableOpacity onPress={() => removeSpec(index)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <AppIcon.Close width={18} height={18} color={theme.colors.text.tertiary} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Material */}
+      <View style={styles.formGroup}>
+        <View style={styles.labelRow}>
+          <Text variant="captionMedium" style={styles.label}>Material</Text>
+          <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+        </View>
+        <DropdownButton
+          value={spec.material_name}
+          placeholder="Select material"
+          onPress={() => {
+            setActiveSpecIndex(index);
+            rawMaterialSheetRef.current?.present();
+          }}
+        />
+        <View style={[styles.customMaterialRow, { marginTop: theme.spacing[2] }]}>
+          <TextInput
+            style={styles.customMaterialInput}
+            value={index === activeSpecIndex ? customMaterialName : ''}
+            onFocus={() => setActiveSpecIndex(index)}
+            onChangeText={(v) => {
+              setActiveSpecIndex(index);
+              setCustomMaterialName(v);
+            }}
+            placeholder="Or type custom material name"
+            placeholderTextColor={theme.colors.text.tertiary}
+          />
+          <TouchableOpacity
+            style={[
+              styles.addMaterialButton,
+              ((!customMaterialName.trim() || index !== activeSpecIndex) && { opacity: 0.6 }),
+            ]}
+            onPress={handleAddCustomMaterial}
+            disabled={!customMaterialName.trim() || index !== activeSpecIndex}
+          >
+            <Text variant="bodyMedium" style={styles.buttonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Size + Size Unit */}
+      <View style={[styles.row, styles.formGroup]}>
+        <View style={[styles.fieldContainer, styles.halfField, { marginRight: theme.spacing[2] }]}>
+          <View style={styles.labelRow}>
+            <Text variant="captionMedium" style={styles.label}>Size</Text>
+            <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+          </View>
+          <TextInput
+            value={spec.size}
+            onChangeText={(v) => updateSpec(index, { size: v })}
+            placeholder="e.g. 10x10"
+            placeholderTextColor={theme.colors.text.tertiary}
+            style={styles.input}
+          />
+        </View>
+        <View style={[styles.fieldContainer, styles.halfField, { marginLeft: theme.spacing[2] }]}>
+          <Text variant="captionMedium" style={styles.label}>Unit</Text>
+          <DropdownButton
+            value={SIZE_UNIT_OPTIONS.find((o) => o.value === spec.size_unit)?.label}
+            placeholder="Select unit"
+            onPress={() => {
+              setActiveSpecIndex(index);
+              sizeUnitSheetRef.current?.present();
+            }}
+          />
+        </View>
+      </View>
+
+      {/* Thickness + Thickness Unit */}
+      <View style={[styles.row, styles.formGroup]}>
+        <View style={[styles.fieldContainer, styles.halfField, { marginRight: theme.spacing[2] }]}>
+          <View style={styles.labelRow}>
+            <Text variant="captionMedium" style={styles.label}>Thickness</Text>
+            <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+          </View>
+          <TextInput
+            value={spec.thickness}
+            onChangeText={(v) => updateSpec(index, { thickness: v })}
+            placeholder="e.g. 350"
+            placeholderTextColor={theme.colors.text.tertiary}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+        </View>
+        <View style={[styles.fieldContainer, styles.halfField, { marginLeft: theme.spacing[2] }]}>
+          <Text variant="captionMedium" style={styles.label}>Unit</Text>
+          <DropdownButton
+            value={THICKNESS_UNIT_OPTIONS.find((o) => o.value === spec.thickness_unit)?.label}
+            placeholder="Select unit"
+            onPress={() => {
+              setActiveSpecIndex(index);
+              thicknessUnitSheetRef.current?.present();
+            }}
+          />
+        </View>
+      </View>
+
+      {/* Grade / Finish */}
+      <View style={{ marginBottom: 0 }}>
+        <View style={styles.labelRow}>
+          <Text variant="captionMedium" style={styles.label}>Grade / Finish / Certifications</Text>
+          <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+        </View>
+        <DropdownButton
+          value={buildFinishDisplay(spec.finish_ids)}
+          placeholder="Select finish options"
+          onPress={() => {
+            setActiveSpecIndex(index);
+            finishSheetRef.current?.present();
+          }}
+        />
+      </View>
+    </View>
+  );
 
   return (
     <BottomSheetModalProvider>
@@ -420,7 +604,7 @@ const PostJobworkGiveScreen: React.FC = () => {
             {/* Card: Jobwork & quantity */}
             <Card style={styles.card}>
               <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>
-                Jobwork & quantity
+                Jobwork & Quantity
               </Text>
               <View style={styles.formGroup}>
                 <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
@@ -449,52 +633,6 @@ const PostJobworkGiveScreen: React.FC = () => {
                   />
                 </View>
               </View>
-              <View style={styles.formGroup}>
-                <View style={styles.labelRow}>
-                  <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                    Raw Materials / Material
-                  </Text>
-                  <Text variant="captionSmall" style={styles.optionalLabel}>
-                    (Optional)
-                  </Text>
-                </View>
-                <DropdownButton
-                  value={rawMaterialsValue || ''}
-                  placeholder="Select material"
-                  onPress={() => rawMaterialSheetRef.current?.present()}
-                />
-                <View style={{ marginTop: theme.spacing[3] }}>
-                  <View style={styles.labelRow}>
-                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                      Custom Material
-                    </Text>
-                    <Text variant="captionSmall" style={styles.optionalLabel}>
-                      (Optional)
-                    </Text>
-                  </View>
-                  <View style={styles.customMaterialRow}>
-                    <TextInput
-                      style={styles.customMaterialInput}
-                      value={customMaterialName}
-                      onChangeText={setCustomMaterialName}
-                      placeholder="Enter material if not in list"
-                      placeholderTextColor={theme.colors.text.tertiary}
-                    />
-                    <TouchableOpacity
-                      style={[
-                        styles.addMaterialButton,
-                        (!customMaterialName.trim() && { opacity: 0.6 }),
-                      ]}
-                      onPress={handleAddCustomMaterial}
-                      disabled={!customMaterialName.trim()}
-                    >
-                      <Text variant="bodyMedium" style={styles.buttonText}>
-                        Add
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
               <FormInput
                 name="quantity"
                 control={control}
@@ -506,97 +644,57 @@ const PostJobworkGiveScreen: React.FC = () => {
               />
             </Card>
 
-            {/* Card: Specifications */}
+            {/* Card: Specifications (multi) */}
             <Card style={styles.card}>
               <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>
                 Specifications
               </Text>
-              <View style={[styles.row, styles.formGroup]}>
-                <View style={[styles.fieldContainer, styles.halfField, { marginRight: theme.spacing[2] }]}>
-                  <Text variant="captionMedium" style={styles.label}>
-                    Size
-                  </Text>
-                  <Controller
-                    control={control}
-                    name="size"
-                    render={({ field: { value, onChange } }) => (
-                      <TextInput
-                        value={value ?? ''}
-                        onChangeText={onChange}
-                        placeholder="e.g. 10x10"
-                        placeholderTextColor={theme.colors.text.tertiary}
-                        style={styles.input}
-                      />
-                    )}
-                  />
-                </View>
-                <View style={[styles.fieldContainer, styles.halfField, { marginLeft: theme.spacing[2] }]}>
-                  <Text variant="captionMedium" style={styles.label}>
-                    Unit
-                  </Text>
-                  <DropdownButton
-                    value={SIZE_UNIT_OPTIONS.find((o) => o.value === sizeUnitValue)?.label}
-                    placeholder="Select unit"
-                    onPress={() => sizeUnitSheetRef.current?.present()}
-                  />
-                </View>
-              </View>
-              <View style={[styles.row, styles.formGroup]}>
-                <View style={[styles.fieldContainer, styles.halfField, { marginRight: theme.spacing[2] }]}>
-                  <View style={styles.labelRow}>
-                    <Text variant="captionMedium" style={styles.label}>
-                      Thickness
-                    </Text>
-                    <Text variant="captionSmall" style={styles.optionalLabel}>
-                      (Optional)
-                    </Text>
-                  </View>
-                  <Controller
-                    control={control}
-                    name="thickness"
-                    render={({ field: { value, onChange } }) => (
-                      <TextInput
-                        value={value ?? ''}
-                        onChangeText={onChange}
-                        placeholder="e.g. 350"
-                        placeholderTextColor={theme.colors.text.tertiary}
-                        keyboardType="numeric"
-                        style={styles.input}
-                      />
-                    )}
-                  />
-                </View>
-                <View style={[styles.fieldContainer, styles.halfField, { marginLeft: theme.spacing[2] }]}>
-                  <Text variant="captionMedium" style={styles.label}>
-                    Unit
-                  </Text>
-                  <DropdownButton
-                    value={THICKNESS_UNIT_OPTIONS.find((o) => o.value === thicknessUnitValue)?.label}
-                    placeholder="Select unit"
-                    onPress={() => thicknessUnitSheetRef.current?.present()}
-                  />
-                </View>
-              </View>
-              <View style={styles.formGroup}>
-                <View style={styles.labelRow}>
-                  <Text variant="captionMedium" style={styles.label}>
-                    Grade / Finish / Certifications
-                  </Text>
-                  <Text variant="captionSmall" style={styles.optionalLabel}>
-                    (Optional)
-                  </Text>
-                </View>
-                <DropdownButton
-                  value={selectedFinishesDisplay}
-                  placeholder="Select finish options"
-                  onPress={() => finishSheetRef.current?.present()}
-                />
-              </View>
+              <Text variant="captionMedium" style={[styles.label, { marginBottom: theme.spacing[3] }]}>
+                Add one or more material specifications for this jobwork.
+              </Text>
+
+              {specifications.map((spec, index) => renderSpecCard(spec, index))}
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: theme.spacing[3],
+                  paddingVertical: theme.spacing[3],
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary.DEFAULT,
+                  borderStyle: 'dashed',
+                  borderRadius: theme.borderRadius.md,
+                  gap: theme.spacing[2],
+                }}
+                onPress={addSpec}
+                activeOpacity={0.7}
+              >
+                <AppIcon.PlusCircle width={18} height={18} color={theme.colors.primary.DEFAULT} />
+                <Text variant="bodyMedium" style={{ color: theme.colors.primary.DEFAULT }}>
+                  Add Specification
+                </Text>
+              </TouchableOpacity>
+
               <FormInput
                 name="quality_requirements"
                 control={control}
                 label="Quality Requirements / Certifications (optional)"
                 placeholder="e.g., Tolerance ±0.5mm, FSSAI, pharma grade..."
+                multiline
+                numberOfLines={3}
+                containerStyle={{ marginTop: theme.spacing[4], marginBottom: 0 }}
+              />
+            </Card>
+
+            {/* Other instructions */}
+            <Card style={styles.card}>
+              <FormInput
+                name="other_instructions"
+                control={control}
+                label="Any Other Specific Instructions (optional)"
+                placeholder="Any packing, dispatch, or coordination notes for this jobwork."
                 multiline
                 numberOfLines={3}
                 containerStyle={styles.formGroup}
@@ -692,19 +790,6 @@ const PostJobworkGiveScreen: React.FC = () => {
                 />
               </View>
             </Card>
-
-            {/* Other instructions */}
-            <Card style={styles.card}>
-              <FormInput
-                name="other_instructions"
-                control={control}
-                label="Any Other Specific Instructions (optional)"
-                placeholder="Any packing, dispatch, or coordination notes for this jobwork."
-                multiline
-                numberOfLines={3}
-                containerStyle={styles.formGroup}
-              />
-            </Card>
           </View>
         </View>
       </ScreenWrapper>
@@ -754,11 +839,11 @@ const PostJobworkGiveScreen: React.FC = () => {
               autoCorrect={false}
             />
           </View>
-          <BottomSheetFlatList
+          <BottomSheetFlatList<ConverterType>
             data={filteredJobworkTypes}
-            keyExtractor={(item) => String(item.id)}
+            keyExtractor={(item: ConverterType) => String(item.id)}
             contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
-            renderItem={({ item }) => (
+            renderItem={({ item }: { item: ConverterType }) => (
               <TouchableOpacity
                 style={[
                   styles.modalOption,
@@ -787,11 +872,11 @@ const PostJobworkGiveScreen: React.FC = () => {
           <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[4] }}>
             Select Timeline
           </Text>
-          <BottomSheetFlatList
+          <BottomSheetFlatList<{ label: string; value: JobworkTimeline }>
             data={TIMELINE_OPTIONS}
-            keyExtractor={(item) => item.value}
+            keyExtractor={(item: { label: string; value: JobworkTimeline }) => item.value}
             contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
-            renderItem={({ item }) => (
+            renderItem={({ item }: { item: { label: string; value: JobworkTimeline } }) => (
               <TouchableOpacity
                 style={[
                   styles.modalOption,
@@ -809,7 +894,7 @@ const PostJobworkGiveScreen: React.FC = () => {
         </View>
       </GorhomBottomSheetModal>
 
-      {/* Raw Material Bottom Sheet */}
+      {/* Raw Material Bottom Sheet (shared, writes to activeSpecIndex) */}
       <GorhomBottomSheetModal
         ref={rawMaterialSheetRef}
         snapPoints={['70%', '95%']}
@@ -843,9 +928,12 @@ const PostJobworkGiveScreen: React.FC = () => {
             contentContainerStyle={{ paddingBottom: theme.spacing[6] }}
             renderItem={({ item }: { item: Material }) => (
               <TouchableOpacity
-                style={styles.modalOption}
+                style={[
+                  styles.modalOption,
+                  activeSpec?.material_name === item.name && styles.locationOptionSelected,
+                ]}
                 onPress={() => {
-                  setValue('raw_materials', item.name ?? '', { shouldValidate: true });
+                  updateSpec(activeSpecIndex, { material_name: item.name ?? '' });
                   rawMaterialSheetRef.current?.dismiss();
                 }}
               >
@@ -874,20 +962,23 @@ const PostJobworkGiveScreen: React.FC = () => {
         </View>
       </GorhomBottomSheetModal>
 
-      {/* Size unit sheet */}
+      {/* Size unit sheet (shared, writes to activeSpecIndex) */}
       <GorhomBottomSheetModal ref={sizeUnitSheetRef} snapPoints={['40%']} enablePanDownToClose>
         <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4] }}>
           <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[4] }}>
             Select size unit
           </Text>
-          <BottomSheetFlatList
+          <BottomSheetFlatList<{ label: string; value: SizeUnit }>
             data={SIZE_UNIT_OPTIONS}
-            keyExtractor={(item) => item.value}
-            renderItem={({ item }) => (
+            keyExtractor={(item: { label: string; value: SizeUnit }) => item.value}
+            renderItem={({ item }: { item: { label: string; value: SizeUnit } }) => (
               <TouchableOpacity
-                style={[styles.modalOption, sizeUnitValue === item.value && styles.locationOptionSelected]}
+                style={[
+                  styles.modalOption,
+                  activeSpec?.size_unit === item.value && styles.locationOptionSelected,
+                ]}
                 onPress={() => {
-                  setValue('size_unit', item.value, { shouldValidate: true });
+                  updateSpec(activeSpecIndex, { size_unit: item.value });
                   sizeUnitSheetRef.current?.dismiss();
                 }}
               >
@@ -898,20 +989,23 @@ const PostJobworkGiveScreen: React.FC = () => {
         </View>
       </GorhomBottomSheetModal>
 
-      {/* Thickness unit sheet */}
+      {/* Thickness unit sheet (shared, writes to activeSpecIndex) */}
       <GorhomBottomSheetModal ref={thicknessUnitSheetRef} snapPoints={['50%']} enablePanDownToClose>
         <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4] }}>
           <Text variant="h4" fontWeight="semibold" style={{ marginBottom: theme.spacing[4] }}>
             Select thickness unit
           </Text>
-          <BottomSheetFlatList
+          <BottomSheetFlatList<{ label: string; value: ThicknessUnit }>
             data={THICKNESS_UNIT_OPTIONS}
-            keyExtractor={(item) => item.value}
-            renderItem={({ item }) => (
+            keyExtractor={(item: { label: string; value: ThicknessUnit }) => item.value}
+            renderItem={({ item }: { item: { label: string; value: ThicknessUnit } }) => (
               <TouchableOpacity
-                style={[styles.modalOption, thicknessUnitValue === item.value && styles.locationOptionSelected]}
+                style={[
+                  styles.modalOption,
+                  activeSpec?.thickness_unit === item.value && styles.locationOptionSelected,
+                ]}
                 onPress={() => {
-                  setValue('thickness_unit', item.value, { shouldValidate: true });
+                  updateSpec(activeSpecIndex, { thickness_unit: item.value });
                   thicknessUnitSheetRef.current?.dismiss();
                 }}
               >
@@ -922,9 +1016,10 @@ const PostJobworkGiveScreen: React.FC = () => {
         </View>
       </GorhomBottomSheetModal>
 
-      {/* Finish sheet */}
+      {/* Finish sheet (shared multi-select, writes to activeSpecIndex) */}
       <GorhomBottomSheetModal
         ref={finishSheetRef}
+        doneFooter
         snapPoints={['70%', '95%']}
         enablePanDownToClose
         onDismiss={() => setFinishSearch('')}
@@ -934,7 +1029,7 @@ const PostJobworkGiveScreen: React.FC = () => {
           searchQuery={finishSearch}
           onSearchChange={setFinishSearch}
           items={allFinishes.map((item) => ({ id: item.id, name: item.name }))}
-          selectedIds={finishIdsValue}
+          selectedIds={activeSpec?.finish_ids ?? []}
           onSelect={toggleFinish}
           onDeselect={toggleFinish}
           theme={theme}
@@ -962,10 +1057,7 @@ const PostJobworkGiveScreen: React.FC = () => {
             <ScrollView showsVerticalScrollIndicator={false}>
               {userLocations.length === 0 ? (
                 <View style={{ paddingVertical: theme.spacing[2] }}>
-                  <Text
-                    variant="bodyMedium"
-                    style={{ color: theme.colors.text.tertiary }}
-                  >
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary }}>
                     No saved locations found.
                   </Text>
                 </View>
@@ -976,20 +1068,14 @@ const PostJobworkGiveScreen: React.FC = () => {
                     style={styles.modalOption}
                     onPress={() => handleSavedLocationSelect(loc)}
                   >
-                    <Text variant="bodyMedium">
-                      {loc.address || loc.city}
-                    </Text>
-                    <Text
-                      variant="captionSmall"
-                      style={{ color: theme.colors.text.tertiary }}
-                    >
+                    <Text variant="bodyMedium">{loc.address || loc.city}</Text>
+                    <Text variant="captionSmall" style={{ color: theme.colors.text.tertiary }}>
                       {loc.city}
                       {loc.state ? `, ${loc.state}` : ''}
                     </Text>
                   </TouchableOpacity>
                 ))
               )}
-
               <TouchableOpacity
                 style={[
                   styles.modalOption,
@@ -1004,10 +1090,7 @@ const PostJobworkGiveScreen: React.FC = () => {
                   setShowLocationPicker(true);
                 }}
               >
-                <Text
-                  variant="bodyMedium"
-                  style={{ color: theme.colors.primary.DEFAULT }}
-                >
+                <Text variant="bodyMedium" style={{ color: theme.colors.primary.DEFAULT }}>
                   Select on Map
                 </Text>
               </TouchableOpacity>
@@ -1041,4 +1124,3 @@ const PostJobworkGiveScreen: React.FC = () => {
 };
 
 export default PostJobworkGiveScreen;
-

@@ -128,6 +128,7 @@ const RawMaterialsScreen = () => {
   return (
     <ScreenWrapper
       scrollable
+      keyboardDoneBar
       backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
       contentContainerStyle={styles.scrollContent}

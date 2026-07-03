@@ -16,6 +16,7 @@ import type {
 } from './@types';
 import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
 import { useDashboardHeaderHeight } from '../../DashboardHeaderHeightContext';
+import { ResponsesCard } from '../ResponsesCard';
 import { createStyles } from './styles';
 
 const defaultSnapshotData: MachineSnapshotData = {
@@ -204,9 +205,13 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
           onRefresh={handleRefresh}
           tintColor={theme.colors.primary.DEFAULT}
           colors={[theme.colors.primary.DEFAULT]}
+          progressViewOffset={headerInset}
         />
       }
     >
+      {/* Responses to your posts (2-tap path to chat) */}
+      <ResponsesCard />
+
       {/* <View style={styles.creditsBar}>
         <View style={styles.creditsLeft}>
           <View style={styles.creditsIconWrap}>

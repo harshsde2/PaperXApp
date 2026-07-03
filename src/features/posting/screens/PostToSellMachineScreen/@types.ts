@@ -24,6 +24,7 @@ export interface PostToSellMachineFormData {
   year_of_purchase: number | undefined;
   price: number | undefined;
   price_negotiable: boolean;
+  machine_price_range: string;
   urgency: 'normal' | 'urgent';
   visibility: MachineVisibilityType;
   location: string;

@@ -1,2 +1,54 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg fill="currentColor" width="800px" height="800px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28 3L28 4L26 4L26 11L32 11L32 4L30 4L30 3 Z M 34 8L34 12L15 12L15 10L13 10L13 23L11 23L11 12L10 12C7.195313 12 5 14.195313 5 17C5 19.351563 5.960938 26.808594 6 27.125L6.125 28L10 28L10 29L9 29L9 31L13 31L13 29L12 29L12 28L15.78125 28L16.59375 24.75C16.703125 24.304688 17.101563 24 17.5625 24L22.84375 24C23.820313 24 24.652344 24.664063 24.8125 25.59375C24.941406 26.324219 25 27.140625 25 28C25 28.859375 24.941406 29.675781 24.8125 30.40625C24.652344 31.335938 23.820313 32 22.84375 32L8 32C5.242188 32 3 34.242188 3 37L3 42C3 43.652344 4.347656 45 6 45L8 45L8 46L13 46L13 45L33 45L33 46L38 46L38 45L40 45C41.652344 45 43 43.652344 43 42L43 17C43 14.242188 40.757813 12 38 12L36 12L36 8 Z M 44.71875 15C44.910156 15.632813 45 16.304688 45 17L45 24L47 24L47 15 Z M 34 17C35.652344 17 37 18.347656 37 20C37 21.652344 35.652344 23 34 23C32.347656 23 31 21.652344 31 20C31 18.347656 32.347656 17 34 17 Z M 34 19C33.449219 19 33 19.449219 33 20C33 20.550781 33.449219 21 34 21C34.550781 21 35 20.550781 35 20C35 19.449219 34.550781 19 34 19 Z M 34 27C36.757813 27 39 29.242188 39 32C39 34.757813 36.757813 37 34 37C31.242188 37 29 34.757813 29 32C29 29.242188 31.242188 27 34 27 Z M 34 29C32.34375 29 31 30.34375 31 32C31 33.65625 32.34375 35 34 35C35.65625 35 37 33.65625 37 32C37 30.34375 35.65625 29 34 29Z"/></svg>
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 120 72" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <!-- Control monitor (top-left, above feeder) -->
+  <rect x="2" y="2" width="11" height="8" rx="1"/>
+  <!-- Monitor neck -->
+  <rect x="6" y="10" width="3" height="3"/>
+
+  <!-- Paper feeder (left) — stack of horizontal sheet lines + platform -->
+  <rect x="2" y="15" width="13" height="2"   rx="0.5"/>
+  <rect x="2" y="19" width="13" height="2"   rx="0.5"/>
+  <rect x="2" y="23" width="13" height="2"   rx="0.5"/>
+  <rect x="1" y="26" width="15" height="5"   rx="1.5"/>
+
+  <!-- Ink rollers — 2 small circles sitting above each print unit -->
+  <circle cx="23" cy="13" r="2.5"/>
+  <circle cx="30" cy="13" r="2.5"/>
+
+  <circle cx="44" cy="13" r="2.5"/>
+  <circle cx="51" cy="13" r="2.5"/>
+
+  <circle cx="65" cy="13" r="2.5"/>
+  <circle cx="72" cy="13" r="2.5"/>
+
+  <circle cx="86" cy="13" r="2.5"/>
+  <circle cx="93" cy="13" r="2.5"/>
+
+  <!-- Print Unit 1 — body with cylinder cut-out (evenodd) -->
+  <path fill-rule="evenodd" d="M18 19 L37 19 L37 42 L18 42 Z M27.5 26 A4.5 4.5 0 0 0 27.5 35 A4.5 4.5 0 0 0 27.5 26 Z"/>
+
+  <!-- Print Unit 2 -->
+  <path fill-rule="evenodd" d="M39 19 L58 19 L58 42 L39 42 Z M48.5 26 A4.5 4.5 0 0 0 48.5 35 A4.5 4.5 0 0 0 48.5 26 Z"/>
+
+  <!-- Print Unit 3 -->
+  <path fill-rule="evenodd" d="M60 19 L79 19 L79 42 L60 42 Z M69.5 26 A4.5 4.5 0 0 0 69.5 35 A4.5 4.5 0 0 0 69.5 26 Z"/>
+
+  <!-- Print Unit 4 -->
+  <path fill-rule="evenodd" d="M81 19 L100 19 L100 42 L81 42 Z M90.5 26 A4.5 4.5 0 0 0 90.5 35 A4.5 4.5 0 0 0 90.5 26 Z"/>
+
+  <!-- Paper delivery (right) — stacked sheets + platform -->
+  <rect x="103" y="15" width="13" height="2"  rx="0.5"/>
+  <rect x="103" y="19" width="13" height="2"  rx="0.5"/>
+  <rect x="103" y="23" width="13" height="2"  rx="0.5"/>
+  <rect x="103"  y="26" width="15" height="5" rx="1.5"/>
+
+  <!-- Main machine body / frame (connects all 4 units) -->
+  <rect x="1" y="42" width="117" height="18" rx="2"/>
+
+  <!-- Base legs -->
+  <rect x="5"   y="60" width="8" height="8" rx="1"/>
+  <rect x="30"  y="60" width="8" height="8" rx="1"/>
+  <rect x="57"  y="60" width="8" height="8" rx="1"/>
+  <rect x="84"  y="60" width="8" height="8" rx="1"/>
+  <rect x="109" y="60" width="8" height="8" rx="1"/>
+</svg>

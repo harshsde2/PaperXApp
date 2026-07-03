@@ -49,6 +49,9 @@ export interface IScreenWrapperProps {
   
   loading?: boolean;
   loadingComponent?: ReactNode;
-  
+
+  /** When true, shows a cross-platform "Done" bar above the keyboard while it's open. */
+  keyboardDoneBar?: boolean;
+
   style?: ViewStyle;
 }

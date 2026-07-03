@@ -1,27 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  View,
-  ScrollView,
-  Alert,
-  RefreshControl,
-} from 'react-native';
+import { View, ScrollView, Alert, RefreshControl } from 'react-native';
 import { useTheme } from '@theme/index';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
 import { AppIcon } from '@assets/svgs';
-import {
-  useGetRtdOrderDetail,
-  useAcceptRtdOrder,
-  useDeclineRtdOrder,
-  useMarkRtdOrderInProduction,
-} from '@services/api';
+import { useGetRtdOrderDetail, useAcceptRtdOrder, useDeclineRtdOrder } from '@services/api';
 import type { RtdOrderStatus } from '@services/api';
 import { OrderStatusBadge } from '../../components/OrderStatusBadge';
 import { OrderSummaryCard } from '../../components/OrderSummaryCard';
 import { OrderTimeline } from '../../components/OrderTimeline';
 import { OrderActionButtons } from '../../components/OrderActionButtons';
-import { DispatchProofModal } from '../../components/DispatchProofModal';
 import { ContactDetailsCard } from '@shared/components/ContactDetailsCard';
 import { useSkeleton } from '@shared/hooks/useSkeleton';
 import { DetailSkeleton } from '@shared/components/skeletons';
@@ -47,23 +36,15 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
   const styles = createStyles(theme);
   const navigation = useNavigation();
 
-  const {
-    data: order,
-    isError,
-    refetch,
-  } = useGetRtdOrderDetail(orderId);
+  const { data: order, isError, refetch } = useGetRtdOrderDetail(orderId);
 
   const acceptMutation = useAcceptRtdOrder();
   const declineMutation = useDeclineRtdOrder();
-  const inProductionMutation = useMarkRtdOrderInProduction();
 
-  const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
   const [countdown, setCountdown] = useState<CountdownState | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const showSkeleton = useSkeleton(!order && !isError);
 
-
-  // Countdown timer for REQUESTED state
   useEffect(() => {
     if (order?.status !== 'REQUESTED' || !order.confirmation_deadline) {
       setCountdown(null);
@@ -114,22 +95,13 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
     ]);
   }, [orderId, declineMutation, navigation]);
 
-  const handleMarkInProduction = useCallback(() => {
-    inProductionMutation.mutate(Number(orderId), {
-      onSuccess: () => refetch(),
-      onError: (err) => Alert.alert('Error', err.message || 'Failed to update order'),
-    });
-  }, [orderId, inProductionMutation, refetch]);
-
-  const handleDispatch = useCallback(() => {
-    setDispatchModalVisible(true);
-  }, []);
-
-  const handleDispatchSuccess = useCallback(() => {
-    refetch();
-  }, [refetch]);
-
   const status = order?.status as RtdOrderStatus | undefined;
+  const showBrandContact =
+    status === 'CONNECTED' ||
+    status === 'PAID' ||
+    status === 'IN_PRODUCTION' ||
+    status === 'DISPATCHED' ||
+    status === 'COMPLETED';
 
   const renderCountdown = useMemo(() => {
     if (!countdown || status !== 'REQUESTED') return null;
@@ -152,47 +124,6 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
     );
   }, [countdown, status, styles, theme]);
 
-  const renderPayoutInfo = useMemo(() => {
-    if (status !== 'COMPLETED' || !order?.payout) return null;
-    const rawAmount = order.payout.amount ?? order.payout.payout_amount;
-    const numericAmount = rawAmount != null ? Number(rawAmount) : 0;
-    const formattedAmount = !isNaN(numericAmount)
-      ? numericAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      : '0.00';
-    return (
-      <View style={styles.payoutCard}>
-        <Text style={styles.payoutTitle}>Payout Information</Text>
-        <View style={styles.payoutRow}>
-          <Text style={styles.payoutAmount}>₹{formattedAmount}</Text>
-          <Text style={styles.payoutStatus}>{order.payout.payout_status}</Text>
-        </View>
-      </View>
-    );
-  }, [status, order?.payout, styles]);
-
-  const renderDisputeBanner = useMemo(() => {
-    if (status !== 'DISPUTED') return null;
-    return (
-      <View
-        style={[
-          styles.bannerCard,
-          {
-            backgroundColor: theme.colors.error.DEFAULT + '10',
-            borderColor: theme.colors.error.DEFAULT + '30',
-          },
-        ]}
-      >
-        <Text style={[styles.bannerTitle, { color: theme.colors.error.DEFAULT }]}>
-          Dispute Raised
-        </Text>
-        <Text style={[styles.bannerText, { color: theme.colors.text.secondary }]}>
-          The brand has raised a dispute on this order. Payout is on hold until the dispute is
-          resolved. Please contact support for assistance.
-        </Text>
-      </View>
-    );
-  }, [status, styles, theme]);
-
   const renderCancelledBanner = useMemo(() => {
     if (status !== 'CANCELLED') return null;
     return (
@@ -209,35 +140,11 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           Order Cancelled
         </Text>
         <Text style={[styles.bannerText, { color: theme.colors.text.secondary }]}>
-          This order was cancelled by the brand before payment was completed.
+          This order was cancelled by the brand before the platform fee was paid.
         </Text>
       </View>
     );
   }, [status, styles, theme]);
-
-  const renderTrackingInfo = useMemo(() => {
-    if (status !== 'DISPATCHED' && status !== 'COMPLETED') return null;
-    if (!order?.tracking_number && !order?.dispatch_proof_url) return null;
-    return (
-      <View style={styles.trackingCard}>
-        <Text style={styles.trackingTitle}>Dispatch Information</Text>
-        {order.dispatch_proof_type && (
-          <View style={styles.trackingRow}>
-            <Text style={styles.trackingLabel}>Proof Type</Text>
-            <Text style={styles.trackingValue}>
-              {order.dispatch_proof_type.replace(/_/g, ' ')}
-            </Text>
-          </View>
-        )}
-        {order.tracking_number && (
-          <View style={[styles.trackingRow, { marginTop: theme.spacing[2] }]}>
-            <Text style={styles.trackingLabel}>Tracking Number</Text>
-            <Text style={styles.trackingValue}>{order.tracking_number}</Text>
-          </View>
-        )}
-      </View>
-    );
-  }, [status, order, styles, theme]);
 
   if (!order) {
     if (isError) {
@@ -281,7 +188,6 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           />
         }
       >
-        {/* Status Header */}
         <View style={styles.statusHeader}>
           <View style={styles.statusHeaderRow}>
             <Text style={styles.statusTitle}>
@@ -295,33 +201,19 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           {renderCountdown}
         </View>
 
-        {/* Banners */}
-        {renderDisputeBanner}
         {renderCancelledBanner}
 
-        {/* Payout */}
-        {renderPayoutInfo}
-
-        {/* Tracking */}
-        {renderTrackingInfo}
-
-        {/* Timeline */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Order Progress</Text>
           <OrderTimeline currentStatus={order.status as RtdOrderStatus} />
         </View>
 
-        {/* Order Summary */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Order Details</Text>
           <OrderSummaryCard order={order} />
         </View>
 
-        {/* Brand Contact (shown from PAID onwards for both sides) */}
-        {(order.status === 'PAID' ||
-          order.status === 'IN_PRODUCTION' ||
-          order.status === 'DISPATCHED' ||
-          order.status === 'COMPLETED') && (
+        {showBrandContact && (
           <ContactDetailsCard
             title="Brand Contact"
             name={order.brand?.name}
@@ -331,28 +223,16 @@ export const RTDOrderDetailScreen: React.FC<RTDOrderDetailScreenProps> = ({ rout
           />
         )}
 
-        {/* Actions */}
         <View style={styles.actionContainer}>
           <OrderActionButtons
             status={order.status as RtdOrderStatus}
             onAccept={handleAccept}
             onDecline={handleDecline}
-            onMarkInProduction={handleMarkInProduction}
-            onDispatch={handleDispatch}
             loadingAccept={acceptMutation.isPending}
             loadingDecline={declineMutation.isPending}
-            loadingMarkInProduction={inProductionMutation.isPending}
           />
         </View>
       </ScrollView>
-
-      {/* Dispatch Proof Modal */}
-      <DispatchProofModal
-        visible={dispatchModalVisible}
-        orderId={Number(order.id)}
-        onClose={() => setDispatchModalVisible(false)}
-        onSuccess={handleDispatchSuccess}
-      />
     </View>
   );
 };

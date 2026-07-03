@@ -24,7 +24,6 @@ import type {
   GetRtdOrdersResponse,
   CreateRtdProductRequest,
   UpdateRtdProductRequest,
-  DispatchRtdOrderRequest,
 } from './@types';
 
 const extractData = <T>(response: any): T => {
@@ -66,25 +65,6 @@ export const useGetRtdEntitlement = (options?: { enabled?: boolean }) => {
     },
     staleTime: 0,
     gcTime: 0,
-    enabled: options?.enabled ?? true,
-  });
-};
-
-export interface RtdDispatchOptions {
-  allowed_couriers: string[];
-}
-
-export const useGetRtdDispatchOptions = (options?: { enabled?: boolean }) => {
-  return useQuery({
-    queryKey: queryKeys.converterRtd.dispatchOptions(),
-    queryFn: async (): Promise<RtdDispatchOptions> => {
-      const response = await api.get(RTD_ENDPOINTS.DISPATCH_OPTIONS);
-      const raw = extractData<RtdDispatchOptions>(response);
-      return {
-        allowed_couriers: Array.isArray(raw?.allowed_couriers) ? raw.allowed_couriers : [],
-      };
-    },
-    staleTime: 1000 * 60 * 10,
     enabled: options?.enabled ?? true,
   });
 };
@@ -296,42 +276,6 @@ export const useDeclineRtdOrder = () => {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.orders() });
       queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.orderDetail(id) });
-    },
-  });
-};
-
-export const useMarkRtdOrderInProduction = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: number): Promise<RtdOrder> => {
-      const response = await api.post(RTD_ENDPOINTS.ORDER_IN_PRODUCTION(id));
-      return extractData<RtdOrder>(response);
-    },
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.orders() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.orderDetail(id) });
-    },
-  });
-};
-
-export const useDispatchRtdOrder = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: DispatchRtdOrderRequest;
-    }): Promise<RtdOrder> => {
-      const response = await api.post(RTD_ENDPOINTS.ORDER_DISPATCH(id), data);
-      return extractData<RtdOrder>(response);
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.converterRtd.orders() });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.converterRtd.orderDetail(variables.id),
-      });
     },
   });
 };

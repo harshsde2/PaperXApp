@@ -148,6 +148,20 @@ export type MachineVisibilityType = 'converters' | 'machine_dealers' | 'all';
 
 export const MACHINE_VISIBILITY_OPTIONS: { label: string; value: MachineVisibilityType }[] = [
   { label: 'Converters only', value: 'converters' },
-  { label: 'Machine dealers only', value: 'machine_dealers' },
-  { label: 'Converters & machine dealers', value: 'all' },
+  { label: 'Paper / Printing / Packaging machine dealers only', value: 'machine_dealers' },
+  { label: 'Converters & Paper / Printing / Packaging machine dealers', value: 'all' },
+];
+
+/**
+ * Machine price-range brackets — drive the posting fee (see backend config/pricing.php).
+ * `value` keys MUST match the backend bracket keys. If left unset, the server defaults to
+ * the ₹5–15L bracket and flags it on the payment screen.
+ */
+export const MACHINE_PRICE_RANGE_OPTIONS: { label: string; value: string }[] = [
+  { label: 'Below ₹2 lakh', value: 'below_2l' },
+  { label: '₹2 – ₹5 lakh', value: '2_5l' },
+  { label: '₹5 – ₹15 lakh', value: '5_15l' },
+  { label: '₹15 – ₹50 lakh', value: '15_50l' },
+  { label: '₹50 lakh – ₹1 crore', value: '50l_1cr' },
+  { label: 'Above ₹1 crore', value: 'above_1cr' },
 ];

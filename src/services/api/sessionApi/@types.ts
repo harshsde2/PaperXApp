@@ -337,6 +337,7 @@ export interface ChatThreadListItem {
   id: number;
   thread_id?: number;
   inquiry_id: number;
+  inquiry_title?: string;
   poster_user_id: number;
   responder_user_id: number;
   responder_role: string | null;
@@ -349,6 +350,7 @@ export interface ChatThreadListItem {
 }
 
 export type GetInquiryChatThreadsResponse = ChatThreadListItem[];
+export type GetAllChatThreadsResponse = ChatThreadListItem[];
 
 export interface OpenChatThreadResponse {
   thread_id: number;

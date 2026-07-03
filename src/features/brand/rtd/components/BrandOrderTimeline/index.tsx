@@ -1,5 +1,5 @@
 import React, { memo, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,36 +13,23 @@ import type { RtdOrderStatus } from '@services/api';
 import type { BrandOrderTimelineProps } from './@types';
 import { createStyles } from './styles';
 
-const STEPS: RtdOrderStatus[] = [
-  'REQUESTED',
-  'ACCEPTED',
-  'PAID',
-  'IN_PRODUCTION',
-  'DISPATCHED',
-];
+const STEPS: RtdOrderStatus[] = ['REQUESTED', 'ACCEPTED', 'CONNECTED'];
 
 const STEP_LABELS: Record<string, string> = {
   REQUESTED: 'Requested',
   ACCEPTED: 'Accepted',
-  PAID: 'Paid',
-  IN_PRODUCTION: 'Production',
-  DISPATCHED: 'Dispatched',
+  CONNECTED: 'Connected',
 };
 
-const HAPPY_ORDER: RtdOrderStatus[] = [
-  'REQUESTED',
-  'ACCEPTED',
-  'PAID',
-  'IN_PRODUCTION',
-  'DISPATCHED',
-  'COMPLETED',
-];
+const HAPPY_ORDER: RtdOrderStatus[] = ['REQUESTED', 'ACCEPTED', 'CONNECTED'];
 
 function resolveIndex(status: RtdOrderStatus): number {
   const idx = HAPPY_ORDER.indexOf(status);
   if (idx >= 0) return idx;
+  if (status === 'PAID' || status === 'IN_PRODUCTION' || status === 'DISPATCHED' || status === 'COMPLETED') {
+    return HAPPY_ORDER.indexOf('CONNECTED');
+  }
   if (status === 'CANCELLED') return HAPPY_ORDER.indexOf('ACCEPTED') + 1;
-  if (status === 'DISPUTED') return HAPPY_ORDER.indexOf('DISPATCHED') + 1;
   return 0;
 }
 
@@ -76,31 +63,23 @@ export const BrandOrderTimeline = memo<BrandOrderTimelineProps>(
 
     const currentIdx = resolveIndex(currentStatus);
     const isCancelled = currentStatus === 'CANCELLED';
-    const isDisputed = currentStatus === 'DISPUTED';
 
     return (
       <View style={styles.container}>
         <View style={styles.row}>
           {STEPS.map((step, idx) => {
             const isCompleted = idx < currentIdx;
-            const isCurrent =
-              idx === currentIdx && !isCancelled && !isDisputed;
-            const isFuture = idx >= currentIdx && !isCompleted && !isCurrent;
-
-            const isTerminalStep =
-              (isCancelled && step === 'PAID') ||
-              (isDisputed && step === 'DISPATCHED');
+            const isCurrent = idx === currentIdx && !isCancelled;
+            const isTerminalStep = isCancelled && step === 'CONNECTED';
 
             const leftLineStyle =
               idx === 0
                 ? styles.lineTransparent
                 : isCompleted || isCurrent
                   ? styles.lineCompleted
-                  : isTerminalStep && isCancelled
+                  : isTerminalStep
                     ? styles.lineCancelled
-                    : isTerminalStep && isDisputed
-                      ? styles.lineDisputed
-                      : styles.lineFuture;
+                    : styles.lineFuture;
 
             const rightLineStyle =
               idx === STEPS.length - 1
@@ -109,13 +88,11 @@ export const BrandOrderTimeline = memo<BrandOrderTimelineProps>(
                   ? styles.lineCompleted
                   : styles.lineFuture;
 
-            let circleStyle = styles.circleFuture;
+            let circleStyle: ViewStyle = styles.circleFuture;
             let iconChar = '';
             if (isTerminalStep) {
-              circleStyle = isCancelled
-                ? styles.circleCancelled
-                : styles.circleDisputed;
-              iconChar = isCancelled ? '✕' : '⚠';
+              circleStyle = styles.circleCancelled;
+              iconChar = '✕';
             } else if (isCompleted) {
               circleStyle = styles.circleCompleted;
               iconChar = '✓';
@@ -125,41 +102,28 @@ export const BrandOrderTimeline = memo<BrandOrderTimelineProps>(
             }
 
             const labelStyle = isTerminalStep
-              ? isCancelled
-                ? { color: theme.colors.error.DEFAULT }
-                : { color: theme.colors.warning.DEFAULT }
+              ? { color: theme.colors.error.DEFAULT }
               : isCompleted
                 ? styles.labelCompleted
                 : isCurrent
                   ? styles.labelCurrent
                   : undefined;
 
-            const displayLabel = isTerminalStep
-              ? isCancelled
-                ? 'Cancelled'
-                : 'Disputed'
-              : STEP_LABELS[step];
+            const displayLabel = isTerminalStep ? 'Cancelled' : STEP_LABELS[step];
 
             return (
               <View key={step} style={styles.stepWrapper}>
                 <View style={styles.circleRow}>
                   <View style={[styles.lineLeft, leftLineStyle]} />
                   <View>
-                    {isCurrent && (
-                      <PulseCircle style={styles.pulseOuter} />
-                    )}
+                    {isCurrent && <PulseCircle style={styles.pulseOuter} />}
                     <View style={[styles.circle, circleStyle]}>
-                      {iconChar !== '' && (
-                        <Text style={styles.iconText}>{iconChar}</Text>
-                      )}
+                      {iconChar !== '' && <Text style={styles.iconText}>{iconChar}</Text>}
                     </View>
                   </View>
                   <View style={[styles.lineRight, rightLineStyle]} />
                 </View>
-                <Text
-                  style={[styles.label, labelStyle]}
-                  numberOfLines={1}
-                >
+                <Text style={[styles.label, labelStyle]} numberOfLines={1}>
                   {displayLabel}
                 </Text>
               </View>

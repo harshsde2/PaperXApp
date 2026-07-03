@@ -11,6 +11,8 @@ import {
   Alert,
   Modal,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
@@ -27,7 +29,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BrandRequirementType,
   BrandPackagingType,
-  BrandTimeline,
   useGetProfile,
 } from '@services/api';
 import { SCREENS } from '@navigation/constants';
@@ -65,10 +66,6 @@ const QUANTITY_RANGE_OPTIONS: DropdownOption[] = [
   { label: '50000+', value: '50000+' },
 ];
 
-const TIMELINE_OPTIONS: DropdownOption<BrandTimeline>[] = [
-  { label: 'Urgent 1-2 Days', value: 'Urgent 1-2 Days' },
-  { label: 'Normal 3-5 Days', value: 'Normal 3-5 Days' },
-];
 
 const PostBrandRequirementScreen = () => {
   const navigation = useNavigation<any>();
@@ -87,7 +84,6 @@ const PostBrandRequirementScreen = () => {
       requirement_type: 'Packaging',
       packaging_type: 'Boxes',
       quantity_range: '',
-      timeline: 'Normal 3-5 Days',
       description: '',
       location: '',
       city: '',
@@ -105,8 +101,6 @@ const PostBrandRequirementScreen = () => {
   const [showRequirementTypePicker, setShowRequirementTypePicker] = useState(false);
   const [showPackagingTypePicker, setShowPackagingTypePicker] = useState(false);
   const [showQuantityRangePicker, setShowQuantityRangePicker] = useState(false);
-  const [showTimelinePicker, setShowTimelinePicker] = useState(false);
-
   // Watch values
   const requirementType = watch('requirement_type');
   const locationValue = watch('location');
@@ -219,11 +213,6 @@ const PostBrandRequirementScreen = () => {
         return;
       }
 
-      if (!data.timeline) {
-        Alert.alert('Validation Error', 'Please select a timeline');
-        return;
-      }
-
       if (!data.description.trim()) {
         Alert.alert('Validation Error', 'Please enter a description');
         return;
@@ -243,7 +232,7 @@ const PostBrandRequirementScreen = () => {
       const apiData: any = {
         requirement_type: data.requirement_type,
         quantity_range: data.quantity_range,
-        timeline: data.timeline,
+        timeline: 'Normal 3-5 Days',
         description: data.description.trim(),
         location: data.location.trim(),
         city: data.city.trim(),
@@ -261,10 +250,6 @@ const PostBrandRequirementScreen = () => {
       // Generate reference number
       const refNumber = `#${Math.floor(Math.random() * 9000) + 1000}`;
       
-      // Determine urgency label for display
-      const isUrgent = data.timeline === 'Urgent 1-2 Days';
-      const urgencyLabel = isUrgent ? 'Urgent 1-2 Days' : 'Normal 3-5 Days';
-
       // Get requirement type display name
       const requirementTypeName = REQUIREMENT_TYPE_OPTIONS.find(
         opt => opt.value === data.requirement_type
@@ -285,10 +270,7 @@ const PostBrandRequirementScreen = () => {
         materialName: packagingTypeName || requirementTypeName,
         quantity: data.quantity_range,
         quantityUnit: 'pieces',
-        urgency: urgencyLabel,
-        tags: isUrgent 
-          ? [requirementTypeName, 'Urgent'] 
-          : [requirementTypeName],
+        tags: [requirementTypeName],
       };
 
       // Navigate to payment confirmation screen
@@ -348,10 +330,16 @@ const PostBrandRequirementScreen = () => {
 
   return (
     <>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
       <ScreenWrapper
         backgroundColor={theme.colors.background.secondary}
         scrollable={true}
         safeAreaEdges={[]}
+        keyboardDoneBar
       >
         <View style={[styles.container, { paddingBottom: bottomPadding }]}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>
@@ -446,28 +434,6 @@ const PostBrandRequirementScreen = () => {
               />
             </View>
 
-            {/* Timeline */}
-            <View style={styles.formGroup}>
-              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                Timeline 
-              </Text>
-              <Controller
-                control={control}
-                name="timeline"
-                rules={validationRules.required('Please select timeline') as any}
-                render={({ field: { value }, fieldState: { error } }) => (
-                  <>
-                    <DropdownButton
-                      value={TIMELINE_OPTIONS.find((opt) => opt.value === value)?.label}
-                      placeholder="Select Timeline"
-                      onPress={() => setShowTimelinePicker(true)}
-                    />
-                    {error && <Text style={styles.errorText}>{error.message}</Text>}
-                  </>
-                )}
-              />
-            </View>
-
             {/* Location */}
             <View style={styles.formGroup}>
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
@@ -512,6 +478,7 @@ const PostBrandRequirementScreen = () => {
           </View>
         </View>
       </ScreenWrapper>
+      </KeyboardAvoidingView>
 
       {/* Location Picker Modal */}
       <Modal
@@ -621,15 +588,6 @@ const PostBrandRequirementScreen = () => {
         QUANTITY_RANGE_OPTIONS,
         (value) => setValue('quantity_range', value, { shouldValidate: true }),
         watch('quantity_range')
-      )}
-
-      {renderPickerModal(
-        showTimelinePicker,
-        () => setShowTimelinePicker(false),
-        'Select Timeline',
-        TIMELINE_OPTIONS,
-        (value) => setValue('timeline', value, { shouldValidate: true }),
-        watch('timeline')
       )}
 
       {/* Submit Button */}

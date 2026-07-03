@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, TouchableOpacity, InteractionManager } from 'react-native';
+import { View, TouchableOpacity, InteractionManager, Modal, TextInput } from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
@@ -22,9 +22,11 @@ import {
 } from './@types';
 import { createStyles } from './styles';
 import { AuthStackParamList } from '@navigation/AuthStackNavigator';
-import { useGetBrands } from '@services/api';
+import { useGetBrands, useCreateBrand } from '@services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appContent } from '@utils/appContent';
+import { useAppDispatch } from '@store/hooks';
+import { showToast } from '@store/slices/uiSlice';
 
 const MillBrandDetailsScreen = () => {
   const navigation = useNavigation<MillBrandDetailsScreenNavigationProp>();
@@ -32,6 +34,7 @@ const MillBrandDetailsScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
   const brandSheetRef = useRef<BottomSheetModal>(null);
 
   // Get params from route
@@ -39,8 +42,11 @@ const MillBrandDetailsScreen = () => {
 
   // Fetch brands from API
   const { data: brands = [], isLoading, isError, refetch } = useGetBrands();
+  const { mutateAsync: createBrand, isPending: isAddingBrand } = useCreateBrand();
 
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
+  const [isCustomBrandModalVisible, setIsCustomBrandModalVisible] = useState(false);
+  const [customBrandName, setCustomBrandName] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<SelectedBrand | null>(
     null,
   );
@@ -64,6 +70,42 @@ const MillBrandDetailsScreen = () => {
     setBrandSearchQuery('');
     brandSheetRef.current?.present();
   }, [preferNotToDisclose]);
+
+  const openCustomBrandModal = useCallback(() => {
+    if (preferNotToDisclose) return;
+    setCustomBrandName('');
+    setIsCustomBrandModalVisible(true);
+  }, [preferNotToDisclose]);
+
+  const handleAddCustomBrand = useCallback(
+    async (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) {
+        dispatch(showToast({ message: 'Please enter a brand name', type: 'error' }));
+        return;
+      }
+      try {
+        const brand = await createBrand({ name: trimmed });
+        if (brand?.id) {
+          brandSheetRef.current?.dismiss();
+          setIsCustomBrandModalVisible(false);
+          setCustomBrandName('');
+          InteractionManager.runAfterInteractions(() => {
+            setSelectedBrand({ id: brand.id, name: brand.name });
+            setBrandSearchQuery('');
+          });
+          dispatch(showToast({ message: 'Brand added successfully', type: 'success' }));
+        } else {
+          dispatch(showToast({ message: 'Failed to add brand', type: 'error' }));
+        }
+      } catch (error: any) {
+        const msg =
+          error?.response?.data?.message || error?.message || 'Failed to add brand';
+        dispatch(showToast({ message: msg, type: 'error' }));
+      }
+    },
+    [createBrand, dispatch],
+  );
 
   const handlePreferNotToDisclose = (value: boolean) => {
     setPreferNotToDisclose(value);
@@ -151,13 +193,7 @@ const MillBrandDetailsScreen = () => {
                 disabled={preferNotToDisclose}
               />
               <TouchableOpacity
-                onPress={() => {
-                  // For manual entry, user can still open the selector
-                  // and type in the search to find or add a brand
-                  if (!preferNotToDisclose) {
-                    openBrandSelector();
-                  }
-                }}
+                onPress={openCustomBrandModal}
                 activeOpacity={0.7}
                 disabled={preferNotToDisclose}
               >
@@ -282,6 +318,54 @@ const MillBrandDetailsScreen = () => {
         />
       </FloatingBottomContainer>
 
+      <Modal
+        visible={isCustomBrandModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCustomBrandModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text variant="h4" fontWeight="semibold" style={styles.modalTitle}>
+              Add Mill / Brand
+            </Text>
+            <TextInput
+              style={styles.customBrandInput}
+              placeholder="Enter mill / brand name"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={customBrandName}
+              onChangeText={setCustomBrandName}
+              editable={!isAddingBrand}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <CustomButton
+                title="Cancel"
+                onPress={() => setIsCustomBrandModalVisible(false)}
+                variant="outline"
+                size="md"
+                style={styles.modalCancelButton}
+              />
+              <CustomButton
+                title="Add"
+                onPress={() => handleAddCustomBrand(customBrandName)}
+                variant="gradient"
+                size="md"
+                loading={isAddingBrand}
+                disabled={isAddingBrand || !customBrandName.trim()}
+                gradientColors={[
+                  theme.colors.primary[400],
+                  theme.colors.primary.DEFAULT,
+                ]}
+                gradientStart={{ x: 0, y: 0 }}
+                gradientEnd={{ x: 1, y: 1 }}
+                style={styles.addBrandButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <GorhomBottomSheetModal
         ref={brandSheetRef}
         snapPoints={['70%', '95%']}
@@ -299,6 +383,8 @@ const MillBrandDetailsScreen = () => {
           onSelect={handleBrandSelect}
           theme={theme}
           ListComponent={BottomSheetFlatList}
+          onAddCustom={handleAddCustomBrand}
+          isAddingCustom={isAddingBrand}
         />
       </GorhomBottomSheetModal>
       </View>

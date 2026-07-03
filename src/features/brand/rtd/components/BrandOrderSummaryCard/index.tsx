@@ -40,7 +40,7 @@ export const BrandOrderSummaryCard = memo<BrandOrderSummaryCardProps>(
           </View>
 
           <Text variant="bodySmall" style={styles.price}>
-            ₹{order.total_amount}
+            ₹{order.subtotal}
           </Text>
         </View>
 

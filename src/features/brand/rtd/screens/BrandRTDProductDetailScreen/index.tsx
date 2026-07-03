@@ -11,7 +11,6 @@ import { SCREENS } from '@navigation/constants';
 import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
 import { ProductSpecsGrid } from '../../components/ProductSpecsGrid';
 import { QuantityPricingCard } from '../../components/QuantityPricingCard';
-import { EscrowBanner } from '../../components/EscrowBanner';
 import { useSkeleton } from '@shared/hooks/useSkeleton';
 import { DetailSkeleton } from '@shared/components/skeletons';
 import type { RtdPriceSlab } from '@services/api/rtdApi/@types';
@@ -170,9 +169,6 @@ export const BrandRTDProductDetailScreen: React.FC<
           </Text>
         </View> */}
 
-        {/* <View style={styles.escrowWrapper}>
-          <EscrowBanner />
-        </View> */}
       </ScrollView>
 
       <View style={styles.footer}>

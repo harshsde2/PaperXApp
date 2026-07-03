@@ -45,6 +45,8 @@ import { CustomHeader } from '@shared/components/CustomHeader';
 import { SCREENS } from './constants';
 import MarketScreen from '@features/main/screens/MarketScreen/MarketScreen';
 import NotificationsScreen from '@features/main/screens/NotificationsScreen/NotificationsScreen';
+import MessagesScreen from '@features/main/screens/MessagesScreen/MessagesScreen';
+import ResponsesListScreen from '@features/sessions/screens/ResponsesListScreen';
 import RegistrationDetailsScreen from '@features/main/screens/RegistrationDetailsScreen/RegistrationDetailsScreen';
 import ArticleDetailScreen from '@features/main/screens/MarketScreen/components/ArticleDetailScreen';
 import type { MarketInsightArticle } from '@services/api';
@@ -95,6 +97,8 @@ export type MainStackParamList = {
     creditsDeducted: number;
   };
   Notifications: undefined;
+  Messages: undefined;
+  Responses: undefined;
   RegistrationDetails: undefined;
   // Wallet Screens
   WalletMain: undefined;
@@ -300,6 +304,22 @@ const MainNavigator = () => {
         }}
       />
       <Stack.Screen
+        name={SCREENS.MAIN.MESSAGES}
+        component={MessagesScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.RESPONSES}
+        component={ResponsesListScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
         name={SCREENS.MAIN.REGISTRATION_DETAILS}
         component={RegistrationDetailsScreen}
         options={{
@@ -454,7 +474,7 @@ const MainNavigator = () => {
         component={BrandRTDMarketplaceScreen}
         options={{
           headerShown: true,
-          title: 'Ready to Dispatch Marketplace',
+          title: 'Ready to Dispatch Products',
           animation: 'slide_from_right',
         }}
       />

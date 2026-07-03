@@ -7,14 +7,7 @@ import type { RtdOrder, RtdOrderStatus } from '@services/api/rtdApi/@types';
  *
  * Mirrors backend: RTDOrderStatus::activeStatuses()
  */
-export const ACTIVE_RTD_STATUSES: RtdOrderStatus[] = [
-  'REQUESTED',
-  'ACCEPTED',
-  'PAID',
-  'IN_PRODUCTION',
-  'DISPATCHED',
-  'DISPUTED',
-];
+export const ACTIVE_RTD_STATUSES: RtdOrderStatus[] = ['REQUESTED', 'ACCEPTED'];
 
 /**
  * Safely extract product ID from an order.

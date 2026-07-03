@@ -299,6 +299,11 @@ export const INQUIRY_ENDPOINTS = {
 } as const;
 
 export const CHAT_THREAD_ENDPOINTS = {
+  ALL: `${API_VERSION}/chat-threads`,
   MESSAGES: (threadId: number | string) => `${API_VERSION}/chat-threads/${threadId}/messages`,
   MARK_READ: (threadId: number | string) => `${API_VERSION}/chat-threads/${threadId}/read`,
+} as const;
+
+export const PRICING_ENDPOINTS = {
+  QUOTE: `${API_VERSION}/pricing/quote`,
 } as const;

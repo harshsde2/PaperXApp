@@ -36,6 +36,7 @@ import {
   MACHINE_BRAND_NAMES,
   URGENCY_OPTIONS,
   MACHINE_VISIBILITY_OPTIONS,
+  MACHINE_PRICE_RANGE_OPTIONS,
 } from '../../constants/machineConstants';
 import { createStyles } from './styles';
 import type { PostToBuyMachineFormData, SavedLocation } from './@types';
@@ -59,6 +60,7 @@ export const PostToBuyMachineScreen = () => {
   const [showConditionPicker, setShowConditionPicker] = useState(false);
   const [showUrgencyPicker, setShowUrgencyPicker] = useState(false);
   const [showVisibilityPicker, setShowVisibilityPicker] = useState(false);
+  const [showPriceRangePicker, setShowPriceRangePicker] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
 
@@ -71,6 +73,7 @@ export const PostToBuyMachineScreen = () => {
       condition_preference: [],
       budget_min: undefined,
       budget_max: undefined,
+      machine_price_range: '',
       urgency: 'normal',
       visibility: 'machine_dealers',
       location: '',
@@ -254,6 +257,7 @@ export const PostToBuyMachineScreen = () => {
         urgency: data.urgency,
         visibility: data.visibility,
         description,
+        machine_price_range: data.machine_price_range || undefined,
         currency: 'INR' as const,
         location: data.location.trim(),
         latitude: data.latitude!,
@@ -451,6 +455,24 @@ export const PostToBuyMachineScreen = () => {
                       </Text>
                     )}
                   </>
+                )}
+              />
+            </View>
+
+            {/* Machine price range — drives the posting fee */}
+            <View style={styles.formGroup}>
+              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                Machine Price Range
+              </Text>
+              <Controller
+                control={control}
+                name="machine_price_range"
+                render={({ field: { value } }) => (
+                  <DropdownButton
+                    value={MACHINE_PRICE_RANGE_OPTIONS.find((o) => o.value === value)?.label}
+                    placeholder="Select price range (sets posting fee)"
+                    onPress={() => setShowPriceRangePicker(true)}
+                  />
                 )}
               />
             </View>
@@ -681,6 +703,29 @@ export const PostToBuyMachineScreen = () => {
                 onPress={() => {
                   setValue('urgency', opt.value as 'normal' | 'urgent', { shouldValidate: true });
                   setShowUrgencyPicker(false);
+                }}
+              >
+                <Text variant="bodyMedium">{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {showPriceRangePicker && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text variant="h4" fontWeight="semibold">Machine price range</Text>
+              <TouchableOpacity onPress={() => setShowPriceRangePicker(false)}><Text style={{ fontSize: 24 }}>×</Text></TouchableOpacity>
+            </View>
+            {MACHINE_PRICE_RANGE_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={styles.modalOption}
+                onPress={() => {
+                  setValue('machine_price_range', opt.value, { shouldValidate: true });
+                  setShowPriceRangePicker(false);
                 }}
               >
                 <Text variant="bodyMedium">{opt.label}</Text>

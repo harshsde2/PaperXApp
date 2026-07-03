@@ -97,4 +97,40 @@ export const createStyles = (theme: Theme) =>
     relationshipSubtext: {
       color: theme.colors.text.tertiary,
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: theme.colors.background.overlay,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing[4],
+    },
+    modalCard: {
+      backgroundColor: theme.colors.background.primary,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing[4],
+      gap: theme.spacing[3],
+    },
+    modalTitle: {
+      color: theme.colors.text.primary,
+    },
+    customBrandInput: {
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing[3],
+      fontSize: 16,
+      backgroundColor: theme.colors.surface.primary,
+      color: theme.colors.text.primary,
+      fontFamily: theme.fontFamily.regular,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: theme.spacing[2],
+    },
+    modalCancelButton: {
+      minWidth: 80,
+    },
+    addBrandButton: {
+      minWidth: 80,
+    },
   });

@@ -8,6 +8,7 @@ import { createStyles } from './styles';
 const STATUS_LABELS: Record<string, string> = {
   REQUESTED: 'Requested',
   ACCEPTED: 'Accepted',
+  CONNECTED: 'Connected',
   PAID: 'Paid',
   IN_PRODUCTION: 'In Production',
   DISPATCHED: 'Dispatched',
@@ -19,6 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
 const BG_MAP: Record<string, OrderStatusBadgeStyleKey> = {
   REQUESTED: 'requested',
   ACCEPTED: 'accepted',
+  CONNECTED: 'completed',
   PAID: 'paid',
   IN_PRODUCTION: 'inProduction',
   DISPATCHED: 'dispatched',
@@ -30,6 +32,7 @@ const BG_MAP: Record<string, OrderStatusBadgeStyleKey> = {
 const TEXT_MAP: Record<string, OrderStatusBadgeStyleKey> = {
   REQUESTED: 'textRequested',
   ACCEPTED: 'textAccepted',
+  CONNECTED: 'textCompleted',
   PAID: 'textPaid',
   IN_PRODUCTION: 'textInProduction',
   DISPATCHED: 'textDispatched',

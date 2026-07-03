@@ -140,7 +140,6 @@ export const queryKeys = {
     all: ['converter-rtd'] as const,
     listingPacks: () => [...queryKeys.converterRtd.all, 'listing-packs'] as const,
     entitlement: () => [...queryKeys.converterRtd.all, 'entitlement'] as const,
-    dispatchOptions: () => [...queryKeys.converterRtd.all, 'dispatch-options'] as const,
     myProducts: (params?: Record<string, any>) =>
       [...queryKeys.converterRtd.all, 'products', params] as const,
     productDetail: (id: number | string) =>
@@ -210,6 +209,7 @@ export const queryKeys = {
       [...queryKeys.chat.all, 'conversations', conversationId, 'messages'] as const,
     structured: {
       all: ['chat', 'structured'] as const,
+      allThreads: () => [...queryKeys.chat.structured.all, 'all-threads'] as const,
       inquiryThreads: (inquiryId: number | string) =>
         [...queryKeys.chat.structured.all, 'inquiry-threads', inquiryId] as const,
       threadMessages: (

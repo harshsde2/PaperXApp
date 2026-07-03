@@ -30,6 +30,28 @@ export const createStyles = (theme: Theme) =>
     closeButton: {
       padding: theme.spacing[1],
     },
+    balanceBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: theme.colors.primary[50],
+      borderWidth: 1,
+      borderColor: theme.colors.primary[200],
+      borderRadius: theme.borderRadius.card.md,
+      paddingHorizontal: theme.spacing[4],
+      paddingVertical: theme.spacing[3],
+      marginBottom: theme.spacing[4],
+    },
+    balanceLabel: {
+      fontSize: 13,
+      fontWeight: fontWeightForPlatform('600'),
+      color: theme.colors.text.secondary,
+    },
+    balanceValue: {
+      fontSize: 15,
+      fontWeight: fontWeightForPlatform('800'),
+      color: theme.colors.primary.DEFAULT,
+    },
     subtitle: {
       fontSize: 13,
       fontWeight: fontWeightForPlatform('500'),
@@ -90,5 +112,9 @@ export const createStyles = (theme: Theme) =>
     },
     buyButton: {
       minWidth: 100,
+    },
+    directPayButton: {
+      marginTop: 8,
+      width: '100%',
     },
   });

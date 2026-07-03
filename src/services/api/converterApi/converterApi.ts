@@ -110,7 +110,7 @@ export const useGetConverterTypes = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes - reference data doesn't change often
+    staleTime: 0,
   });
 };
 
@@ -139,7 +139,7 @@ export const useGetFinishedProducts = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 0,
   });
 };
 
@@ -168,7 +168,7 @@ export const useGetScrapTypes = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 0,
   });
 };
 
@@ -201,7 +201,7 @@ export const useGetConverterReferenceData = () => {
         machines: [],
       };
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes - reference data doesn't change often
+    staleTime: 0,
   });
 };
 

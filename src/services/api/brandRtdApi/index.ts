@@ -9,7 +9,6 @@ export {
   useConfirmRtdPayment,
   useCreateBrandRtdRazorpayOrder,
   useVerifyBrandRtdRazorpayPayment,
-  useRaiseRtdDispute,
   useCancelRtdOrder,
 } from './brandRtdApi';
 export type { VerifyBrandRtdRazorpayPaymentVariables } from './brandRtdApi';

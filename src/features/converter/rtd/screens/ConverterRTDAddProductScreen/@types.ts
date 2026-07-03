@@ -43,6 +43,7 @@ export interface FormData {
   latitude?: number;
   longitude?: number;
   price_slabs: PriceSlabRow[];
+  gst_rate?: string;
 }
 
 export interface FormErrors {
@@ -62,4 +63,5 @@ export interface FormErrors {
   base_price?: string;
   delivery_geography?: string;
   price_slabs?: string[];
+  gst_rate?: string;
 }

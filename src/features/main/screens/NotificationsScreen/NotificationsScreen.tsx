@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppIcon } from '@assets/svgs';
 import { Text } from '@shared/components/Text';
 import { CustomButton } from '@shared/components/CustomButton';
 import { useTheme } from '@theme/index';
@@ -121,6 +122,9 @@ const NotificationsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + theme.spacing[2] }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.backButton}>
+          <AppIcon.ArrowLeft width={24} height={24} color={theme.colors.text.primary} />
+        </TouchableOpacity>
         <Text variant="h5" style={styles.title}>
           Notifications
         </Text>

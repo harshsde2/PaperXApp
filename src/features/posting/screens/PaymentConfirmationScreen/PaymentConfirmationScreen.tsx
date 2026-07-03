@@ -24,7 +24,7 @@ import {
   useGetWalletBalance,
   useCreateRazorpayExactCreditsOrder,
   useVerifyRazorpayPayment,
-  useDeductCredits,
+  usePricingQuote,
   usePostDealerRequirement,
   usePostBrandRequirement,
   usePostConverterRequirement,
@@ -33,7 +33,7 @@ import {
   usePostConverterJobworkFind,
   usePostConverterJobworkGive,
 } from '@services/api';
-import type { VerifyRazorpayPaymentRequest } from '@services/api';
+import type { VerifyRazorpayPaymentRequest, PricingQuoteSpecs } from '@services/api';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
 import {
@@ -48,7 +48,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createStyles } from './styles';
 import {
   PaymentConfirmationScreenRouteProp,
-  POSTING_COSTS,
   DIRECT_PAY_INR_PER_CREDIT,
   ListingDetails,
 } from './@types';
@@ -99,7 +98,6 @@ const PaymentConfirmationScreen = () => {
   const { mutateAsync: createExactCreditsOrder } = useCreateRazorpayExactCreditsOrder();
   const { mutateAsync: verifyRazorpayPayment } = useVerifyRazorpayPayment();
 
-  const { mutate: deductCredits } = useDeductCredits();
   const { mutate: postDealerRequirement } = usePostDealerRequirement();
   const { mutate: postBrandRequirement } = usePostBrandRequirement();
   const { mutate: postConverterRequirement } = usePostConverterRequirement();
@@ -185,25 +183,44 @@ const PaymentConfirmationScreen = () => {
     [navigation]
   );
 
-  // Calculate costs
-  const costBreakdown = useMemo(() => {
-    const standardFee = POSTING_COSTS.STANDARD_FEE;
-    const urgencyBoost = listingDetails?.urgency?.toLowerCase().includes('urgent')
-      ? POSTING_COSTS.URGENCY_BOOST
-      : 0;
-    const subtotal = standardFee + urgencyBoost;
-    const vat = Math.round((subtotal * POSTING_COSTS.VAT_PERCENTAGE) / 100);
-    const total = subtotal + vat;
+  // Server-authoritative fee quote (config/pricing.php). The screen only displays this;
+  // the post endpoint charges the same amount.
+  const quoteSpecs = useMemo<PricingQuoteSpecs>(() => {
+    const fd = (formData ?? {}) as any;
+    const urgencyRaw = String(
+      fd.urgency || fd.timeline || listingDetails?.urgency || 'normal',
+    ).toLowerCase();
+    const urgency =
+      urgencyRaw.includes('urgent') || urgencyRaw.includes('emergency') ? 'urgent' : 'normal';
+
+    let inquiryType = fd.inquiry_type || 'material';
+    if (typedRequirementType.includes('jobwork')) inquiryType = 'job';
+    if (typedRequirementType === 'machineDealer' || fd.machine_id || fd.machine_category) {
+      inquiryType = 'machine';
+    }
 
     return {
-      standardFee,
-      urgencyBoost,
-      vat,
-      total,
+      role: typedRequirementType === 'brand' ? 'brand' : user?.primary_role ?? undefined,
+      inquiry_type: inquiryType,
+      intent: fd.intent,
+      material_id: fd.material_id ?? null,
+      thickness: fd.thickness ?? null,
+      thickness_unit: fd.thickness_unit,
+      size: fd.size ?? null,
+      size_unit: fd.size_unit,
+      quantity: fd.quantity ?? null,
+      quantity_unit: fd.quantity_unit,
+      urgency,
+      machine_price_range: fd.machine_price_range ?? null,
     };
-  }, [listingDetails?.urgency]);
+  }, [formData, listingDetails?.urgency, typedRequirementType, user?.primary_role]);
 
-  const hasEnoughCredits = (wallet?.balance ?? 0) >= costBreakdown.total;
+  const { data: quote, isLoading: quoteLoading } = usePricingQuote(quoteSpecs, {
+    enabled: !!formData,
+  });
+
+  const total = quote?.total ?? 0;
+  const hasEnoughCredits = (wallet?.balance ?? 0) >= total;
 
   // Converter material posting endpoint accepts only location_source = "manual".
   // Keep dropdown UX, but normalize payload just before API submit.
@@ -253,53 +270,36 @@ const PaymentConfirmationScreen = () => {
             invalidateQueriesByRequirementType(typedRequirementType);
           }
 
-          deductCredits(
+          // The post endpoint already deducted the server-computed fee; just refresh + navigate.
+          queryClient.invalidateQueries({ queryKey: queryKeys.wallet.balance() });
+          setIsProcessing(false);
+          navigateToMatchmakingSuccess(
             {
-              credits: costBreakdown.total,
-              description: 'Requirement Posted',
-              transaction_type: 'REQUIREMENT_POSTED',
-              reference_id: referenceId,
-              reference_type: 'inquiry',
-              metadata: {
-                material: listingDetails?.materialName,
-                quantity: listingDetails?.quantity,
-              },
+              id: referenceId,
+              materialName: listingDetails?.materialName || 'Requirement',
+              quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
+              deadline: getDeadlineDate(listingDetails?.urgency),
             },
-            {
-              onSuccess: () => {
-                setIsProcessing(false);
-                navigateToMatchmakingSuccess(
-                  {
-                    id: referenceId,
-                    materialName: listingDetails?.materialName || 'Requirement',
-                    quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
-                    deadline: getDeadlineDate(listingDetails?.urgency),
-                  },
-                  costBreakdown.total
-                );
-              },
-              onError: () => {
-                setIsProcessing(false);
-                navigation.navigate(SCREENS.MAIN.MATCHMAKING_SUCCESS, {
-                  requirementDetails: {
-                    id: referenceId,
-                    materialName: listingDetails?.materialName || 'Requirement',
-                    quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
-                    deadline: getDeadlineDate(listingDetails?.urgency),
-                  },
-                  creditsDeducted: costBreakdown.total,
-                });
-              },
-            }
+            total
           );
         },
         onError: (error: any) => {
           setIsProcessing(false);
-          const errorMessage =
-            error?.response?.data?.message ||
-            error?.message ||
-            'Failed to post requirement. Please try again.';
-          Alert.alert('Error', errorMessage);
+          const status = error?.response?.status;
+          const code = error?.response?.data?.errors?.error_code;
+          const msg = error?.response?.data?.message || error?.message || '';
+          if (status === 402 || code === 'INSUFFICIENT_BALANCE' || /insufficient/i.test(msg)) {
+            Alert.alert(
+              'Insufficient Credits',
+              `You need ${total} credits to post this requirement. Please buy more credits.`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Buy Credits', onPress: handleBuyCredits },
+              ]
+            );
+            return;
+          }
+          Alert.alert('Error', msg || 'Failed to post requirement. Please try again.');
         },
       }
     );
@@ -310,11 +310,10 @@ const PaymentConfirmationScreen = () => {
     user?.primary_role,
     queryClient,
     invalidateQueriesByRequirementType,
-    deductCredits,
-    costBreakdown.total,
+    total,
     listingDetails,
     navigateToMatchmakingSuccess,
-    navigation,
+    handleBuyCredits,
   ]);
 
   const showVerifyRetry = useCallback(
@@ -347,7 +346,7 @@ const PaymentConfirmationScreen = () => {
                   })
                 );
                 const { data } = await refetchWallet();
-                if ((data?.balance ?? 0) < costBreakdown.total) {
+                if ((data?.balance ?? 0) < total) {
                   setIsProcessing(false);
                   Alert.alert(
                     'Could not post yet',
@@ -369,7 +368,7 @@ const PaymentConfirmationScreen = () => {
       verifyRazorpayPayment,
       dispatch,
       refetchWallet,
-      costBreakdown.total,
+      total,
       runPostRequirementFlow,
     ]
   );
@@ -378,7 +377,7 @@ const PaymentConfirmationScreen = () => {
       pendingVerifyRef.current = null;
       setIsProcessing(true);
       try {
-        const order = await createExactCreditsOrder({ credits: costBreakdown.total });
+        const order = await createExactCreditsOrder({ credits: total });
         const prefillName = user?.company_name?.trim() || undefined;
         const checkoutResult = await openRazorpayForWalletOrder(order, {
           contact: user?.mobile,
@@ -411,7 +410,7 @@ const PaymentConfirmationScreen = () => {
 
       try {
         const { data } = await refetchWallet();
-        if ((data?.balance ?? 0) < costBreakdown.total) {
+        if ((data?.balance ?? 0) < total) {
           setIsProcessing(false);
           Alert.alert(
             'Could not post yet',
@@ -431,7 +430,7 @@ const PaymentConfirmationScreen = () => {
       user,
       showVerifyRetry,
       refetchWallet,
-      costBreakdown.total,
+      total,
       runPostRequirementFlow,
     ]
   );
@@ -441,7 +440,7 @@ const PaymentConfirmationScreen = () => {
       return;
     }
 
-    const credits = costBreakdown.total;
+    const credits = total;
     const estimatedInr = credits * DIRECT_PAY_INR_PER_CREDIT;
     Alert.alert(
       'Pay & post',
@@ -456,13 +455,13 @@ const PaymentConfirmationScreen = () => {
         },
       ]
     );
-  }, [isProcessing, walletLoading, costBreakdown.total, runDirectRazorpayAndPost]);
+  }, [isProcessing, walletLoading, total, runDirectRazorpayAndPost]);
 
   const handlePayAndPost = useCallback(() => {
     if (!hasEnoughCredits) {
       Alert.alert(
         'Insufficient Credits',
-        `You need ${costBreakdown.total} credits to post this requirement. Please buy more credits.`,
+        `You need ${total} credits to post this requirement. Please buy more credits.`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Buy Credits', onPress: handleBuyCredits },
@@ -473,7 +472,7 @@ const PaymentConfirmationScreen = () => {
 
     setIsProcessing(true);
     runPostRequirementFlow();
-  }, [hasEnoughCredits, costBreakdown.total, handleBuyCredits, runPostRequirementFlow]);
+  }, [hasEnoughCredits, total, handleBuyCredits, runPostRequirementFlow]);
 
   const handleCancel = useCallback(() => {
     navigation.goBack();
@@ -614,10 +613,10 @@ const PaymentConfirmationScreen = () => {
             <TouchableOpacity
               style={[
                 styles.directPayButton,
-                (isProcessing || walletLoading) && styles.payButtonDisabled,
+                (isProcessing || walletLoading || quoteLoading || !quote) && styles.payButtonDisabled,
               ]}
               onPress={handleDirectPay}
-              disabled={isProcessing || walletLoading}
+              disabled={isProcessing || walletLoading || quoteLoading || !quote}
               activeOpacity={0.8}
             >
               <Text style={styles.directPayButtonText}>Pay Directly</Text>
@@ -629,27 +628,68 @@ const PaymentConfirmationScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Cost Breakdown</Text>
           <View style={styles.costCard}>
-            <View style={[styles.costRow, styles.costRowBorder]}>
-              <Text style={styles.costLabel}>Standard Posting Fee</Text>
-              <Text style={styles.costValue}>{costBreakdown.standardFee} Credits</Text>
-            </View>
-
-            {costBreakdown.urgencyBoost > 0 && (
-              <View style={[styles.costRow, styles.costRowBorder]}>
-                <Text style={styles.costLabel}>Urgency Boost (7-Day)</Text>
-                <Text style={styles.costValue}>{costBreakdown.urgencyBoost} Credits</Text>
+            {quoteLoading || !quote ? (
+              <View style={[styles.costRow]}>
+                <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                <Text style={styles.costLabel}>Calculating fee…</Text>
               </View>
+            ) : (
+              <>
+                {/* Raw-material context: show value band / weight / quantity bucket */}
+                {quote.breakdown?.flow === 'raw_material' && (
+                  <>
+                    <View style={[styles.costRow, styles.costRowBorder]}>
+                      <Text style={styles.costLabel}>Value Band</Text>
+                      <Text style={styles.costValue}>{quote.breakdown.value_band}</Text>
+                    </View>
+                    {quote.breakdown.kg != null && (
+                      <View style={[styles.costRow, styles.costRowBorder]}>
+                        <Text style={styles.costLabel}>Estimated Weight</Text>
+                        <Text style={styles.costValue}>
+                          {Number(quote.breakdown.kg).toLocaleString('en-IN')} kg
+                        </Text>
+                      </View>
+                    )}
+                    {!!quote.breakdown.bucket_label && (
+                      <View style={[styles.costRow, styles.costRowBorder]}>
+                        <Text style={styles.costLabel}>Quantity Bucket</Text>
+                        <Text style={styles.costValue}>{quote.breakdown.bucket_label}</Text>
+                      </View>
+                    )}
+                  </>
+                )}
+
+                {/* Machine context: show selected price-range bracket */}
+                {quote.breakdown?.flow === 'machine' && !!quote.breakdown.price_range_label && (
+                  <View style={[styles.costRow, styles.costRowBorder]}>
+                    <Text style={styles.costLabel}>Price Range</Text>
+                    <Text style={styles.costValue}>{quote.breakdown.price_range_label}</Text>
+                  </View>
+                )}
+
+                <View style={[styles.costRow, styles.costRowBorder]}>
+                  <Text style={styles.costLabel}>Posting Fee</Text>
+                  <Text style={styles.costValue}>{quote.base_fee} Credits</Text>
+                </View>
+
+                <View style={[styles.costRow, styles.costRowBorder]}>
+                  <Text style={styles.costLabel}>GST ({quote.gst_percent}%)</Text>
+                  <Text style={styles.costValue}>{quote.gst} Credits</Text>
+                </View>
+
+                <View style={[styles.costRow, styles.totalRow]}>
+                  <Text style={styles.totalLabel}>Total</Text>
+                  <Text style={styles.totalValue}>{quote.total} Credits</Text>
+                </View>
+
+                {quote.breakdown?.flow === 'machine' && quote.breakdown.default_applied && (
+                  <Text style={styles.costLabel}>
+                    ⚠ No price range selected — defaulted to{' '}
+                    {quote.breakdown.price_range_label} for visibility and fee.
+                  </Text>
+                )}
+              </>
             )}
-
-            <View style={[styles.costRow, styles.costRowBorder]}>
-              <Text style={styles.costLabel}>VAT ({POSTING_COSTS.VAT_PERCENTAGE}%)</Text>
-              <Text style={styles.costValue}>{costBreakdown.vat} Credits</Text>
-            </View>
-
-            <View style={[styles.costRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Total Deduction</Text>
-              <Text style={styles.totalValue}>{costBreakdown.total} Credits</Text>
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -659,10 +699,10 @@ const PaymentConfirmationScreen = () => {
         <TouchableOpacity
           style={[
             styles.payButton,
-            !hasEnoughCredits && styles.payButtonDisabled,
+            (!hasEnoughCredits || quoteLoading || !quote) && styles.payButtonDisabled,
           ]}
           onPress={handlePayAndPost}
-          disabled={isProcessing || walletLoading}
+          disabled={isProcessing || walletLoading || quoteLoading || !quote}
           activeOpacity={0.8}
         >
           {isProcessing ? (
@@ -671,7 +711,7 @@ const PaymentConfirmationScreen = () => {
             <>
               <Text style={styles.payButtonText}>Pay & Post</Text>
               <View style={styles.payButtonBadge}>
-                <Text style={styles.payButtonBadgeText}>{costBreakdown.total} CREDITS</Text>
+                <Text style={styles.payButtonBadgeText}>{total} CREDITS</Text>
               </View>
             </>
           )}

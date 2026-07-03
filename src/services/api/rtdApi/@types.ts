@@ -38,6 +38,7 @@ export interface RtdProduct {
   moq: number;
   max_capacity?: number;
   base_price: string;
+  gst_rate?: string | null;
   buy_now_enabled: boolean;
   delivery_geography: string | null;
   location_id?: number | null;
@@ -73,6 +74,7 @@ export interface CreateRtdProductRequest {
   moq: number;
   max_capacity?: number;
   base_price: number;
+  gst_rate?: string;
   buy_now_enabled?: boolean;
   delivery_geography?: string;
   location_id?: number;
@@ -101,6 +103,7 @@ export interface UpdateRtdProductRequest {
   moq?: number;
   max_capacity?: number;
   base_price?: number;
+  gst_rate?: string;
   buy_now_enabled?: boolean;
   delivery_geography?: string;
   location_id?: number;
@@ -129,21 +132,15 @@ export interface GetConverterRtdProductsResponse {
 export type RtdOrderStatus =
   | 'REQUESTED'
   | 'ACCEPTED'
+  | 'CONNECTED'
   | 'PAID'
   | 'IN_PRODUCTION'
   | 'DISPATCHED'
   | 'COMPLETED'
   | 'CANCELLED'
-  | 'DISPUTED';
-
-export interface RtdOrderPayout {
-  id: number;
-  /** Payout amount (API may return as `amount` or `payout_amount`) */
-  amount?: string;
-  payout_amount?: string;
-  payout_status: 'PENDING' | 'RELEASED' | 'HOLD_DISPUTE';
-  released_at?: string | null;
-}
+  | 'DISPUTED'
+  | 'DECLINED'
+  | 'EXPIRED';
 
 export interface RtdOrderProduct {
   id: number;
@@ -189,36 +186,16 @@ export interface RtdOrder {
   unit_price?: string | number;
   confirmation_deadline?: string | null;
   paid_at?: string | null;
-  dispatched_at?: string | null;
-  completed_at?: string | null;
   cancelled_at?: string | null;
-  tracking_number?: string | null;
-  dispatch_proof_type?: 'tracking_number' | 'lr_photo' | 'delivery_challan' | null;
-  dispatch_proof_url?: string | null;
   logo_path?: string | null;
+  delivery_address?: string | null;
+  order_notes?: string | null;
   transaction_id?: string | null;
   product?: RtdOrderProduct;
   brand?: RtdOrderBrand;
   converter?: RtdOrderConverter;
-  payout?: RtdOrderPayout | null;
   created_at: string;
   updated_at: string;
-}
-
-/** Document type for dispatch proof (one of these + file is required). */
-export type RtdDispatchProofType =
-  | 'courier_receipt'
-  | 'lr_copy'
-  | 'eway_bill'
-  | 'transport_challan'
-  | 'invoice_copy';
-
-export interface DispatchRtdOrderRequest {
-  courier_name: string;
-  tracking_number: string;
-  dispatch_date: string; // YYYY-MM-DD
-  proof_type: RtdDispatchProofType;
-  file_path: string;
 }
 
 export interface GetRtdOrdersParams {
@@ -247,6 +224,7 @@ export interface GetRtdCatalogParams {
   category?: string;
   lead_time?: RtdLeadTime;
   delivery_geography?: string;
+  location_scope?: 'city' | 'state' | 'pan_india';
   min_price?: number;
   max_price?: number;
   min_moq?: number;
@@ -266,6 +244,8 @@ export interface GetRtdCatalogResponse {
 export interface RequestRtdOrderPayload {
   product_id: number;
   quantity: number;
+  delivery_address?: string;
+  order_notes?: string;
 }
 
 export interface ConfirmRtdPaymentPayload {

@@ -629,6 +629,7 @@ const PostJobworkFindScreen: React.FC = () => {
       {/* Machinery Bottom Sheet */}
       <GorhomBottomSheetModal
         ref={machinerySheetRef}
+        doneFooter
         snapPoints={['60%', '90%']}
         enablePanDownToClose
         onDismiss={() => setMachinerySearchQuery('')}

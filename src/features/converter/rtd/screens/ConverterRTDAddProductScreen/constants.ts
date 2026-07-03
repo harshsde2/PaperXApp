@@ -94,6 +94,14 @@ export const THICKNESS_UNIT_OPTIONS: {
   { label: 'MICRON', value: 'MICRON' },
 ];
 
+export const GST_RATE_OPTIONS: { label: string; value: string }[] = [
+  { label: '0% (Exempt)', value: '0%' },
+  { label: '5%', value: '5%' },
+  { label: '12%', value: '12%' },
+  { label: '18%', value: '18%' },
+  { label: '28%', value: '28%' },
+];
+
 export const BRANDING_METHOD_OPTIONS = [
   'Screen printing',
   'Offset printing',

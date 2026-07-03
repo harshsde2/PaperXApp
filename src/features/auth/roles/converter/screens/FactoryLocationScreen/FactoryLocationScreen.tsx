@@ -44,6 +44,7 @@ const FactoryLocationScreen = () => {
   return (
     <ScreenWrapper
       scrollable
+      keyboardDoneBar
       backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
       contentContainerStyle={styles.scrollContent}

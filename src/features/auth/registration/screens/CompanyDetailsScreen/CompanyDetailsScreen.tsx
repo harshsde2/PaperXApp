@@ -289,6 +289,7 @@ const CompanyDetailsScreen = () => {
       <View style={{ flex: 1 }}>
         <ScreenWrapper
           scrollable
+          keyboardDoneBar
           backgroundColor={theme.colors.background.secondary}
           safeAreaEdges={[]}
           contentContainerStyle={styles.scrollContent}

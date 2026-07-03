@@ -1,7 +1,7 @@
 export const appContent = {
   splashScreen: {
     headline: 'CONNECTING THE WHOLE ECOSYSTEM',
-    subheadline: 'A B2B Real-Time smart session-based matchmaking discovery and a marketplace platform for the Paper,Printing and Packaging Industry.',
+    subheadline: 'A B2B Real-Time smart session-based matchmaking discovery platform for the Paper,Printing and Packaging Industry.',
     actionButtonText: "Let's start",
   },
   MaterialRegistration: {

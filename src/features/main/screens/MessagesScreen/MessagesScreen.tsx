@@ -141,7 +141,19 @@ const MessagesScreen: React.FC = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Messages</Text>
+        <View style={styles.headerLeft}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <AppIcon.ArrowLeft width={24} height={24} color="#111827" />
+            </TouchableOpacity>
+          )}
+          <Text style={styles.title}>Messages</Text>
+        </View>
         <TouchableOpacity style={styles.searchButton}>
           <AppIcon.Search width={24} height={24} color="#6B7280" />
         </TouchableOpacity>
@@ -202,6 +214,19 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+    marginLeft: -8,
   },
   title: {
     fontSize: 28,

@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
 import { getColorWithOpacity } from '@theme/utils/themeHelpers';
 import { useAppSelector } from '@store/hooks';
-import { useGetProfile, useNotificationUnreadCount } from '@services/api';
+import { useGetProfile, useNotificationUnreadCount, useGetActiveSessions } from '@services/api';
+import type { ActiveSessionListItem } from '@services/api';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { SCREENS } from '@navigation/constants';
@@ -33,6 +34,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onLayoutHeight
   const { user } = useAppSelector((state) => state.auth);
   const { data: profileData } = useGetProfile();
   const { data: unreadData } = useNotificationUnreadCount();
+  // Shared React Query cache with ResponsesCard / ResponsesListScreen — no extra network.
+  const { data: activeSessionsData } = useGetActiveSessions({ filter: 'all', per_page: 50 });
+  const responsesCount = useMemo(() => {
+    const sessions = (activeSessionsData?.data ?? []) as ActiveSessionListItem[];
+    return sessions
+      .filter((s) => s.is_owner === true && (s.responses_received ?? 0) > 0)
+      .reduce((sum, s) => sum + (s.responses_received ?? 0), 0);
+  }, [activeSessionsData]);
   const theme = useTheme();
   const primaryRole = profileData?.primary_role || user?.primaryRole || 'dealer';
   const companyName = profileData?.company_name || 'Your Company';
@@ -102,12 +111,26 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onLayoutHeight
     navigation.navigate(SCREENS.MAIN.NOTIFICATIONS);
   };
 
+  const handleMessagesPress = () => {
+    navigation.navigate(SCREENS.MAIN.RESPONSES);
+  };
+
   const handleProfilePress = () => {
     navigation.navigate(SCREENS.MAIN.PROFILE);
   };
 
   const renderHeaderActions = () => (
     <View style={styles.headerActions}>
+      <TouchableOpacity onPress={handleMessagesPress} style={styles.notificationButtonContainer}>
+        <AppIcon.Messages width={20} height={20} color={theme.colors.text.primary} />
+        {responsesCount > 0 && (
+          <View style={styles.notificationBadge}>
+            <Text variant="captionSmall" style={styles.notificationBadgeText}>
+              {responsesCount > 99 ? '99+' : responsesCount}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
       <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationButtonContainer}>
         <AppIcon.Notification width={20} height={20} color={theme.colors.text.primary} />
         {unreadCount > 0 && (

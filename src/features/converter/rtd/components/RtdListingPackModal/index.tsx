@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
@@ -14,8 +15,17 @@ import { AppIcon } from '@assets/svgs';
 import {
   useGetRtdListingPacks,
   usePurchaseRtdListingPack,
+  useCreateRazorpayExactCreditsOrder,
+  useVerifyRazorpayPayment,
 } from '@services/api';
 import type { RtdListingPackItem } from '@services/api';
+import { useAppSelector } from '@store/hooks';
+import {
+  openRazorpayForWalletOrder,
+  isRazorpayUserCancellation,
+  isRazorpaySdkError,
+  formatPurchaseError,
+} from '@features/wallet/screens/CreditPacksScreen/razorpayCheckout';
 import type { RtdListingPackModalProps } from './@types';
 import { createStyles } from './styles';
 
@@ -30,9 +40,13 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const user = useAppSelector((state) => state.auth.user);
   const [purchasingPackSlug, setPurchasingPackSlug] = useState<string | null>(null);
+  const [directPayingPackSlug, setDirectPayingPackSlug] = useState<string | null>(null);
   const { data: packs = [], isLoading } = useGetRtdListingPacks();
   const purchaseMutation = usePurchaseRtdListingPack();
+  const { mutateAsync: createExactCreditsOrder } = useCreateRazorpayExactCreditsOrder();
+  const { mutateAsync: verifyRazorpayPayment } = useVerifyRazorpayPayment();
 
   const handleBuy = useCallback(
     async (pack: RtdListingPackItem) => {
@@ -87,6 +101,57 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
     ]
   );
 
+  const handleDirectPay = useCallback(
+    async (pack: RtdListingPackItem) => {
+      const estimatedInr = pack.price * 10;
+      Alert.alert(
+        'Pay directly',
+        `Pay about ₹${estimatedInr.toLocaleString('en-IN')} for ${pack.price} credits (estimate). Razorpay shows the final amount. Credits will be added and this pack will be purchased automatically.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Pay now',
+            onPress: async () => {
+              setDirectPayingPackSlug(pack.slug);
+              try {
+                const order = await createExactCreditsOrder({ credits: pack.price });
+
+                const checkoutResult = await openRazorpayForWalletOrder(order, {
+                  contact: user?.mobile,
+                  name: user?.company_name?.trim() || undefined,
+                });
+
+                await verifyRazorpayPayment(checkoutResult);
+
+                await purchaseMutation.mutateAsync({ pack_slug: pack.slug });
+
+                setDirectPayingPackSlug(null);
+                onClose();
+                onPurchaseSuccess();
+              } catch (err: any) {
+                setDirectPayingPackSlug(null);
+                if (isRazorpayUserCancellation(err)) return;
+                if (isRazorpaySdkError(err)) {
+                  Alert.alert('Payment failed', formatPurchaseError(err));
+                  return;
+                }
+                Alert.alert('Error', formatPurchaseError(err));
+              }
+            },
+          },
+        ]
+      );
+    },
+    [
+      user,
+      createExactCreditsOrder,
+      verifyRazorpayPayment,
+      purchaseMutation,
+      onClose,
+      onPurchaseSuccess,
+    ]
+  );
+
   if (!visible) return null;
 
   return (
@@ -108,9 +173,16 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
               <AppIcon.Close width={24} height={24} color={theme.colors.text.primary} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.subtitle}>
-            Pay once from your wallet balance (credits). Valid for 120 days.
-          </Text>
+          <View style={styles.balanceBanner}>
+            <Text style={styles.balanceLabel}>Available credits</Text>
+            {walletBalanceLoading ? (
+              <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+            ) : (
+              <Text style={styles.balanceValue}>
+                {walletBalance.toLocaleString('en-IN')} Credits
+              </Text>
+            )}
+          </View>
           <ScrollView
             style={{ maxHeight: 400 }}
             contentContainerStyle={styles.scrollContent}
@@ -133,7 +205,7 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
                     )}
                     <Text style={styles.packName}>{pack.name}</Text>
                     <Text style={styles.packMeta}>
-                      {pack.product_limit} product{pack.product_limit !== 1 ? 's' : ''} ·{' '}
+                      Upto {pack.product_limit} product{pack.product_limit !== 1 ? 's' : ''} ·{' '}
                       {pack.validity_days} days validity
                     </Text>
                     <View style={styles.packPriceRow}>
@@ -144,10 +216,27 @@ export const RtdListingPackModal: React.FC<RtdListingPackModalProps> = ({
                         variant="gradient"
                         size="sm"
                         loading={purchasingPackSlug === pack.slug}
-                        disabled={purchaseMutation.isPending || walletBalanceLoading}
+                        disabled={
+                          purchaseMutation.isPending ||
+                          walletBalanceLoading ||
+                          !!directPayingPackSlug
+                        }
                         style={styles.buyButton}
                       />
                     </View>
+                    <CustomButton
+                      title={`Pay Directly — ₹~${(pack.price * 10).toLocaleString('en-IN')}`}
+                      onPress={() => handleDirectPay(pack)}
+                      variant="outline"
+                      size="sm"
+                      loading={directPayingPackSlug === pack.slug}
+                      disabled={
+                        purchaseMutation.isPending ||
+                        !!purchasingPackSlug ||
+                        !!directPayingPackSlug
+                      }
+                      style={styles.directPayButton}
+                    />
                   </View>
                 );
               })

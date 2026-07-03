@@ -47,6 +47,10 @@ export const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacing[3],
       alignItems: 'center',
     },
+    backButton: {
+      padding: theme.spacing[1],
+      marginRight: theme.spacing[2],
+    },
     markAllButton: {
       minWidth: 140,
     },

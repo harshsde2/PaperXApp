@@ -83,7 +83,7 @@ export const useGetMaterials = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes - reference data doesn't change often
+    staleTime: 0,
   });
 };
 
@@ -171,7 +171,7 @@ export const useGetMaterialsInfinite = (perPage: number = 5) => {
       
       return undefined;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 0,
   });
 };
 
@@ -194,6 +194,28 @@ export const useCreateMaterial = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.reference.materials() });
+    },
+  });
+};
+
+/**
+ * Create a custom brand / mill (when user can't find theirs in the list).
+ * Requires auth. Mirrors useCreateMaterial.
+ */
+export const useCreateBrand = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { name: string }): Promise<Brand> => {
+      const response = await api.post(REFERENCE_ENDPOINTS.BRANDS, {
+        name: params.name.trim(),
+      });
+      const responseData = response.data as any;
+      const brand = responseData?.data ?? responseData;
+      return brand;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reference.brands() });
     },
   });
 };
@@ -223,7 +245,7 @@ export const useGetMaterialDetails = (materialId: number | string) => {
       return responseData;
     },
     enabled: !!materialId,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
   });
 };
 
@@ -266,7 +288,7 @@ export const useGetMachines = (
 
       return [];
     },
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
     enabled: options?.enabled !== false,
   });
 };
@@ -306,7 +328,7 @@ export const useGetMaterialFinishes = (params?: GetMaterialFinishesParams) => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
   });
 };
 
@@ -388,7 +410,7 @@ export const useGetMaterialFinishesInfinite = (perPage: number = 50, params?: Om
       
       return undefined;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 0,
   });
 };
 
@@ -428,7 +450,7 @@ export const useGetMaterialMills = (params: GetMaterialMillsParams) => {
       return [];
     },
     enabled: !!params.material_id,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
   });
 };
 
@@ -468,7 +490,7 @@ export const useGetMaterialThicknessTypes = (params: GetMaterialThicknessTypesPa
       return [];
     },
     enabled: !!params.material_id,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
   });
 };
 
@@ -504,6 +526,6 @@ export const useGetBrands = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
   });
 };

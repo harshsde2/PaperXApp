@@ -22,7 +22,7 @@ import type {
 import { INITIAL_ADVANCED_FILTERS } from './@types';
 import { createStyles } from './styles';
 
-const FILTER_SNAP_POINTS = ['75%','100%'];
+const FILTER_SNAP_POINTS = ['100%'];
 
 export const BrandRTDMarketplaceScreen: React.FC<
   BrandRTDMarketplaceScreenProps
@@ -57,7 +57,9 @@ export const BrandRTDMarketplaceScreen: React.FC<
     if (advancedFilters.delivery_geography) count++;
     if (advancedFilters.lead_time) count++;
     if (advancedFilters.min_price || advancedFilters.max_price) count++;
-    if (advancedFilters.moq) count++;
+    if (advancedFilters.moq_range) count++;
+    if (advancedFilters.category) count++;
+    if (advancedFilters.location_scope) count++;
     if (advancedFilters.has_branding === 'yes') count++;
     return count;
   }, [advancedFilters]);
@@ -106,11 +108,22 @@ export const BrandRTDMarketplaceScreen: React.FC<
     if (advancedFilters.max_price) {
       params.max_price = Number(advancedFilters.max_price);
     }
-    if (advancedFilters.moq) {
-      const moqNum = Number(advancedFilters.moq);
-      if (!isNaN(moqNum) && moqNum > 0) {
-        params.max_moq = moqNum;
+    if (advancedFilters.moq_range) {
+      if (advancedFilters.moq_range === '0-50') {
+        params.min_moq = 0;
+        params.max_moq = 50;
+      } else if (advancedFilters.moq_range === '50-500') {
+        params.min_moq = 50;
+        params.max_moq = 500;
+      } else if (advancedFilters.moq_range === '500+') {
+        params.min_moq = 500;
       }
+    }
+    if (advancedFilters.category) {
+      params.category = advancedFilters.category;
+    }
+    if (advancedFilters.location_scope) {
+      params.location_scope = advancedFilters.location_scope as 'city' | 'state' | 'pan_india';
     }
     if (advancedFilters.has_branding === 'yes') {
       params.has_branding = 'yes';

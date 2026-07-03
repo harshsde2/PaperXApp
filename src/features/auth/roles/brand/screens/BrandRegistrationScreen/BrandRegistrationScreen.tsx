@@ -15,6 +15,7 @@ import { Controller } from 'react-hook-form';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { DropdownButton } from '@shared/components/DropdownButton';
 import { StructuredAddressFormModal } from '@shared/components/StructuredAddressFormModal';
 import type { WarehouseFormMapData } from '@shared/components/WarehouseAddressForm/@types';
@@ -720,16 +721,15 @@ const BrandRegistrationScreen = () => {
   const handleBrandStructuredAddressSubmit = useCallback(
     (data: {
       name: string;
-      flatHouseNo: string;
-      streetLandmark: string;
-      locality: string;
+      location1: string;
+      location2: string;
       state: string;
       city: string;
       pincode: string;
       latitude: number;
       longitude: number;
     }) => {
-      const streetBlock = [data.flatHouseNo, data.streetLandmark, data.locality]
+      const streetBlock = [data.location1, data.location2]
         .filter(Boolean)
         .join(', ');
       setValue('state', data.state, { shouldValidate: true });
@@ -1631,6 +1631,8 @@ const BrandRegistrationScreen = () => {
 
         </ScreenWrapper>
       </KeyboardAvoidingView>
+
+      <KeyboardDoneBar />
 
       {/* Floating Bottom Container - Hidden when keyboard is open */}
       {!isKeyboardVisible && (

@@ -83,8 +83,6 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
 
   const [form, setForm] = useState<OrderFormState>({
     quantity: String(initialQty ?? ''),
-    deliveryAddress: '',
-    orderNotes: '',
     logoFile: null,
   });
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -104,26 +102,16 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
   const platformFeePercent = PLATFORM_FEE_SLABS.find((s) => subtotal <= s.max)?.percent ?? 5;
   const platformFee = subtotal * (platformFeePercent / 100);
   const sellerGstRegistered = product?.seller_gst_registered !== false;
-  const gst = sellerGstRegistered ? (subtotal + platformFee) * 0.18 : 0;
-  const total = subtotal + platformFee + gst;
+  const gst = sellerGstRegistered ? platformFee * 0.18 : 0;
+  const platformTotal = platformFee + gst;
 
   const isSubmitting = requestOrder.isPending || requestOrderWithLogo.isPending;
   const qtyInSlab = isQuantityInSlab(product?.price_slabs, qty);
   const maxQty = getMaxSlabQty(product?.price_slabs);
-  const hasAddress = form.deliveryAddress.trim().length > 0;
-  const canSubmit = qty >= (product?.moq ?? 1) && qtyInSlab && hasAddress && !isSubmitting;
+  const canSubmit = qty >= (product?.moq ?? 1) && qtyInSlab && !isSubmitting;
 
-  console.log('canSubmit', canSubmit);
-  console.log('qty', qty);
-  console.log('qtyInSlab', qtyInSlab);
-  console.log('hasAddress', hasAddress);
-  console.log('isSubmitting', isSubmitting);
   const handleSubmit = useCallback(() => {
     if (!product || isSubmitting) return;
-    if (!form.deliveryAddress.trim()) {
-      Alert.alert('Invalid Address', 'Delivery address is required.');
-      return;
-    }
     if (qty < product.moq) {
       Alert.alert('Invalid Quantity', `Minimum order quantity is ${product.moq} units.`);
       return;
@@ -250,82 +238,35 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
             showCamera={false}
           />
         </View>
-
-        {/* Logistics */}
-        <View style={styles.section}>
-          <Text fontWeight="bold" style={styles.sectionTitle}>
-            Logistics
-          </Text>
-
-          <Text style={styles.fieldLabel}>Delivery Address</Text>
-          <View
-            style={[
-              styles.textareaContainer,
-              focusedField === 'address' && styles.textareaContainerFocused,
-            ]}
-          >
-            <TextInput
-              style={styles.textarea}
-              value={form.deliveryAddress}
-              onChangeText={(v) => setForm((s) => ({ ...s, deliveryAddress: v }))}
-              placeholder="Enter delivery address"
-              placeholderTextColor={theme.colors.text.placeholder}
-              multiline
-              numberOfLines={3}
-              onFocus={() => setFocusedField('address')}
-              onBlur={() => setFocusedField(null)}
-            />
-          </View>
-
-          <View style={styles.leadTimeCard}>
-            <View style={styles.leadTimeIconWrapper}>
-              <AppIcon.Sessions width={20} height={20} color={theme.colors.primary.DEFAULT} />
-            </View>
-            <View style={styles.leadTimeContent}>
-              <Text style={styles.leadTimeLabel}>Lead Time Commitment</Text>
-              <Text fontWeight="bold" style={styles.leadTimeValue}>
-                {product?.lead_time_label ?? 'Standard: 5-7 Business Days'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Additional Info */}
-        <View style={styles.section}>
-          <Text fontWeight="bold" style={styles.sectionTitle}>
-            Additional Info
-          </Text>
-
-          <Text style={styles.fieldLabel}>
-            Order Notes <Text style={styles.optionalTag}>(Optional)</Text>
-          </Text>
-          <View
-            style={[
-              styles.textareaContainer,
-              focusedField === 'notes' && styles.textareaContainerFocused,
-            ]}
-          >
-            <TextInput
-              style={styles.textarea}
-              value={form.orderNotes}
-              onChangeText={(v) => setForm((s) => ({ ...s, orderNotes: v }))}
-              placeholder="Any special instructions..."
-              placeholderTextColor={theme.colors.text.placeholder}
-              multiline
-              numberOfLines={3}
-              onFocus={() => setFocusedField('notes')}
-              onBlur={() => setFocusedField(null)}
-            />
-          </View>
-        </View>
       </ScrollView>
 
       {/* Footer */}
       <View style={styles.footer}>
+        <View style={styles.footerRow}>
+          <Text style={styles.footerLabel}>Order Value (pay direct to converter)</Text>
+          <Text style={styles.footerValue}>
+            ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </Text>
+        </View>
+        <View style={styles.footerRow}>
+          <Text style={styles.footerLabel}>Platform Fee ({platformFeePercent}%)</Text>
+          <Text style={styles.footerValue}>
+            ₹{platformFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </Text>
+        </View>
+        {sellerGstRegistered && (
+          <View style={styles.footerRow}>
+            <Text style={styles.footerLabel}>GST on Platform Fee (18%)</Text>
+            <Text style={styles.footerValue}>
+              ₹{gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </Text>
+          </View>
+        )}
+        <View style={styles.footerDivider} />
         <View style={styles.footerTotalRow}>
-          <Text style={styles.footerTotalLabel}>Order Total Estimate</Text>
+          <Text style={styles.footerTotalLabel}>You Pay to PaperX</Text>
           <Text fontWeight="bold" style={styles.footerTotalValue}>
-            ₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹{platformTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
         </View>
         <CustomButton
@@ -337,7 +278,7 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
         />
         <Text style={styles.termsText}>
           By clicking Request Order, you agree to PaperX Terms of Service.
-          Zupply acts as a payment collection facilitator on behalf of the seller.
+          You will pay the platform fee to PaperX after the converter accepts.
         </Text>
       </View>
     </KeyboardAvoidingView>

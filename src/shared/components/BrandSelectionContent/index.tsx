@@ -20,14 +20,23 @@ export const BrandSelectionContent = memo(({
   onSelect,
   theme,
   ListComponent = FlatList,
+  onAddCustom,
+  isAddingCustom = false,
 }: BrandSelectionContentProps) => {
   const styles = createStyles(theme);
 
+  const trimmedQuery = searchQuery.trim();
+
   const filteredBrands = useMemo(() => {
-    if (!searchQuery.trim()) return brands;
-    const query = searchQuery.toLowerCase();
+    if (!trimmedQuery) return brands;
+    const query = trimmedQuery.toLowerCase();
     return brands.filter((brand) => brand.name.toLowerCase().includes(query));
-  }, [searchQuery, brands]);
+  }, [trimmedQuery, brands]);
+
+  const hasExactMatch = useMemo(
+    () => brands.some((brand) => brand.name.toLowerCase() === trimmedQuery.toLowerCase()),
+    [brands, trimmedQuery]
+  );
 
   const handleSelect = useCallback(
     (brand: BrandItemData) => {
@@ -95,6 +104,27 @@ export const BrandSelectionContent = memo(({
     );
   }, [isLoading, isError, searchQuery, onRetry, styles, theme]);
 
+  const ListFooterComponent = useCallback(() => {
+    if (!onAddCustom || !trimmedQuery || hasExactMatch) return null;
+    return (
+      <TouchableOpacity
+        style={styles.addCustomRow}
+        onPress={() => onAddCustom(trimmedQuery)}
+        disabled={isAddingCustom}
+        activeOpacity={0.7}
+      >
+        {isAddingCustom ? (
+          <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+        ) : (
+          <AppIcon.PlusCircle width={20} height={20} color={theme.colors.primary.DEFAULT} />
+        )}
+        <Text variant="bodyMedium" fontWeight="medium" style={styles.addCustomText}>
+          Add "{trimmedQuery}"
+        </Text>
+      </TouchableOpacity>
+    );
+  }, [onAddCustom, trimmedQuery, hasExactMatch, isAddingCustom, styles, theme]);
+
   const listHeader = (
     <View style={styles.listHeader}>
       <Text variant="h4" fontWeight="semibold" style={styles.title}>
@@ -127,6 +157,7 @@ export const BrandSelectionContent = memo(({
       style={styles.container}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={listHeader}
+      ListFooterComponent={ListFooterComponent}
       nestedScrollEnabled
       bounces={false}
       renderItem={renderItem}

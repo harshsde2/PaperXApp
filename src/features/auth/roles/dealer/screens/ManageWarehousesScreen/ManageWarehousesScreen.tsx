@@ -281,9 +281,8 @@ const ManageWarehousesScreen = () => {
   const handleWarehouseFormSubmit = useCallback(
     (data: {
       name: string;
-      flatHouseNo: string;
-      streetLandmark: string;
-      locality: string;
+      location1: string;
+      location2: string;
       state: string;
       city: string;
       pincode: string;
@@ -291,9 +290,8 @@ const ManageWarehousesScreen = () => {
       longitude: number;
     }) => {
       const fullAddress = [
-        data.flatHouseNo,
-        data.streetLandmark,
-        data.locality,
+        data.location1,
+        data.location2,
         data.city,
         data.state,
         data.pincode,

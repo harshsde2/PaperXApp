@@ -58,6 +58,7 @@ import { InsufficientCreditsModal } from '@shared/components/InsufficientCredits
 import type { FormData, FormErrors, SavedLocation } from './@types';
 import {
   BRANDING_METHOD_OPTIONS,
+  GST_RATE_OPTIONS,
   RTD_CATEGORY_OPTIONS,
   SIZE_UNIT_OPTIONS,
   THICKNESS_UNIT_OPTIONS,
@@ -91,6 +92,7 @@ const INITIAL_FORM: FormData = {
   max_capacity: '',
   base_price: '',
   buy_now_enabled: true,
+  gst_rate: '',
   delivery_geography: '',
   location_id: undefined,
   location_source: undefined,
@@ -122,7 +124,10 @@ const validateForm = (form: FormData): FormErrors => {
   }
 
   const slabErrors: string[] = [];
-  form.price_slabs.forEach((slab, i) => {
+  const filledSlabs = form.price_slabs.filter(
+    (slab) => slab.min_qty || slab.max_qty || slab.price_per_unit,
+  );
+  filledSlabs.forEach((slab, i) => {
     const min = parseFloat(slab.min_qty);
     const max = parseFloat(slab.max_qty);
     const price = parseFloat(slab.price_per_unit);
@@ -160,6 +165,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showSizeUnitPicker, setShowSizeUnitPicker] = useState(false);
   const [showThicknessUnitPicker, setShowThicknessUnitPicker] = useState(false);
+  const [showGstPicker, setShowGstPicker] = useState(false);
   const [categorySearch, setCategorySearch] = useState('');
   const [materialSearch, setMaterialSearch] = useState('');
   const [finishSearch, setFinishSearch] = useState('');
@@ -270,6 +276,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       max_capacity: p.max_capacity != null ? String(p.max_capacity) : '',
       base_price: p.base_price ?? '',
       buy_now_enabled: p.buy_now_enabled ?? true,
+      gst_rate: (p as any).gst_rate ?? '',
       delivery_geography: p.delivery_geography ?? '',
       location_id: (p as any).location_id ?? undefined,
       location_source: (p as any).location_source ?? undefined,
@@ -442,6 +449,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       moq: parseFloat(form.moq),
       max_capacity: form.max_capacity ? parseFloat(form.max_capacity) : undefined,
       base_price: parseFloat(form.base_price),
+      gst_rate: form.gst_rate || undefined,
       buy_now_enabled: form.buy_now_enabled,
       delivery_geography: form.delivery_geography.trim() || undefined,
       location_id: undefined,
@@ -505,6 +513,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         moq: parseFloat(form.moq),
         max_capacity: form.max_capacity ? parseFloat(form.max_capacity) : undefined,
         base_price: parseFloat(form.base_price),
+        gst_rate: form.gst_rate || undefined,
         buy_now_enabled: form.buy_now_enabled,
         delivery_geography: form.delivery_geography.trim() || undefined,
         location_id: undefined,
@@ -577,12 +586,12 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           <Card style={styles.card}>
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Product Details</Text>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Category</Text>
+              <Text variant="bodySmall" style={styles.label}>Category</Text>
               <DropdownButton value={form.category} placeholder="Select category" onPress={() => categorySheetRef.current?.present()} disabled={isEdit} />
               {!!errors.category && <Text variant="captionSmall" style={styles.errorText}>{errors.category}</Text>}
             </View>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Additional details about the product (Optional)</Text>
+              <Text variant="bodySmall" style={styles.label}>Additional details about the product (Optional)</Text>
               <TextInput
                 value={form.product_name}
                 onChangeText={(value) => updateField('product_name', value)}
@@ -595,7 +604,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
               {!!errors.product_name && <Text variant="captionSmall" style={styles.errorText}>{errors.product_name}</Text>}
             </View>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Product Image</Text>
+              <Text variant="bodySmall" style={styles.label}>Product Image</Text>
               <ImagePicker
                 value={form.image}
                 onChange={handleImageChange}
@@ -610,22 +619,22 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Specifications</Text>
             <View style={styles.row}>
               <View style={[styles.fieldContainer, styles.halfField, { marginRight: theme.spacing[2] }]}>
-                <Text variant="captionMedium" style={styles.label}>Size</Text>
+                <Text variant="bodySmall" style={styles.label}>Size</Text>
                 <TextInput value={form.size} onChangeText={(v) => updateField('size', v)} placeholder="e.g. 10x10" placeholderTextColor={theme.colors.text.placeholder} style={styles.input} />
               </View>
               <View style={[styles.fieldContainer, styles.halfField, { marginLeft: theme.spacing[2] }]}>
-                <Text variant="captionMedium" style={styles.label}>Unit</Text>
+                <Text variant="bodySmall" style={styles.label}>Unit</Text>
                 <DropdownButton value={SIZE_UNIT_OPTIONS.find((item) => item.value === form.size_unit)?.label} placeholder="Select unit" onPress={() => setShowSizeUnitPicker(true)} />
               </View>
             </View>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Material (Optional)</Text>
+              <Text variant="bodySmall" style={styles.label}>Material (Optional)</Text>
               <DropdownButton value={selectedMaterialName} placeholder="Select material" onPress={() => materialSheetRef.current?.present()} />
             </View>
             <View style={styles.fieldContainer}>
               <View style={styles.labelRow}>
-                <Text variant="captionMedium" style={styles.label}>Custom Material</Text>
-                <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+                <Text variant="bodySmall" style={styles.label}>Custom Material</Text>
+                <Text variant="captionMedium" style={styles.optionalLabel}>(Optional)</Text>
               </View>
               <View style={styles.customMaterialRow}>
                 <TextInput style={styles.customMaterialInput} value={customMaterialName} onChangeText={setCustomMaterialName} placeholder="Enter material if not in list" placeholderTextColor={theme.colors.text.tertiary} />
@@ -637,20 +646,20 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             <View style={styles.row}>
               <View style={[styles.fieldContainer, styles.halfField, { marginRight: theme.spacing[2] }]}>
                 <View style={styles.labelRow}>
-                  <Text variant="captionMedium" style={styles.label}>Thickness</Text>
-                  <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+                  <Text variant="bodySmall" style={styles.label}>Thickness</Text>
+                  <Text variant="captionMedium" style={styles.optionalLabel}>(Optional)</Text>
                 </View>
                 <TextInput value={form.thickness} onChangeText={(v) => updateField('thickness', v)} placeholder="e.g. 350" placeholderTextColor={theme.colors.text.placeholder} keyboardType="numeric" style={styles.input} />
               </View>
               <View style={[styles.fieldContainer, styles.halfField, { marginLeft: theme.spacing[2] }]}>
-                <Text variant="captionMedium" style={styles.label}>Unit</Text>
+                <Text variant="bodySmall" style={styles.label}>Unit</Text>
                 <DropdownButton value={THICKNESS_UNIT_OPTIONS.find((item) => item.value === form.thickness_unit)?.label} placeholder="Select unit" onPress={() => setShowThicknessUnitPicker(true)} />
               </View>
             </View>
             <View style={styles.fieldContainer}>
               <View style={styles.labelRow}>
-                <Text variant="captionMedium" style={styles.label}>Grade / Finish / Certifications</Text>
-                <Text variant="captionSmall" style={styles.optionalLabel}>(Optional)</Text>
+                <Text variant="bodySmall" style={styles.label}>Grade / Finish / Certifications</Text>
+                <Text variant="captionMedium" style={styles.optionalLabel}>(Optional)</Text>
               </View>
               <DropdownButton value={selectedFinishesDisplay} placeholder="Select finish options" onPress={() => finishSheetRef.current?.present()} />
             </View>
@@ -682,7 +691,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           <Card style={styles.card}>
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Pricing and Other Details</Text>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Dispatch Lead Time</Text>
+              <Text variant="bodySmall" style={styles.label}>Dispatch Lead Time</Text>
               <View style={styles.leadTimeChipsContainer}>
                 {LEAD_TIME_OPTIONS.map((opt) => {
                   const isActive = form.lead_time === opt.value;
@@ -699,26 +708,32 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Standard Capacity and Price Details</Text>
 
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>MOQ (units)</Text>
+              <Text variant="bodySmall" style={styles.label}>MOQ per order</Text>
               <TextInput value={form.moq} onChangeText={(v) => updateField('moq', v)} placeholder="e.g. 10" placeholderTextColor={theme.colors.text.placeholder} keyboardType="numeric" style={[styles.input, errors.moq && styles.inputError]} />
               {!!errors.moq && <Text variant="captionSmall" style={styles.errorText}>{errors.moq}</Text>}
             </View>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Max Capacity (optional)</Text>
+              <Text variant="bodySmall" style={styles.label}>Max Capacity (optional)</Text>
               <TextInput value={form.max_capacity} onChangeText={(v) => updateField('max_capacity', v)} placeholder="e.g. 1000" placeholderTextColor={theme.colors.text.placeholder} keyboardType="numeric" style={styles.input} />
             </View>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Base Price (₹ per unit)</Text>
+              <Text variant="bodySmall" style={styles.label}>Base Price (₹ per unit)</Text>
               <TextInput value={form.base_price} onChangeText={(v) => updateField('base_price', v)} placeholder="e.g. 25.50" placeholderTextColor={theme.colors.text.placeholder} keyboardType="decimal-pad" style={[styles.input, errors.base_price && styles.inputError]} />
               {!!errors.base_price && <Text variant="captionSmall" style={styles.errorText}>{errors.base_price}</Text>}
             </View>
-            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Price Slabs for the brand to view as per quantity</Text>
-            <View style={styles.switchRow}>
-              <Text variant="bodyMedium" style={styles.switchLabel}>Buy Now Enabled</Text>
-              <Switch value={form.buy_now_enabled} onValueChange={(v) => updateField('buy_now_enabled', v)} trackColor={{ false: theme.colors.border.primary, true: theme.colors.primary[300] }} thumbColor={theme.colors.background.primary} />
-            </View>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Price Slabs</Text>
+              <View style={styles.labelRow}>
+                <Text variant="bodySmall" style={styles.label}>GST Rate</Text>
+                <Text variant="captionMedium" style={styles.optionalLabel}>(Optional)</Text>
+              </View>
+              <DropdownButton
+                value={GST_RATE_OPTIONS.find((o) => o.value === form.gst_rate)?.label}
+                placeholder="Select GST rate"
+                onPress={() => setShowGstPicker(true)}
+              />
+            </View>
+            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Price slab according to the quantity</Text>
+            <View style={styles.fieldContainer}>
               <PriceSlabInput slabs={form.price_slabs} onSlabsChange={handleSlabsChange} errors={errors.price_slabs ?? []} />
             </View>
           </Card>
@@ -726,7 +741,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           <Card style={styles.card}>
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Dispatch</Text>
             <View style={styles.fieldContainer}>
-              <Text variant="captionMedium" style={styles.label}>Dispatch Location</Text>
+              <Text variant="bodySmall" style={styles.label}>Dispatch Location</Text>
               <TouchableOpacity style={styles.locationButton} onPress={() => deliveryLocationSheetRef.current?.present()}>
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyMedium" style={!getSelectedLocationDisplay() ? { color: theme.colors.text.tertiary } : { color: theme.colors.text.primary }} numberOfLines={1}>
@@ -736,6 +751,13 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
                 <AppIcon.ChevronDown width={20} height={20} color={theme.colors.text.tertiary} />
               </TouchableOpacity>
               {!!errors.delivery_geography && <Text variant="captionSmall" style={styles.errorText}>{errors.delivery_geography}</Text>}
+            </View>
+          </Card>
+
+          <Card style={styles.card}>
+            <View style={styles.switchRow}>
+              <Text variant="bodyMedium" style={styles.switchLabel}>Buy Now Available</Text>
+              <Switch value={form.buy_now_enabled} onValueChange={(v) => updateField('buy_now_enabled', v)} trackColor={{ false: theme.colors.border.primary, true: theme.colors.primary[300] }} thumbColor={theme.colors.background.primary} />
             </View>
           </Card>
 
@@ -859,7 +881,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         </View>
       </GorhomBottomSheetModal>
 
-      <GorhomBottomSheetModal ref={finishSheetRef} snapPoints={['70%', '95%']} enablePanDownToClose onDismiss={() => setFinishSearch('')}>
+      <GorhomBottomSheetModal ref={finishSheetRef} snapPoints={['70%', '95%']} enablePanDownToClose doneFooter onDismiss={() => setFinishSearch('')}>
         <MultiSelectBottomSheetContent
           title="Select Grade / Finish / Certifications"
           searchQuery={finishSearch}
@@ -877,6 +899,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         ref={brandingSheetRef}
         snapPoints={['80%']}
         enablePanDownToClose
+        doneFooter
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
@@ -895,6 +918,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             data={filteredBrandingMethods}
             keyExtractor={(item: string) => item}
             keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 96 }}
             renderItem={({ item }: { item: string }) => (
               <TouchableOpacity style={styles.sheetOption} onPress={() => toggleBrandingMethod(item)}>
                 <Text variant="bodyMedium" style={{ flex: 1 }}>{item}</Text>
@@ -960,6 +984,24 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             </View>
             {THICKNESS_UNIT_OPTIONS.map((option) => (
               <TouchableOpacity key={option.value} style={styles.modalOption} onPress={() => { updateField('thickness_unit', option.value); setShowThicknessUnitPicker(false); }}>
+                <Text variant="bodyMedium">{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {showGstPicker && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text variant="h4" fontWeight="semibold">Select GST Rate</Text>
+              <TouchableOpacity onPress={() => setShowGstPicker(false)}>
+                <Text style={styles.closeIcon}>x</Text>
+              </TouchableOpacity>
+            </View>
+            {GST_RATE_OPTIONS.map((option) => (
+              <TouchableOpacity key={option.value} style={[styles.modalOption, form.gst_rate === option.value && { backgroundColor: theme.colors.primary[50] }]} onPress={() => { updateField('gst_rate', option.value); setShowGstPicker(false); }}>
                 <Text variant="bodyMedium">{option.label}</Text>
               </TouchableOpacity>
             ))}

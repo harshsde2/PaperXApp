@@ -10,11 +10,8 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
     status,
     onAccept,
     onDecline,
-    onMarkInProduction,
-    onDispatch,
     loadingAccept = false,
     loadingDecline = false,
-    loadingMarkInProduction = false,
   }) {
     const theme = useTheme();
     const styles = createStyles(theme);
@@ -44,37 +41,6 @@ export const OrderActionButtons = memo<OrderActionButtonsProps>(
       );
     }
 
-    if (status === 'PAID') {
-      return (
-        <View style={styles.container}>
-          <View style={styles.buttonWrap}>
-            <CustomButton
-              title="Mark In Production"
-              onPress={onMarkInProduction}
-              variant="gradient"
-              loading={loadingMarkInProduction}
-              fullWidth
-            />
-          </View>
-        </View>
-      );
-    }
-
-    if (status === 'IN_PRODUCTION') {
-      return (
-        <View style={styles.container}>
-          <View style={styles.buttonWrap}>
-            <CustomButton
-              title="Dispatch Order"
-              onPress={onDispatch}
-              variant="gradient"
-              fullWidth
-            />
-          </View>
-        </View>
-      );
-    }
-
     return null;
-  }
+  },
 );

@@ -346,6 +346,8 @@ export type {
 
 export * from './pricingApi/pricingApi';
 
+export * from './invoiceApi';
+
 export * from './walletApi/walletApi';
 export type {
   // Enums & Constants

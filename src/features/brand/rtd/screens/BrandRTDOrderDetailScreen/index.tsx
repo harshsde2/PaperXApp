@@ -388,7 +388,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
               <View style={styles.pricingDivider} />
               <View style={styles.pricingTotalRow}>
                 <Text fontWeight="bold" style={styles.pricingTotalLabel}>
-                  You Pay to PaperX
+                  You Pay to Zupply
                 </Text>
                 <Text fontWeight="bold" style={styles.pricingTotalValue}>
                   ₹{activeOrder.total_amount}
@@ -398,7 +398,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
 
             <View style={styles.facilitatorNote}>
               <Text style={styles.facilitatorText}>
-                PaperX collects only its platform fee. Product payment and delivery are arranged
+                Zupply collects only its platform fee. Product payment and delivery are arranged
                 directly with the converter after you connect.
               </Text>
             </View>

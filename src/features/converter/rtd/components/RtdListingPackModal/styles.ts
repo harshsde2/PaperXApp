@@ -113,8 +113,4 @@ export const createStyles = (theme: Theme) =>
     buyButton: {
       minWidth: 100,
     },
-    directPayButton: {
-      marginTop: 8,
-      width: '100%',
-    },
   });

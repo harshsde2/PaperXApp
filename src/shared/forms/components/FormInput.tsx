@@ -82,6 +82,7 @@ export function FormInput<T extends FieldValues>({
               </Text>
             )}
             <TextInput
+              returnKeyType={textInputProps.multiline ? undefined : 'done'}
               {...textInputProps}
               style={[
                 defaultInputStyle,

@@ -59,7 +59,7 @@ const MarketScreen: React.FC = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
   const todayInsightQuery = useGetTodayMarketInsight();
   const allArticles = todayInsightQuery.data?.articles ?? [];
-  const companyName = user?.company_name || user?.companyName || 'PaperX';
+  const companyName = user?.company_name || user?.companyName || 'Zupply';
   const headlineSubtitle = `${formatHeadlineDate(todayInsightQuery.data?.insight_date)} · ${allArticles.length} article${
     allArticles.length === 1 ? '' : 's'
   }`;

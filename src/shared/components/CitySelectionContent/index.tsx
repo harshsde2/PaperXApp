@@ -64,6 +64,7 @@ export const CitySelectionContent = memo(({
           placeholderTextColor={theme.colors.text.tertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          returnKeyType="search"
         />
       </View>
     </View>
@@ -76,6 +77,7 @@ export const CitySelectionContent = memo(({
       style={styles.container}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={listHeader}
+      keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
       bounces={false}
       renderItem={renderItem}

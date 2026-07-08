@@ -23,7 +23,7 @@ export const requestLocationPermission = async (): Promise<LocationPermissionSta
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
           title: 'Location Permission',
-          message: 'PaperX needs access to your location to show warehouses on the map.',
+          message: 'Zupply needs access to your location to show warehouses on the map.',
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
@@ -188,7 +188,7 @@ export const openLocationSettings = (): void => {
 export const showPermissionDeniedAlert = (): void => {
   Alert.alert(
     'Location Permission Required',
-    'PaperX needs access to your location to show warehouses on the map. Please enable location access in your device settings.',
+    'Zupply needs access to your location to show warehouses on the map. Please enable location access in your device settings.',
     [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Open Settings', onPress: openLocationSettings },

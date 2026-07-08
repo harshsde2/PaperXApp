@@ -53,5 +53,11 @@ export interface IScreenWrapperProps {
   /** When true, shows a cross-platform "Done" bar above the keyboard while it's open. */
   keyboardDoneBar?: boolean;
 
+  /** When true, wraps content in a KeyboardAvoidingView (padding behavior on iOS). */
+  keyboardAvoiding?: boolean;
+
+  /** Offset passed to the KeyboardAvoidingView (e.g. header height). Only used when keyboardAvoiding is true. */
+  keyboardVerticalOffset?: number;
+
   style?: ViewStyle;
 }

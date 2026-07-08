@@ -140,6 +140,7 @@ export const MultiSelectBottomSheetContent = memo(({
           }}
           autoCapitalize="none"
           autoCorrect={false}
+          returnKeyType="search"
         />
       </View>
     </View>
@@ -152,6 +153,7 @@ export const MultiSelectBottomSheetContent = memo(({
       style={styles.list}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={listHeader}
+      keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
       bounces={false}
       renderItem={renderItem}

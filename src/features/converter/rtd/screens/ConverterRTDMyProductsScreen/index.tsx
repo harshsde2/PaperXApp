@@ -12,6 +12,7 @@ import { useTheme } from '@theme/index';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@shared/components/Text';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { AppIcon } from '@assets/svgs';
 import {
   useGetConverterRtdProducts,
@@ -282,6 +283,7 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
             onChangeText={setSearch}
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="search"
           />
         </View>
       </View>
@@ -302,6 +304,7 @@ export const ConverterRTDMyProductsScreen: React.FC = () => {
           />
         }
       />
+      <KeyboardDoneBar />
     </View>
   );
 };

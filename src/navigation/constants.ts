@@ -57,6 +57,10 @@ export const SCREENS = {
     TRANSACTION_HISTORY: 'TransactionHistory',
     ADD_CUSTOM_CREDITS: 'AddCustomCredits',
   },
+  INVOICES: {
+    LIST: 'InvoiceList',
+    DETAIL: 'InvoiceDetail',
+  },
   SESSIONS: {
     DASHBOARD: 'SessionDashboard',
     DETAILS: 'SessionDetails',

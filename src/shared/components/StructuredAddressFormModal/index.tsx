@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { WarehouseAddressForm } from '@shared/components/WarehouseAddressForm/WarehouseAddressForm';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { useTheme } from '@theme/index';
 import type { StructuredAddressFormModalProps } from './@types';
 import { createStyles } from './styles';
@@ -78,6 +79,7 @@ export const StructuredAddressFormModal: React.FC<
             submitLabel={submitLabel}
           />
         </KeyboardAvoidingView>
+        <KeyboardDoneBar />
       </SafeAreaView>
     </Modal>
   );

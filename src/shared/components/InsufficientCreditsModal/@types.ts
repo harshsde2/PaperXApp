@@ -17,6 +17,8 @@ export interface InsufficientCreditsModalProps {
   title?: string;
   /** Optional message override */
   message?: string;
+  /** Optional label for the primary buy button (default: "Buy Credits") */
+  buyButtonLabel?: string;
   /** Test ID for testing */
   testID?: string;
 }

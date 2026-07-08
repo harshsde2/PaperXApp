@@ -11,6 +11,7 @@ import { SCREENS } from '@navigation/constants';
 import { ACTIVE_RTD_STATUSES, getOrderProductId } from '../../constants';
 import { ProductSpecsGrid } from '../../components/ProductSpecsGrid';
 import { QuantityPricingCard } from '../../components/QuantityPricingCard';
+import { HowItWorksSteps } from '../../components/HowItWorksSteps';
 import { useSkeleton } from '@shared/hooks/useSkeleton';
 import { DetailSkeleton } from '@shared/components/skeletons';
 import type { RtdPriceSlab } from '@services/api/rtdApi/@types';
@@ -157,6 +158,10 @@ export const BrandRTDProductDetailScreen: React.FC<
           />
         </View>
 
+        <View style={styles.sectionWrapper}>
+          <HowItWorksSteps />
+        </View>
+
         {/* <View style={styles.infoBanner}>
           <AppIcon.Security
             width={20}
@@ -164,7 +169,7 @@ export const BrandRTDProductDetailScreen: React.FC<
             color={theme.colors.primary.DEFAULT as string}
           />
           <Text style={styles.infoBannerText}>
-            PaperX Trade Assurance — Your payment is protected through our
+            Zupply Trade Assurance — Your payment is protected through our
             escrow service until order fulfilment is verified.
           </Text>
         </View> */}
@@ -178,11 +183,16 @@ export const BrandRTDProductDetailScreen: React.FC<
             {product.lead_time_label ?? 'Contact Seller'}
           </Text>
         </View>
-        <CustomButton
-          title={hasActiveOrder ? 'View Active Order' : 'Request Order'}
-          variant={hasActiveOrder ? 'primary' : 'gradient'}
-          onPress={handleRequestOrder}
-        />
+        <View style={styles.footerRight}>
+          <CustomButton
+            title={hasActiveOrder ? 'View Active Order' : 'Request Order'}
+            variant={hasActiveOrder ? 'primary' : 'gradient'}
+            onPress={handleRequestOrder}
+          />
+          {!hasActiveOrder && (
+            <Text style={styles.footerCaption}>No payment is taken now</Text>
+          )}
+        </View>
       </View>
     </View>
   );

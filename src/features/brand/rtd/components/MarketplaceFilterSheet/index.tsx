@@ -54,7 +54,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
     }, [categorySearch]);
 
     const PRICE_MIN = 0;
-    const PRICE_MAX = 1000;
+    const PRICE_MAX = 10000;
     const handleMinPriceChange = useCallback((value: string) => {
       setDraft((prev) => {
         const num = parseFloat(value);
@@ -120,12 +120,24 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
     );
 
     const handleCategorySelect = useCallback((value: string) => {
-      setDraft((prev) => ({ ...prev, category: prev.category === value ? '' : value }));
+      setDraft((prev) => ({
+        ...prev,
+        categories: prev.categories.includes(value)
+          ? prev.categories.filter((c) => c !== value)
+          : [...prev.categories, value],
+      }));
       setCategorySearch('');
     }, []);
 
-    const handleClearCategory = useCallback(() => {
-      setDraft((prev) => ({ ...prev, category: '' }));
+    const handleRemoveCategory = useCallback((value: string) => {
+      setDraft((prev) => ({
+        ...prev,
+        categories: prev.categories.filter((c) => c !== value),
+      }));
+    }, []);
+
+    const handleUseCaseChange = useCallback((value: string) => {
+      setDraft((prev) => ({ ...prev, product_use_case: value }));
     }, []);
 
     const handleLocationScopePress = useCallback(
@@ -172,13 +184,21 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
               Category
             </Text>
 
-            {draft.category ? (
-              <Pressable style={styles.selectedCategoryChip} onPress={handleClearCategory}>
-                <Text variant="captionLarge" style={styles.selectedCategoryText} numberOfLines={1}>
-                  {draft.category}
-                </Text>
-                <AppIcon.Close width={14} height={14} color={theme.colors.primary.DEFAULT} />
-              </Pressable>
+            {draft.categories.length > 0 ? (
+              <View style={styles.selectedCategoriesWrap}>
+                {draft.categories.map((cat) => (
+                  <Pressable
+                    key={cat}
+                    style={styles.selectedCategoryChip}
+                    onPress={() => handleRemoveCategory(cat)}
+                  >
+                    <Text variant="captionLarge" style={styles.selectedCategoryText} numberOfLines={1}>
+                      {cat}
+                    </Text>
+                    <AppIcon.Close width={14} height={14} color={theme.colors.primary.DEFAULT} />
+                  </Pressable>
+                ))}
+              </View>
             ) : null}
 
             <TextInput
@@ -190,8 +210,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
               returnKeyType="done"
             />
 
-            {(categorySearch.length > 0 || !draft.category) && (
-              <ScrollView
+            <ScrollView
                 style={styles.categoryDropdown}
                 nestedScrollEnabled
                 keyboardShouldPersistTaps="handled"
@@ -199,7 +218,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
                 bounces={false}
               >
                 {filteredCategories.map((cat) => {
-                  const isActive = draft.category === cat;
+                  const isActive = draft.categories.includes(cat);
                   return (
                     <Pressable
                       key={cat}
@@ -227,7 +246,23 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
                   </View>
                 )}
               </ScrollView>
-            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="bodyMedium" style={styles.sectionLabel}>
+              What is your product for which you are finding packaging?
+            </Text>
+            <TextInput
+              style={styles.categorySearchInput}
+              placeholder="e.g. chocolates, electronics, apparels"
+              placeholderTextColor={theme.colors.text.placeholder ?? theme.colors.text.tertiary}
+              value={draft.product_use_case}
+              onChangeText={handleUseCaseChange}
+              returnKeyType="done"
+            />
+            <Text variant="captionSmall" style={styles.sectionHelperText}>
+              This helps us narrow down your search.
+            </Text>
           </View>
 
           <View style={styles.section}>
@@ -318,7 +353,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
 
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              Price per Piece (₹) 0 – 1000
+              Price per Piece (₹) 0 – 10000
             </Text>
             <PriceRangeSlider
               minPrice={draft.min_price}
@@ -326,7 +361,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
               onMinChange={handleMinPriceChange}
               onMaxChange={handleMaxPriceChange}
               rangeMin={0}
-              rangeMax={1000}
+              rangeMax={10000}
             />
           </View>
 

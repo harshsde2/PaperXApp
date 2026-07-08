@@ -341,6 +341,8 @@ export interface ChatThreadListItem {
   poster_user_id: number;
   responder_user_id: number;
   responder_role: string | null;
+  /** Anonymous display label, e.g. "Responder 1" — real names are hidden from posters. */
+  responder_label?: string;
   last_message_id: number | null;
   last_message_at: string | null;
   last_message_preview?: string | null;

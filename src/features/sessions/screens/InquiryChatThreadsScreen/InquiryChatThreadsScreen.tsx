@@ -76,11 +76,8 @@ export default function InquiryChatThreadsScreen() {
   const renderThread = ({ item }: { item: ChatThreadListItem }) => {
     const threadId = Number(item.id ?? item.thread_id ?? 0);
     const hasValidThreadId = Number.isFinite(threadId) && threadId > 0;
-    const partnerName =
-      item.responder_user?.name ??
-      item.responder_user?.company_name ??
-      item.poster_user?.name ??
-      `Responder #${item.responder_user?.id ?? item.responder_user_id ?? item.thread_id ?? item.id ?? '?'}`;
+    // Responder identity is hidden from posters — show the anonymous label only.
+    const partnerName = item.responder_label || 'Responder';
 
     const unreadCount = Number(item.unread_count ?? 0);
     const lastOpenedAt = getThreadLastOpenedAt(threadId);

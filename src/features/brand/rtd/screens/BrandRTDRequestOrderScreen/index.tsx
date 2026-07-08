@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { CustomButton } from '@shared/components/CustomButton';
 import { ImagePicker } from '@shared/components/ImagePicker';
 import { AppIcon } from '@assets/svgs';
@@ -93,13 +94,8 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
     [product?.price_slabs, product?.base_price, qty],
   );
   const subtotal = qty * pricePerUnit;
-  const PLATFORM_FEE_SLABS: { max: number; percent: number }[] = [
-    { max: 25000, percent: 9 },
-    { max: 75000, percent: 8 },
-    { max: 200000, percent: 6 },
-    { max: 300000, percent: 5 },
-  ];
-  const platformFeePercent = PLATFORM_FEE_SLABS.find((s) => subtotal <= s.max)?.percent ?? 5;
+  // Flat platform fee (match backend CommissionCalculator): always 9% of order value.
+  const platformFeePercent = 9;
   const platformFee = subtotal * (platformFeePercent / 100);
   const sellerGstRegistered = product?.seller_gst_registered !== false;
   const gst = sellerGstRegistered ? platformFee * 0.18 : 0;
@@ -163,6 +159,7 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
   }
 
   return (
+    <>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -264,7 +261,7 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
         )}
         <View style={styles.footerDivider} />
         <View style={styles.footerTotalRow}>
-          <Text style={styles.footerTotalLabel}>You Pay to PaperX</Text>
+          <Text style={styles.footerTotalLabel}>You Pay to Zupply</Text>
           <Text fontWeight="bold" style={styles.footerTotalValue}>
             ₹{platformTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
@@ -277,10 +274,12 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
           disabled={!canSubmit}
         />
         <Text style={styles.termsText}>
-          By clicking Request Order, you agree to PaperX Terms of Service.
-          You will pay the platform fee to PaperX after the converter accepts.
+          By clicking Request Order, you agree to Zupply Terms of Service.
+          You will pay the platform fee to Zupply after the converter accepts.
         </Text>
       </View>
     </KeyboardAvoidingView>
+    <KeyboardDoneBar />
+    </>
   );
 };

@@ -16,6 +16,8 @@ import {
   WalletScreen,
   CreditPacksScreen,
   TransactionHistoryScreen,
+  InvoiceListScreen,
+  InvoiceDetailScreen,
 } from '@features/wallet';
 import {
   SessionDashboardScreen,
@@ -113,6 +115,8 @@ export type MainStackParamList = {
     | undefined;
   TransactionHistory: undefined;
   AddCustomCredits: undefined;
+  InvoiceList: undefined;
+  InvoiceDetail: { invoiceKey: string; invoiceNo?: string };
   // Session Screens
   SessionDashboard: {
     initialTab?: 'all' | 'my_posts';
@@ -354,6 +358,24 @@ const MainNavigator = () => {
           title: 'Transaction History',
           animation: 'slide_from_right',
         }}
+      />
+      <Stack.Screen
+        name={SCREENS.INVOICES.LIST}
+        component={InvoiceListScreen}
+        options={{
+          headerShown: true,
+          title: 'Invoices',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.INVOICES.DETAIL}
+        component={InvoiceDetailScreen}
+        options={({ route }) => ({
+          headerShown: true,
+          title: (route.params as { invoiceNo?: string })?.invoiceNo || 'Invoice',
+          animation: 'slide_from_right',
+        })}
       />
       {/* Session Screens */}
       <Stack.Screen

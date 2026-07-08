@@ -30,9 +30,12 @@ export interface AdvancedFilterState {
   min_price: string;
   max_price: string;
   moq_range: MoqRange;
-  category: string;
+  /** Multi-select categories. */
+  categories: string[];
   location_scope: LocationScope;
   has_branding: 'yes' | 'no' | null;
+  /** UI-only for now: what product the brand needs packaging for (e.g. chocolates, electronics). */
+  product_use_case: string;
 }
 
 export const INITIAL_ADVANCED_FILTERS: AdvancedFilterState = {
@@ -41,7 +44,8 @@ export const INITIAL_ADVANCED_FILTERS: AdvancedFilterState = {
   min_price: '',
   max_price: '',
   moq_range: '',
-  category: '',
+  categories: [],
   location_scope: '',
   has_branding: null,
+  product_use_case: '',
 };

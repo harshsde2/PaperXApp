@@ -352,6 +352,8 @@ const PostJobworkFindScreen: React.FC = () => {
         backgroundColor={theme.colors.background.secondary}
         scrollable
         safeAreaEdges={[]}
+        keyboardAvoiding
+        keyboardDoneBar
       >
         <Animated.View
           style={[styles.container, { paddingBottom: bottomPadding }]}

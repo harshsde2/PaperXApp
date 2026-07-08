@@ -13,9 +13,10 @@ import {
   View,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { BottomSheetFlatList, BottomSheetModal, BottomSheetModalProvider, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { useTheme } from '@theme/index';
 import { AppIcon } from '@assets/svgs';
 import { Card } from '@shared/components/Card';
@@ -41,11 +42,9 @@ import {
   type Material,
   type MaterialFinish,
   type RtdLeadTime,
-  type RtdListingPackItem,
   type RtdProduct,
 } from '@services/api';
 import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
-import { SCREENS } from '@navigation/constants';
 import { resolveMediaUrl } from '@shared/utils/resolveMediaUrl';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { showToast } from '@store/slices/uiSlice';
@@ -54,7 +53,6 @@ import { PriceSlabInput } from '../../components/PriceSlabInput';
 import type { PriceSlabRow } from '../../components/PriceSlabInput';
 import { ProductListingSuccessModal } from '../../components/ProductListingSuccessModal';
 import { RtdListingPackModal } from '../../components/RtdListingPackModal';
-import { InsufficientCreditsModal } from '@shared/components/InsufficientCreditsModal';
 import type { FormData, FormErrors, SavedLocation } from './@types';
 import {
   BRANDING_METHOD_OPTIONS,
@@ -160,8 +158,6 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPackModal, setShowPackModal] = useState(false);
-  const [insufficientCreditsModalVisible, setInsufficientCreditsModalVisible] = useState(false);
-  const [listingPackRequiredCredits, setListingPackRequiredCredits] = useState(0);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showSizeUnitPicker, setShowSizeUnitPicker] = useState(false);
   const [showThicknessUnitPicker, setShowThicknessUnitPicker] = useState(false);
@@ -172,7 +168,6 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
   const [brandingSearch, setBrandingSearch] = useState('');
   const [customMaterialName, setCustomMaterialName] = useState('');
 
-  const resumePackModalAfterCreditsRef = useRef(false);
   const categorySheetRef = useRef<BottomSheetModal>(null);
   const materialSheetRef = useRef<BottomSheetModal>(null);
   const finishSheetRef = useRef<BottomSheetModal>(null);
@@ -530,45 +525,18 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
     }
 
     if (!hasEntitlement) {
+      void refetchWallet();
       setShowPackModal(true);
       return;
     }
 
     performCreateProduct();
-  }, [form, isEdit, productId, hasEntitlement, performCreateProduct, updateProduct, uploadImage]);
+  }, [form, isEdit, productId, hasEntitlement, performCreateProduct, updateProduct, uploadImage, refetchWallet]);
 
   const handlePackPurchaseSuccess = useCallback(() => {
     setShowPackModal(false);
     performCreateProduct();
   }, [performCreateProduct]);
-
-  const navigateToBuyWalletCredits = useCallback(() => {
-    resumePackModalAfterCreditsRef.current = true;
-    setInsufficientCreditsModalVisible(false);
-    setShowPackModal(false);
-    navigation.navigate(SCREENS.WALLET.CREDIT_PACKS as never, {
-      returnTo: {
-        name: SCREENS.CONVERTER_RTD.ADD_PRODUCT,
-        params: isEdit && productId ? { productId } : {},
-      },
-    } as never);
-  }, [navigation, isEdit, productId]);
-
-  const handleInsufficientBalanceForPack = useCallback((pack: RtdListingPackItem) => {
-    setShowPackModal(false);
-    setListingPackRequiredCredits(pack.price);
-    setInsufficientCreditsModalVisible(true);
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (resumePackModalAfterCreditsRef.current) {
-        resumePackModalAfterCreditsRef.current = false;
-        setShowPackModal(true);
-        void refetchWallet();
-      }
-    }, [refetchWallet]),
-  );
 
   if (!isFormReady) {
     return null;
@@ -591,7 +559,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
               {!!errors.category && <Text variant="captionSmall" style={styles.errorText}>{errors.category}</Text>}
             </View>
             <View style={styles.fieldContainer}>
-              <Text variant="bodySmall" style={styles.label}>Additional details about the product (Optional)</Text>
+              <Text variant="bodySmall" style={styles.label}>Additional details about the product / Mention use of this product (Optional)</Text>
               <TextInput
                 value={form.product_name}
                 onChangeText={(value) => updateField('product_name', value)}
@@ -665,7 +633,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
             </View>
             <View style={styles.fieldContainer}>
               <View style={styles.switchRow}>
-                <Text variant="bodyMedium" style={styles.switchLabel}>Enable branding methods</Text>
+                <Text variant="bodyMedium" style={styles.switchLabel}>Enable branding methods / Printing methods (Optional)</Text>
                 <Switch
                   value={form.branding_enabled}
                   onValueChange={(value) => {
@@ -702,7 +670,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
                   );
                 })}
               </View>
-              <Text variant="captionSmall" size={8} style={{fontStyle: 'italic'}} >This is a commitment. Failure to honour affects your visibility & trust score and may result in the product being de-listed.</Text>
+              <Text variant="captionSmall" color={theme.colors.text.tertiary} size={12} style={{fontStyle: 'italic'}} >This is a commitment. Failure to honour affects your visibility & trust score and may result in the product being de-listed.</Text>
               {!!errors.lead_time && <Text variant="captionSmall" style={styles.errorText}>{errors.lead_time}</Text>}
             </View>
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Standard Capacity and Price Details</Text>
@@ -732,7 +700,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
                 onPress={() => setShowGstPicker(true)}
               />
             </View>
-            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Price slab according to the quantity</Text>
+            <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Price slab according to the quantity (Optional)</Text>
             <View style={styles.fieldContainer}>
               <PriceSlabInput slabs={form.price_slabs} onSlabsChange={handleSlabsChange} errors={errors.price_slabs ?? []} />
             </View>
@@ -773,17 +741,6 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           onPurchaseSuccess={handlePackPurchaseSuccess}
           walletBalance={wallet?.balance ?? 0}
           walletBalanceLoading={walletBalanceLoading}
-          onInsufficientBalanceForPack={handleInsufficientBalanceForPack}
-          onBuyWalletCredits={navigateToBuyWalletCredits}
-        />
-        <InsufficientCreditsModal
-          visible={insufficientCreditsModalVisible}
-          currentBalance={wallet?.balance ?? 0}
-          requiredCredits={listingPackRequiredCredits}
-          title="Not enough credits"
-          message={`This listing pack costs ${listingPackRequiredCredits} credits. Add credits to your wallet, then you can buy the pack here.`}
-          onClose={() => setInsufficientCreditsModalVisible(false)}
-          onBuyCredits={navigateToBuyWalletCredits}
         />
         <ProductListingSuccessModal
           visible={showSuccessModal}
@@ -800,6 +757,8 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
           isUpdate={isEdit}
         />
       </KeyboardAvoidingView>
+
+      <KeyboardDoneBar />
 
       <GorhomBottomSheetModal
         ref={categorySheetRef}

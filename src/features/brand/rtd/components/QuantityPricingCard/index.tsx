@@ -8,19 +8,11 @@ import { createStyles } from './styles';
 
 const GST_RATE = 0.18;
 
-/** Platform fee slabs (match backend CommissionCalculator): ≤25k→9%, ≤75k→8%, ≤200k→6%, ≤300k→5% */
-const PLATFORM_FEE_SLABS: { max: number; percent: number }[] = [
-  { max: 25000, percent: 9 },
-  { max: 75000, percent: 8 },
-  { max: 200000, percent: 6 },
-  { max: 300000, percent: 5 },
-];
+/** Flat platform fee (match backend CommissionCalculator): always 9% of order value. */
+const PLATFORM_FEE_PERCENT = 9;
 
-function getPlatformFeePercent(subtotal: number): number {
-  for (const slab of PLATFORM_FEE_SLABS) {
-    if (subtotal <= slab.max) return slab.percent;
-  }
-  return PLATFORM_FEE_SLABS[PLATFORM_FEE_SLABS.length - 1].percent;
+function getPlatformFeePercent(_subtotal: number): number {
+  return PLATFORM_FEE_PERCENT;
 }
 
 const DEFAULT_MAX_ORDER_QTY = 9_999_999;
@@ -145,6 +137,8 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
           </Text>
         </View>
 
+        <View style={styles.separator} />
+
         <View style={styles.pricingRow}>
           <Text variant="bodySmall" style={styles.pricingLabel}>
             Platform fee (Zupply)
@@ -167,7 +161,7 @@ export const QuantityPricingCard = memo<QuantityPricingCardProps>(
 
         <View style={styles.totalRow}>
           <Text variant="bodyMedium" fontWeight="bold" style={styles.totalLabel}>
-            You Pay to PaperX
+            You Pay to Zupply
           </Text>
           <Text variant="h5" fontWeight="extrabold" style={styles.totalValue}>
             ₹{pricing.platformTotal}

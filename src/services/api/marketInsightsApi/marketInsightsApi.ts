@@ -15,7 +15,9 @@ const extractData = <T>(response: any): T => {
 };
 
 export const fetchTodayMarketInsight = async (): Promise<MarketInsight> => {
-  const response = await api.get<MarketInsight>(INSIGHTS_ENDPOINTS.TODAY);
+  // First request of the day triggers RSS + AI generation on the backend,
+  // which can take well over the default 30s timeout.
+  const response = await api.get<MarketInsight>(INSIGHTS_ENDPOINTS.TODAY, { timeout: 120000 });
   return extractData<MarketInsight>(response);
 };
 

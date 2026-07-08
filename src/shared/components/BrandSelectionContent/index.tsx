@@ -145,6 +145,7 @@ export const BrandSelectionContent = memo(({
           onChangeText={onSearchChange}
           autoCapitalize="none"
           autoCorrect={false}
+          returnKeyType="search"
         />
       </View>
     </View>
@@ -158,6 +159,7 @@ export const BrandSelectionContent = memo(({
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={listHeader}
       ListFooterComponent={ListFooterComponent}
+      keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
       bounces={false}
       renderItem={renderItem}

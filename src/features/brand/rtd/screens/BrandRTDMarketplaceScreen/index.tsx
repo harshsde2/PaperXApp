@@ -5,6 +5,7 @@ import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet
 import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
+import { CustomButton } from '@shared/components/CustomButton';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { AppIcon } from '@assets/svgs';
 import { useGetRtdCatalogInfinite, useGetBrandRtdOrders } from '@services/api/brandRtdApi';
@@ -58,7 +59,7 @@ export const BrandRTDMarketplaceScreen: React.FC<
     if (advancedFilters.lead_time) count++;
     if (advancedFilters.min_price || advancedFilters.max_price) count++;
     if (advancedFilters.moq_range) count++;
-    if (advancedFilters.category) count++;
+    if (advancedFilters.categories.length > 0) count++;
     if (advancedFilters.location_scope) count++;
     if (advancedFilters.has_branding === 'yes') count++;
     return count;
@@ -119,8 +120,8 @@ export const BrandRTDMarketplaceScreen: React.FC<
         params.min_moq = 500;
       }
     }
-    if (advancedFilters.category) {
-      params.category = advancedFilters.category;
+    if (advancedFilters.categories.length > 0) {
+      params.categories = advancedFilters.categories;
     }
     if (advancedFilters.location_scope) {
       params.location_scope = advancedFilters.location_scope as 'city' | 'state' | 'pan_india';
@@ -224,9 +225,17 @@ export const BrandRTDMarketplaceScreen: React.FC<
         <Text style={styles.emptySubText}>
           Try adjusting your filters or check back later for new listings.
         </Text>
+        <Text style={styles.emptyCtaText}>Can't find it?</Text>
+        <CustomButton
+          title="Post a Custom Requirement"
+          onPress={() => navigation.navigate(SCREENS.MAIN.POST_BRAND_REQUIREMENT as any)}
+          variant="gradient"
+          size="md"
+          style={styles.emptyCtaButton}
+        />
       </View>
     );
-  }, [showSkeleton, styles, theme.borderRadius]);
+  }, [showSkeleton, styles, theme.borderRadius, navigation]);
 
   const renderFooter = useCallback(() => {
     if (!isFetchingNextPage) return null;

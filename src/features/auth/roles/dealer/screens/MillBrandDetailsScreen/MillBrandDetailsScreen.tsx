@@ -167,6 +167,8 @@ const MillBrandDetailsScreen = () => {
       <View style={{ flex: 1 }}>
       <ScreenWrapper
         scrollable
+        keyboardAvoiding
+        keyboardDoneBar
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
         contentStyle={{ ...styles.scrollContent, paddingBottom: bottomPadding }}

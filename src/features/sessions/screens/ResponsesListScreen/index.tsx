@@ -52,14 +52,10 @@ const UnifiedInboxScreen = () => {
 
   const openChat = useCallback(
     (item: ChatThreadListItem) => {
-      const partnerName =
-        item.responder_user?.name ||
-        item.responder_user?.company_name ||
-        'Chat';
       navigation.navigate(SCREENS.SESSIONS.STRUCTURED_CHAT, {
         threadId: String(item.id),
         inquiryId: String(item.inquiry_id),
-        partnerName,
+        partnerName: item.responder_label || 'Responder',
       });
     },
     [navigation],
@@ -67,7 +63,7 @@ const UnifiedInboxScreen = () => {
 
   const renderItem = useCallback(
     ({ item }: { item: ChatThreadListItem }) => {
-      const name = item.responder_user?.name || item.responder_user?.company_name || 'Unknown';
+      const name = item.responder_label || 'Responder';
       const role = getRoleLabel(item.responder_role);
       const preview = item.last_message_preview || 'Tap to open chat';
       const time = formatTime(item.last_message_at);

@@ -132,4 +132,12 @@ export const createStyles = (theme: Theme) =>
       fontWeight: fontWeightForPlatform('700'),
       color: theme.colors.text.primary,
     },
+    footerRight: {
+      alignItems: 'center',
+      gap: theme.spacing[1],
+    },
+    footerCaption: {
+      fontSize: 10,
+      color: theme.colors.text.tertiary,
+    },
   });

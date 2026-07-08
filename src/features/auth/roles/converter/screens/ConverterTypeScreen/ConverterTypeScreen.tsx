@@ -137,6 +137,7 @@ const ConverterTypeScreen = () => {
     <ScreenWrapper
       scrollable
       keyboardDoneBar
+      keyboardAvoiding
       backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
       contentContainerStyle={styles.scrollContent}

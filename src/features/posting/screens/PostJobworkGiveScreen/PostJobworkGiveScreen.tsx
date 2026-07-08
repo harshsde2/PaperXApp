@@ -591,6 +591,8 @@ const PostJobworkGiveScreen: React.FC = () => {
         backgroundColor={theme.colors.background.secondary}
         scrollable
         safeAreaEdges={[]}
+        keyboardAvoiding
+        keyboardDoneBar
       >
         <View style={[styles.container, { paddingBottom: bottomPadding }]}>
           <Text variant="h3" fontWeight="bold" style={styles.title}>

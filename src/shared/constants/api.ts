@@ -216,6 +216,11 @@ export const WALLET_ENDPOINTS = {
   DEDUCT: `${API_VERSION}/wallet/deduct`,
 } as const;
 
+export const INVOICE_ENDPOINTS = {
+  LIST: `${API_VERSION}/invoices`,
+  DETAIL: (key: string) => `${API_VERSION}/invoices/${key}`,
+} as const;
+
 // File Upload Endpoints
 export const UPLOAD_ENDPOINTS = {
   SINGLE: `${API_VERSION}/upload/single`,

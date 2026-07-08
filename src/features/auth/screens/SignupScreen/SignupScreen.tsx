@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Linking } from 'react-native';
+import { View, TouchableOpacity, TextInput, Linking, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '@navigation/constants';
 import { Text } from '@shared/components/Text';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { SignupScreenNavigationProp } from './@types';
 import { styles } from './styles';
 
@@ -20,15 +21,18 @@ const SignupScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.topSection}>
         <Text variant="h2" style={styles.logo}>Logo</Text>
       </View>
-      
+
       <View style={styles.bottomSection}>
         <Text variant="h1" style={styles.title}>Create Account</Text>
         <Text variant="bodyMedium" style={styles.subtitle}>
-          Enter your mobile number to get started with PaperX
+          Enter your mobile number to get started with Zupply
         </Text>
         
         <View style={styles.formContainer}>
@@ -41,6 +45,8 @@ const SignupScreen = () => {
             onChangeText={setMobileNumber}
             keyboardType="phone-pad"
             maxLength={10}
+            returnKeyType="done"
+            onSubmitEditing={Keyboard.dismiss}
           />
           
           <TouchableOpacity
@@ -76,7 +82,8 @@ const SignupScreen = () => {
           </View>
         </View>
       </View>
-    </View>
+      <KeyboardDoneBar />
+    </KeyboardAvoidingView>
   );
 };
 

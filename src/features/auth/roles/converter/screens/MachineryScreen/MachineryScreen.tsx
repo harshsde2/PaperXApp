@@ -115,6 +115,7 @@ const MachineryScreen = () => {
     <ScreenWrapper
       scrollable
       keyboardDoneBar
+      keyboardAvoiding
       backgroundColor={theme.colors.background.secondary}
       safeAreaEdges={[]}
       contentContainerStyle={styles.scrollContent}

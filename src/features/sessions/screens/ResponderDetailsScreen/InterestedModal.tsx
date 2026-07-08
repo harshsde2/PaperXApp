@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { createStyles } from './styles';
 
 export interface InterestedModalProps {
@@ -82,6 +83,7 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
               placeholder="0"
               placeholderTextColor={theme.colors.text.tertiary}
               keyboardType="decimal-pad"
+              returnKeyType="done"
             />
             <Text style={[styles.modalLabel, { color: theme.colors.text.secondary, marginTop: 12 }]}>
               Any other details you want to add (optional)
@@ -127,6 +129,7 @@ export const InterestedModal: React.FC<InterestedModalProps> = ({
             </View>
           </View>
         </KeyboardAvoidingView>
+        <KeyboardDoneBar />
       </View>
     </Modal>
   );

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, ScrollView, StyleSheet, ViewStyle, StatusBar, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, ViewStyle, StatusBar, ActivityIndicator, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Canvas, RadialGradient, Rect, vec, LinearGradient } from '@shopify/react-native-skia';
@@ -32,6 +32,8 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
   loading = false,
   loadingComponent,
   keyboardDoneBar = false,
+  keyboardAvoiding = false,
+  keyboardVerticalOffset = 0,
   style,
 }) => {
   const theme = useTheme();
@@ -147,6 +149,7 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
           ]}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           {...scrollViewProps}
         >
           {children}
@@ -181,7 +184,17 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
         style={[containerStyle,{flex:1}]}
         edges={edges}
       >
-        {renderContent()}
+        {keyboardAvoiding ? (
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoiding}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={keyboardVerticalOffset}
+          >
+            {renderContent()}
+          </KeyboardAvoidingView>
+        ) : (
+          renderContent()
+        )}
         {loading && (
           <View style={styles.loadingOverlay}>
             {loadingComponent || (
@@ -196,6 +209,9 @@ const ScreenWrapper: React.FC<IScreenWrapperProps> = ({
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoiding: {
+    flex: 1,
+  },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',

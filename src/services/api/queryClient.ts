@@ -239,6 +239,13 @@ export const queryKeys = {
       [...queryKeys.wallet.all, 'transactions', 'infinite', params] as const,
   },
 
+  // Invoices (payment orders: credit packs, direct pay, RTD platform fees)
+  invoices: {
+    all: ['invoices'] as const,
+    list: () => [...queryKeys.invoices.all, 'list'] as const,
+    detail: (key: string) => [...queryKeys.invoices.all, 'detail', key] as const,
+  },
+
   // Sessions (Unified for all roles)
   sessions: {
     all: ['sessions'] as const,

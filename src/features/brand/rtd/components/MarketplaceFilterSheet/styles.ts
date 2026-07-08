@@ -34,6 +34,10 @@ export const createStyles = (theme: Theme) =>
       fontWeight: fontWeightForPlatform('600'),
       marginBottom: theme.spacing[3],
     },
+    sectionHelperText: {
+      color: theme.colors.text.tertiary,
+      marginTop: theme.spacing[2],
+    },
     textInput: {
       backgroundColor: theme.colors.surface.tertiary,
       borderWidth: 1,
@@ -105,6 +109,12 @@ export const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 6,
+    },
+    selectedCategoriesWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing[2],
+      marginBottom: theme.spacing[2],
     },
     selectedCategoryChip: {
       flexDirection: 'row',

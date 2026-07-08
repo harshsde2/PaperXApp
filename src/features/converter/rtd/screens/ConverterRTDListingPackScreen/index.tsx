@@ -48,7 +48,7 @@ export const ConverterRTDListingPackScreen: React.FC = () => {
       >
         <Text style={styles.title}>Choose a listing pack</Text>
         <Text style={styles.subtitle}>
-          Pay once from your wallet balance (credits). Valid for 120 days.
+          Pay once from your wallet balance (credits).
         </Text>
 
         {isLoading ? (

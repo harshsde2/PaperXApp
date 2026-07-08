@@ -59,6 +59,10 @@ const SettingsScreen: React.FC = () => {
     navigation.navigate(SCREENS.WALLET.MAIN);
   };
 
+  const handleInvoicesPress = () => {
+    navigation.navigate(SCREENS.INVOICES.LIST);
+  };
+
   const settingsSections = [
     // ...(themeContext
     //   ? [
@@ -108,6 +112,14 @@ const SettingsScreen: React.FC = () => {
           subtitle: 'Manage your wallet and credits',
           type: 'navigation',
           onPress: handleWalletPress,
+        },
+        {
+          id: 'invoices',
+          icon: <AppIcon.Transactions width={22} height={22} color={theme.colors.text.secondary} />,
+          title: 'Invoices',
+          subtitle: 'View and download payment invoices',
+          type: 'navigation',
+          onPress: handleInvoicesPress,
         },
         // {
         //   id: 'notifications',

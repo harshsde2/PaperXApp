@@ -19,6 +19,7 @@ export const InsufficientCreditsModal: React.FC<InsufficientCreditsModalProps> =
   onBuyCredits,
   title = 'Insufficient Credits',
   message,
+  buyButtonLabel = 'Buy Credits',
   testID,
 }) => {
   const theme = useTheme();
@@ -73,7 +74,7 @@ export const InsufficientCreditsModal: React.FC<InsufficientCreditsModalProps> =
               activeOpacity={0.8}
             >
               <AppIcon.Wallet width={20} height={20} color={theme.colors.white} />
-              <Text style={styles.buyButtonText}>Buy Credits</Text>
+              <Text style={styles.buyButtonText}>{buyButtonLabel}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

@@ -135,3 +135,9 @@ afterEvaluate {
     tasks.findByName("checkDebugAarMetadata")?.enabled = false
     tasks.findByName("checkReleaseAarMetadata")?.enabled = false
 }
+
+// Bundle only the icon fonts we actually use from react-native-vector-icons.
+project.ext.vectoricons = [
+    iconFontNames: ['Feather.ttf']
+]
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

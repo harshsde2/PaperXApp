@@ -222,6 +222,8 @@ export interface GetRtdOrdersResponse {
 
 export interface GetRtdCatalogParams {
   category?: string;
+  /** Multi-select categories (serialized as categories[]=a&categories[]=b). */
+  categories?: string[];
   lead_time?: RtdLeadTime;
   delivery_geography?: string;
   location_scope?: 'city' | 'state' | 'pan_india';

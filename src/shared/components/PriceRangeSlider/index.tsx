@@ -20,7 +20,7 @@ import {
 } from './styles';
 
 const RANGE_MIN = 0;
-const RANGE_MAX = 1000;
+const RANGE_MAX = 10000;
 const SPRING_CONFIG = { damping: 18, stiffness: 150 };
 
 function clamp(value: number, low: number, high: number): number {
@@ -221,6 +221,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             value={minPrice}
             onChangeText={onMinChange}
             keyboardType="numeric"
+            returnKeyType="done"
           />
         </View>
         <Text variant="bodyMedium" style={styles.rangeSeparator}>
@@ -237,6 +238,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             value={maxPrice}
             onChangeText={onMaxChange}
             keyboardType="numeric"
+            returnKeyType="done"
           />
         </View>
       </View>

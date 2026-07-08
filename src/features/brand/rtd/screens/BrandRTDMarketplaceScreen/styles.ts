@@ -68,6 +68,16 @@ export const createStyles = (theme: Theme) =>
       textAlign: 'center',
       paddingHorizontal: theme.spacing[8],
     },
+    emptyCtaText: {
+      fontSize: 14,
+      fontWeight: fontWeightForPlatform('600'),
+      color: theme.colors.text.secondary,
+      marginTop: theme.spacing[5],
+    },
+    emptyCtaButton: {
+      marginTop: theme.spacing[3],
+      minWidth: 240,
+    },
     footerLoader: {
       paddingVertical: theme.spacing[4],
     },

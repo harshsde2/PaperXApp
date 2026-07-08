@@ -16,6 +16,7 @@ import {
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
+import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
 import { createStyles } from '../styles';
 
 export interface SubmitQuoteModalProps {
@@ -82,6 +83,7 @@ export const SubmitQuoteModal: React.FC<SubmitQuoteModalProps> = ({
               placeholder="e.g. 50000"
               placeholderTextColor={theme.colors.text.tertiary}
               keyboardType="decimal-pad"
+              returnKeyType="done"
             />
             <Text style={[modalStyles.label, { color: theme.colors.text.secondary }]}>
               Delivery (days)
@@ -93,6 +95,7 @@ export const SubmitQuoteModal: React.FC<SubmitQuoteModalProps> = ({
               placeholder="e.g. 7"
               placeholderTextColor={theme.colors.text.tertiary}
               keyboardType="number-pad"
+              returnKeyType="done"
             />
             <Text style={[modalStyles.label, { color: theme.colors.text.secondary }]}>
               Notes (optional)
@@ -133,6 +136,7 @@ export const SubmitQuoteModal: React.FC<SubmitQuoteModalProps> = ({
             </View>
           </View>
         </KeyboardAvoidingView>
+        <KeyboardDoneBar />
       </View>
     </Modal>
   );

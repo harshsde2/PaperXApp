@@ -551,6 +551,36 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       >
         <Animated.View style={styles.container} entering={FadeIn.duration(300)}>
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {!isEdit && (
+            hasEntitlement ? (
+              <View style={[styles.slotsBanner, styles.slotsBannerHasSlots]}>
+                <View style={styles.slotsBannerText}>
+                  <Text variant="bodySmall" fontWeight="semibold" style={styles.slotsBannerTitle}>
+                    {entitlementData?.entitlement?.remaining_slots} of {entitlementData?.entitlement?.product_limit} listing slots left
+                  </Text>
+                  <Text variant="captionSmall" style={styles.slotsBannerSubtitle}>
+                    This product uses 1 slot. No payment needed while slots remain.
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.slotsBanner, styles.slotsBannerNoSlots]}
+                onPress={() => setShowPackModal(true)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.slotsBannerText}>
+                  <Text variant="bodySmall" fontWeight="semibold" style={styles.slotsBannerTitle}>
+                    No listing slots left
+                  </Text>
+                  <Text variant="captionSmall" style={styles.slotsBannerSubtitle}>
+                    Buy a listing pack to add products.
+                  </Text>
+                </View>
+                <Text variant="bodySmall" style={styles.slotsBannerCta}>Buy a pack</Text>
+              </TouchableOpacity>
+            )
+          )}
           <Card style={styles.card}>
             <Text variant="h6" fontWeight="semibold" style={styles.sectionTitle}>Product Details</Text>
             <View style={styles.fieldContainer}>

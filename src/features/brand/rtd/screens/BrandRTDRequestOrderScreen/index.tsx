@@ -41,16 +41,6 @@ function findMatchingSlab(
   return parseFloat(basePrice) || 0;
 }
 
-function isQuantityInSlab(slabs: RtdPriceSlab[] | undefined, qty: number): boolean {
-  if (!slabs?.length || qty <= 0) return false;
-  return slabs.some((s) => qty >= s.min_qty && qty <= s.max_qty);
-}
-
-function getMaxSlabQty(slabs: RtdPriceSlab[] | undefined): number {
-  if (!slabs?.length) return Infinity;
-  return Math.max(...slabs.map((s) => s.max_qty));
-}
-
 export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProps> = ({
   route,
   navigation,
@@ -102,9 +92,13 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
   const platformTotal = platformFee + gst;
 
   const isSubmitting = requestOrder.isPending || requestOrderWithLogo.isPending;
-  const qtyInSlab = isQuantityInSlab(product?.price_slabs, qty);
-  const maxQty = getMaxSlabQty(product?.price_slabs);
-  const canSubmit = qty >= (product?.moq ?? 1) && qtyInSlab && !isSubmitting;
+  // Price slabs are optional volume discounts; any quantity within moq/max is
+  // orderable (gaps and slab-less products fall back to base_price on the
+  // backend). Gate only on the moq/max_capacity range.
+  const moq = product?.moq ?? 1;
+  const maxQty = product?.max_capacity ?? Infinity;
+  const withinRange = qty >= moq && qty <= maxQty;
+  const canSubmit = withinRange && !isSubmitting;
 
   const handleSubmit = useCallback(() => {
     if (!product || isSubmitting) return;
@@ -112,8 +106,8 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
       Alert.alert('Invalid Quantity', `Minimum order quantity is ${product.moq} units.`);
       return;
     }
-    if (!isQuantityInSlab(product.price_slabs, qty)) {
-      Alert.alert('Invalid Quantity', `Quantity ${qty} does not match any price slab. Max is ${getMaxSlabQty(product.price_slabs)}.`);
+    if (product.max_capacity != null && qty > product.max_capacity) {
+      Alert.alert('Invalid Quantity', `Maximum order quantity is ${product.max_capacity} units.`);
       return;
     }
 
@@ -196,7 +190,7 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
             style={[
               styles.inputContainer,
               focusedField === 'quantity' && styles.inputContainerFocused,
-              qty > 0 && qty < (product?.moq ?? 1) && styles.inputContainerError,
+              qty > 0 && !withinRange && styles.inputContainerError,
             ]}
           >
             <TextInput
@@ -211,14 +205,14 @@ export const BrandRTDRequestOrderScreen: React.FC<BrandRTDRequestOrderScreenProp
             />
             <Text style={styles.inputSuffix}>units</Text>
           </View>
-          {qty > 0 && qty < (product?.moq ?? 1) && (
+          {qty > 0 && qty < moq && (
             <Text style={styles.errorText}>
-              Minimum order quantity is {product?.moq} units
+              Minimum order quantity is {moq} units
             </Text>
           )}
-          {qty > 0 && qty >= (product?.moq ?? 1) && !qtyInSlab && (
+          {qty > 0 && product?.max_capacity != null && qty > product.max_capacity && (
             <Text style={styles.errorText}>
-              Quantity must be within a price slab (max {maxQty})
+              Maximum order quantity is {product.max_capacity} units
             </Text>
           )}
 

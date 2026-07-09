@@ -3,6 +3,7 @@ export type NotificationNavigationType =
   | 'SESSION'
   | 'INQUIRY'
   | 'RTD_ORDER'
+  | 'RTD_PRODUCT'
   | 'PAYMENT';
 
 export interface NotificationItem {

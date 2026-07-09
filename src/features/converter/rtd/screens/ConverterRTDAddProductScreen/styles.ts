@@ -17,6 +17,35 @@ export const createStyles = (theme: Theme) =>
     card: {
       marginBottom: theme.spacing[4],
     },
+    slotsBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: theme.spacing[3],
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing[4],
+    },
+    slotsBannerHasSlots: {
+      backgroundColor: theme.colors.primary.light,
+    },
+    slotsBannerNoSlots: {
+      backgroundColor: theme.colors.warning.light,
+    },
+    slotsBannerText: {
+      flex: 1,
+      marginRight: theme.spacing[2],
+    },
+    slotsBannerTitle: {
+      color: theme.colors.text.primary,
+    },
+    slotsBannerSubtitle: {
+      color: theme.colors.text.secondary,
+      marginTop: theme.spacing[1],
+    },
+    slotsBannerCta: {
+      color: theme.colors.warning.DEFAULT,
+      fontFamily: theme.fontFamily.semibold,
+    },
     sectionTitle: {
       marginBottom: theme.spacing[4],
     },

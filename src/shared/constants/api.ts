@@ -195,6 +195,12 @@ export const NOTIFICATION_ENDPOINTS = {
   UNREAD_COUNT: `${API_VERSION}/notifications/unread-count`,
 } as const;
 
+// Push notification device-token registration
+export const DEVICE_TOKEN_ENDPOINTS = {
+  REGISTER: `${API_VERSION}/user/device-tokens`,
+  UNREGISTER: `${API_VERSION}/user/device-tokens`,
+} as const;
+
 // Payment Endpoints
 export const PAYMENT_ENDPOINTS = {
   CREATE_PAYMENT: `${API_VERSION}/payments/create`,

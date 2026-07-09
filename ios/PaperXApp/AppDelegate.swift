@@ -2,6 +2,7 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import FirebaseCore
 import GoogleMaps
 import RNBootSplash
 
@@ -16,6 +17,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // Configure Firebase before React Native starts so the default app exists
+    // by the time JS (e.g. the FCM background handler in index.js) runs.
+    FirebaseApp.configure()
+
     // Initialize Google Maps with API Key
     GMSServices.provideAPIKey("AIzaSyAKNIzVRmthsfYNHfjuEpIJJwZvJ1R5qTA")
     

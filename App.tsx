@@ -13,6 +13,7 @@ import ToastManager, { Toast } from 'toastify-react-native';
 import { ToastBanner } from '@shared/components/Toast';
 import { ToastListener } from '@shared/components/ToastListener';
 import AnimatedSplash from '@shared/components/AnimatedSplash';
+import NotificationProvider from '@shared/components/NotificationProvider';
 
 function App() {
   const [splashVisible, setSplashVisible] = useState(true);
@@ -68,7 +69,9 @@ function App() {
                     }}
                   />
                   <ToastListener />
-                  <AppNavigator />
+                  <NotificationProvider>
+                    <AppNavigator />
+                  </NotificationProvider>
                   {splashVisible && (
                     <AnimatedSplash
                       onAnimationEnd={() => setSplashVisible(false)}

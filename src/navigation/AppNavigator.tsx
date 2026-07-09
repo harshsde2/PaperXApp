@@ -8,6 +8,8 @@ import { storageService } from '@services/storage/storageService';
 import { normalizePostingLocationsFromProfile } from '@services/api/userApi/locationNormalizer';
 import AuthStackNavigator from './AuthStackNavigator';
 import MainNavigator from './MainNavigator';
+import { navigationContainerRef } from './navigationRef';
+import { flushPendingNavigation } from '@services/notifications';
 
 const AppNavigator = () => {
   const dispatch = useAppDispatch();
@@ -117,7 +119,10 @@ const AppNavigator = () => {
   const shouldShowMainNavigator = isAuthenticated && hasCompletedRegistration;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navigationContainerRef}
+      onReady={flushPendingNavigation}
+    >
       {shouldShowMainNavigator ? <MainNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );

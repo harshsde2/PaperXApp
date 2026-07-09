@@ -146,7 +146,7 @@ const LoginScreen = () => {
               label="Mobile Number"
               placeholder="Enter Your mobile number"
               keyboardType="phone-pad"
-              returnKeyType="done"
+              // returnKeyType="done"
               onSubmitEditing={Keyboard.dismiss}
               blurOnSubmit
               maxLength={10}

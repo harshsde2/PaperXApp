@@ -7,6 +7,7 @@ import { store } from './src/store';
 import { queryClient } from './src/services/api/queryClient';
 import AppNavigator from './src/navigation/AppNavigator';
 import { BottomSheetProvider } from '@shared/components/BottomSheet';
+import { KeyboardDoneBarProvider } from '@shared/components/KeyboardDoneBar';
 import { ThemeProvider } from './src/theme';
 import ToastManager, { Toast } from 'toastify-react-native';
 import { ToastBanner } from '@shared/components/Toast';
@@ -22,57 +23,59 @@ function App() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
             <BottomSheetProvider>
-              <SafeAreaProvider>
-                <ToastManager
-                  width="90%"
-                  position="top"
-                  theme="light"
-                  showCloseIcon
-                  showProgressBar={false}
-                  useModal={false}
-                  config={{
-                    success: (props) => (
-                      <ToastBanner
-                        type="success"
-                        title={props.text1 || ''}
-                        message={props.text2}
-                        onClose={props.hide}
-                      />
-                    ),
-                    info: (props) => (
-                      <ToastBanner
-                        type="info"
-                        title={props.text1 || ''}
-                        message={props.text2}
-                        onClose={props.hide}
-                      />
-                    ),
-                    warn: (props) => (
-                      <ToastBanner
-                        type="warning"
-                        title={props.text1 || ''}
-                        message={props.text2}
-                        onClose={props.hide}
-                      />
-                    ),
-                    error: (props) => (
-                      <ToastBanner
-                        type="error"
-                        title={props.text1 || ''}
-                        message={props.text2}
-                        onClose={props.hide}
-                      />
-                    ),
-                  }}
-                />
-                <ToastListener />
-                <AppNavigator />
-                {splashVisible && (
-                  <AnimatedSplash
-                    onAnimationEnd={() => setSplashVisible(false)}
+              <KeyboardDoneBarProvider>
+                <SafeAreaProvider>
+                  <ToastManager
+                    width="90%"
+                    position="top"
+                    theme="light"
+                    showCloseIcon
+                    showProgressBar={false}
+                    useModal={false}
+                    config={{
+                      success: (props) => (
+                        <ToastBanner
+                          type="success"
+                          title={props.text1 || ''}
+                          message={props.text2}
+                          onClose={props.hide}
+                        />
+                      ),
+                      info: (props) => (
+                        <ToastBanner
+                          type="info"
+                          title={props.text1 || ''}
+                          message={props.text2}
+                          onClose={props.hide}
+                        />
+                      ),
+                      warn: (props) => (
+                        <ToastBanner
+                          type="warning"
+                          title={props.text1 || ''}
+                          message={props.text2}
+                          onClose={props.hide}
+                        />
+                      ),
+                      error: (props) => (
+                        <ToastBanner
+                          type="error"
+                          title={props.text1 || ''}
+                          message={props.text2}
+                          onClose={props.hide}
+                        />
+                      ),
+                    }}
                   />
-                )}
-              </SafeAreaProvider>
+                  <ToastListener />
+                  <AppNavigator />
+                  {splashVisible && (
+                    <AnimatedSplash
+                      onAnimationEnd={() => setSplashVisible(false)}
+                    />
+                  )}
+                </SafeAreaProvider>
+              </KeyboardDoneBarProvider>
             </BottomSheetProvider>
           </ThemeProvider>
         </GestureHandlerRootView>

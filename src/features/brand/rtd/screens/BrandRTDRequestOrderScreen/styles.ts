@@ -81,7 +81,7 @@ export const createStyles = (theme: Theme) =>
       borderWidth: 1.5,
     },
     inputContainerError: {
-      borderColor: theme.colors.status.error,
+      borderColor: theme.colors.error.DEFAULT,
     },
     textInput: {
       flex: 1,
@@ -96,7 +96,7 @@ export const createStyles = (theme: Theme) =>
     },
     errorText: {
       fontSize: 12,
-      color: theme.colors.status.error,
+      color: theme.colors.error.DEFAULT,
       marginTop: theme.spacing[1],
     },
 

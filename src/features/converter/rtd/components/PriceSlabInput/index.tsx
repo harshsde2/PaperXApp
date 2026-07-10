@@ -56,7 +56,7 @@ export const PriceSlabInput: React.FC<PriceSlabInputProps> = ({
               placeholder="0"
               placeholderTextColor={theme.colors.text.placeholder}
               keyboardType="numeric"
-              returnKeyType="done"
+              // returnKeyType="done"
               style={styles.input}
             />
           </View>
@@ -70,7 +70,7 @@ export const PriceSlabInput: React.FC<PriceSlabInputProps> = ({
               placeholder="0"
               placeholderTextColor={theme.colors.text.placeholder}
               keyboardType="numeric"
-              returnKeyType="done"
+              // returnKeyType="done"
               style={styles.input}
             />
           </View>
@@ -86,7 +86,7 @@ export const PriceSlabInput: React.FC<PriceSlabInputProps> = ({
               placeholder="0"
               placeholderTextColor={theme.colors.text.placeholder}
               keyboardType="numeric"
-              returnKeyType="done"
+              // returnKeyType="done"
               style={styles.input}
             />
           </View>

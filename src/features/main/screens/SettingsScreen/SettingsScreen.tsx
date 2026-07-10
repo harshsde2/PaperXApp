@@ -7,6 +7,7 @@ import { AppIcon } from '@assets/svgs';
 import { useAppDispatch } from '@store/hooks';
 import { logout } from '@store/slices/authSlice';
 import { storageService } from '@services/storage/storageService';
+import { unregisterCurrentDeviceToken } from '@services/api/deviceTokenApi';
 import { useTheme, useThemeContext, themePalettes } from '@theme/index';
 import { SCREENS } from '@navigation/constants';
 import type { ThemePaletteId } from '@theme/index';
@@ -42,7 +43,9 @@ const SettingsScreen: React.FC = () => {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkMode, setDarkMode] = React.useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Unregister this device's push token before the bearer is cleared.
+    await unregisterCurrentDeviceToken();
     storageService.clearAuth();
     dispatch(logout());
   };

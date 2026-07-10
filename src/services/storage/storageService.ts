@@ -105,6 +105,15 @@ class StorageService {
     return this.getObject<T>(STORAGE_KEYS.USER_DATA);
   }
 
+  // FCM push token (device-scoped — intentionally NOT cleared on logout)
+  setFcmToken(token: string): void {
+    this.setString(STORAGE_KEYS.FCM_TOKEN, token);
+  }
+
+  getFcmToken(): string | undefined {
+    return this.getString(STORAGE_KEYS.FCM_TOKEN);
+  }
+
   clearAuth(): void {
     this.delete(STORAGE_KEYS.AUTH_TOKEN);
     this.delete(STORAGE_KEYS.REFRESH_TOKEN);

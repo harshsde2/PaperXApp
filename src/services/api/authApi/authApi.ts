@@ -15,6 +15,7 @@ import type {
 } from './@types';
 import type { UpdateProfileResponse } from '@services/api/userApi/@types';
 import { storageService } from '@services/storage/storageService';
+import { unregisterCurrentDeviceToken } from '@services/api/deviceTokenApi';
 import { queryKeys } from '../queryClient';
 import { useAppDispatch } from '@store/hooks';
 import { setCredentials, setOTPSent, setOTPVerified, logout as logoutAction } from '@store/slices/authSlice';
@@ -240,6 +241,8 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: async (): Promise<void> => {
       try {
+        // Remove this device's push token while the bearer is still valid.
+        await unregisterCurrentDeviceToken();
         await api.post(AUTH_ENDPOINTS.LOGOUT);
       } catch (error) {
         console.warn('Logout API call failed:', error);

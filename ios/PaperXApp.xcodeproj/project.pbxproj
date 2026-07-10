@@ -25,6 +25,7 @@
 		57EF4E7DFBED4681A0587A79 /* Poppins-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA52A20F906043CCB9E12C9B /* Poppins-ExtraLight.ttf */; };
 		6F8EC061F3F44FE48A439D5A /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8966AA9D9A844FC9B8622B9D /* Poppins-SemiBold.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+		7C776F022FFF2ACC004095C4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7C776F012FFF2ACB004095C4 /* GoogleService-Info.plist */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		82565C6958634BCF9834E653 /* Montserrat-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5034D5F5926E44EBA42980E9 /* Montserrat-MediumItalic.ttf */; };
 		87D63E9A043E4519BF4D9712 /* Poppins-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 29CDA42FC17E428BB39AC499 /* Poppins-Italic.ttf */; };
@@ -80,6 +81,7 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = PaperXApp/AppDelegate.swift; sourceTree = "<group>"; };
 		76BFB8F16E8D4057B97DDBD6 /* Poppins-ThinItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ThinItalic.ttf"; path = "../src/assets/fonts/Poppins-ThinItalic.ttf"; sourceTree = "<group>"; };
 		783A108915F3A2AE0794B7F4 /* Pods-PaperXApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PaperXApp.release.xcconfig"; path = "Target Support Files/Pods-PaperXApp/Pods-PaperXApp.release.xcconfig"; sourceTree = "<group>"; };
+		7C776F012FFF2ACB004095C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		7C8E069B1AA24C598ACC62C4 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../src/assets/fonts/Poppins-Bold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = PaperXApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8966AA9D9A844FC9B8622B9D /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../src/assets/fonts/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				7C776F012FFF2ACB004095C4 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* PaperXApp */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -322,6 +325,7 @@
 				FE9C5DE94DCC490C9E7DF235 /* Montserrat-ExtraBoldItalic.ttf in Resources */,
 				C38B1987D67B433C81E29D1A /* BootSplash.storyboard in Resources */,
 				C0DAC02C65B94CDBB0435620 /* Colors.xcassets in Resources */,
+				7C776F022FFF2ACC004095C4 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,6 +447,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PaperXApp/PaperXApp.entitlements;
 				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LZSXGH9GNM;
 				ENABLE_BITCODE = NO;
@@ -452,7 +457,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.06;
+				MARKETING_VERSION = 1.07;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -473,6 +478,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PaperXApp/PaperXApp.entitlements;
 				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LZSXGH9GNM;
 				INFOPLIST_FILE = PaperXApp/Info.plist;
@@ -481,7 +487,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.06;
+				MARKETING_VERSION = 1.07;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

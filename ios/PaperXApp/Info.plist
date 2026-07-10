@@ -10,10 +10,10 @@
 	<string>Zupply</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -35,14 +35,14 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Zupply needs access to the camera so you can take photos for products, samples, or dispatch proof when posting.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>PaperX needs access to your location to show your warehouse locations on the map and help you find nearby suppliers.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>PaperX needs access to your location to show your warehouse locations on the map and help you find nearby suppliers.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Zupply needs access to your photo library so you can attach product photos, sample images, and dispatch proof photos to your posts and orders.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Zupply needs access to the camera so you can take photos for products, samples, or dispatch proof when posting.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
@@ -84,6 +84,11 @@
 		<string>Montserrat-Italic.ttf</string>
 		<string>Montserrat-SemiBoldItalic.ttf</string>
 		<string>Montserrat-ExtraBoldItalic.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>fetch</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>BootSplash</string>

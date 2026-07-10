@@ -52,11 +52,36 @@ export const resolveNotificationNavigation = (
         },
       };
     case 'RTD_ORDER':
+      // Brand and converter each have their own order-detail screen; the
+      // backend tags the recipient's role via meta.view_target. Legacy
+      // payloads without it fall through to the converter screen.
+      if (viewTarget === 'brand') {
+        return {
+          screen: SCREENS.BRAND_RTD.ORDER_DETAIL,
+          params: {
+            orderId: String(notification.navigation_id),
+          },
+        };
+      }
       return {
         screen: SCREENS.CONVERTER_RTD.ORDER_DETAIL,
         params: {
           orderId: String(notification.navigation_id),
         },
+      };
+    case 'RTD_PRODUCT':
+      // Brand-facing (new-listing broadcast) → brand product detail;
+      // converter-facing (auto-pause/deactivate) → their product list.
+      if (viewTarget === 'brand') {
+        return {
+          screen: SCREENS.BRAND_RTD.PRODUCT_DETAIL,
+          params: {
+            productId: Number(notification.navigation_id),
+          },
+        };
+      }
+      return {
+        screen: SCREENS.CONVERTER_RTD.MY_PRODUCTS,
       };
     case 'PAYMENT':
       return {

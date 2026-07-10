@@ -44,7 +44,7 @@ export const KeyboardDoneBar: React.FC<KeyboardDoneBarProps> = ({
   if (isManaged && activeId !== id) return null;
 
   return (
-    <View style={[styles.bar, { bottom: keyboardHeight }]}>
+    <View style={[styles.bar, { bottom: keyboardHeight }]} pointerEvents="box-none">
       <TouchableOpacity onPress={handlePress} style={styles.button} activeOpacity={0.7}>
         <Text variant="bodyMedium" fontWeight="semibold" style={styles.text}>
           {label}

@@ -12,15 +12,20 @@ export const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       justifyContent: 'flex-end',
       alignItems: 'center',
-      backgroundColor: theme.colors.surface.secondary,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border.primary,
+      // Transparent full-width strip — only the pill below is opaque, so form
+      // content just above the keyboard stays visible instead of being covered.
+      backgroundColor: 'transparent',
       paddingHorizontal: theme.spacing[4],
       paddingVertical: theme.spacing[2],
     },
     button: {
       paddingHorizontal: theme.spacing[3],
       paddingVertical: theme.spacing[1],
+      backgroundColor: theme.colors.surface.secondary,
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      ...theme.shadows.md,
     },
     text: {
       color: theme.colors.primary.DEFAULT,

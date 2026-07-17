@@ -635,38 +635,6 @@ const PaymentConfirmationScreen = () => {
               </View>
             ) : (
               <>
-                {/* Raw-material context: show value band / weight / quantity bucket */}
-                {quote.breakdown?.flow === 'raw_material' && (
-                  <>
-                    <View style={[styles.costRow, styles.costRowBorder]}>
-                      <Text style={styles.costLabel}>Value Band</Text>
-                      <Text style={styles.costValue}>{quote.breakdown.value_band}</Text>
-                    </View>
-                    {quote.breakdown.kg != null && (
-                      <View style={[styles.costRow, styles.costRowBorder]}>
-                        <Text style={styles.costLabel}>Estimated Weight</Text>
-                        <Text style={styles.costValue}>
-                          {Number(quote.breakdown.kg).toLocaleString('en-IN')} kg
-                        </Text>
-                      </View>
-                    )}
-                    {!!quote.breakdown.bucket_label && (
-                      <View style={[styles.costRow, styles.costRowBorder]}>
-                        <Text style={styles.costLabel}>Quantity Bucket</Text>
-                        <Text style={styles.costValue}>{quote.breakdown.bucket_label}</Text>
-                      </View>
-                    )}
-                  </>
-                )}
-
-                {/* Machine context: show selected price-range bracket */}
-                {quote.breakdown?.flow === 'machine' && !!quote.breakdown.price_range_label && (
-                  <View style={[styles.costRow, styles.costRowBorder]}>
-                    <Text style={styles.costLabel}>Price Range</Text>
-                    <Text style={styles.costValue}>{quote.breakdown.price_range_label}</Text>
-                  </View>
-                )}
-
                 <View style={[styles.costRow, styles.costRowBorder]}>
                   <Text style={styles.costLabel}>Posting Fee</Text>
                   <Text style={styles.costValue}>{quote.base_fee} Credits</Text>
@@ -681,13 +649,6 @@ const PaymentConfirmationScreen = () => {
                   <Text style={styles.totalLabel}>Total</Text>
                   <Text style={styles.totalValue}>{quote.total} Credits</Text>
                 </View>
-
-                {quote.breakdown?.flow === 'machine' && quote.breakdown.default_applied && (
-                  <Text style={styles.costLabel}>
-                    ⚠ No price range selected — defaulted to{' '}
-                    {quote.breakdown.price_range_label} for visibility and fee.
-                  </Text>
-                )}
               </>
             )}
           </View>

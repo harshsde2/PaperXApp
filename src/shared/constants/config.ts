@@ -63,7 +63,7 @@ const getDevelopmentApiUrl = (): string => {
  * Hosted API (HTTPS). Used for staging and release builds.
  * Change this when the production API domain changes.
  */
-const SERVER_API_BASE_URL = 'https://paperx.safewayrssi.com';
+const SERVER_API_BASE_URL = 'https://admin.hellozupply.in';
 
 // API Base URLs
 export const API_BASE_URLS = {

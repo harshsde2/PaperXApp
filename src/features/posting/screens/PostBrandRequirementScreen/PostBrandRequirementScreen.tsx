@@ -102,7 +102,6 @@ const PostBrandRequirementScreen = () => {
   const [showPackagingTypePicker, setShowPackagingTypePicker] = useState(false);
   const [showQuantityRangePicker, setShowQuantityRangePicker] = useState(false);
   // Watch values
-  const requirementType = watch('requirement_type');
   const locationValue = watch('location');
   const locationIdValue = watch('location_id');
   const locationSourceValue = watch('location_source');
@@ -203,7 +202,7 @@ const PostBrandRequirementScreen = () => {
         return;
       }
 
-      if (data.requirement_type === 'Packaging' && !data.packaging_type) {
+      if (!data.packaging_type) {
         Alert.alert('Validation Error', 'Please select a packaging type');
         return;
       }
@@ -240,8 +239,8 @@ const PostBrandRequirementScreen = () => {
         longitude: data.longitude!,
       };
 
-      // Only include packaging_type if requirement_type is Packaging
-      if (data.requirement_type === 'Packaging' && data.packaging_type) {
+      // Packaging type is required for every requirement type
+      if (data.packaging_type) {
         apiData.packaging_type = data.packaging_type;
       }
 
@@ -255,8 +254,8 @@ const PostBrandRequirementScreen = () => {
         opt => opt.value === data.requirement_type
       )?.label || data.requirement_type;
 
-      // Get packaging type display name if applicable
-      const packagingTypeName = data.requirement_type === 'Packaging' && data.packaging_type
+      // Get packaging type display name (applies to every requirement type)
+      const packagingTypeName = data.packaging_type
         ? PACKAGING_TYPE_OPTIONS.find(opt => opt.value === data.packaging_type)?.label || data.packaging_type
         : '';
 
@@ -381,24 +380,22 @@ const PostBrandRequirementScreen = () => {
             </View>
 
             {/* Packaging Type (only show if requirement type is Packaging) */}
-            {requirementType === 'Packaging' && (
-              <View style={styles.formGroup}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  What Packaging / Printing service are you looking for? 
-                </Text>
-                <Controller
-                  control={control}
-                  name="packaging_type"
-                  render={({ field: { value } }) => (
-                    <DropdownButton
-                      value={PACKAGING_TYPE_OPTIONS.find((opt) => opt.value === value)?.label}
-                      placeholder="Select Packaging Type"
-                      onPress={() => setShowPackagingTypePicker(true)}
-                    />
-                  )}
-                />
-              </View>
-            )}
+            <View style={styles.formGroup}>
+              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                What Packaging / Printing service are you looking for?
+              </Text>
+              <Controller
+                control={control}
+                name="packaging_type"
+                render={({ field: { value } }) => (
+                  <DropdownButton
+                    value={PACKAGING_TYPE_OPTIONS.find((opt) => opt.value === value)?.label}
+                    placeholder="Select Packaging Type"
+                    onPress={() => setShowPackagingTypePicker(true)}
+                  />
+                )}
+              />
+            </View>
 
             {/* Description */}
             <FormInput

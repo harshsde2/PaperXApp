@@ -44,6 +44,7 @@ import {
 } from '@features/wallet/screens/CreditPacksScreen/razorpayCheckout';
 import { SCREENS } from '@navigation/constants';
 import { queryKeys } from '@services/api';
+import { PAYMENTS_ENABLED } from '@shared/constants/config';
 import { useQueryClient } from '@tanstack/react-query';
 import { createStyles } from './styles';
 import {
@@ -85,6 +86,9 @@ const PaymentConfirmationScreen = () => {
 
   const { listingDetails, formData, requirementType = 'dealer' } = route.params || {};
   const typedRequirementType = requirementType as RequirementType;
+
+  // Free-launch mode: no payment step; posting is free.
+  const freeMode = !PAYMENTS_ENABLED;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const pendingVerifyRef = useRef<VerifyRazorpayPaymentRequest | null>(null);
@@ -280,7 +284,7 @@ const PaymentConfirmationScreen = () => {
               quantity: `${listingDetails?.quantity} ${listingDetails?.quantityUnit || 'pieces'}`,
               deadline: getDeadlineDate(listingDetails?.urgency),
             },
-            total
+            freeMode ? 0 : total
           );
         },
         onError: (error: any) => {
@@ -311,10 +315,17 @@ const PaymentConfirmationScreen = () => {
     queryClient,
     invalidateQueriesByRequirementType,
     total,
+    freeMode,
     listingDetails,
     navigateToMatchmakingSuccess,
     handleBuyCredits,
   ]);
+
+  const handleFreePost = useCallback(() => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    runPostRequirementFlow();
+  }, [isProcessing, runPostRequirementFlow]);
 
   const showVerifyRetry = useCallback(
     (message: string) => {
@@ -548,6 +559,17 @@ const PaymentConfirmationScreen = () => {
           </View>
         </View>
 
+        {freeMode ? (
+          <View style={styles.section}>
+            <View style={styles.freeModeCard}>
+              <AppIcon.TickCheckedBox width={22} height={22} color={theme.colors.success.DEFAULT} />
+              <Text style={styles.freeModeText}>
+                No payment required — posting is free right now.
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <>
         {/* Payment Method Section - Wallet Card */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Payment Method</Text>
@@ -653,30 +675,47 @@ const PaymentConfirmationScreen = () => {
             )}
           </View>
         </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Bottom Buttons */}
       <View style={[styles.bottomContainer, { paddingBottom: insets.bottom }]}>
-        <TouchableOpacity
-          style={[
-            styles.payButton,
-            (!hasEnoughCredits || quoteLoading || !quote) && styles.payButtonDisabled,
-          ]}
-          onPress={handlePayAndPost}
-          disabled={isProcessing || walletLoading || quoteLoading || !quote}
-          activeOpacity={0.8}
-        >
-          {isProcessing ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <>
-              <Text style={styles.payButtonText}>Pay & Post</Text>
-              <View style={styles.payButtonBadge}>
-                <Text style={styles.payButtonBadgeText}>{total} CREDITS</Text>
-              </View>
-            </>
-          )}
-        </TouchableOpacity>
+        {freeMode ? (
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={handleFreePost}
+            disabled={isProcessing}
+            activeOpacity={0.8}
+          >
+            {isProcessing ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.payButtonText}>Post Now</Text>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.payButton,
+              (!hasEnoughCredits || quoteLoading || !quote) && styles.payButtonDisabled,
+            ]}
+            onPress={handlePayAndPost}
+            disabled={isProcessing || walletLoading || quoteLoading || !quote}
+            activeOpacity={0.8}
+          >
+            {isProcessing ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Text style={styles.payButtonText}>Pay & Post</Text>
+                <View style={styles.payButtonBadge}>
+                  <Text style={styles.payButtonBadgeText}>{total} CREDITS</Text>
+                </View>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
           <Text style={styles.cancelButtonText}>Cancel</Text>

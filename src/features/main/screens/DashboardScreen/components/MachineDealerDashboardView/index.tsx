@@ -48,7 +48,7 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
     data: activeSessionsResponse,
     refetch: refetchActiveSessions,
     isRefetching: isSessionsRefetching,
-  } = useGetActiveSessions({ filter: 'all', per_page: 5 });
+  } = useGetActiveSessions({ filter: 'all', per_page: 3 });
 
   const activeSessions = activeSessionsResponse?.data ?? [];
   const isRefreshing = refreshing || isSessionsRefetching;
@@ -70,7 +70,7 @@ export const MachineDealerDashboardView: React.FC<MachineDealerDashboardViewProp
 
   const transformedSessions = useMemo((): TransformedSession[] => {
     if (!activeSessions.length) return [];
-    return activeSessions.slice(0, 5).map((session: ActiveSessionListItem) => {
+    return activeSessions.slice(0, 3).map((session: ActiveSessionListItem) => {
       const firstItem = session.items?.[0];
       const totalQuantity = session.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 

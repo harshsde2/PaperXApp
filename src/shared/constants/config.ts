@@ -91,6 +91,18 @@ if (__DEV__) {
 export const API_TIMEOUT = 30000; // 30 seconds
 export const API_UPLOAD_TIMEOUT = 120000; // 2 minutes for file uploads
 
+/**
+ * Payments master switch.
+ *
+ * Set to `false` for the free-launch period: the app skips ALL payment steps —
+ * posting fees, the RTD "connect" platform fee, and RTD listing packs — so users
+ * can post / connect / list for free. Set back to `true` to re-enable payments.
+ *
+ * NOTE: this must match the backend flag `PAYMENTS_ENABLED` (config/features.php);
+ * the backend enforces fees server-side, so both sides must agree.
+ */
+export const PAYMENTS_ENABLED = false;
+
 // Storage Keys
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',

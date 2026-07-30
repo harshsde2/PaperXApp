@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { BlurView } from '@react-native-community/blur';
+import { ANDROID_BLUR } from '@shared/constants/glass';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '@theme/index';
 import { getColorWithOpacity } from '@theme/utils/themeHelpers';
@@ -40,15 +41,8 @@ const GlassyWrapper: React.FC<IGlassyWrapperProps> = ({
     40,
   );
 
-  const androidFallbackBackground = getColorWithOpacity(
-    theme.colors.white,
-    35,
-  );
-
   const hasBaseGradient =
     Array.isArray(gradientColors) && gradientColors.length >= 2;
-
-  const androidFrostOverGradient = getColorWithOpacity(theme.colors.white, 18);
 
   const glossyColors = useMemo(
     () => [
@@ -91,26 +85,15 @@ const GlassyWrapper: React.FC<IGlassyWrapperProps> = ({
             pointerEvents="none"
           />
         )}
-        {Platform.OS === 'ios' ? (
-          <BlurView
-            style={blurFillStyle}
-            blurType={blurType}
-            blurAmount={blurAmount}
-            reducedTransparencyFallbackColor={reducedTransparencyFallback}
-          />
-        ) : (
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                borderRadius,
-                backgroundColor: hasBaseGradient
-                  ? androidFrostOverGradient
-                  : androidFallbackBackground,
-              },
-            ]}
-          />
-        )}
+        <BlurView
+          style={blurFillStyle}
+          blurType={blurType}
+          blurAmount={blurAmount}
+          blurRadius={ANDROID_BLUR.blurRadius}
+          downsampleFactor={ANDROID_BLUR.downsampleFactor}
+          overlayColor={ANDROID_BLUR.overlayColor}
+          reducedTransparencyFallbackColor={reducedTransparencyFallback}
+        />
 
         <View style={overlayStyle} pointerEvents="none" />
 

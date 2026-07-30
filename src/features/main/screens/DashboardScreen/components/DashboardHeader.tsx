@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, Image, Platform, StyleSheet, LayoutChangeEvent } from 'react-native';
+import { View, TouchableOpacity, Image, StyleSheet, LayoutChangeEvent } from 'react-native';
 import { BlurView } from '@react-native-community/blur';
+import { ANDROID_BLUR, GLASS_TINT_OPACITY } from '@shared/constants/glass';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@theme/index';
 import { getColorWithOpacity } from '@theme/utils/themeHelpers';
@@ -53,44 +54,31 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onLayoutHeight
   const blurFallbackColors = useMemo(
     () => ({
       iosReducedTransparency: getColorWithOpacity(theme.colors.white, 52),
-      androidFallback: getColorWithOpacity(theme.colors.white, 52),
     }),
     [theme.colors.white],
   );
 
-  const renderGlassBackground = () =>
-    Platform.OS === 'ios' ? (
-      <>
-        <BlurView
-          style={StyleSheet.absoluteFill}
-          blurType="light"
-          blurAmount={6}
-          reducedTransparencyFallbackColor={blurFallbackColors.iosReducedTransparency}
-          pointerEvents="none"
-        />
-        <View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: getColorWithOpacity(theme.colors.white, 4) },
-          ]}
-        />
-      </>
-    ) : (
-      <>
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: blurFallbackColors.androidFallback }]}
-        />
-        <View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: getColorWithOpacity(theme.colors.white, 3) },
-          ]}
-        />
-      </>
-    );
+  const renderGlassBackground = () => (
+    <>
+      <BlurView
+        style={StyleSheet.absoluteFill}
+        blurType="light"
+        blurAmount={6}
+        blurRadius={ANDROID_BLUR.blurRadius}
+        downsampleFactor={ANDROID_BLUR.downsampleFactor}
+        overlayColor={ANDROID_BLUR.overlayColor}
+        reducedTransparencyFallbackColor={blurFallbackColors.iosReducedTransparency}
+        pointerEvents="none"
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: getColorWithOpacity(theme.colors.white, GLASS_TINT_OPACITY) },
+        ]}
+      />
+    </>
+  );
 
   const handleHeaderLayout = (e: LayoutChangeEvent) => {
     onLayoutHeight?.(e.nativeEvent.layout.height);

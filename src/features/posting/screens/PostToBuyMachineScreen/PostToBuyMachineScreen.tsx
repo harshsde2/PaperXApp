@@ -12,6 +12,7 @@ import {
   Modal,
   StyleSheet,
   ScrollView,
+  Keyboard,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
@@ -355,7 +356,7 @@ export const PostToBuyMachineScreen = () => {
               <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
                 Preferred Brands (optional)
               </Text>
-              <TouchableOpacity style={styles.locationButton} onPress={() => setShowBrandPicker(true)} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.locationButton} onPress={() => { Keyboard.dismiss(); setShowBrandPicker(true); }} activeOpacity={0.7}>
                 <Text variant="bodyMedium" style={{ color: theme.colors.text.tertiary }} numberOfLines={1}>
                   {preferredBrands.length ? `${preferredBrands.length} selected` : 'Select brands'}
                 </Text>
@@ -382,7 +383,7 @@ export const PostToBuyMachineScreen = () => {
                 name="condition_preference"
                 render={() => (
                   <>
-                    <TouchableOpacity style={styles.locationButton} onPress={() => setShowConditionPicker(true)} activeOpacity={0.7}>
+                    <TouchableOpacity style={styles.locationButton} onPress={() => { Keyboard.dismiss(); setShowConditionPicker(true); }} activeOpacity={0.7}>
                       <Text variant="bodyMedium" style={conditionPreference.length ? { color: theme.colors.text.primary } : { color: theme.colors.text.tertiary }} numberOfLines={1}>
                         {conditionPreference.length ? conditionPreference.join(', ') : 'Select condition(s)'}
                       </Text>
@@ -512,7 +513,7 @@ export const PostToBuyMachineScreen = () => {
                 rules={validationRules.required('Please select a location') as any}
                 render={({ fieldState: { error } }) => (
                   <>
-                    <TouchableOpacity style={styles.locationButton} onPress={() => setShowLocationDropdown(true)} activeOpacity={0.7}>
+                    <TouchableOpacity style={styles.locationButton} onPress={() => { Keyboard.dismiss(); setShowLocationDropdown(true); }} activeOpacity={0.7}>
                       <Text variant="bodyMedium" style={!getSelectedLocationDisplay() ? { color: theme.colors.text.tertiary } : { color: theme.colors.text.primary }} numberOfLines={1}>
                         {getSelectedLocationDisplay() || 'Select location'}
                       </Text>

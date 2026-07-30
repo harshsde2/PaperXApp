@@ -58,6 +58,22 @@ export const createStyles = (theme: Theme) =>
       letterSpacing: 0.5,
       marginBottom: theme.spacing[3],
     },
+    freeModeCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing[3],
+      backgroundColor: theme.colors.background.primary,
+      borderRadius: theme.borderRadius.card?.lg ?? 16,
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      padding: theme.spacing[4],
+    },
+    freeModeText: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: fontWeightForPlatform('600'),
+      color: theme.colors.text.primary,
+    },
 
     // ==========================================
     // LISTING DETAILS CARD

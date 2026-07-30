@@ -99,6 +99,15 @@ const DashboardScreen = () => {
     }, [])
   );
 
+  // Keep the dashboard's active-sessions list in sync with the full Sessions screen:
+  // the dashboard tab stays mounted, so refetch on focus instead of relying on staleTime.
+  useFocusEffect(
+    useCallback(() => {
+      refetchDashboard();
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+    }, [refetchDashboard, queryClient])
+  );
+
   const gradientColors = useMemo(
     () => [
       theme.colors.primary[50],

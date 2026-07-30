@@ -51,10 +51,6 @@ const ProfileScreen = () => {
     logoutMutation.mutate();
   };
 
-  const handleEdit = useCallback(() => {
-    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
-  }, [navigation]);
-
   const handleAccountSettings = useCallback(() => {
     // navigation.navigate(SCREENS.MAIN.SETTINGS);
     return null;
@@ -69,20 +65,12 @@ const ProfileScreen = () => {
     return null;
   }, [navigation]);
 
-  // Set header options with Edit button
+  // Set header options
   useLayoutEffect(() => {
     navigation.setOptions({
-      header: (props: any) => (
-        <CustomHeader
-          {...props}
-          rightButton={{
-            icon: <Text style={styles.editButtonText}>Edit</Text>,
-            onPress: handleEdit,
-          }}
-        />
-      ),
+      header: (props: any) => <CustomHeader {...props} />,
     });
-  }, [navigation, handleEdit]);
+  }, [navigation]);
 
   // Extract user data from API response
   const userData = profileData;

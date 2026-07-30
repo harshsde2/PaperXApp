@@ -32,6 +32,12 @@ export const SCREENS = {
     MARKET: 'Market',
     SETTINGS: 'Settings',
     INQUIRIES: 'Inquiries',
+    /**
+     * Brand's Ready-to-Dispatch catalogue as a bottom tab. Deliberately a
+     * different route name from SCREENS.BRAND_RTD.MARKETPLACE (which stays a
+     * pushed stack screen) so the two navigators don't share a route name.
+     */
+    RTD: 'RTDMarketplace',
     MARKET_INSIGHT: 'MarketScreen',
     ARTICLE_DETAIL: 'ArticleDetail',
     CAPACITY: 'Capacity',
@@ -93,7 +99,16 @@ export const SCREENS = {
 export type UserRole = 'dealer' | 'machine-dealer' | 'converter' | 'brand';
 
 // Tab configurations for each role
-export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: string }[]> = {
+export const TAB_CONFIGS: Record<
+  UserRole,
+  {
+    name: string;
+    label: string;
+    icon: string;
+    /** Render the navigator header for this tab (default false). */
+    showHeader?: boolean;
+  }[]
+> = {
   dealer: [
     { name: SCREENS.MAIN.DASHBOARD, label: 'Dashboard', icon: 'Dashboard' },
     { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
@@ -116,7 +131,10 @@ export const TAB_CONFIGS: Record<UserRole, { name: string; label: string; icon: 
   ],
   brand: [
     { name: SCREENS.MAIN.HOME, label: 'Home', icon: 'Home' },
-    { name: SCREENS.MAIN.MARKET, label: 'Insights', icon: 'MarketIcon' },
+    // Brands get the RTD catalogue here instead of Insights.
+    // showHeader: this screen sets its own CustomHeader (filter button) via
+    // setOptions, which needs the navigator's header enabled to render.
+    { name: SCREENS.MAIN.RTD, label: 'RTD', icon: 'Order', showHeader: true },
     { name: SCREENS.MAIN.INQUIRIES, label: 'Inquiries', icon: 'Inquiries' },
     { name: SCREENS.MAIN.SETTINGS, label: 'Settings', icon: 'Settings' },
   ],

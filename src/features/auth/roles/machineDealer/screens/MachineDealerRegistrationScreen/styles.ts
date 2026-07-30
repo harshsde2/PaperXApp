@@ -153,6 +153,69 @@ export const createStyles = (theme: Theme) =>
       color: theme.colors.primary.DEFAULT,
       textDecorationLine: 'underline',
     },
+    // Machine preferences list + add-form
+    addPrefIconButton: {
+      width: 32,
+      height: 32,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.primary[50],
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    prefEmptyText: {
+      color: theme.colors.text.tertiary,
+      marginBottom: theme.spacing[3],
+    },
+    prefList: {
+      gap: theme.spacing[2],
+      marginBottom: theme.spacing[3],
+    },
+    prefRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      paddingVertical: theme.spacing[2],
+      paddingHorizontal: theme.spacing[3],
+      backgroundColor: theme.colors.surface.primary,
+      gap: theme.spacing[2],
+    },
+    prefRowTextWrap: {
+      flex: 1,
+    },
+    prefRowName: {
+      color: theme.colors.text.primary,
+    },
+    prefRowCategory: {
+      color: theme.colors.text.tertiary,
+      marginTop: 2,
+    },
+    prefRowBrands: {
+      color: theme.colors.text.secondary,
+      marginTop: 2,
+    },
+    prefRemoveButton: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface.tertiary,
+    },
+    addPrefForm: {
+      borderWidth: 1,
+      borderColor: theme.colors.border.primary,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing[3],
+      backgroundColor: theme.colors.background.secondary,
+      gap: theme.spacing[3],
+      marginBottom: theme.spacing[2],
+    },
+    addPrefButton: {
+      marginTop: theme.spacing[1],
+    },
     modalOverlay: {
       flex: 1,
       backgroundColor: theme.colors.background.overlay,

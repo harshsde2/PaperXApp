@@ -1,5 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import React, { useCallback } from 'react';
+import { TouchableOpacity, StyleProp, ViewStyle, TextStyle, Keyboard } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { useTheme } from '@theme/index';
@@ -51,6 +51,13 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
 }) => {
   const theme = useTheme();
 
+  // Dismiss the keyboard before opening the selector so its option list is not
+  // hidden behind an already-open keyboard.
+  const handlePress = useCallback(() => {
+    Keyboard.dismiss();
+    onPress?.();
+  }, [onPress]);
+
   const defaultStyle: StyleProp<ViewStyle> = {
     flexDirection: 'row',
     alignItems: 'center',
@@ -80,7 +87,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
   return (
     <TouchableOpacity
       style={[defaultStyle, style]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       activeOpacity={activeOpacity}
     >

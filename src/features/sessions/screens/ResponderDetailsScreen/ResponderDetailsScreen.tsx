@@ -82,6 +82,7 @@ export default function ResponderDetailsScreen() {
   const [interestedModalVisible, setInterestedModalVisible] = useState(false);
   const [isRefreshingAfterInterest, setIsRefreshingAfterInterest] = useState(false);
   const [sampleImageFullScreenVisible, setSampleImageFullScreenVisible] = useState(false);
+  const [referenceImageFullScreenVisible, setReferenceImageFullScreenVisible] = useState(false);
 
   const params = route.params?.params ?? route.params;
   const { sessionId, session: routeSession } = params ?? {};
@@ -149,6 +150,7 @@ export default function ResponderDetailsScreen() {
   const isJobworkFind = responderDetail?.inquiry_type === JOBWORK_FIND_INQUIRY_TYPE;
   const sampleImageUrl = responderDetail?.sample_image_url ?? null;
   const showSampleImage = isJobworkFind && !!sampleImageUrl;
+  const referenceImageUrl = responderDetail?.reference_image_url ?? null;
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
@@ -280,6 +282,20 @@ export default function ResponderDetailsScreen() {
           </View>
         )}
 
+        {/* Brand reference image (optional) */}
+        {referenceImageUrl && (
+          <View style={styles.sampleImageSection}>
+            <Text style={styles.responderSectionLabel}>Reference image</Text>
+            <TouchableOpacity
+              style={styles.sampleImageThumbnailWrap}
+              onPress={() => setReferenceImageFullScreenVisible(true)}
+              activeOpacity={0.9}
+            >
+              <Image source={{ uri: referenceImageUrl }} style={styles.sampleImageThumbnail} resizeMode="cover" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Time since post (elapsed, counts up to 24h or backend end) */}
         {!isLocked && createdAt && (
           <View style={styles.responderTimerWrap}>
@@ -385,6 +401,13 @@ export default function ResponderDetailsScreen() {
           visible={sampleImageFullScreenVisible}
           imageUrl={sampleImageUrl}
           onClose={() => setSampleImageFullScreenVisible(false)}
+        />
+      )}
+      {referenceImageUrl && (
+        <FullScreenImageModal
+          visible={referenceImageFullScreenVisible}
+          imageUrl={referenceImageUrl}
+          onClose={() => setReferenceImageFullScreenVisible(false)}
         />
       )}
     </ScreenWrapper>

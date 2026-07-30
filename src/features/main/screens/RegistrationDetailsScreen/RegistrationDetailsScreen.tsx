@@ -6,6 +6,7 @@ import { useTheme } from '@theme/hooks/useTheme';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { useRegistrationDetails } from '@services/api';
+import { SCREENS } from '@navigation/constants';
 import { createStyles } from './styles';
 import { SectionPillBar } from './components/SectionPillBar';
 import { DetailSection } from './components/DetailSection';
@@ -29,6 +30,9 @@ const RegistrationDetailsScreen: React.FC = () => {
       id: s.id,
       title: s.title,
       icon: s.icon,
+      editable: s.editable,
+      editKey: s.editKey,
+      edit: s.edit,
       rows: s.rows.map((r) => ({
         id: r.id,
         type: r.type ?? 'value',
@@ -38,6 +42,19 @@ const RegistrationDetailsScreen: React.FC = () => {
       })),
     }));
   }, [data]);
+
+  const handleEditSection = useCallback(
+    (section: RegistrationSectionVM) => {
+      if (!section.editable || !section.editKey) return;
+      navigation.navigate(SCREENS.MAIN.EDIT_REGISTRATION_SECTION, {
+        role: data?.role ?? '',
+        editKey: section.editKey,
+        title: section.title,
+        edit: section.edit ?? {},
+      });
+    },
+    [navigation, data?.role],
+  );
 
   React.useEffect(() => {
     if (sections.length > 0 && !activeSection) {
@@ -201,7 +218,13 @@ const RegistrationDetailsScreen: React.FC = () => {
             key={section.id}
             onLayout={(e) => handleSectionLayout(section.id, e.nativeEvent.layout.y)}
           >
-            <DetailSection title={section.title} icon={section.icon} rows={section.rows} />
+            <DetailSection
+              title={section.title}
+              icon={section.icon}
+              rows={section.rows}
+              editable={section.editable}
+              onEdit={() => handleEditSection(section)}
+            />
           </View>
         ))}
       </ScrollView>

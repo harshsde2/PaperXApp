@@ -56,6 +56,7 @@ export const SCREENS = {
     NOTIFICATIONS: 'Notifications',
     RESPONSES: 'Responses',
     REGISTRATION_DETAILS: 'RegistrationDetails',
+    EDIT_REGISTRATION_SECTION: 'EditRegistrationSection',
   },
   WALLET: {
     MAIN: 'WalletMain',

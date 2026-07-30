@@ -130,6 +130,7 @@ export interface PostBrandRequirementRequest {
   city: string; // Required - city name
   latitude: number; // Required - GPS latitude
   longitude: number; // Required - GPS longitude
+  reference_image?: string | null; // Optional - relative path from /upload/single
 }
 
 export interface PostBrandRequirementResponse {

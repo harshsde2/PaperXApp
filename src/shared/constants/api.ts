@@ -62,6 +62,7 @@ export const REFERENCE_ENDPOINTS = {
 export const DEALER_ENDPOINTS = {
   // Profile
   COMPLETE_PROFILE: `${API_VERSION}/dealer/profile/complete`,
+  UPDATE_SECTION: `${API_VERSION}/dealer/profile/section`,
 
   // Dashboard
   DASHBOARD: `${API_VERSION}/dealer/dashboard`,
@@ -97,6 +98,7 @@ export const DEALER_ENDPOINTS = {
 export const MACHINE_DEALER_ENDPOINTS = {
   // Profile
   COMPLETE_PROFILE: `${API_VERSION}/machine-dealer/profile/complete`,
+  UPDATE_SECTION: `${API_VERSION}/machine-dealer/profile/section`,
 
   // Dashboard
   DASHBOARD: `${API_VERSION}/machine-dealer/dashboard`,
@@ -111,6 +113,7 @@ export const MACHINE_DEALER_ENDPOINTS = {
 export const CONVERTER_ENDPOINTS = {
   // Profile
   COMPLETE_PROFILE: `${API_VERSION}/converter/profile/complete`,
+  UPDATE_SECTION: `${API_VERSION}/converter/profile/section`,
 
   // Dashboard
   DASHBOARD: `${API_VERSION}/converter/dashboard`,
@@ -128,6 +131,7 @@ export const CONVERTER_ENDPOINTS = {
 export const BRAND_ENDPOINTS = {
   // Profile
   COMPLETE_PROFILE: `${API_VERSION}/brand/profile/complete`,
+  UPDATE_SECTION: `${API_VERSION}/brand/profile/section`,
 
   // Dashboard
   DASHBOARD: `${API_VERSION}/brand/dashboard`,

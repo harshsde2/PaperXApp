@@ -20,6 +20,8 @@ import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
 import { FloatingBottomContainer } from '@shared/components/FloatingBottomContainer';
 import { DropdownButton } from '@shared/components/DropdownButton';
+import { ImagePicker } from '@shared/components/ImagePicker';
+import type { PickedImage } from '@shared/utils/imagePicker';
 import { LocationPicker } from '@shared/location';
 import type { Location } from '@shared/location/types';
 import { AppIcon } from '@assets/svgs';
@@ -30,6 +32,7 @@ import {
   BrandRequirementType,
   BrandPackagingType,
   useGetProfile,
+  useUploadImage,
 } from '@services/api';
 import { SCREENS } from '@navigation/constants';
 import { useAppSelector } from '@store/hooks';
@@ -74,6 +77,10 @@ const PostBrandRequirementScreen = () => {
   const insets = useSafeAreaInsets();
   const user = useAppSelector((state) => state.auth.user);
   const { data: profileData, refetch: refetchProfile } = useGetProfile();
+  const uploadImage = useUploadImage();
+
+  // Optional reference image (kept out of RHF; uploaded on submit)
+  const [referenceImage, setReferenceImage] = useState<PickedImage | null>(null);
 
   useEffect(() => {
     refetchProfile();
@@ -195,7 +202,7 @@ const PostBrandRequirementScreen = () => {
   }, [locationIdValue, locationSourceValue, locationValue, userLocations]);
 
   const onSubmit = useCallback(
-    (data: PostBrandRequirementFormData) => {
+    async (data: PostBrandRequirementFormData) => {
       // Validate required fields
       if (!data.requirement_type) {
         Alert.alert('Validation Error', 'Please select a requirement type');
@@ -244,6 +251,20 @@ const PostBrandRequirementScreen = () => {
         apiData.packaging_type = data.packaging_type;
       }
 
+      // Upload the optional reference image and attach its path
+      if (referenceImage) {
+        try {
+          const path = await uploadImage.mutateAsync({ file: referenceImage });
+          apiData.reference_image = path;
+        } catch (e: any) {
+          Alert.alert(
+            'Upload failed',
+            e?.message || 'Could not upload the reference image. Please try again.',
+          );
+          return;
+        }
+      }
+
       console.log('Brand Requirement API Data:', JSON.stringify(apiData, null, 2));
 
       // Generate reference number
@@ -279,7 +300,7 @@ const PostBrandRequirementScreen = () => {
         requirementType: 'brand', // Add flag to identify brand requirement
       });
     },
-    [navigation],
+    [navigation, referenceImage, uploadImage],
   );
 
   const buttonHeight = 60;
@@ -408,6 +429,22 @@ const PostBrandRequirementScreen = () => {
               numberOfLines={4}
               containerStyle={styles.formGroup}
             />
+
+            {/* Reference Image (optional) */}
+            <View style={styles.formGroup}>
+              <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                Any reference image of the product you have{'  '}
+                <Text variant="captionMedium" style={{ color: theme.colors.text.tertiary }}>
+                  (Optional)
+                </Text>
+              </Text>
+              <ImagePicker
+                value={referenceImage}
+                onChange={setReferenceImage}
+                placeholderText="Add reference photo"
+                showCamera
+              />
+            </View>
 
             {/* Quantity Range */}
             <View style={styles.formGroup}>
@@ -593,15 +630,22 @@ const PostBrandRequirementScreen = () => {
           style={styles.button}
           onPress={handleSubmit(onSubmit)}
           activeOpacity={0.8}
+          disabled={uploadImage.isPending}
         >
-          <Text variant="buttonMedium" style={styles.buttonText}>
-            Continue to Payment
-          </Text>
-          <AppIcon.ArrowRight
-            width={20}
-            height={20}
-            color={theme.colors.text.inverse}
-          />
+          {uploadImage.isPending ? (
+            <ActivityIndicator color={theme.colors.text.inverse} size="small" />
+          ) : (
+            <>
+              <Text variant="buttonMedium" style={styles.buttonText}>
+                Continue to Payment
+              </Text>
+              <AppIcon.ArrowRight
+                width={20}
+                height={20}
+                color={theme.colors.text.inverse}
+              />
+            </>
+          )}
         </TouchableOpacity>
       </FloatingBottomContainer>
     </>

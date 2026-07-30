@@ -28,6 +28,20 @@ export const createStyles = (theme: Theme) =>
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
+    editButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: theme.spacing[2],
+      paddingVertical: 4,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.primary[50],
+    },
+    editButtonText: {
+      fontSize: 12,
+      fontFamily: theme.fontFamily.semibold,
+      color: theme.colors.primary.DEFAULT,
+    },
     card: {
       backgroundColor: theme.colors.surface.primary,
       borderRadius: theme.borderRadius.lg,

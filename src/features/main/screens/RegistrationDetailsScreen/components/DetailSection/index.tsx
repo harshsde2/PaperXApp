@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useTheme } from '@theme/hooks/useTheme';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
@@ -24,7 +24,7 @@ const getIcon = (name?: string | null) => {
   return map[name] || null;
 };
 
-export const DetailSection = memo(({ title, icon, rows }: DetailSectionProps) => {
+export const DetailSection = memo(({ title, icon, rows, editable, onEdit }: DetailSectionProps) => {
   const theme = useTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const IconComp = getIcon(icon);
@@ -100,7 +100,13 @@ export const DetailSection = memo(({ title, icon, rows }: DetailSectionProps) =>
             <IconComp width={16} height={16} color={theme.colors.primary.DEFAULT} />
           </View>
         ) : null}
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={[styles.sectionTitle, { flex: 1 }]}>{title}</Text>
+        {editable && onEdit ? (
+          <TouchableOpacity onPress={onEdit} style={styles.editButton} activeOpacity={0.7}>
+            <AppIcon.Edit width={14} height={14} color={theme.colors.primary.DEFAULT} />
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
       <View style={styles.card}>{rows.map(renderRow)}</View>
     </View>

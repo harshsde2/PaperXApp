@@ -556,7 +556,7 @@ export type {
 // REGISTRATION DETAILS API (Unified for all roles)
 // ============================================
 
-export { useRegistrationDetails } from './registrationDetailsApi/registrationDetailsApi';
+export { useRegistrationDetails, useUpdateProfileSection } from './registrationDetailsApi/registrationDetailsApi';
 export type {
   RegistrationDetails,
   RegistrationDetailsSection,

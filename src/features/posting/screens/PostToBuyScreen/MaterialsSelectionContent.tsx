@@ -85,6 +85,9 @@ interface MaterialsSelectionContentCommonProps {
   onScroll: (event: any) => void;
   theme: Theme;
   ListComponent?: ComponentType<any>;
+  // Search input component. Pass BottomSheetTextInput when rendered inside a
+  // Gorhom bottom sheet so keyboard focus/blur is tracked correctly.
+  InputComponent?: ComponentType<any>;
 }
 
 type MaterialsSelectionContentProps = MaterialsSelectionContentCommonProps & (MaterialModeProps | GradeModeProps);
@@ -100,6 +103,7 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
     onScroll,
     theme,
     ListComponent = FlatList,
+    InputComponent = TextInput,
   } = props;
 
   const styles = createStyles(theme);
@@ -217,7 +221,7 @@ export const MaterialsSelectionContent = memo((props: MaterialsSelectionContentP
             color={theme.colors.text.tertiary}
           />
         </View>
-        <TextInput
+        <InputComponent
           style={styles.searchInput}
           placeholder="Search materials"
           placeholderTextColor={theme.colors.text.tertiary}

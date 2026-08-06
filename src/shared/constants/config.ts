@@ -101,7 +101,7 @@ export const API_UPLOAD_TIMEOUT = 120000; // 2 minutes for file uploads
  * NOTE: this must match the backend flag `PAYMENTS_ENABLED` (config/features.php);
  * the backend enforces fees server-side, so both sides must agree.
  */
-export const PAYMENTS_ENABLED = false;
+export const PAYMENTS_ENABLED = true; // TEMP: live go-live smoke test — REVERT to false after testing
 
 // Storage Keys
 export const STORAGE_KEYS = {

@@ -29,6 +29,8 @@ import {
   LOGO_REVEAL_DURATION,
   FADE_OUT_DURATION,
   FADE_OUT_START,
+  TEXT_REVEAL_DELAY,
+  TEXT_REVEAL_DURATION,
   PARTICLE_COUNT,
   PARTICLE_MIN_DISTANCE,
   PARTICLE_MAX_DISTANCE,
@@ -93,6 +95,7 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
   const particleProgress = useSharedValue(0);
   const revealProgress = useSharedValue(0);
   const overlayOpacity = useSharedValue(1);
+  const textOpacity = useSharedValue(0);
 
   const particles = useMemo(generateParticles, []);
   const serpentinePath = useMemo(buildSerpentinePath, []);
@@ -125,6 +128,14 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
       }),
     );
 
+    textOpacity.value = withDelay(
+      TEXT_REVEAL_DELAY,
+      withTiming(1, {
+        duration: TEXT_REVEAL_DURATION,
+        easing: Easing.out(Easing.cubic),
+      }),
+    );
+
     overlayOpacity.value = withDelay(
       FADE_OUT_START,
       withTiming(
@@ -146,6 +157,10 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
 
   const overlayAnimatedStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
+  }));
+
+  const textAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
   }));
 
   return (
@@ -185,6 +200,10 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
           </Group>
         </Canvas>
       </View>
+
+      <Animated.Text style={[styles.poweredBy, textAnimatedStyle]}>
+        Powered by SPNP Paper and Pack
+      </Animated.Text>
     </Animated.View>
   );
 };

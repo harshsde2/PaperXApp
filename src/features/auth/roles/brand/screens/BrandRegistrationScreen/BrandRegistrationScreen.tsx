@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Keyboard,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -1197,7 +1198,7 @@ const BrandRegistrationScreen = () => {
                       </Text>
                       <TouchableOpacity
                         style={styles.brandTypeSelector}
-                        onPress={() => setShowBrandTypeModal(true)}
+                        onPress={() => { Keyboard.dismiss(); setShowBrandTypeModal(true); }}
                         activeOpacity={0.7}
                       >
                         <Text

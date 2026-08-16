@@ -50,6 +50,7 @@ import NotificationsScreen from '@features/main/screens/NotificationsScreen/Noti
 import MessagesScreen from '@features/main/screens/MessagesScreen/MessagesScreen';
 import ResponsesListScreen from '@features/sessions/screens/ResponsesListScreen';
 import RegistrationDetailsScreen from '@features/main/screens/RegistrationDetailsScreen/RegistrationDetailsScreen';
+import EditRegistrationSectionScreen from '@features/main/screens/EditRegistrationSectionScreen';
 import ArticleDetailScreen from '@features/main/screens/MarketScreen/components/ArticleDetailScreen';
 import type { MarketInsightArticle } from '@services/api';
 
@@ -102,6 +103,12 @@ export type MainStackParamList = {
   Messages: undefined;
   Responses: undefined;
   RegistrationDetails: undefined;
+  EditRegistrationSection: {
+    role: string;
+    editKey: string;
+    title: string;
+    edit: Record<string, any>;
+  };
   // Wallet Screens
   WalletMain: undefined;
   /** Optional return target after Razorpay credit purchase (e.g. RTD add product). */
@@ -326,6 +333,14 @@ const MainNavigator = () => {
       <Stack.Screen
         name={SCREENS.MAIN.REGISTRATION_DETAILS}
         component={RegistrationDetailsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.EDIT_REGISTRATION_SECTION}
+        component={EditRegistrationSectionScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',

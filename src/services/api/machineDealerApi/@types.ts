@@ -25,6 +25,13 @@ export type ListingStatus = 'active' | 'pending' | 'sold' | 'expired' | 'cancell
 // COMPLETE PROFILE
 // ============================================
 
+/** One machine preference: a category, the selected machine (type), and optional brands. */
+export interface MachinePreferencePayload {
+  machine_category: MachineCategoryType | string;
+  machine_id: number;
+  brand_names?: string[];
+}
+
 export interface CompleteMachineDealerProfileRequest {
   company_name: string;
   gst?: string | null;
@@ -35,9 +42,12 @@ export interface CompleteMachineDealerProfileRequest {
   location: string;
   latitude: number;
   longitude: number;
+  // Legacy single fields kept in sync from the first preference (matching engine reads these)
   primary_machine_category?: MachineCategoryType | null;
   primary_machine_id?: number | null;
   preferred_brand_names?: string[] | null;
+  // Full list of machine preferences the dealer selected
+  machine_preferences?: MachinePreferencePayload[];
 }
 
 export interface CompleteMachineDealerProfileResponse {

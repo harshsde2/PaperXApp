@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Controller } from 'react-hook-form';
-import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetFlatList, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { GorhomBottomSheetModal } from '@shared/components/GorhomBottomSheetModal';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { Text } from '@shared/components/Text';
@@ -1627,6 +1627,11 @@ const PostToBuyScreen = () => {
             ref={materialsSheetRef}
             snapPoints={['70%', '95%']}
             enablePanDownToClose
+            // When the search keyboard opens, extend the sheet to its highest
+            // snap point (95%) so the list isn't buried under the keyboard.
+            keyboardBehavior="extend"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
             onDismiss={() => {
               setSearchQuery('');
               setIsMaterialsSheetOpen(false);
@@ -1647,6 +1652,7 @@ const PostToBuyScreen = () => {
               onScroll={handleScroll}
               theme={theme}
               ListComponent={BottomSheetFlatList}
+              InputComponent={BottomSheetTextInput}
             />
           </GorhomBottomSheetModal>
         </>

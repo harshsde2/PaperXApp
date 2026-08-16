@@ -8,6 +8,10 @@ export const LOGO_REVEAL_DURATION = 800;
 export const FADE_OUT_DURATION = 400;
 export const FADE_OUT_START = 2400;
 
+// "Powered by" tagline fades in only after the logo has finished revealing (~1800ms).
+export const TEXT_REVEAL_DELAY = 1850;
+export const TEXT_REVEAL_DURATION = 450;
+
 export const PARTICLE_COUNT = 30;
 export const PARTICLE_MIN_DISTANCE = 200;
 export const PARTICLE_MAX_DISTANCE = 500;

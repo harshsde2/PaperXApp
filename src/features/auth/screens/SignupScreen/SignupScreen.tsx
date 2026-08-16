@@ -4,20 +4,33 @@ import { useNavigation } from '@react-navigation/native';
 import { SCREENS } from '@navigation/constants';
 import { Text } from '@shared/components/Text';
 import { KeyboardDoneBar } from '@shared/components/KeyboardDoneBar';
+import { Toast } from 'toastify-react-native';
 import { SignupScreenNavigationProp } from './@types';
 import { styles } from './styles';
+
+// Indian mobile: 10 digits, must start with 6, 7, 8, or 9
+const INDIAN_MOBILE_REGEX = /^[6-9][0-9]{9}$/;
 
 const SignupScreen = () => {
   const navigation = useNavigation<SignupScreenNavigationProp>();
   const [mobileNumber, setMobileNumber] = useState('');
 
+  const isValidMobile = INDIAN_MOBILE_REGEX.test(mobileNumber.trim());
+
   const handleSendOTP = () => {
-    if (mobileNumber.trim()) {
-      navigation.navigate(SCREENS.AUTH.OTP_VERIFICATION, {
-        mobile: mobileNumber,
-        purpose: 'signup',
+    if (!isValidMobile) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid mobile number',
+        text2: 'Enter a valid 10-digit Indian mobile number (starting 6-9)',
+        position: 'top',
       });
+      return;
     }
+    navigation.navigate(SCREENS.AUTH.OTP_VERIFICATION, {
+      mobile: mobileNumber.trim(),
+      purpose: 'signup',
+    });
   };
 
   return (
@@ -50,9 +63,9 @@ const SignupScreen = () => {
           />
           
           <TouchableOpacity
-            style={[styles.button, !mobileNumber.trim() && styles.buttonDisabled]}
+            style={[styles.button, !isValidMobile && styles.buttonDisabled]}
             onPress={handleSendOTP}
-            disabled={!mobileNumber.trim()}
+            disabled={!isValidMobile}
           >
             <Text variant="buttonMedium" style={styles.buttonText}>Send OTP</Text>
           </TouchableOpacity>

@@ -274,6 +274,8 @@ export interface PosterDetailResponse {
   jobwork?: JobworkDetails;
   sample_available?: boolean;
   sample_image_url?: string | null;
+  /** Optional brand reference image (public URL). */
+  reference_image_url?: string | null;
 }
 
 // ============================================
@@ -303,6 +305,8 @@ export interface ResponderDetailResponse {
   jobwork?: JobworkDetails;
   sample_available?: boolean;
   sample_image_url?: string | null;
+  /** Optional brand reference image (public URL). */
+  reference_image_url?: string | null;
 }
 
 // ============================================

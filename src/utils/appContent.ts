@@ -4,6 +4,10 @@ export const appContent = {
     subheadline: 'A B2B Real-Time smart session-based matchmaking discovery platform for the Paper,Printing and Packaging Industry.',
     actionButtonText: "Let's start",
   },
+  introCarousel: {
+    skip: 'Skip',
+    next: 'Next',
+  },
   MaterialRegistration: {
     Headline: 'What materials do you deal in?',
     Subheadline: 'Select the specific raw materials of paper, paperboard and other support materials you buy and sell to get optimum matches.',

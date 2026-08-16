@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useContext, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform, LayoutChangeEvent } from 'react-native';
 import { BlurView } from '@react-native-community/blur';
+import { ANDROID_BLUR, GLASS_TINT_OPACITY } from '@shared/constants/glass';
 import { fontWeightForPlatform } from '@shared/utils/fontWeightForPlatform';
 import {
   createBottomTabNavigator,
@@ -30,6 +31,7 @@ import SettingsScreen from '@features/main/screens/SettingsScreen/SettingsScreen
 // Inquiries tab for brand now uses the unified SessionDashboardScreen
 import CapacityScreen from '@features/main/screens/CapacityScreen/CapacityScreen';
 import SessionDashboardScreen from '@features/sessions/screens/SessionDashboardScreen/SessionDashboardScreen';
+import { BrandRTDMarketplaceScreen } from '@features/brand/rtd';
 
 export type BottomTabParamList = {
   Home: undefined;
@@ -41,6 +43,7 @@ export type BottomTabParamList = {
   Capacity: undefined;
   Sessions: undefined;
   Profile: undefined;
+  RTDMarketplace: undefined;
 };
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -58,6 +61,7 @@ const getIconComponent = (iconName: string) => {
     Capacity: AppIcon.Capacity,
     Sessions: AppIcon.Sessions,
     Profile: AppIcon.Profile,
+    Order: AppIcon.Order,
   };
   return icons[iconName] || AppIcon.Home;
 };
@@ -74,6 +78,7 @@ const getScreenComponent = (screenName: string) => {
     [SCREENS.MAIN.CAPACITY]: CapacityScreen,
     [SCREENS.MAIN.SESSIONS]: SessionDashboardScreen,
     [SCREENS.MAIN.PROFILE]: ProfileScreen,
+    [SCREENS.MAIN.RTD]: BrandRTDMarketplaceScreen,
   };
   return screens[screenName] || DashboardScreen;
 };
@@ -100,7 +105,6 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
   const blurFallbackColors = useMemo(
     () => ({
       iosReducedTransparency: getColorWithOpacity(theme.colors.white, 52),
-      androidFallback: getColorWithOpacity(theme.colors.white, 52),
     }),
     [theme.colors.white],
   );
@@ -127,38 +131,23 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
       style={[styles.tabBarOuter, { paddingBottom: insets.bottom || 12 }]}
       onLayout={handleTabBarLayout}
     >
-      {Platform.OS === 'ios' ? (
-        <>
-          <BlurView
-            style={StyleSheet.absoluteFill}
-            blurType={'light'}
-            blurAmount={6}
-            reducedTransparencyFallbackColor={blurFallbackColors.iosReducedTransparency}
-            pointerEvents="none"
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: getColorWithOpacity(theme.colors.white, 4) },
-            ]}
-          />
-        </>
-      ) : (
-        <>
-          <View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: blurFallbackColors.androidFallback }]}
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: getColorWithOpacity(theme.colors.white, 3) },
-            ]}
-          />
-        </>
-      )}
+      <BlurView
+        style={StyleSheet.absoluteFill}
+        blurType={'light'}
+        blurAmount={6}
+        blurRadius={ANDROID_BLUR.blurRadius}
+        downsampleFactor={ANDROID_BLUR.downsampleFactor}
+        overlayColor={ANDROID_BLUR.overlayColor}
+        reducedTransparencyFallbackColor={blurFallbackColors.iosReducedTransparency}
+        pointerEvents="none"
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: getColorWithOpacity(theme.colors.white, GLASS_TINT_OPACITY) },
+        ]}
+      />
       <View style={styles.tabBarRow}>
       {/* Left side tabs */}
       {leftTabs.map((route) => {
@@ -332,7 +321,10 @@ const createTabBarStyles = (theme: ReturnType<typeof useTheme>) =>
       shadowOffset: { width: 0, height: -4 },
       shadowOpacity: 0.03,
       shadowRadius: 10,
-      elevation: 12,
+      // Android: elevation promotes this view to its own render layer, which
+      // stops Dimezis BlurView from capturing the content beneath it. The
+      // borderTop above already separates the bar, so drop it on Android.
+      elevation: Platform.OS === 'android' ? 0 : 12,
       zIndex: 100,
     },
     tabBarRow: {
@@ -467,9 +459,9 @@ const BottomTabNavigator: React.FC = () => {
       {tabConfig.map((tab) => (
         <Tab.Screen
           key={tab.name}
-        
           name={tab.name as keyof BottomTabParamList}
           component={getScreenComponent(tab.name)}
+          options={{ headerShown: tab.showHeader ?? false }}
         />
       ))}
     </Tab.Navigator>

@@ -16,7 +16,9 @@ import {
   useCreateBrandRtdRazorpayOrder,
   useVerifyBrandRtdRazorpayPayment,
   useCancelRtdOrder,
+  useConfirmRtdPayment,
 } from '@services/api/brandRtdApi';
+import { PAYMENTS_ENABLED } from '@shared/constants/config';
 import type { RtdOrderStatus } from '@services/api';
 import type { VerifyRazorpayPaymentRequest } from '@services/api/walletApi/@types';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
@@ -135,6 +137,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
   const pendingVerifyRef = useRef<VerifyRazorpayPaymentRequest | null>(null);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const cancelOrder = useCancelRtdOrder();
+  const confirmRtdPayment = useConfirmRtdPayment();
 
   const paying = checkoutBusy || createRtdRzpOrder.isPending || verifyRtdRzpPayment.isPending;
 
@@ -218,6 +221,31 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
     if (!activeOrder) return;
     const orderId = activeOrder.id;
     const total = activeOrder.total_amount;
+
+    // Free-launch mode: connect without paying the platform fee.
+    if (!PAYMENTS_ENABLED) {
+      Alert.alert('Connect', 'Connect with this converter for free?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Connect',
+          onPress: () => {
+            confirmRtdPayment.mutate(
+              { order_id: orderId, transaction_id: 'FREE_MODE' },
+              {
+                onSuccess: () => {
+                  dispatch(showToast({ message: 'Connected', type: 'success' }));
+                  void refetch();
+                },
+                onError: (err: any) =>
+                  Alert.alert('Error', err?.message ?? 'Could not connect. Please try again.'),
+              },
+            );
+          },
+        },
+      ]);
+      return;
+    }
+
     Alert.alert(
       'Confirm payment',
       `Pay platform fee of ₹${total} via Razorpay? You will complete checkout in a secure window.`,
@@ -231,7 +259,7 @@ export const BrandRTDOrderDetailScreen: React.FC<BrandRTDOrderDetailScreenProps>
         },
       ]
     );
-  }, [activeOrder, runRtdRazorpayCheckout]);
+  }, [activeOrder, runRtdRazorpayCheckout, confirmRtdPayment, dispatch, refetch]);
 
   const handleCancel = useCallback(() => {
     if (!activeOrder) return;

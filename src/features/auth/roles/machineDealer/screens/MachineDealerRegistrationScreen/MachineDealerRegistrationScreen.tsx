@@ -74,6 +74,7 @@ const MachineDealerRegistrationScreen = () => {
       businessDescription: '',
       machine_category: undefined,
       machine_id: undefined,
+      machine_preferences: [],
       preferred_brand_ids: [],
     },
     mode: 'onBlur',
@@ -108,7 +109,14 @@ const MachineDealerRegistrationScreen = () => {
   const locationValue = watch('location');
   const machineCategoryValue = watch('machine_category');
   const machineIdValue = watch('machine_id');
+  const machinePreferencesValue = watch('machine_preferences');
   const preferredBrandIdsValue = watch('preferred_brand_ids');
+
+  // First time (empty list) the add-form is shown by default; after adding it collapses
+  // and the + icon re-opens it.
+  const [showAddPreference, setShowAddPreference] = useState(
+    () => (getValues('machine_preferences')?.length ?? 0) === 0,
+  );
 
   const brandItems = useMemo(
     () => MACHINE_BRAND_NAMES.map((name, index) => ({ id: index, name })),
@@ -134,6 +142,65 @@ const MachineDealerRegistrationScreen = () => {
     const firstThree = names.slice(0, 3).join(', ');
     return `${firstThree} +${names.length - 3} more`;
   }, [preferredBrandIdsValue]);
+
+  const handleAddPreference = useCallback(() => {
+    const category = getValues('machine_category');
+    const machineId = getValues('machine_id');
+    if (!category || machineId == null) {
+      Toast.show({
+        type: 'error',
+        text1: 'Select machine',
+        text2: 'Choose a category and machine type first.',
+        position: 'top',
+      });
+      return;
+    }
+    const current = getValues('machine_preferences') ?? [];
+    if (current.some((p) => p.machine_id === machineId)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Already added',
+        text2: 'This machine is already in your list.',
+        position: 'top',
+      });
+      return;
+    }
+    const machineName = machines.find((m) => m.id === machineId)?.name ?? `Machine #${machineId}`;
+    const brandIds = getValues('preferred_brand_ids') ?? [];
+    const brandNames = brandIds
+      .map((id) => MACHINE_BRAND_NAMES[id])
+      .filter((name): name is string => Boolean(name));
+    setValue(
+      'machine_preferences',
+      [
+        ...current,
+        {
+          machine_category: category,
+          machine_id: machineId,
+          machine_name: machineName,
+          brand_names: brandNames,
+        },
+      ],
+      { shouldValidate: false },
+    );
+    // Reset the staging selection so the pickers are clear for the next add.
+    setValue('machine_category', undefined, { shouldValidate: false });
+    setValue('machine_id', undefined, { shouldValidate: false });
+    setValue('preferred_brand_ids', [], { shouldValidate: false });
+    setShowAddPreference(false);
+  }, [getValues, setValue, machines]);
+
+  const handleRemovePreference = useCallback(
+    (index: number) => {
+      const current = getValues('machine_preferences') ?? [];
+      setValue(
+        'machine_preferences',
+        current.filter((_, i) => i !== index),
+        { shouldValidate: false },
+      );
+    },
+    [getValues, setValue],
+  );
 
   const { isKeyboardVisible } = useKeyboard();
   const floatingContainerPadding = useFloatingBottomPadding({ buttonHeight: 60 });
@@ -373,12 +440,31 @@ const MachineDealerRegistrationScreen = () => {
       return;
     }
 
-    const selectedPreferredBrandNames =
-      data.preferred_brand_ids && data.preferred_brand_ids.length > 0
-        ? data.preferred_brand_ids
-            .map((id) => MACHINE_BRAND_NAMES[id])
-            .filter((name): name is string => Boolean(name))
-        : null;
+    if (!data.machine_preferences || data.machine_preferences.length === 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Machine required',
+        text2: 'Add at least one machine preference.',
+        position: 'top',
+      });
+      return;
+    }
+
+    const machinePreferences = data.machine_preferences.map((p) => ({
+      machine_category: p.machine_category,
+      machine_id: p.machine_id,
+      brand_names: p.brand_names && p.brand_names.length > 0 ? p.brand_names : undefined,
+    }));
+
+    // Legacy global list = union of every preference's brands (matching engine reads this).
+    const unionBrandNames = Array.from(
+      new Set(
+        data.machine_preferences.reduce<string[]>((acc, p) => {
+          if (p.brand_names) acc.push(...p.brand_names);
+          return acc;
+        }, []),
+      ),
+    );
 
     const machineDealerRegistrationData: CompleteMachineDealerProfileRequest = {
       company_name: profileData.company_name || '',
@@ -390,9 +476,11 @@ const MachineDealerRegistrationScreen = () => {
       location: data.location.trim(),
       latitude: data.latitude,
       longitude: data.longitude,
-      primary_machine_category: data.machine_category ?? null,
-      primary_machine_id: data.machine_id ?? null,
-      preferred_brand_names: selectedPreferredBrandNames,
+      // Keep legacy single fields in sync (matching engine reads these)
+      primary_machine_category: machinePreferences[0]?.machine_category ?? null,
+      primary_machine_id: machinePreferences[0]?.machine_id ?? null,
+      preferred_brand_names: unionBrandNames.length > 0 ? unionBrandNames : null,
+      machine_preferences: machinePreferences,
     };
 
     completeMachineDealerProfile(machineDealerRegistrationData, {
@@ -462,6 +550,7 @@ const MachineDealerRegistrationScreen = () => {
       <ScreenWrapper
         scrollable
         keyboardDoneBar
+        keyboardAvoiding
         backgroundColor={theme.colors.background.secondary}
         safeAreaEdges={[]}
         contentContainerStyle={{ ...styles.scrollContent, paddingBottom: floatingContainerPadding }}
@@ -594,102 +683,155 @@ const MachineDealerRegistrationScreen = () => {
               <Text variant="h4" fontWeight="semibold" style={styles.sectionTitle}>
                 Machine Preferences
               </Text>
-            </View>
-
-            {/* Machine Category */}
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Primary Machine Category
-                </Text>
-              </View>
-              <Controller
-                control={control}
-                name="machine_category"
-                render={({ field: { value } }) => (
-                  <>
-                    <DropdownButton
-                      value={MACHINE_CATEGORY_OPTIONS.find((o) => o.value === value)?.label}
-                      placeholder="Select category"
-                      onPress={openMachineCategorySheet}
-                    />
-                  </>
-                )}
-              />
-            </View>
-
-            {/* Machine Type */}
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Primary Machine Type
-                </Text>
-              </View>
-              <Controller
-                control={control}
-                name="machine_id"
-                render={({ fieldState: { error } }) => (
-                  <>
-                    <DropdownButton
-                      value={selectedMachine?.name}
-                      placeholder={
-                        machineCategoryValue
-                          ? isLoadingMachines
-                            ? 'Loading...'
-                            : 'Select machine type'
-                          : 'Select category first'
-                      }
-                      onPress={openMachineTypeSheet}
-                      disabled={!machineCategoryValue || isLoadingMachines}
-                    />
-                    {error && (
-                      <Text
-                        variant="captionSmall"
-                        style={{
-                          color: theme.colors.error.DEFAULT,
-                          marginTop: 4,
-                        }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
               <TouchableOpacity
-                onPress={openCustomMachineModal}
+                onPress={() => setShowAddPreference((prev) => !prev)}
                 activeOpacity={0.7}
-                style={styles.addCustomLinkRow}
+                style={styles.addPrefIconButton}
+                accessibilityLabel="Add machine preference"
               >
-                <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
-                <Text variant="captionSmall" style={styles.addCustomLinkText}>
-                  Can't find your machine? Tap to add a custom one
-                </Text>
+                <AppIcon.PlusCircle width={22} height={22} color={theme.colors.primary.DEFAULT} />
               </TouchableOpacity>
             </View>
 
-            {/* Preferred Brands (optional, multi-select) */}
-            <View style={styles.formGroup}>
-              <View style={styles.labelRow}>
-                <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
-                  Preferred Brands
-                </Text>
-                <Text variant="captionMedium" style={styles.optionalLabel}>
-                  (Optional)
-                </Text>
-              </View>
-              <Controller
-                control={control}
-                name="preferred_brand_ids"
-                render={() => (
-                  <DropdownButton
-                    value={preferredBrandDisplay || ''}
-                    placeholder="Select preferred brands (multi-select)"
-                    onPress={openPreferredBrandsSheet}
+            {/* List of added machine preferences */}
+            <Controller
+              control={control}
+              name="machine_preferences"
+              render={({ field: { value } }) => {
+                const items = value ?? [];
+                if (items.length === 0) {
+                  return (
+                    <Text variant="bodySmall" style={styles.prefEmptyText}>
+                      No machines added yet — tap + to add one.
+                    </Text>
+                  );
+                }
+                return (
+                  <View style={styles.prefList}>
+                    {items.map((pref, index) => (
+                      <View key={`${pref.machine_id}-${index}`} style={styles.prefRow}>
+                        <View style={styles.prefRowTextWrap}>
+                          <Text variant="bodyMedium" fontWeight="medium" style={styles.prefRowName}>
+                            {pref.machine_name}
+                          </Text>
+                          <Text variant="captionSmall" style={styles.prefRowCategory}>
+                            {MACHINE_CATEGORY_OPTIONS.find((o) => o.value === pref.machine_category)?.label ??
+                              pref.machine_category}
+                          </Text>
+                          {pref.brand_names && pref.brand_names.length > 0 && (
+                            <Text variant="captionSmall" style={styles.prefRowBrands}>
+                              Brands: {pref.brand_names.join(', ')}
+                            </Text>
+                          )}
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleRemovePreference(index)}
+                          activeOpacity={0.7}
+                          style={styles.prefRemoveButton}
+                          accessibilityLabel="Remove machine"
+                        >
+                          <AppIcon.Close width={16} height={16} color={theme.colors.text.secondary} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                );
+              }}
+            />
+
+            {/* Add-preference form (revealed by the + icon) */}
+            {showAddPreference && (
+              <View style={styles.addPrefForm}>
+                {/* Machine Category */}
+                <View>
+                  <View style={styles.labelRow}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Machine Category
+                    </Text>
+                  </View>
+                  <Controller
+                    control={control}
+                    name="machine_category"
+                    render={({ field: { value } }) => (
+                      <DropdownButton
+                        value={MACHINE_CATEGORY_OPTIONS.find((o) => o.value === value)?.label}
+                        placeholder="Select category"
+                        onPress={openMachineCategorySheet}
+                      />
+                    )}
                   />
-                )}
-              />
-            </View>
+                </View>
+
+                {/* Machine Type */}
+                <View>
+                  <View style={styles.labelRow}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Machine Type
+                    </Text>
+                  </View>
+                  <Controller
+                    control={control}
+                    name="machine_id"
+                    render={() => (
+                      <DropdownButton
+                        value={selectedMachine?.name}
+                        placeholder={
+                          machineCategoryValue
+                            ? isLoadingMachines
+                              ? 'Loading...'
+                              : 'Select machine type'
+                            : 'Select category first'
+                        }
+                        onPress={openMachineTypeSheet}
+                        disabled={!machineCategoryValue || isLoadingMachines}
+                      />
+                    )}
+                  />
+                  <TouchableOpacity
+                    onPress={openCustomMachineModal}
+                    activeOpacity={0.7}
+                    style={styles.addCustomLinkRow}
+                  >
+                    <AppIcon.PlusCircle width={16} height={16} color={theme.colors.primary.DEFAULT} />
+                    <Text variant="captionSmall" style={styles.addCustomLinkText}>
+                      Can't find your machine? Tap to add a custom one
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Preferred Brands for this machine (optional) */}
+                <View>
+                  <View style={styles.labelRow}>
+                    <Text variant="bodyMedium" fontWeight="medium" style={styles.label}>
+                      Preferred Brands
+                    </Text>
+                    <Text variant="captionMedium" style={styles.optionalLabel}>
+                      (Optional)
+                    </Text>
+                  </View>
+                  <Controller
+                    control={control}
+                    name="preferred_brand_ids"
+                    render={() => (
+                      <DropdownButton
+                        value={preferredBrandDisplay || ''}
+                        placeholder="Select preferred brands (multi-select)"
+                        onPress={openPreferredBrandsSheet}
+                      />
+                    )}
+                  />
+                </View>
+
+                <CustomButton
+                  title="Add Machine"
+                  onPress={handleAddPreference}
+                  variant="primary"
+                  size="md"
+                  style={styles.addPrefButton}
+                  disabled={!machineCategoryValue || machineIdValue == null}
+                />
+              </View>
+            )}
           </Card>
 
           <Card style={styles.card}>
@@ -765,7 +907,7 @@ const MachineDealerRegistrationScreen = () => {
             <View style={styles.infoContainer}>
               <Text style={styles.infoIcon}>ℹ️</Text>
               <Text variant="captionSmall" style={styles.infoText}>
-                Providing additional information helps us better match you with relevant opportunities.
+                Providing additional information helps us match you with relevant opportunities.
               </Text>
             </View>
           </Card>

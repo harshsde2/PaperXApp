@@ -63,12 +63,12 @@ const getDevelopmentApiUrl = (): string => {
  * Hosted API (HTTPS). Used for staging and release builds.
  * Change this when the production API domain changes.
  */
-const SERVER_API_BASE_URL = 'https://paperx.safewayrssi.com';
+const SERVER_API_BASE_URL = 'https://admin.hellozupply.in';
 
 // API Base URLs
 export const API_BASE_URLS = {
-  // [ENV.DEVELOPMENT]: getDevelopmentApiUrl(),
-  [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
+  [ENV.DEVELOPMENT]: getDevelopmentApiUrl(), // Local backend (LAN IP:8000)
+  // [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
   [ENV.STAGING]: SERVER_API_BASE_URL,
   [ENV.PRODUCTION]: SERVER_API_BASE_URL,
 } as const;
@@ -90,6 +90,18 @@ if (__DEV__) {
 // API Timeouts
 export const API_TIMEOUT = 30000; // 30 seconds
 export const API_UPLOAD_TIMEOUT = 120000; // 2 minutes for file uploads
+
+/**
+ * Payments master switch.
+ *
+ * Set to `false` for the free-launch period: the app skips ALL payment steps —
+ * posting fees, the RTD "connect" platform fee, and RTD listing packs — so users
+ * can post / connect / list for free. Set back to `true` to re-enable payments.
+ *
+ * NOTE: this must match the backend flag `PAYMENTS_ENABLED` (config/features.php);
+ * the backend enforces fees server-side, so both sides must agree.
+ */
+export const PAYMENTS_ENABLED = true; // TEMP: matches server (payments still ON there). Set BOTH this + server .env to false together for free-launch.
 
 // Storage Keys
 export const STORAGE_KEYS = {

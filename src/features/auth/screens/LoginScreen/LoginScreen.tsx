@@ -10,12 +10,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   TouchableOpacity,
-  Linking,
   Keyboard,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
 import { CustomButton } from '@shared/components/CustomButton';
+import { LegalModal } from '@shared/components/LegalModal';
+import type { LegalDocType } from '@shared/components/LegalModal/@types';
 import { Toast } from 'toastify-react-native';
 import { LoginScreenNavigationProp } from './@types';
 import { createStyles } from './styles';
@@ -30,6 +31,7 @@ const LoginScreen = () => {
   const styles = createStyles(theme);
   const { mutate: sendOTP, isPending: isSendingOTP } = useSendOTP();
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
 
   const { control, handleSubmit } = useForm<LoginFormData>({
     defaultValues: {
@@ -153,8 +155,9 @@ const LoginScreen = () => {
               rules={{
                 required: 'Mobile number is required',
                 pattern: {
-                  value: /^[0-9]{10}$/,
-                  message: 'Please enter a valid 10-digit mobile number',
+                  // Indian mobile: 10 digits, must start with 6, 7, 8, or 9
+                  value: /^[6-9][0-9]{9}$/,
+                  message: 'Enter a valid 10-digit Indian mobile number (starting 6-9)',
                 },
                 minLength: {
                   value: 10,
@@ -186,11 +189,11 @@ const LoginScreen = () => {
                 <Text variant="captionMedium" style={styles.termsText}>
                   I agree to the{' '}
                 </Text>
-                <TouchableOpacity onPress={() => Linking.openURL('#')} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
+                <TouchableOpacity onPress={() => setLegalDoc('terms')} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
                   <Text variant="captionMedium" style={styles.termsLink}>Terms and Conditions</Text>
                 </TouchableOpacity>
                 <Text variant="captionMedium" style={styles.termsText}>{' '}and{' '}</Text>
-                <TouchableOpacity onPress={() => Linking.openURL('#')} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
+                <TouchableOpacity onPress={() => setLegalDoc('privacy')} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
                   <Text variant="captionMedium" style={styles.termsLink}>Privacy Policy</Text>
                 </TouchableOpacity>
               </View>
@@ -217,6 +220,12 @@ const LoginScreen = () => {
           />
         </View>
       </KeyboardAvoidingView>
+
+      <LegalModal
+        visible={legalDoc !== null}
+        docType={legalDoc ?? 'terms'}
+        onClose={() => setLegalDoc(null)}
+      />
     </ScreenWrapper>
   );
 };

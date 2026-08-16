@@ -295,7 +295,7 @@ export const MarketplaceFilterSheet = memo<MarketplaceFilterSheetProps>(
 
           <View style={styles.section}>
             <Text variant="bodyMedium" style={styles.sectionLabel}>
-              Location
+            Location of the Supplier
             </Text>
             <View style={styles.chipsRow}>
               {LOCATION_SCOPE_OPTIONS.map((opt) => {

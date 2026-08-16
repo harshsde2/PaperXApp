@@ -5,55 +5,33 @@ export const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.primary[50],
     },
-    contentContainer: {
+    list: {
       flex: 1,
-      justifyContent: 'space-between',
-      paddingHorizontal: theme.spacing[6],
-      paddingTop: 60,
-      paddingBottom: 40,
     },
-    logoWrap: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+    skipButton: {
+      position: 'absolute',
+      right: theme.spacing[4],
+      zIndex: 10,
+      paddingHorizontal: theme.spacing[4],
+      paddingVertical: theme.spacing[2],
+      borderRadius: theme.borderRadius.full,
+      backgroundColor: 'rgba(255, 255, 255, 0.75)',
     },
-    header: {
-      alignItems: 'center',
-      paddingTop: theme.spacing[4],
-    },
-    visualContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: -theme.spacing[8],
-    },
-    bottomSection: {
-      width: '100%',
-      alignItems: 'center',
-      gap: theme.spacing[6],
-      marginBottom: theme.spacing[4],
-    },
-    headline: {
-      fontFamily: theme.fontFamily.bold,
-      fontSize: 28,
-      lineHeight: 36,
-      color: theme.colors.white,
-      textAlign: 'center',
-      textShadowColor: 'rgba(0,0,0,0.45)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 8,
-    },
-    subheadline: {
-      fontFamily: theme.fontFamily.medium,
+    skipText: {
+      fontFamily: theme.fontFamily.semibold,
       fontSize: theme.typography.body.small.fontSize,
-      color: 'rgba(255,255,255,0.92)',
-      textAlign: 'center',
-      paddingHorizontal: theme.spacing[2],
-      lineHeight: 22,
-      textShadowColor: 'rgba(0,0,0,0.4)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 6,
+      color: theme.colors.primary.DEFAULT,
+    },
+    controls: {
+      width: '100%',
+      paddingHorizontal: theme.spacing[6],
+      paddingTop: theme.spacing[4],
+      gap: theme.spacing[5],
+    },
+    dotsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });

@@ -13,6 +13,19 @@ export type RazorpayOpenResult = {
   razorpay_signature: string;
 };
 
+/**
+ * Shared `modal` options for every RazorpayCheckout.open call.
+ * - confirm_close: false — suppress the "cancel payment?" confirmation dialog.
+ *   Razorpay's success screen lingers ~5s before auto-dismissing and its back
+ *   handler otherwise pops that dialog even on success, which can dead-lock the
+ *   checkout (its buttons stop responding → app must be force-restarted).
+ * - animation: true — keep the normal open/close transition.
+ */
+const RAZORPAY_MODAL_OPTIONS = {
+  confirm_close: false,
+  animation: true,
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -63,6 +76,13 @@ export async function openRazorpayForWalletOrder(
       ...(prefill.name ? { name: prefill.name } : {}),
     },
     theme: { color: '#0D0D0D' },
+    // Razorpay shows its own "Payment Successful" screen for ~5s before it
+    // auto-dismisses. Its default back handler pops a "cancel payment?" confirm
+    // dialog on ANY back press — even on that success screen — and in the SDK's
+    // current build that dialog can dead-lock the checkout activity (Cancel/OK
+    // stop responding, forcing an app restart). Disabling confirm_close makes a
+    // back-press on the success screen just dismiss cleanly.
+    modal: RAZORPAY_MODAL_OPTIONS,
   };
 
   const data = (await RazorpayCheckout.open(options)) as {
@@ -104,6 +124,9 @@ export async function openRazorpayForBrandRtdOrder(
       ...(prefill.name ? { name: prefill.name } : {}),
     },
     theme: { color: '#0D0D0D' },
+    // See openRazorpayForWalletOrder: disables the post-success "cancel payment?"
+    // dialog that can dead-lock the checkout when back is pressed.
+    modal: RAZORPAY_MODAL_OPTIONS,
   };
 
   const data = (await RazorpayCheckout.open(options)) as {

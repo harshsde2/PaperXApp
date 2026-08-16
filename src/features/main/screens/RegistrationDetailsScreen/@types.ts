@@ -13,4 +13,7 @@ export interface RegistrationSectionVM {
   title: string;
   icon?: string | null;
   rows: RegistrationRowVM[];
+  editable?: boolean;
+  editKey?: string;
+  edit?: Record<string, any>;
 }

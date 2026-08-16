@@ -264,3 +264,30 @@ export const useLogout = () => {
   });
 };
 
+/**
+ * Permanently delete the user's account (Apple 5.1.1(v)).
+ * Unlike logout, we only clear local auth on SUCCESS — if the server call fails,
+ * the account still exists, so the user stays logged in and sees an error.
+ */
+export const useDeleteAccount = () => {
+  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      await api.delete(USER_ENDPOINTS.DELETE_ACCOUNT);
+    },
+    onSuccess: () => {
+      // Account is gone server-side (tokens revoked). Clear everything locally;
+      // AppNavigator will drop the user back to the auth/login stack.
+      storageService.clearAuth();
+      dispatch(logoutAction());
+      dispatch(clearRoles());
+      queryClient.clear();
+    },
+    onError: (error: Error) => {
+      console.error('Delete account error:', error);
+    },
+  });
+};
+

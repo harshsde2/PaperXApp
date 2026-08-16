@@ -90,6 +90,7 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
   const theme = useTheme();
   const styles = createStyles(theme);
   const [sampleImageFullScreenVisible, setSampleImageFullScreenVisible] = useState(false);
+  const [referenceImageFullScreenVisible, setReferenceImageFullScreenVisible] = useState(false);
 
   if (isLoading && !data) {
     return (
@@ -121,6 +122,7 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
   const isJobworkFind = data.inquiry_type === JOBWORK_FIND_INQUIRY_TYPE;
   const sampleImageUrl = data.sample_image_url ?? null;
   const showSampleImage = isJobworkFind && !!sampleImageUrl;
+  const referenceImageUrl = data.reference_image_url ?? null;
 
   const jobworkDetailLines = jobwork ? buildJobworkDetailLines(jobwork) : [];
 
@@ -204,6 +206,20 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
         </View>
       )}
 
+      {/* Brand reference image (optional) */}
+      {referenceImageUrl && (
+        <View style={styles.posterDetailSampleImageSection}>
+          <Text style={styles.posterDetailSampleImageLabel}>Reference image</Text>
+          <TouchableOpacity
+            style={styles.posterDetailSampleImageThumbnailWrap}
+            onPress={() => setReferenceImageFullScreenVisible(true)}
+            activeOpacity={0.9}
+          >
+            <Image source={{ uri: referenceImageUrl }} style={styles.posterDetailSampleImageThumbnail} resizeMode="cover" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Counts section */}
       <Text style={styles.posterDetailCountsTitle}>Reach & responses</Text>
       <View style={styles.posterDetailCountsRow}>
@@ -236,6 +252,13 @@ export const PosterDetailView: React.FC<PosterDetailViewProps> = ({
           visible={sampleImageFullScreenVisible}
           imageUrl={sampleImageUrl}
           onClose={() => setSampleImageFullScreenVisible(false)}
+        />
+      )}
+      {referenceImageUrl && (
+        <FullScreenImageModal
+          visible={referenceImageFullScreenVisible}
+          imageUrl={referenceImageUrl}
+          onClose={() => setReferenceImageFullScreenVisible(false)}
         />
       )}
     </ScrollView>

@@ -10,13 +10,29 @@ import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@theme/index';
 import { Text } from '@shared/components/Text';
+import { CustomButton } from '@shared/components/CustomButton';
 import { AppIcon } from '@assets/svgs';
 import type { DealerDashboardData } from '@services/api';
+import { useGetActiveSessions } from '@services/api';
+import type { ActiveSessionListItem } from '@services/api/sessionApi/@types';
 import { SCREENS } from '@navigation/constants';
 import { useTabBarContentBottomInset } from '@shared/hooks/useTabBarContentBottomInset';
 import { useDashboardHeaderHeight } from '../DashboardHeaderHeightContext';
 import { ResponsesCard } from './ResponsesCard';
 import { createStyles } from './DealerDashboardView/styles';
+
+interface TransformedSession {
+  id: string;
+  status: 'ACTIVE' | 'NEGOTIATION' | 'WAITING';
+  timeRemaining: string;
+  companyAvatar: string;
+  company: string;
+  description: string;
+  actionRequired: boolean;
+  responsesReceived: number;
+  totalExpectedResponses: number;
+  progressPercent: number;
+}
 
 const { width } = Dimensions.get('window');
 
@@ -60,6 +76,92 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
     unreadNotifications: apiData?.unread_notifications_count ?? 0,
     postedRequirements: apiData?.posted_requirements_count ?? 0,
   };
+
+  // Active sessions = own posted + matched opportunities (own + matched, via /sessions/active)
+  const {
+    data: activeSessionsResponse,
+    refetch: refetchActiveSessions,
+    isRefetching: isSessionsRefetching,
+  } = useGetActiveSessions({ filter: 'all', per_page: 3 });
+  const activeSessions = activeSessionsResponse?.data ?? [];
+
+  const transformedSessions = useMemo((): TransformedSession[] => {
+    if (!activeSessions.length) return [];
+    return activeSessions.slice(0, 3).map((session: ActiveSessionListItem) => {
+      const firstItem = session.items?.[0];
+      const totalQuantity = session.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+      let status: TransformedSession['status'] = 'ACTIVE';
+      if (session.status === 'RESPONSES_RECEIVED' || session.status === 'CHAT_ACTIVE') {
+        status = 'NEGOTIATION';
+      } else if (session.status === 'MATCHING') {
+        status = 'WAITING';
+      }
+
+      let timeRemaining = '';
+      if (session.countdown) {
+        const { days, hours, minutes } = session.countdown;
+        if (days > 0) timeRemaining = `${days}d ${hours}h`;
+        else if (hours > 0) timeRemaining = `${hours}h ${minutes}m`;
+        else timeRemaining = `${minutes}m`;
+      }
+
+      const companyName = session.title.split('-')[0]?.trim() || session.poster_label || 'Company';
+      const companyAvatar = companyName.charAt(0).toUpperCase();
+      const materialName = firstItem?.material_category || 'Material';
+      const quantityUnit = firstItem?.quantity_unit || 'units';
+      const description = `${materialName} - ${totalQuantity} ${quantityUnit}`;
+
+      const safeResponsesReceived = Number(session.responses_received ?? 0);
+      const safeMatchedDealers = Number(session.matched_dealers_count ?? 0);
+      const safeMatchingProgressMatched = Number(session.matching_progress?.matched ?? 0);
+      const hasExplicitResponses =
+        session.responses_received !== null && session.responses_received !== undefined;
+      const resolvedResponsesReceived = hasExplicitResponses
+        ? Number.isFinite(safeResponsesReceived)
+          ? safeResponsesReceived
+          : 0
+        : Math.max(
+            Number.isFinite(safeMatchingProgressMatched) ? safeMatchingProgressMatched : 0,
+            Number.isFinite(safeMatchedDealers) ? safeMatchedDealers : 0,
+          );
+      const totalExpectedResponses = 10;
+      const responsesReceived = Math.max(
+        0,
+        Math.min(resolvedResponsesReceived, totalExpectedResponses),
+      );
+      const progressPercent = (responsesReceived / totalExpectedResponses) * 100;
+
+      return {
+        id: String(session.id),
+        status,
+        timeRemaining,
+        companyAvatar,
+        company: companyName,
+        description,
+        actionRequired: session.status === 'RESPONSES_RECEIVED',
+        responsesReceived,
+        totalExpectedResponses,
+        progressPercent,
+      };
+    });
+  }, [activeSessions]);
+
+  const handleViewAllSessions = useCallback(() => {
+    navigation.navigate(SCREENS.SESSIONS.DASHBOARD, { initialTab: 'all' });
+  }, [navigation]);
+
+  const handleSessionPress = useCallback(
+    (sessionId: string) => {
+      navigation.navigate(SCREENS.SESSIONS.DETAILS, { sessionId });
+    },
+    [navigation],
+  );
+
+  const handleRefresh = useCallback(() => {
+    onRefresh?.();
+    refetchActiveSessions();
+  }, [onRefresh, refetchActiveSessions]);
 
   const [actionCardLayout, setActionCardLayout] = useState({ width: 160, height: 170 });
   const onActionCardLayout = useCallback((event: any) => {
@@ -110,15 +212,13 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
       contentContainerStyle={scrollContentContainerStyle}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        onRefresh ? (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary.DEFAULT}
-            colors={[theme.colors.primary.DEFAULT]}
-            progressViewOffset={headerInset}
-          />
-        ) : undefined
+        <RefreshControl
+          refreshing={refreshing || isSessionsRefetching}
+          onRefresh={handleRefresh}
+          tintColor={theme.colors.primary.DEFAULT}
+          colors={[theme.colors.primary.DEFAULT]}
+          progressViewOffset={headerInset}
+        />
       }
     >
       {/* Title Section */}
@@ -332,6 +432,110 @@ export const DealerDashboardView: React.FC<DealerDashboardViewProps> = ({
             {dashboardData.postedRequirements} posted
           </Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Active Sessions (own posts + matched opportunities) */}
+      <View style={styles.activeSessionsSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Active Sessions</Text>
+          <TouchableOpacity onPress={handleViewAllSessions}>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        {transformedSessions.length === 0 ? (
+          <View style={styles.emptySessionsCard}>
+            <View style={styles.emptySessionsIconWrap}>
+              <AppIcon.Sessions width={32} height={32} color={theme.colors.primary.DEFAULT} />
+            </View>
+            <Text style={styles.emptySessionsTitle}>No active sessions</Text>
+            <Text style={styles.emptySessionsDesc}>
+              You don't have any active sessions or matched opportunities right now.
+            </Text>
+            <View style={{ alignSelf: 'center' }}>
+              <CustomButton
+                title="View All Sessions"
+                onPress={handleViewAllSessions}
+                variant="gradient"
+                size="sm"
+                style={{ marginTop: theme.spacing[2], alignSelf: 'flex-start' }}
+                textStyle={styles.viewAllSessionsButtonText}
+              />
+            </View>
+          </View>
+        ) : (
+          <>
+            {transformedSessions.map((session) => (
+              <TouchableOpacity
+                key={session.id}
+                style={styles.sessionCard}
+                onPress={() => handleSessionPress(session.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.sessionHeader}>
+                  <View style={styles.sessionStatusBadge}>
+                    <View
+                      style={[
+                        styles.sessionStatusDot,
+                        {
+                          backgroundColor:
+                            session.status === 'NEGOTIATION'
+                              ? theme.colors.success.DEFAULT
+                              : theme.colors.warning.DEFAULT,
+                        },
+                      ]}
+                    />
+                    <Text style={styles.sessionStatusText}>{session.status.replace('_', ' ')}</Text>
+                  </View>
+                  {session.timeRemaining ? (
+                    <View style={styles.sessionTimeContainer}>
+                      <AppIcon.Sessions width={14} height={14} color={theme.colors.primary.DEFAULT} />
+                      <Text style={styles.sessionTimeText}>{session.timeRemaining}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.sessionContent}>
+                  <View style={styles.sessionAvatar}>
+                    <Text style={styles.sessionAvatarText}>{session.companyAvatar}</Text>
+                  </View>
+                  <View style={styles.sessionInfo}>
+                    <Text style={styles.sessionCompany}>{session.company}</Text>
+                    <Text style={styles.sessionDescription}>{session.description}</Text>
+                  </View>
+                  {session.actionRequired ? (
+                    <TouchableOpacity style={styles.actionButton}>
+                      <Text style={styles.actionButtonText}>Action</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity style={styles.chatButton}>
+                      <AppIcon.Messages width={20} height={20} color={theme.colors.text.secondary} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View style={styles.sessionProgress}>
+                  <View style={styles.progressMetaRow}>
+                    <Text style={styles.progressMetaLabel}>Responses Received</Text>
+                    <Text style={styles.progressMetaValue}>
+                      {session.responsesReceived}/{session.totalExpectedResponses}
+                    </Text>
+                  </View>
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: `${session.progressPercent}%` }]} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+            <View style={{ alignSelf: 'center' }}>
+              <CustomButton
+                title="View All Sessions"
+                onPress={handleViewAllSessions}
+                variant="gradient"
+                size="sm"
+                style={{ marginTop: theme.spacing[2], alignSelf: 'flex-start' }}
+                textStyle={styles.viewAllSessionsButtonText}
+              />
+            </View>
+          </>
+        )}
       </View>
 
       {/* Market Insight */}

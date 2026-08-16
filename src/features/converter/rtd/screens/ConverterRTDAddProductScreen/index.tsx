@@ -53,6 +53,7 @@ import { PriceSlabInput } from '../../components/PriceSlabInput';
 import type { PriceSlabRow } from '../../components/PriceSlabInput';
 import { ProductListingSuccessModal } from '../../components/ProductListingSuccessModal';
 import { RtdListingPackModal } from '../../components/RtdListingPackModal';
+import { PAYMENTS_ENABLED } from '@shared/constants/config';
 import type { FormData, FormErrors, SavedLocation } from './@types';
 import {
   BRANDING_METHOD_OPTIONS,
@@ -524,7 +525,8 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       return;
     }
 
-    if (!hasEntitlement) {
+    // Free-launch mode: skip the listing-pack requirement and list directly.
+    if (PAYMENTS_ENABLED && !hasEntitlement) {
       void refetchWallet();
       setShowPackModal(true);
       return;
@@ -551,7 +553,7 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
       >
         <Animated.View style={styles.container} entering={FadeIn.duration(300)}>
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          {!isEdit && (
+          {!isEdit && PAYMENTS_ENABLED && (
             hasEntitlement ? (
               <View style={[styles.slotsBanner, styles.slotsBannerHasSlots]}>
                 <View style={styles.slotsBannerText}>
@@ -870,7 +872,16 @@ export const ConverterRTDAddProductScreen: React.FC = () => {
         </View>
       </GorhomBottomSheetModal>
 
-      <GorhomBottomSheetModal ref={finishSheetRef} snapPoints={['70%', '95%']} enablePanDownToClose doneFooter onDismiss={() => setFinishSearch('')}>
+      <GorhomBottomSheetModal
+        ref={finishSheetRef}
+        snapPoints={['70%', '95%']}
+        enablePanDownToClose
+        doneFooter
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onDismiss={() => setFinishSearch('')}
+      >
         <MultiSelectBottomSheetContent
           title="Select Grade / Finish / Certifications"
           searchQuery={finishSearch}

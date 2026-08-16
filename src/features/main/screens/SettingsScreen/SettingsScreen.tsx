@@ -3,6 +3,7 @@ import { View, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@shared/components/Text';
+import { ConfirmModal } from '@shared/components/ConfirmModal';
 import { AppIcon } from '@assets/svgs';
 import { useAppDispatch } from '@store/hooks';
 import { logout } from '@store/slices/authSlice';
@@ -42,12 +43,24 @@ const SettingsScreen: React.FC = () => {
   const styles = createStyles(theme);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkMode, setDarkMode] = React.useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
-  const handleLogout = async () => {
-    // Unregister this device's push token before the bearer is cleared.
-    await unregisterCurrentDeviceToken();
-    storageService.clearAuth();
-    dispatch(logout());
+  const handleLogout = () => {
+    setLogoutModalVisible(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Unregister this device's push token before the bearer is cleared.
+      await unregisterCurrentDeviceToken();
+    } catch {
+      // Ignore token-unregister failures; still proceed with logout.
+    } finally {
+      storageService.clearAuth();
+      dispatch(logout());
+    }
   };
 
   const handleNavigateToProfile = () => {
@@ -251,6 +264,19 @@ const SettingsScreen: React.FC = () => {
 
         <Text style={styles.version}>Version 1.0.0</Text>
       </ScrollView>
+
+      <ConfirmModal
+        visible={logoutModalVisible}
+        title="Log Out?"
+        message="Are you sure you want to log out of your account?"
+        confirmLabel="Log Out"
+        cancelLabel="Cancel"
+        destructive
+        loading={isLoggingOut}
+        icon={<AppIcon.Warning width={32} height={32} color={theme.colors.error.DEFAULT} />}
+        onConfirm={handleConfirmLogout}
+        onCancel={() => setLogoutModalVisible(false)}
+      />
     </View>
   );
 };

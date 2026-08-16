@@ -222,7 +222,9 @@ const SessionChatScreen = () => {
     <ScreenWrapper safeAreaEdges={[]} backgroundColor={theme.colors.background.primary}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // Android manifest uses adjustResize, which already lifts the input; adding
+        // behavior="height" double-handles it and hides the box behind the keyboard.
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
         {/* Header inside KAV so offset calculation is correct */}

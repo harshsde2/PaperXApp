@@ -1,5 +1,6 @@
 import React, { memo, useMemo, useCallback, useState, useEffect } from 'react';
-import { View, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import { View, FlatList, TouchableOpacity } from 'react-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { Text } from '@shared/components/Text';
 import { AppIcon } from '@assets/svgs';
 import { MultiSelectBottomSheetContentProps } from './@types';
@@ -129,7 +130,7 @@ export const MultiSelectBottomSheetContent = memo(({
           color={theme.colors.text.tertiary}
           style={styles.searchIcon}
         />
-        <TextInput
+        <BottomSheetTextInput
           style={styles.searchInput}
           placeholder={placeholder}
           placeholderTextColor={theme.colors.text.tertiary}

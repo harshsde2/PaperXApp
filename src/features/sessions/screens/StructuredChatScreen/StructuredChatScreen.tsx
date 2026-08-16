@@ -359,7 +359,9 @@ export default function StructuredChatScreen() {
     <ScreenWrapper safeAreaEdges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // Android manifest uses adjustResize, which already lifts the input; adding
+        // behavior="height" double-handles it and hides the box behind the keyboard.
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
         <FlatList

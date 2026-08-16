@@ -99,7 +99,7 @@ export const ConverterDashboardView: React.FC<ConverterDashboardViewProps> = ({
 
   const transformedSessions = useMemo((): TransformedSession[] => {
     if (!dashboardData.activeSessions?.length) return [];
-    return dashboardData.activeSessions.slice(0, 5).map((session: ActiveSessionListItem) => {
+    return dashboardData.activeSessions.slice(0, 3).map((session: ActiveSessionListItem) => {
       const firstItem = session.items?.[0];
       const totalQuantity =
         session.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;

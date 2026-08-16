@@ -3,7 +3,7 @@ import { View, TouchableOpacity, RefreshControl, Image, LayoutChangeEvent } from
 import { Canvas, RoundedRect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
-import { useLogout, useGetProfile } from '@services/api';
+import { useDeleteAccount, useGetProfile } from '@services/api';
 import { storageService } from '@services/storage/storageService';
 import { setRoles, setActiveRole } from '@store/slices/roleSlice';
 import { Text } from '@shared/components/Text';
@@ -12,6 +12,8 @@ import { Section } from '@shared/components/Section';
 import { ScreenWrapper } from '@shared/components/ScreenWrapper';
 import { CustomHeader } from '@shared/components/CustomHeader';
 import { CustomButton } from '@shared/components/CustomButton';
+import { ConfirmModal } from '@shared/components/ConfirmModal';
+import { Toast } from 'toastify-react-native';
 import { AnimatedCircularProgress } from '@shared/components/AnimatedCircularProgress';
 import { useTheme } from '@theme/index';
 import { ProfileScreenNavigationProp } from './@types';
@@ -41,19 +43,31 @@ const ProfileScreen = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { activeRole, availableRoles, primaryRole: reduxPrimaryRole, secondaryRole: reduxSecondaryRole } = useAppSelector((state) => state.role);
-  const logoutMutation = useLogout();
-  
+  const deleteMutation = useDeleteAccount();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
   // Fetch user profile from API
   const { data: profileData, isLoading, isError, refetch, isRefetching } = useGetProfile();
   const showSkeleton = useSkeleton(isLoading);
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+  const handleDeleteAccountPress = () => setDeleteModalVisible(true);
+  const handleCancelDelete = () => setDeleteModalVisible(false);
 
-  const handleEdit = useCallback(() => {
-    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
-  }, [navigation]);
+  const handleConfirmDelete = () => {
+    deleteMutation.mutate(undefined, {
+      // On success the auth state clears and AppNavigator swaps to the login
+      // stack (this screen unmounts), so we only handle the error case here.
+      onError: (err: Error) => {
+        setDeleteModalVisible(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Could not delete account',
+          text2: err?.message || 'Please try again.',
+          position: 'top',
+        });
+      },
+    });
+  };
 
   const handleAccountSettings = useCallback(() => {
     // navigation.navigate(SCREENS.MAIN.SETTINGS);
@@ -69,20 +83,12 @@ const ProfileScreen = () => {
     return null;
   }, [navigation]);
 
-  // Set header options with Edit button
+  // Set header options
   useLayoutEffect(() => {
     navigation.setOptions({
-      header: (props: any) => (
-        <CustomHeader
-          {...props}
-          rightButton={{
-            icon: <Text style={styles.editButtonText}>Edit</Text>,
-            onPress: handleEdit,
-          }}
-        />
-      ),
+      header: (props: any) => <CustomHeader {...props} />,
     });
-  }, [navigation, handleEdit]);
+  }, [navigation]);
 
   // Extract user data from API response
   const userData = profileData;
@@ -593,22 +599,31 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       </Section>
 
-      {/* Logout Button */}
+      {/* Delete Account (Apple 5.1.1(v)). Log Out lives in the Settings tab. */}
       <CustomButton
-        title="Log Out"
-        onPress={handleLogout}
+        title="Delete Account"
+        onPress={handleDeleteAccountPress}
         variant="danger"
         size="md"
-        loading={logoutMutation.isPending}
-        disabled={logoutMutation.isPending}
-        rightIcon={
-          <AppIcon.ArrowRight width={20} height={20} color={theme.colors.text.inverse} />
-        }
+        loading={deleteMutation.isPending}
+        disabled={deleteMutation.isPending}
         style={styles.logoutButton}
       />
 
       {/* Version */}
       <Text style={styles.versionText}>v1.0.4</Text>
+
+      <ConfirmModal
+        visible={deleteModalVisible}
+        title="Delete Account?"
+        message="This permanently deletes your account and personal data. This action can't be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        loading={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </ScreenWrapper>
   );
 };

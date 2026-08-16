@@ -155,8 +155,9 @@ const LoginScreen = () => {
               rules={{
                 required: 'Mobile number is required',
                 pattern: {
-                  value: /^[0-9]{10}$/,
-                  message: 'Please enter a valid 10-digit mobile number',
+                  // Indian mobile: 10 digits, must start with 6, 7, 8, or 9
+                  value: /^[6-9][0-9]{9}$/,
+                  message: 'Enter a valid 10-digit Indian mobile number (starting 6-9)',
                 },
                 minLength: {
                   value: 10,

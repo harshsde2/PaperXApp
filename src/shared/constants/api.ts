@@ -32,6 +32,7 @@ export const USER_ENDPOINTS = {
   UPDATE_PROFILE: `${API_VERSION}/user/profile`,
   SWITCH_ROLE: `${API_VERSION}/user/switch-role`,
   UPLOAD_AVATAR: `${API_VERSION}/user/avatar`,
+  DELETE_ACCOUNT: `${API_VERSION}/user/account`,
 } as const;
 
 // Reference Data Endpoints

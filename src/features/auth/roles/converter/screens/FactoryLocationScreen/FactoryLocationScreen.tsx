@@ -21,11 +21,11 @@ const FactoryLocationScreen = () => {
   const { profileData } = route.params || {};
   
   const [searchAddress, setSearchAddress] = useState('');
-  const [streetAddress, setStreetAddress] = useState('1200 Manufacturing Blvd.');
-  const [city, setCity] = useState('Chicago');
-  const [state, setState] = useState('Illinois');
-  const [zipCode, setZipCode] = useState('60614');
-  const [country, setCountry] = useState('United States');
+  const [streetAddress, setStreetAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [country, setCountry] = useState('');
 
   const handleUseCurrentLocation = () => {
     // TODO: Implement geolocation to get current location

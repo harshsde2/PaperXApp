@@ -76,10 +76,10 @@ const CompanyDetailsScreen = () => {
   const { control, handleSubmit, setValue, watch } = useForm<CompanyDetailsFormData>({
     defaultValues: {
       companyName: '',
-      gstin: '928627527846124',
+      gstin: '',
       state: '',
       city: '',
-      udyamCertificateNumber: '911234567890',
+      udyamCertificateNumber: '',
     },
     mode: 'onBlur',
   });

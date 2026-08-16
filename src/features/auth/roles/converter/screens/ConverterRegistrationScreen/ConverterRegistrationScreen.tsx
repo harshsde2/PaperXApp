@@ -54,6 +54,7 @@ const ConverterRegistrationScreen = () => {
   const multiSelectSheetRef = useRef<BottomSheetModal>(null);
   const capacityUnitSheetRef = useRef<BottomSheetModal>(null);
   const [multiSelectConfig, setMultiSelectConfig] = useState<MultiSelectConfig | null>(null);
+  const [capacitySheetOpen, setCapacitySheetOpen] = useState(false);
   const { data: referenceData, isLoading: isLoadingReference } = useGetConverterReferenceData();
   const { data: materials, isLoading: isLoadingMaterials } = useGetMaterials();
   const { mutate: completeProfile, isPending: isSubmitting } = useCompleteConverterProfile();
@@ -1133,7 +1134,7 @@ const ConverterRegistrationScreen = () => {
       </Animated.View>
     </ScreenWrapper>
 
-        {!isKeyboardVisible && (
+        {!isKeyboardVisible && !multiSelectConfig && !capacitySheetOpen && !showFactoryAddressModal && (
           <FloatingBottomContainer
             backgroundColor={theme.colors.background.primary}
             paddingHorizontal={theme.spacing[4]}
@@ -1222,6 +1223,8 @@ const ConverterRegistrationScreen = () => {
           ref={capacityUnitSheetRef}
           snapPoints={['65%', '80%']}
           enablePanDownToClose
+          doneFooter
+          onChange={(index: number) => setCapacitySheetOpen(index >= 0)}
         >
           <View style={{ paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[4], flex: 1 }}>
             <Text

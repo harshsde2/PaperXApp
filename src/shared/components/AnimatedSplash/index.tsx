@@ -200,9 +200,8 @@ const AnimatedSplash = ({ onAnimationEnd }: AnimatedSplashProps) => {
           </Group>
         </Canvas>
       </View>
-
       <Animated.Text style={[styles.poweredBy, textAnimatedStyle]}>
-        Powered by SPNP Paper and Pack
+        Powered by SPNP Paper and Pack Pvt Ltd
       </Animated.Text>
     </Animated.View>
   );

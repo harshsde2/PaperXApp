@@ -31,12 +31,20 @@ export const fetchMarketInsightsHistory = async (days: number = 7): Promise<Mark
   return extractData<MarketInsightsHistoryResponse>(response);
 };
 
+/**
+ * Market insights are generated once per day, so unlike sessions/matches they
+ * are NOT time-sensitive. Caching them means re-opening the screen renders
+ * instantly from cache instead of showing a spinner on every visit.
+ */
+const INSIGHTS_STALE_TIME = 30 * 60 * 1000; // 30 minutes
+const INSIGHTS_GC_TIME = 60 * 60 * 1000; // keep in memory for 1 hour
+
 export const useGetTodayMarketInsight = () => {
   return useQuery({
     queryKey: queryKeys.insights.today(),
     queryFn: fetchTodayMarketInsight,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: INSIGHTS_STALE_TIME,
+    gcTime: INSIGHTS_GC_TIME,
   });
 };
 
@@ -45,8 +53,9 @@ export const useGetMarketInsightByDate = (date: string) => {
     queryKey: queryKeys.insights.byDate(date),
     queryFn: () => fetchMarketInsightByDate(date),
     enabled: Boolean(date),
-    staleTime: 0,
-    gcTime: 0,
+    // A past date's insight never changes — cache it aggressively.
+    staleTime: INSIGHTS_STALE_TIME,
+    gcTime: INSIGHTS_GC_TIME,
   });
 };
 
@@ -54,7 +63,7 @@ export const useGetMarketInsightsHistory = (days: number = 7) => {
   return useQuery({
     queryKey: queryKeys.insights.history(days),
     queryFn: () => fetchMarketInsightsHistory(days),
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: INSIGHTS_STALE_TIME,
+    gcTime: INSIGHTS_GC_TIME,
   });
 };

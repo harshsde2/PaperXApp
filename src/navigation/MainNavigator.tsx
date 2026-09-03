@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '@features/main/screens/ProfileScreen/ProfileScreen';
+import ContactSupportScreen from '@features/main/screens/ContactSupportScreen';
 import PostRequirementOptionsScreen from '@features/posting/screens/PostRequirementOptionsScreen';
 import PostToBuyScreen from '@features/posting/screens/PostToBuyScreen/PostToBuyScreen';
 import PostToSellMachineScreen from '@features/posting/screens/PostToSellMachineScreen/PostToSellMachineScreen';
@@ -57,6 +58,7 @@ import type { MarketInsightArticle } from '@services/api';
 export type MainStackParamList = {
   MainTabs: undefined;
   Profile: undefined;
+  ContactSupport: undefined;
   Post: undefined;
   PostToBuy: { intent?: 'buy' | 'sell' } | undefined;
   PostBrandRequirement: undefined;
@@ -199,6 +201,15 @@ const MainNavigator = () => {
         component={ProfileScreen}
         options={{
           headerShown: true,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name={SCREENS.MAIN.CONTACT_SUPPORT}
+        component={ContactSupportScreen}
+        options={{
+          headerShown: true,
+          title: 'Contact Support',
           animation: 'slide_from_right',
         }}
       />

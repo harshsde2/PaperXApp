@@ -43,6 +43,7 @@ export const SCREENS = {
     CAPACITY: 'Capacity',
     SESSIONS: 'Sessions',
     PROFILE: 'Profile',
+    CONTACT_SUPPORT: 'ContactSupport',
     POST: 'Post',
     POST_TO_BUY: 'PostToBuy',
     POST_TO_SELL_MACHINE: 'PostToSellMachine',

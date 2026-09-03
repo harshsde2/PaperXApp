@@ -67,8 +67,8 @@ const SERVER_API_BASE_URL = 'https://admin.hellozupply.in';
 
 // API Base URLs
 export const API_BASE_URLS = {
-  [ENV.DEVELOPMENT]: getDevelopmentApiUrl(), // Local backend (LAN IP:8000)
-  // [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
+  // [ENV.DEVELOPMENT]: getDevelopmentApiUrl(), // Local backend (LAN IP:8000)
+  [ENV.DEVELOPMENT]: SERVER_API_BASE_URL, // Uncomment to point dev at the server
   [ENV.STAGING]: SERVER_API_BASE_URL,
   [ENV.PRODUCTION]: SERVER_API_BASE_URL,
 } as const;

@@ -79,6 +79,10 @@ const SettingsScreen: React.FC = () => {
     navigation.navigate(SCREENS.INVOICES.LIST);
   };
 
+  const handleContactSupport = () => {
+    navigation.navigate(SCREENS.MAIN.CONTACT_SUPPORT);
+  };
+
   const settingsSections = [
     // ...(themeContext
     //   ? [
@@ -171,16 +175,11 @@ const SettingsScreen: React.FC = () => {
       title: 'Support',
       items: [
         {
-          id: 'help',
-          icon: <AppIcon.Warning width={22} height={22} color={theme.colors.text.secondary} />,
-          title: 'Help Center',
-          type: 'navigation',
-        },
-        {
           id: 'contact',
           icon: <AppIcon.Mail width={22} height={22} color={theme.colors.text.secondary} />,
           title: 'Contact Support',
           type: 'navigation',
+          onPress: handleContactSupport,
         },
       ],
     },

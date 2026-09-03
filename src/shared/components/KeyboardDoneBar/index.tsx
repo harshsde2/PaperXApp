@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId } from 'react';
-import { View, TouchableOpacity, Keyboard } from 'react-native';
+import { View, TouchableOpacity, Keyboard, Platform } from 'react-native';
 import { Text } from '@shared/components/Text';
 import { useTheme } from '@theme/index';
 import { useKeyboard } from '@shared/hooks';
@@ -43,8 +43,13 @@ export const KeyboardDoneBar: React.FC<KeyboardDoneBarProps> = ({
   if (!isKeyboardVisible) return null;
   if (isManaged && activeId !== id) return null;
 
+  // Android uses windowSoftInputMode=adjustResize, so the RN view already
+  // shrinks to sit above the keyboard — the bar belongs at bottom:0. On iOS the
+  // keyboard overlays the content, so we lift the bar by the keyboard height.
+  const bottomOffset = Platform.OS === 'android' ? 0 : keyboardHeight;
+
   return (
-    <View style={[styles.bar, { bottom: keyboardHeight }]} pointerEvents="box-none">
+    <View style={[styles.bar, { bottom: bottomOffset }]} pointerEvents="box-none">
       <TouchableOpacity onPress={handlePress} style={styles.button} activeOpacity={0.7}>
         <Text variant="bodyMedium" fontWeight="semibold" style={styles.text}>
           {label}

@@ -69,20 +69,6 @@ const ProfileScreen = () => {
     });
   };
 
-  const handleAccountSettings = useCallback(() => {
-    // navigation.navigate(SCREENS.MAIN.SETTINGS);
-    return null;
-  }, [navigation]);
-
-  const handleManageRoles = useCallback(() => {
-    navigation.navigate(SCREENS.MAIN.REGISTRATION_DETAILS);
-  }, [navigation]);
-
-  const handleHelpSupport = useCallback(() => {
-    // navigation.navigate(SCREENS.MAIN.SETTINGS);
-    return null;
-  }, [navigation]);
-
   // Set header options
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -561,42 +547,6 @@ const ProfileScreen = () => {
             </Text>
           )}
         </Card>
-      </Section>
-
-      {/* Settings */}
-      <Section
-        title="Settings"
-        style={styles.section}
-      >
-        <TouchableOpacity style={styles.settingsItem} onPress={handleAccountSettings} activeOpacity={0.7}>
-          <View style={styles.settingsItemLeft}>
-            <View style={styles.settingsIcon}>
-              <AppIcon.Settings width={22} height={22} color={theme.colors.text.tertiary} />
-            </View>
-            <Text style={styles.settingsLabel}>Account Settings</Text>
-          </View>
-          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingsItem} onPress={handleManageRoles} activeOpacity={0.7}>
-          <View style={styles.settingsItemLeft}>
-            <View style={styles.settingsIcon}>
-              <AppIcon.Person width={22} height={22} color={theme.colors.text.tertiary} />
-            </View>
-            <Text style={styles.settingsLabel}>Manage Roles</Text>
-          </View>
-          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingsItem} onPress={handleHelpSupport} activeOpacity={0.7}>
-          <View style={styles.settingsItemLeft}>
-            <View style={styles.settingsIcon}>
-              <AppIcon.Warning width={22} height={22} color={theme.colors.text.tertiary} />
-            </View>
-            <Text style={styles.settingsLabel}>Help & Support</Text>
-          </View>
-          <AppIcon.ChevronRight width={20} height={20} color={theme.colors.text.tertiary} />
-        </TouchableOpacity>
       </Section>
 
       {/* Delete Account (Apple 5.1.1(v)). Log Out lives in the Settings tab. */}

@@ -10,7 +10,8 @@
     "start": "react-native start",
     "test": "jest",
     "pod": "cd ios && pod install && cd ..",
-    "getAndroidAPK": "cd android && ./gradlew assembleRelease && cd .."
+    "getAndroidAPK": "cd android && ./gradlew assembleRelease && cd ..",
+    "getAndroidAAB": "cd android && ./gradlew bundleRelease && cd .."
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.8",
